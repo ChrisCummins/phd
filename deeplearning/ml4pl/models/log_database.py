@@ -15,6 +15,7 @@ from sqlalchemy.ext import declarative
 
 from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.models import batch as batches
+from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import epoch
 from labm8.py import app
 from labm8.py import humanize
@@ -60,6 +61,8 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   binary_value: bytes = sql.Column(
     sqlutil.ColumnTypes.LargeBinary(), nullable=False
   )
+
+  timestamp: datetime.datetime = sqlutil.ColumnFactory.MillisecondDatetime()
 
   @property
   def value(self) -> Any:
@@ -131,11 +134,7 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   recall: float = sql.Column(sql.Float, nullable=False)
   f1: float = sql.Column(sql.Float, nullable=False)
 
-  timestamp: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), "mysql"),
-    nullable=False,
-    default=labdate.GetUtcMillisecondsNow,
-  )
+  timestamp: datetime.datetime = sqlutil.ColumnFactory.MillisecondDatetime()
 
   # Create the one-to-one relationship from batch to details.
   details: "BatchDetails" = sql.orm.relationship(
@@ -275,91 +274,64 @@ class BatchDetails(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 ###############################################################################
 
 
-class ModelCheckpointMeta(
-  Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin
-):
+class Checkpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A string to uniquely identify the given experiment run.
-  run_id: str = run_id_lib.RunId.SqlStringColumn(default=None)
+  run_id: str = run_id_lib.RunId.SqlStringColumn(default=None, index=True)
 
   # The epoch number, >= 1.
-  epoch: int = sql.Column(sql.Integer, nullable=False, index=True)
+  epoch_num: int = sql.Column(sql.Integer, nullable=False, index=True)
 
-  # The batch number across all epochs.
-  global_step: int = sql.Column(sql.Integer, nullable=False)
+  timestamp: datetime.datetime = sqlutil.ColumnFactory.MillisecondDatetime()
 
-  # The validation accuracy of the model.
-  validation_accuracy: float = sql.Column(sql.Float, nullable=False)
-
-  date_added: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), "mysql"),
-    nullable=False,
-    default=labdate.GetUtcMillisecondsNow,
+  data: "CheckpointModelData" = sql.orm.relationship(
+    "CheckpointModelData", uselist=False, cascade="all, delete-orphan",
   )
 
-  model_checkpoint: "ModelCheckpoint" = sql.orm.relationship(
-    "ModelCheckpoint", uselist=False, cascade="all", back_populates="meta"
-  )
-
+  # Unique checkpoint.
   __table_args__ = (
-    sql.UniqueConstraint("run_id", "epoch", name="unique_epoch_checkpoint"),
+    sql.UniqueConstraint("run_id", "epoch_num", name="unique_checkpoint"),
   )
 
   @property
-  def data(self) -> Any:
+  def model_data(self) -> Any:
     # Checkpoints are stored with zlib compression.
-    return pickle.loads(
-      codecs.decode(self.model_checkpoint.binary_data, "zlib")
-    )
-
-  @data.setter
-  def data(self, data) -> None:
-    # Checkpoints are stored with zlib compression.
-    self.model_checkpoint.binary_data = codecs.encode(
-      pickle.dumps(data), "zlib"
-    )
+    return pickle.loads(codecs.decode(self.data.binary_model_data, "zlib"))
 
   @classmethod
   def Create(
-    cls,
-    run_id: str,
-    epoch: int,
-    global_step: int,
-    validation_accuracy: float,
-    data: Any,
+    cls, checkpoint: checkpoints.Checkpoint,
   ):
     """Instantiate a model checkpoint. Use this convenience method rather than
     constructing objects directly to ensure that fields are encoded correctly.
     """
-    checkpoint = ModelCheckpointMeta(
-      run_id=run_id,
-      epoch=epoch,
-      global_step=global_step,
-      validation_accuracy=validation_accuracy,
-      model_checkpoint=ModelCheckpoint(),
+    # Note that best_results is not stored, as we can re-compute it from the
+    # batch logs table.
+    return Checkpoint(
+      run_id=str(checkpoint.run_id),
+      epoch_num=checkpoint.epoch_num,
+      data=CheckpointModelData(
+        binary_data=codecs.encode(pickle.dumps(checkpoint.model_data), "zlib")
+      ),
     )
-    checkpoint.data = data
-    return checkpoint
 
 
-class ModelCheckpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
-  """The sister table of ModelCheckpointMeta, which stores the actual data of
-  a model, as returned by classifier_base.ModelDataToSave().
+class CheckpointModelData(
+  Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin
+):
+  """The sister table of Checkpoint, which stores the actual data of a model,
+  as returned by classifier_base.GetModelData().
   """
 
   id: int = sql.Column(
-    sql.Integer, sql.ForeignKey("model_checkpoint_metas.id"), primary_key=True
+    sql.Integer,
+    sql.ForeignKey("checkpoints.id", onupdate="CASCADE", ondelete="CASCADE"),
+    primary_key=True,
   )
 
-  # The model data. This is stored as a zlib pickled dump of the data returned
-  # by a model's ModelDataToSave() method.
   binary_data: bytes = sql.Column(
     sqlutil.ColumnTypes.LargeBinary(), nullable=False
-  )
-
-  meta: ModelCheckpointMeta = sql.orm.relationship(
-    "ModelCheckpointMeta", back_populates="model_checkpoint"
   )
 
 

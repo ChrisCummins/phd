@@ -2,8 +2,11 @@
 
 TODO: Detailed explanation of the file.
 """
+import enum
 from typing import Any
 from typing import Optional
+
+import sqlalchemy as sql
 
 import build_info
 from deeplearning.ml4pl import run_id as run_id_lib
@@ -21,16 +24,45 @@ from labm8.py import sqlutil
 FLAGS = app.FLAGS
 
 
+class KeepCheckpoints(enum.Enum):
+  NONE = 0
+  ALL = 1
+  LAST_EPOCH = 2
+
+
+class KeepDetailedBatches(enum.Enum):
+  NONE = 0
+  ALL = 1
+  LAST_EPOCH = 2
+
+
+app.DEFINE_enum(
+  "keep_checkpoints",
+  KeepCheckpoints,
+  KeepCheckpoints.ALL,
+  "The type of checkpoints to keep.",
+)
+app.DEFINE_enum(
+  "keep_detailed_batches",
+  KeepDetailedBatches,
+  KeepDetailedBatches.ALL,
+  "The type of detailed batches to keep.",
+)
+
 app.DEFINE_integer(
   "logger_buffer_size_mb",
   32,
-  "The maximum size of the log buffer, in megabytes.",
+  "Tuning parameter. The maximum size of the log buffer, in megabytes.",
 )
 app.DEFINE_integer(
-  "logger_buffer_length", 1024, "The maximum length of the log buffer."
+  "logger_buffer_length",
+  1024,
+  "Tuning parameter. The maximum length of the log buffer.",
 )
 app.DEFINE_integer(
-  "logger_flush_seconds", 10, "The maximum number of seconds between flushes."
+  "logger_flush_seconds",
+  10,
+  "Tuning parameter. The maximum number of seconds between flushes.",
 )
 
 
@@ -94,17 +126,18 @@ class Logger(object):
     data: batch.Data,
     results: batch.Results,
   ):
-    batch = log_database.Batch.Create(
-      run_id=run_id,
-      epoch_type=epoch_type,
-      epoch_num=epoch_num,
-      batch_num=batch_num,
-      timer=timer,
-      data=data,
-      results=results,
-      details=log_database.BatchDetails.Create(data=data, results=results),
+    self._writer.AddOne(
+      log_database.Batch.Create(
+        run_id=run_id,
+        epoch_type=epoch_type,
+        epoch_num=epoch_num,
+        batch_num=batch_num,
+        timer=timer,
+        data=data,
+        results=results,
+        details=log_database.BatchDetails.Create(data=data, results=results),
+      )
     )
-    self._writer.AddOne(batch)
 
   def OnEpochEnd(
     self,
@@ -113,46 +146,55 @@ class Logger(object):
     epoch_num: epoch.Type,
     results: epoch.Results,
   ):
-    pass
+    option = FLAGS.keep_detailed_batches()
+
+    if option == KeepDetailedBatches.NONE:
+      pass
+    elif option == KeepDetailedBatches.ALL:
+      pass
+    elif option == KeepDetailedBatches.LAST_EPOCH:
+
+      def DeleteOldDetailedBatchLogs(session):
+        """Delete old detailed batch logs."""
+        detailed_batches_to_delete = [
+          row.id
+          for row in session.query(log_database.Batch.id).filter(
+            log_database.Batch.run_id == run_id,
+            log_database.Batch.epoch_num != epoch_num,
+          )
+        ]
+        if detailed_batches_to_delete:
+          session.query(log_database.BatchDetails).filter(
+            log_database.BatchDetails.id.in_(detailed_batches_to_delete)
+          ).delete(synchronize_session=False)
+          self.ctx.Log(
+            2,
+            "Deleted %s old batch log details",
+            len(detailed_batches_to_delete),
+          )
+
+      self._writer.AddLambdaOp(DeleteOldDetailedBatchLogs)
 
   #############################################################################
   # Save and restore checkpoints.
   #############################################################################
 
   def Save(self, checkpoint: checkpoints.Checkpoint) -> None:
-    self.ctx.Log(1, "Save")
-    # TODO(github.com/ChrisCummins/ProGraML/issues/24): Port old code:
-    #     with self.log_db.Session(commit=True) as session:
-    #       # Check for an existing model with this state.
-    #       existing = (
-    #         session.query(log_database.ModelCheckpointMeta.id)
-    #         .filter(log_database.ModelCheckpointMeta.run_id == self.run_id)
-    #         .filter(log_database.ModelCheckpointMeta.epoch == self.epoch_num)
-    #         .first()
-    #       )
-    #
-    #       # Delete any existing model checkpoint with this state.
-    #       if existing:
-    #         app.Log(2, "Replacing existing model checkpoint")
-    #         delete = sql.delete(log_database.ModelCheckpoint).where(
-    #           log_database.ModelCheckpoint.id == existing.id
-    #         )
-    #         self.log_db.engine.execute(delete)
-    #         delete = sql.delete(log_database.ModelCheckpointMeta).where(
-    #           log_database.ModelCheckpointMeta.id == existing.id
-    #         )
-    #         self.log_db.engine.execute(delete)
-    #
-    #       # Add the new checkpoint.
-    #       session.add(
-    #         log_database.ModelCheckpointMeta.Create(
-    #           run_id=self.run_id,
-    #           epoch=self.epoch_num,
-    #           global_step=self.global_training_step,
-    #           validation_accuracy=validation_accuracy,
-    #           data=data_to_save,
-    #         )
-    #       )
+    option = FLAGS.keep_checkpoints()
+
+    if option == KeepCheckpoints.NONE:
+      pass
+    elif option == KeepCheckpoints.ALL:
+      self._writer.AddOne(log_database.Checkpoint.Create(checkpoint))
+    elif option == KeepCheckpoints.LAST_EPOCH:
+      self._writer.AddLambdaOp(
+        lambda session: session.query(log_database.Checkpoint)
+        .filter(log_database.Checkpoint.run_id == checkpoint.run_id)
+        .delete()
+      )
+      self._writer.AddOne(log_database.Checkpoint.Create(checkpoint))
+    else:
+      raise NotImplementedError("unreachable")
 
   def Load(
     self, run_id: run_id_lib.RunId, epoch_num: Optional[int] = None

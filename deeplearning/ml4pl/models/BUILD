@@ -146,6 +146,9 @@ py_library(
     srcs = ["log_database.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":batch",
+        ":checkpoints",
+        ":epoch",
         "//deeplearning/ml4pl:run_id",
         "//labm8/py:app",
         "//labm8/py:decorators",

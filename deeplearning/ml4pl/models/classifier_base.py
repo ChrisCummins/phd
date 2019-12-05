@@ -30,7 +30,7 @@ class ClassifierBase(object):
 
   And may optionally wish to implement these additional methods:
     CreateModelData()  # initialize an untrained model.
-    ModelDataToSave()  # get model data to save.
+    GetModelData()     # get model data to save.
     LoadModelData()    # load model data.
   """
 
