@@ -149,6 +149,29 @@ def test_AllColumnNames_invalid_object():
     sqlutil.ColumnNames(NotAModel)
 
 
+def test_Session_re_use():
+  base = declarative.declarative_base()
+
+  class Table(base, sqlutil.TablenameFromClassNameMixin):
+    """A table containing a single 'value' primary key."""
+
+    value = sql.Column(sql.Integer, primary_key=True)
+
+  # Create and populate a test database.
+  db = sqlutil.Database("sqlite://", base)
+  with db.Session(commit=True) as s:
+    s.GetOrAdd(Table, value=42)
+
+  # Test Session pass-thru.
+  with db.Session() as session:
+    with db.Session(session) as session:
+      assert session.query(Table).count() == 1
+
+  # Test Session with default constructed session.
+  with db.Session(session=None) as session:
+    assert session.query(Table).count() == 1
+
+
 def test_Session_GetOrAdd():
   """Test that GetOrAdd() does not create duplicates."""
   base = declarative.declarative_base()
