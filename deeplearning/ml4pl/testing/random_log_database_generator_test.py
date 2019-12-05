@@ -143,6 +143,7 @@ def test_benchmark_CreateRandomGraphTuple(benchmark):
   """Benchmark logs generation."""
 
   def Benchmark():
+    """A microbenchmark that instantiates a new generator."""
     generator = random_log_database_generator.RandomLogDatabaseGenerator()
     generator.CreateRandomRunLogs()
 
