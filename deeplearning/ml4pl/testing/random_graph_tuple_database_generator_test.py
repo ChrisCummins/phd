@@ -100,6 +100,8 @@ def test_PopulateDatahaseithRandomGraphTuples(
 ):
   """Test populating databases."""
   random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
+    db=db,
+    graph_count=graph_count,
     node_x_dimensionality=node_x_dimensionality,
     node_y_dimensionality=node_y_dimensionality,
     graph_x_dimensionality=graph_x_dimensionality,
