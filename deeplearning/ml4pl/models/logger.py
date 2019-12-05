@@ -48,7 +48,13 @@ app.DEFINE_enum(
   KeepDetailedBatches.ALL,
   "The type of detailed batches to keep.",
 )
-
+app.DEFINE_string(
+  "logger_tag",
+  "",
+  "An arbitrary tag which will be stored as a lag in the parameters table. Use "
+  "this to group multiple runs of a model with a meaningful name, e.g. for "
+  "grouping the 'k' run IDs of a k-fold dataset.",
+)
 app.DEFINE_integer(
   "logger_buffer_size_mb",
   32,
