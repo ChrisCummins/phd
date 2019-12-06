@@ -10,6 +10,7 @@ import sqlalchemy as sql
 
 import build_info
 from deeplearning.ml4pl import run_id as run_id_lib
+from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch
 from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import epoch
@@ -112,18 +113,32 @@ class Logger(object):
   # Event callbacks.
   #############################################################################
 
-  def OnStartRun(self, run_id: run_id_lib.RunId) -> None:
+  def OnStartRun(
+    self, run_id: run_id_lib.RunId, graph_db: graph_tuple_database.Database
+  ) -> None:
     """Register the creation of a new run ID.
 
     This records the experimental parameters of a run.
     """
+    # Record the run ID and experimental parameters.
     flags = {k.split(".")[-1]: v for k, v in app.FlagsToDict().items()}
     self._writer.AddMany(
+      # Run ID.
+      [log_database.RunId(run_id=run_id)]
+      +
+      # Flags.
       log_database.Parameter.CreateManyFromDict(
         run_id, log_database.ParameterType.FLAG, flags
       )
-    )
-    self._writer.AddMany(
+      +
+      # Graph database stats.
+      log_database.Parameter.CreateManyFromDict(
+        run_id,
+        log_database.ParameterType.INPUT_GRAPHS_INFO,
+        graph_db.stats_json,
+      )
+      +
+      # Build info.
       log_database.Parameter.CreateManyFromDict(
         run_id,
         log_database.ParameterType.BUILD_INFO,

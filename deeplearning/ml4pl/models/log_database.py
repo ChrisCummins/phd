@@ -79,7 +79,8 @@ class ParameterType(enum.Enum):
   """The parameter type."""
 
   FLAG = 1
-  BUILD_INFO = 2
+  INPUT_GRAPHS_INFO = 2
+  BUILD_INFO = 3
 
 
 class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):

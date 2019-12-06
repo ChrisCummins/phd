@@ -284,7 +284,7 @@ def _RunWithLogger(
       )
       model.Initialize()
 
-  logger.OnStartRun(model.run_id)
+  logger.OnStartRun(model.run_id, graph_db)
 
   if FLAGS.test_only:
     batch_iterator = MakeBatchIterator(
