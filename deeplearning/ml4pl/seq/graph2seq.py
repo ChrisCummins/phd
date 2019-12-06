@@ -11,7 +11,7 @@ from deeplearning.ml4pl.graphs import graph_query
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import (
   control_and_data_flow_graph as cdfg,
 )
-from deeplearning.ml4pl.models.lstm import bytecode2seq
+from deeplearning.ml4pl.seq import ir2seq
 from labm8.py import app
 from labm8.py import labtypes
 
@@ -27,7 +27,7 @@ app.DEFINE_database(
 
 
 class EncoderBase(object):
-  """Base class for performing graph-to-encoded bytecode translation.
+  """Base class for performing graph-to-encoded sequence translation.
 
   This graph exposes two methods for converting graphs to encoded sequences:
 
@@ -51,12 +51,14 @@ class EncoderBase(object):
 
 
 class GraphToBytecodeEncoder(EncoderBase):
-  """Encode graphs to bytecode sequences."""
+  """Encode graphs to bytecode sequences.
+
+  """
 
   def __init__(
     self,
     graph_db: graph_database.Database,
-    bytecode_encoder: bytecode2seq.EncoderBase,
+    bytecode_encoder: ir2seq.EncoderBase,
   ):
     super(GraphToBytecodeEncoder, self).__init__(graph_db)
 
@@ -144,7 +146,7 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
   def __init__(
     self,
     graph_db: graph_database.Database,
-    bytecode_encoder: bytecode2seq.EncoderBase,
+    bytecode_encoder: ir2seq.EncoderBase,
     group_by: str,
   ):
     super(GraphToBytecodeGroupingsEncoder, self).__init__(graph_db)

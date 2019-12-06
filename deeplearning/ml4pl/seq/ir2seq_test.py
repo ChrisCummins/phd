@@ -3,12 +3,11 @@ import pathlib
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs.labelled.devmap import make_devmap_dataset
-from deeplearning.ml4pl.models.lstm import bytecode2seq
+from deeplearning.ml4pl.seq import ir2seq
 from labm8.py import app
 from labm8.py import test
 
@@ -60,11 +59,7 @@ def bytecode_db(
 
 @test.Parametrize(
   "encoder_class",
-  [
-    bytecode2seq.BytecodeEncoder,
-    bytecode2seq.OpenClEncoder,
-    bytecode2seq.Inst2VecEncoder,
-  ],
+  [ir2seq.BytecodeEncoder, ir2seq.OpenClEncoder, ir2seq.Inst2VecEncoder,],
 )
 def test_Encode(bytecode_db: bytecode_database.Database, encoder_class):
   FLAGS.bytecode_db = lambda: bytecode_db

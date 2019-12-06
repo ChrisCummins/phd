@@ -10,10 +10,10 @@ from keras import models
 from deeplearning.ml4pl.graphs.labelled import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
-from deeplearning.ml4pl.models.lstm import bytecode2seq
 from deeplearning.ml4pl.models.lstm import encoded_bytecode_database
-from deeplearning.ml4pl.models.lstm import graph2seq
 from deeplearning.ml4pl.models.lstm import lstm_utils as utils
+from deeplearning.ml4pl.seq import graph2seq
+from deeplearning.ml4pl.seq import ir2seq
 from labm8.py import app
 from labm8.py import prof
 
@@ -76,9 +76,9 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
     # The encoder which performs translation from graphs to encoded sequences.
     if FLAGS.bytecode_encoder == "llvm":
-      bytecode_encoder = bytecode2seq.BytecodeEncoder()
+      bytecode_encoder = ir2seq.BytecodeEncoder()
     elif FLAGS.bytecode_encoder == "inst2vec":
-      bytecode_encoder = bytecode2seq.Inst2VecEncoder()
+      bytecode_encoder = ir2seq.Inst2VecEncoder()
     else:
       raise app.UsageError(f"Unknown encoder '{FLAGS.bytecode_encoder}'")
 

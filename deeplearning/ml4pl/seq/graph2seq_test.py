@@ -3,12 +3,11 @@ import pathlib
 import pickle
 
 import networkx as nx
-import pytest
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.models.lstm import bytecode2seq
-from deeplearning.ml4pl.models.lstm import graph2seq
+from deeplearning.ml4pl.seq import graph2seq
+from deeplearning.ml4pl.seq import ir2seq
 from labm8.py import app
 from labm8.py import test
 
@@ -71,9 +70,7 @@ def test_GraphToBytecodeEncoder_Encode(
   graph_db: graph_database.Database, bytecode_db: bytecode_database.Database
 ):
   FLAGS.bytecode_db = lambda: bytecode_db
-  encoder = graph2seq.GraphToBytecodeEncoder(
-    graph_db, bytecode2seq.BytecodeEncoder()
-  )
+  encoder = graph2seq.GraphToBytecodeEncoder(graph_db, ir2seq.BytecodeEncoder())
   encoded = encoder.Encode([1])
   assert len(encoded) == 1
   assert len(encoded[0])
@@ -89,7 +86,7 @@ def test_GraphToBytecodeGroupingsEncoder_Encode(
   FLAGS.unlabelled_graph_db = lambda: graph_db
 
   encoder = graph2seq.GraphToBytecodeGroupingsEncoder(
-    graph_db, bytecode2seq.BytecodeEncoder(), group_by
+    graph_db, ir2seq.BytecodeEncoder(), group_by
   )
 
   encoded_sequences, segment_ids, node_masks = encoder.Encode([1])

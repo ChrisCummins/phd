@@ -2,7 +2,7 @@
 import json
 
 from deeplearning.ml4pl.bytecode import bytecode_database
-from deeplearning.ml4pl.models.lstm import bytecode2seq
+from deeplearning.ml4pl.seq import ir2seq
 from labm8.py import app
 from labm8.py import humanize
 from labm8.py import jsonutil
@@ -92,7 +92,7 @@ def main():
             f"tokens, vocab size {len(vocab)}"
           )
         ):
-          encoded, vocab = bytecode2seq.Encode(
+          encoded, vocab = ir2seq.Encode(
             [r.bytecode for r in chunk.rows], vocab, language=FLAGS.language
           )
           encoded_lengths.extend([len(x) for x in encoded])
