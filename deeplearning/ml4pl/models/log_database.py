@@ -376,7 +376,7 @@ class Checkpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   # A string to uniquely identify the given experiment run.
   run_id: int = sql.Column(
-    sql.Integer,
+    run_id_lib.RunId.SqlStringColumnType(),
     sql.ForeignKey("run_ids.run_id", onupdate="CASCADE", ondelete="CASCADE"),
     default=None,
     index=True,
