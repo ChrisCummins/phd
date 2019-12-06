@@ -107,10 +107,13 @@ def MakeBatchIterator(
 
   if epoch_type == epoch.Type.TRAIN:
     splits = list(set(graph_db.splits) - set(val_splits) - set(test_splits))
+    limit = FLAGS.max_train_per_epoch
   elif epoch_type == epoch.Type.VAL:
     splits = val_splits
+    limit = FLAGS.max_val_per_epoch
   elif epoch_type == epoch.Type.TEST:
     splits = test_splits
+    limit = FLAGS.max_test_per_epoch
   ctx.Log(
     3, "Using %s graph splits %s", epoch_type.name.lower(), sorted(splits)
   )
@@ -121,7 +124,7 @@ def MakeBatchIterator(
     split_filter = lambda: graph_tuple_database.GraphTuple.split.in_(splits)
 
   graph_reader = graph_database_reader.BufferedGraphReader.CreateFromFlags(
-    filters=[split_filter], ctx=ctx
+    filters=[split_filter], ctx=ctx, limit=limit
   )
 
   return batchs.BatchIterator(
