@@ -162,7 +162,7 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
       run_id=str(run_id),
       type_num=type.value,
       name=str(name),
-      binary_value=value,
+      binary_value=pickle.dumps(value),
     )
 
   @classmethod
