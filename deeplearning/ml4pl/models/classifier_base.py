@@ -6,7 +6,7 @@ from typing import Optional
 
 from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
-from deeplearning.ml4pl.models import batch as batchs
+from deeplearning.ml4pl.models import batch as batches
 from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import logger as logging
@@ -93,7 +93,7 @@ class ClassifierBase(object):
     self,
     graphs: Iterable[graph_tuple_database.GraphTuple],
     ctx: progress.ProgressContext = progress.NullContext,
-  ) -> batchs.Data:
+  ) -> batches.Data:
     """Create a mini-batch of data from an iterator of graphs.
 
     Implementatinos of this method must be thread safe. Multiple threads may
@@ -109,9 +109,9 @@ class ClassifierBase(object):
   def RunBatch(
     self,
     epoch_type: epoch.Type,
-    batch: batchs.Data,
+    batch: batches.Data,
     ctx: progress.ProgressContext = progress.NullContext,
-  ) -> batchs.Results:
+  ) -> batches.Results:
     """Process a mini-batch of data using the model.
 
     Args:
@@ -157,7 +157,7 @@ class ClassifierBase(object):
 
   def BatchIterator(
     self, graphs: Iterable[graph_tuple_database.GraphTuple]
-  ) -> Iterable[batchs.Data]:
+  ) -> Iterable[batches.Data]:
     """Generate model batches from an input graph iterator.
 
     Args:
@@ -176,7 +176,7 @@ class ClassifierBase(object):
   def __call__(
     self,
     epoch_type: epoch.Type,
-    batch_iterator: batchs.BatchIterator,
+    batch_iterator: batches.BatchIterator,
     logger: logging.Logger,
   ) -> epoch.Results:
     """Run the model over the inputs.
@@ -289,7 +289,7 @@ class EpochThread(progress.Progress):
     self,
     model: ClassifierBase,
     epoch_type: epoch.Type,
-    batch_iterator: batchs.BatchIterator,
+    batch_iterator: batches.BatchIterator,
     logger: logging.Logger,
   ):
     """Constructor.
@@ -319,7 +319,7 @@ class EpochThread(progress.Progress):
 
   def Run(self) -> None:
     """Run the epoch worker thread."""
-    rolling_results = batchs.RollingResults()
+    rolling_results = batches.RollingResults()
 
     for i, batch in enumerate(self.batch_iterator.batches):
       self.ctx.i += batch.graph_count
