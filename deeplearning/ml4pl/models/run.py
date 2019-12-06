@@ -14,6 +14,7 @@ from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import logger as logger_lib
+from deeplearning.ml4pl.models import schedules
 from labm8.py import app
 from labm8.py import ppar
 from labm8.py import prof
@@ -32,8 +33,17 @@ app.DEFINE_string(
   "the most recent epoch is used. Model checkpoints are loaded from "
   "the log database.",
 )
-app.DEFINE_string(
-  "test_on", "improvement", "Determine when to run the test set.",
+app.DEFINE_enum(
+  "save_on",
+  schedules.SaveOn,
+  schedules.SaveOn.EVERY_EPOCH,
+  "The type of checkpoints to save.",
+)
+app.DEFINE_enum(
+  "test_on",
+  schedules.TestOn,
+  schedules.TestOn.IMPROVEMENT,
+  "Determine when to run the test set.",
 )
 app.DEFINE_boolean(
   "test_only",
@@ -113,7 +123,7 @@ def MakeBatchIterator(
     limit = FLAGS.max_val_per_epoch
   elif epoch_type == epoch.Type.TEST:
     splits = test_splits
-    limit = FLAGS.max_test_per_epoch
+    limit = None  # Never limit the test set.
   ctx.Log(
     3, "Using %s graph splits %s", epoch_type.name.lower(), sorted(splits)
   )
@@ -135,7 +145,7 @@ def MakeBatchIterator(
   )
 
 
-def _RunEpoch(
+def RunEpoch(
   epoch_name: str,
   model: classifier_base.ClassifierBase,
   batch_iterator: batchs.BatchIterator,
@@ -143,26 +153,29 @@ def _RunEpoch(
   logger: logger_lib.Logger,
   ctx: progress.Progress = progress.NullContext,
 ) -> Tuple[epoch.Results, int]:
-  """
+  """Run a single epoch.
 
   Args:
-    model: A model.
-    graph_db: A graph database.
-    epoch_type: The epoch type to run.
+    epoch_name: The name of the epoch, used to generate the logging output.
+    epoch_type: The type of epoch to run.
+    model: The model to run an epoch on.
+    batch_iterator: An iterator over batches.
+    logger: A logger instance.
     ctx: A progress context.
 
   Returns:
-    An epoch Results instance.
+    The results of the epoch.
   """
 
-  def _EpochLabel(results: epoch.Results):
+  def GetEpochLabel(results: epoch.Results) -> str:
+    """Generate the label for an epoch."""
     return (
       f"{shell.ShellEscapeCodes.BLUE}{model.run_id}{shell.ShellEscapeCodes.END} "
       f"{epoch_name} "
       f"{results.ToFormattedString(model.best_results[epoch_type].results)}"
     )
 
-  with prof.Profile(lambda t: _EpochLabel(results), print_to=ctx.print):
+  with prof.Profile(lambda t: GetEpochLabel(results), print_to=ctx.print):
     results = model(epoch_type, batch_iterator, logger)
 
   improved = model.UpdateBestResults(
@@ -173,7 +186,7 @@ def _RunEpoch(
 
 
 class Train(progress.Progress):
-  """The training job."""
+  """A training job. This implements train/val/test schedule."""
 
   def __init__(
     self,
@@ -181,9 +194,6 @@ class Train(progress.Progress):
     graph_db: graph_tuple_database.Database,
     logger: logger_lib.Logger,
   ):
-    if FLAGS.test_on not in {"none", "improvement", "every"}:
-      raise app.UsageError("Unknown --test_on option")
-
     self.model = model
     self.graph_db = graph_db
     self.logger = logger
@@ -199,6 +209,9 @@ class Train(progress.Progress):
 
   def Run(self) -> epoch.Results:
     """Run the train/val/test loop."""
+    test_on = FLAGS.test_on()
+    save_on = FLAGS.save_on()
+
     # Set later.
     test_results = epoch.Results()
 
@@ -214,30 +227,31 @@ class Train(progress.Progress):
       }
 
       self.model.epoch_num = self.ctx.i
-      train_results, _ = self._RunEpoch(epoch.Type.TRAIN, batch_iterators)
+      train_results, _ = self.RunEpoch(epoch.Type.TRAIN, batch_iterators)
       self.model.UpdateBestResults(
         epoch.Type.TRAIN, self.model.epoch_num, train_results, ctx=self.ctx
       )
 
-      val_results, val_improved = self._RunEpoch(
-        epoch.Type.VAL, batch_iterators
-      )
+      val_results, val_improved = self.RunEpoch(epoch.Type.VAL, batch_iterators)
 
-      if val_improved:
+      if test_on == schedules.TestOn.IMPROVEMENT and val_improved:
+        test_results, _ = self.RunEpoch(epoch.Type.TEST, batch_iterators)
+
+      # Determine whether to make a checkpoint.
+      if save_on == schedules.SaveOn.EVERY_EPOCH or (
+        save_on == schedules.SaveOn.VAL_IMPROVED and val_improved
+      ):
         self.logger.Save(self.model.GetCheckpoint())
 
-        if FLAGS.test_on == "improvement":
-          test_results, _ = self._RunEpoch(epoch.Type.TEST, batch_iterators)
-
-      if FLAGS.test_on == "every":
-        test_results, _ = self._RunEpoch(epoch.Type.TEST, batch_iterators)
+      if test_on == schedules.TestOn.EVERY:
+        test_results, _ = self.RunEpoch(epoch.Type.TEST, batch_iterators)
         self.model.UpdateBestResults(
           epoch.Type.TEST, self.model.epoch_num, train_results, ctx=self.ctx
         )
 
     return test_results
 
-  def _RunEpoch(
+  def RunEpoch(
     self,
     epoch_type: epoch.Type,
     batch_iterators: Dict[epoch.Type, batchs.BatchIterator],
@@ -246,7 +260,7 @@ class Train(progress.Progress):
     epoch_name = (
       f"{epoch_type.name.lower():>5} " f"[{self.ctx.i:3d} / {self.ctx.n:3d}]"
     )
-    return _RunEpoch(
+    return RunEpoch(
       epoch_name=epoch_name,
       model=self.model,
       batch_iterator=batch_iterators[epoch_type],
@@ -293,7 +307,7 @@ def _RunWithLogger(
     batch_iterator = MakeBatchIterator(
       epoch_type=epoch.Type.TEST, model=model, graph_db=graph_db
     )
-    _RunEpoch(
+    RunEpoch(
       epoch_name="test",
       model=model,
       batch_iterator=batch_iterator,
