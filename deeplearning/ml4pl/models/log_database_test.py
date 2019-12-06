@@ -53,7 +53,7 @@ def test_Parameter_CreateManyFromDict(
     assert param.type == log_database.ParameterType.BUILD_INFO
     assert param.name in {"a", "b"}
     assert param.value in {1, "foo"}
-  db_session.add_all(params)
+  db_session.add_all([log_database.RunId(run_id="foo")] + params)
   db_session.commit()
 
 
