@@ -83,9 +83,9 @@ class Logger(object):
   def __init__(
     self,
     db: log_database.Database,
-    max_buffer_size: int,
-    max_buffer_length: int,
-    max_seconds_since_flush: float,
+    max_buffer_size: Optional[int] = None,
+    max_buffer_length: Optional[int] = None,
+    max_seconds_since_flush: Optional[float] = None,
     log_level: int = 2,
     ctx: progress.ProgressContext = progress.NullContext,
   ):
