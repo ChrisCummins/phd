@@ -1,152 +1,233 @@
 """A database of compiler intermediate representation files."""
+import codecs
 import datetime
-import typing
 import enum
+import pickle
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Tuple
 
 import sqlalchemy as sql
-from sqlalchemy.dialects import mysql
-from sqlalchemy.ext import declarative
 
-from deeplearning.ml4pl import ml4pl_pb2
+from deeplearning.ml4pl import run_id as run_id_lib
 from labm8.py import app
-from labm8.py import labdate
+from labm8.py import crypto
+from labm8.py import humanize
 from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 
-Base = declarative.declarative_base()
+Base = sql.ext.declarative.declarative_base()
 
 
 class Meta(Base, sqlutil.TablenameFromClassNameMixin):
   """Key-value database metadata store."""
 
-  key: str = sql.Column(sql.String(64), primary_key=True)
-  pickled_value: str = sql.Column(
+  # Unused integer ID for this row.
+  id: int = sql.Column(sql.Integer, primary_key=True)
+
+  # The run ID that generated this <key,value> pair.
+  run_id: str = run_id_lib.RunId.SqlStringColumn()
+
+  timestamp: datetime.datetime = sqlutil.ColumnFactory.MillisecondDatetime()
+
+  # The <key,value> pair.
+  key: str = sql.Column(sql.String(128), index=True)
+  pickled_value: bytes = sql.Column(
     sqlutil.ColumnTypes.LargeBinary(), nullable=False
-  )
-  date_added: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), "mysql"),
-    nullable=False,
-    default=labdate.GetUtcMillisecondsNow,
   )
 
   @property
-  def value(self) -> typing.Any:
+  def value(self) -> Any:
+    """De-pickle the column value."""
     return pickle.loads(self.pickled_value)
 
   @classmethod
-  def Create(cls, key: str, value: typing.Any):
+  def Create(cls, key: str, value: Any):
+    """Construct a table entry."""
     return Meta(key=key, pickled_value=pickle.dumps(value))
 
 
 class SourceLanguage(enum.Enum):
-  """The valid types for parameters."""
+  """Source languages."""
 
   C = 1
   CPP = 2
   OPENCL = 3
   SWIFT = 4
   HASKELL = 5
+  FORTRAN = 6
 
 
-class IrLanguage(enum.Enum):
+class IrType(enum.Enum):
+  """Intermediate representation types."""
 
-  LLVM_6_0 = 1
+  LLVM_3_5 = 1
+  LLVM_6_0 = 2
 
 
-class IntermediateRepresentationFile(
+class IntermediateRepresentation(
   Base, sqlutil.TablenameFromCamelCapsClassNameMixin
 ):
   """A table of compiler intermediate representation files."""
-  id: int = sql.Column(sql.Integer, primary_key=True)
 
-  # The following properties uniquely identify an IR file:
+  id: int = sql.Column(sql.Integer, primary_key=True)
 
   # The name of the source of the intermediate representation.
   source: str = sql.Column(sql.String(256), nullable=False, index=True)
+
   # The relative path of the compiler intermediate representation file.
-  relpath: str = sql.Column(sql.String(256), nullable=False)
-  # The name of the language.
-  source_language: str = sql.Column(SourceLanguage, nullable=False, index=True)
-  ir_language: str = sql.Column(IrLanguage, nullable=False, index=True)
+  relpath: str = sql.Column(sql.String(512), nullable=False)
 
-  compiler_arg_group_id: int = sql.Column(sql.Integer, sql.ForeignKey("compiler_args.arg_group_id"), nullable=True)
+  # The source language.
+  source_language: SourceLanguage = sql.Column(
+    sql.Enum(SourceLanguage), nullable=False, index=True
+  )
 
-  # End of unique IR file attributes.
+  # The intermediate representation type.
+  type: IrType = sql.Column(sql.Enum(IrType), nullable=False, index=True)
 
-  char_count: int = sql.Column(sql.Integer, nullable=False)
-  line_count: int = sql.Column(sql.Integer, nullable=False)
+  # The compiler arguments used to generate the intermediate representation.
+  cflags_sha1: str = sql.Column(sql.String(40), nullable=False)
+  cflags: str = sql.Column(sql.String(4096), nullable=False)
 
-  contents_id: str = sql.Column(sql.Integer, nullable=True)
-  error_id: str = sql.Column(sql.Integer, nullable=True)
+  # A marker to indicate whether compilation of the intermediate representation
+  # succeeded.
+  compilation_succeeded: bool = sql.Column(sql.Boolean, nullable=False)
 
-  date_added: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), "mysql"),
-    nullable=False,
-    default=labdate.GetUtcMillisecondsNow,
+  # The size of the
+  char_count: int = sql.Column(sql.Integer, nullable=True)
+  line_count: int = sql.Column(sql.Integer, nullable=True)
+
+  # The intermediate representation is stored as a binary zlib-compressed blob.
+  ir_sha1: str = sql.Column(sql.String(40), nullable=False, index=True)
+  # The size of the binary IR blob.
+  binary_ir_size: int = sql.Column(sql.Integer, nullable=False)
+  binary_ir: bytes = sql.Column(
+    sqlutil.ColumnTypes.LargeBinary(), nullable=False
   )
 
   @property
-  def contents_sha1(self):
-    return self.contents.sha1
+  def ir(self) -> Any:
+    """Return the intermediate representation."""
+    return pickle.loads(codecs.decode(self.details.binary_true_y, "zlib"))
+
+  timestamp: datetime.datetime = sqlutil.ColumnFactory.MillisecondDatetime()
 
   @property
-  def error_sha1(self):
-    return self.error.sha1
-
-  @property
-  def compiler_args_as_string(self):
-    return ' '.join([row.arg for row in self.compiler_args])
-
-  compiler_args: CompilerArg = sql.orm.relationship(
-    "ModelCheckpointMeta", cascade="all, delete-orphan"
-  )
+  def compiler_args(self) -> str:
+    """Get the compiler args as a string."""
+    return self.compiler_args_row.string
 
   __table_args__ = (
-    sql.UniqueConstraint("source_language", "ir_language", "source", "relpath",
-                         compiler_arg_group_id, name="unique_ir"),
+    sql.UniqueConstraint(
+      "source",
+      "relpath",
+      "source_language",
+      "type",
+      "cflags_sha1",
+      name="unique_ir",
+    ),
   )
 
   @classmethod
-  def Create(cls, proto: programl_pb2.IntermediateRepresentationFile) -> 'IntermediateRepresentationFile':
-    """Return a dictionary of instance constructor args from proto."""
-    return {
-      "source_name": proto.source_name,
-      "relpath": proto.relpath,
-      "language": proto.lang,
-      "cflags": proto.cflags,
-      "charcount": len(proto.bytecode),
-      "linecount": len(proto.bytecode.split("\n")),
-      "bytecode": proto.bytecode,
-      "clang_returncode": proto.clang_returncode,
-      "error_message": proto.error_message,
-    }
+  def CreateEmpty(
+    cls,
+    source: str,
+    relpath: str,
+    source_language: SourceLanguage,
+    type: IrType,
+    cflags: str,
+  ) -> "IntermediateRepresentation":
+    """Construct an "empty" intermediate representation, i.e. one where
+    compilation failed.
+
+    Args:
+      source: The soure name.
+      relpath: The relpath of the file.
+      source_language: The source language.
+      type: The IR type.
+      cflags: The compilation flags.
+
+    Returns:
+      An IntermediateRepresentation instance.
+    """
+    return cls(
+      source=source,
+      relpath=relpath,
+      source_language=source_language,
+      type=type,
+      cflags_sha1=crypto.sha1_str(cflags),
+      cflags=cflags,
+      compilation_succeeded=False,
+      char_count=0,
+      line_count=0,
+      ir_sha1="",
+      binary_ir_size=0,
+      binary_ir=codecs.encode(pickle.dumps(""), "zlib"),
+    )
+
+  @classmethod
+  def CreateFromText(
+    cls,
+    source: str,
+    relpath: str,
+    source_language: SourceLanguage,
+    type: IrType,
+    cflags: str,
+    text: str,
+  ) -> "IntermediateRepresentation":
+    """Construct from textual intermediate representation.
+
+    Args:
+      source: The soure name.
+      relpath: The relpath of the file.
+      source_language: The source language.
+      type: The IR type.
+      cflags: The compilation flags.
+      text: The textual IR.
+
+    Returns:
+      An IntermediateRepresentation instance.
+    """
+    if len(source) > 256:
+      raise TypeError("source column is too long")
+    if len(relpath) > 512:
+      raise TypeError("relpath column is too long")
+    if len(cflags) > 4096:
+      raise TypeError("cflags column is too long")
+    binary_ir = codecs.encode(pickle.dumps(text), "zlib")
+    return cls(
+      source=source,
+      relpath=relpath,
+      source_language=source_language,
+      type=type,
+      cflags_sha1=crypto.sha1_str(cflags),
+      cflags=cflags,
+      compilation_succeeded=True,
+      char_count=len(text),
+      line_count=len(text),
+      ir_sha1=crypto.sha1(binary_ir),
+      binary_ir_size=len(binary_ir),
+      binary_ir=binary_ir,
+    )
 
 
+# A registry of database statics, where each entry is a <name, property> tuple.
+database_statistics_registry: List[Tuple[str, Callable[["Database"], Any]]] = []
 
-class IntermediateRepresentationFileContents(
-    Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
-  id: int = sql.Column(sql.Integer, sql.ForeignKey("intermediate_representation_files.id") primary_key=True)
 
-  contents: str = sql.Column(
-    sqlutil.ColumnTypes.Un  # TODO(github.com/ChrisCummins/ProGraML/issues/6): Implement!
-    nullable=False,
-  )
+def database_statistic(func):
+  """A decorator to mark a method on a Database as a database static.
 
-class IntermediateRepresentationFileError(
-    Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
-  id: int = sql.Column(sql.Integer, sql.ForeignKey("intermediate_representation_files.id") primary_key=True)
-
-  error: str = sql.Column(
-    sqlutil.ColumnTypes.Un  # TODO(github.com/ChrisCummins/ProGraML/issues/6): Implement!
-    nullable=False,
-  )
-
-class CompilerArg(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
-  id: int = sql.Column(sql.Integer, primary_key=True)
-
-  arg_group_id: int = sql.Column(sql.Integer, index=True)
-  arg: str = sql.Column(sql.String(1024), nullable=False)
+  Database statistics can be accessed using Database.stats_json property to
+  retrieve a <name, vale> dictionary.
+  """
+  global database_statistics_registry
+  database_statistics_registry.append((func.__name__, func))
+  return property(func)
 
 
 class Database(sqlutil.Database):
@@ -154,3 +235,85 @@ class Database(sqlutil.Database):
 
   def __init__(self, url: str, must_exist: bool = False):
     super(Database, self).__init__(url, Base, must_exist=must_exist)
+    self._db_stats = None
+
+  @database_statistic
+  def ir_count(self) -> int:
+    """The number of non-empty IRs in the database."""
+    return self.db_stats.ir_count
+
+  @database_statistic
+  def unique_ir_count(self) -> int:
+    """The number of unique non-empty IRs in the database."""
+    return self.db_stats.unique_ir_count
+
+  @database_statistic
+  def ir_data_size(self) -> int:
+    """The sum of non-empty IR binary data sizes."""
+    return self.db_stats.ir_data_size
+
+  @database_statistic
+  def char_count(self) -> int:
+    """The sum of non-empty IR char counts."""
+    return self.db_stats.char_count
+
+  @database_statistic
+  def line_count(self) -> int:
+    """The sum of non-empty IR line counts."""
+    return self.db_stats.line_count
+
+  def RefreshStats(self):
+    """Compute the database stats for access via the instance properties.
+
+    Raises:
+      ValueError: If the database contains invalid entries, e.g. inconsistent
+        vector dimensionalities.
+    """
+    with self.ctx.Profile(
+      2,
+      lambda t: (
+        "Computed stats over "
+        f"{humanize.BinaryPrefix(stats.ir_data_size, 'B')} database "
+        f"({humanize.Plural(stats.ir_count, 'intermediate representation')})"
+      ),
+    ), self.Session() as session:
+      query = session.query(
+        sql.func.count(IntermediateRepresentation.id).label("ir_count"),
+        sql.func.count(
+          sql.func.distinct(IntermediateRepresentation.ir_sha1)
+        ).label("unique_ir_count"),
+        sql.func.sum(IntermediateRepresentation.binary_ir_size).label(
+          "ir_data_size"
+        ),
+        sql.func.sum(IntermediateRepresentation.char_count).label("char_count"),
+        sql.func.sum(IntermediateRepresentation.line_count).label("line_count"),
+      )
+
+      # Ignore "empty" IRs.
+      query = query.filter(
+        IntermediateRepresentation.compilation_succeeded == True
+      )
+
+      # Compute the stats.
+      stats = query.one()
+
+      self._db_stats = stats
+
+  @property
+  def db_stats(self):
+    """Fetch aggregate database stats, or compute them if not set."""
+    if self._db_stats is None:
+      self.RefreshStats()
+    return self._db_stats
+
+  @property
+  def stats_json(self) -> Dict[str, Any]:
+    """Fetch the database statics as a JSON dictionary."""
+    return {
+      name: function(self) for name, function in database_statistics_registry
+    }
+
+
+app.DEFINE_database(
+  "ir_db", Database, None, "A database of intermediate representations."
+)

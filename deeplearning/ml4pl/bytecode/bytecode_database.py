@@ -55,12 +55,6 @@ class LlvmBytecode(
     sql.UniqueConstraint("source_name", "relpath", name="unique_bytecode"),
   )
 
-  date_added: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), "mysql"),
-    nullable=False,
-    default=labdate.GetUtcMillisecondsNow,
-  )
-
   @classmethod
   def FromProto(cls, proto: proto_t) -> typing.Dict[str, typing.Any]:
     """Return a dictionary of instance constructor args from proto."""

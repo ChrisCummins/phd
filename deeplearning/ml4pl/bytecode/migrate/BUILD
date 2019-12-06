@@ -30,3 +30,18 @@ py_binary(
         "//labm8/py:app",
     ],
 )
+
+py_binary(
+    name = "bytecode_db_to_ir_db",
+    srcs = ["bytecode_db_to_ir_db.py"],
+    deps = [
+        "//deeplearning/ml4pl/bytecode:bytecode_database",
+        "//deeplearning/ml4pl/ir:ir_database",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:ppar",
+        "//labm8/py:progress",
+        "//labm8/py:sqlutil",
+        "//third_party/py/sqlalchemy",
+    ],
+)
