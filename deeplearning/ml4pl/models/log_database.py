@@ -23,29 +23,15 @@ from deeplearning.ml4pl.models import batch as batches
 from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import epoch
 from labm8.py import app
-from labm8.py import google_sheets
-from labm8.py import humanize
 from labm8.py import jsonutil
 from labm8.py import pdutil
 from labm8.py import prof
 from labm8.py import sqlutil
-from labm8.py.internal import flags_parsers
+
 
 FLAGS = app.FLAGS
 # Note that log_db flag is declared at the bottom of this file, after Database
 # class is defined.
-
-app.DEFINE_output_path("log_outdir", None, "The database to write logs to.")
-app.DEFINE_list(
-  "log_run_id",
-  [],
-  "A list of run IDs to export. If not set, all runs are exported.",
-)
-app.DEFINE_string(
-  "worksheet",
-  None,
-  "If set, this is the name of Google Sheets worksheet to export to.",
-)
 
 Base = declarative.declarative_base()
 
@@ -735,26 +721,15 @@ app.DEFINE_database(
 )
 
 
+def DatetimeHandler(object):
+  if isinstance(object, datetime.datetime):
+    return str(object)
+
+
 def Main():
   """Main entry point."""
   log_db = FLAGS.log_db()
-
-  # Export tables.
-  if FLAGS.log_outdir:
-    FLAGS.log_outdir.mkdir(exist_ok=True, parents=True)
-    for name, df in log_db.GetTables(FLAGS.log_run_id):
-      outpath = FLAGS.log_outdir / f"{name}.csv"
-      print(outpath)
-      df.to_csv(outpath, index=False)
-  elif FLAGS.worksheet:
-    with prof.Profile("Created google worksheet"):
-      g = google_sheets.GoogleSheets.FromFlagsOrDie()
-      s = g.GetOrCreateSpreadsheet(FLAGS.worksheet)
-      for name, df in log_db.GetTables(FLAGS.log_run_id):
-        ws = g.GetOrCreateWorksheet(s, name)
-        g.ExportDataFrame(ws, df, index=False)
-  else:
-    print(jsonutil.format_json(log_db.stats_json))
+  print(jsonutil.format_json(log_db.stats_json, default=DatetimeHandler))
 
 
 if __name__ == "__main__":

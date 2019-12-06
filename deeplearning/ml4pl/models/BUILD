@@ -107,6 +107,20 @@ py_library(
     ],
 )
 
+py_binary(
+    name = "export_logs",
+    srcs = ["export_logs.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":log_database",
+        ":logger",
+        "//labm8/py:app",
+        "//labm8/py:google_sheets",
+        "//labm8/py:pdutil",
+        "//third_party/py/pandas",
+    ],
+)
+
 py_library(
     name = "log_analysis",
     srcs = ["log_analysis.py"],
