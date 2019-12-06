@@ -32,9 +32,28 @@ def generator() -> random_log_database_generator.RandomLogDatabaseGenerator:
   return random_log_database_generator.RandomLogDatabaseGenerator()
 
 
-def test_add_a_run_id(db_session: log_database.Database.SessionType):
+def test_RunId_add_one(db_session: log_database.Database.SessionType):
   """Test adding a run ID to the database."""
   db_session.add(log_database.RunId(run_id="foo"))
+  db_session.commit()
+
+
+def test_Parameter_CreateManyFromDict(
+  db_session: log_database.Database.SessionType,
+):
+  params = log_database.Parameter.CreateManyFromDict(
+    run_id="foo",
+    type=log_database.ParameterType.BUILD_INFO,
+    parameters={"a": 1, "b": "foo",},
+  )
+
+  assert len(params) == 2
+  for param in params:
+    assert param.run_id == "foo"
+    assert param.type == log_database.ParameterType.BUILD_INFO
+    assert param.name in {"a", "b"}
+    assert param.value in {1, "foo"}
+  db_session.add_all(params)
   db_session.commit()
 
 
@@ -61,16 +80,17 @@ def two_run_id_session(
 
 
 def test_Batch_cascaded_delete(two_run_id_session: DatabaseSessionWithRunLogs):
+  """Test cascaded delete of detailed batch logs."""
   session = two_run_id_session.session
 
   # Sanity check that there are detailed batches.
-  detailed_a_batch_count = (
+  assert (
     session.query(sql.func.count(log_database.Batch.id))
     .join(log_database.BatchDetails)
     .filter(log_database.Batch.run_id == str(two_run_id_session.a.run_id))
     .scalar()
+    >= 1
   )
-  assert detailed_a_batch_count
 
   session.query(log_database.Batch).filter(
     log_database.Batch.run_id == str(two_run_id_session.a.run_id)
@@ -91,7 +111,22 @@ def test_Batch_cascaded_delete(two_run_id_session: DatabaseSessionWithRunLogs):
 
 
 def test_RunId_cascaded_delete(two_run_id_session: DatabaseSessionWithRunLogs):
+  """Test the deleting the RunId deletes all other entries."""
   session = two_run_id_session.session
+
+  # Sanity check that there are params and batches.
+  assert (
+    session.query(sql.func.count(log_database.Parameter.id))
+    .filter(log_database.Parameter.run_id == str(two_run_id_session.a.run_id))
+    .scalar()
+    >= 1
+  )
+  assert (
+    session.query(sql.func.count(log_database.Batch.id))
+    .filter(log_database.Batch.run_id == str(two_run_id_session.a.run_id))
+    .scalar()
+    >= 1
+  )
 
   session.query(log_database.RunId).filter(
     log_database.RunId.run_id == str(two_run_id_session.a.run_id.run_id)

@@ -1,4 +1,4 @@
-"""Database backend for model logs."""
+"""This module provides a database backend for storing model logs."""
 import codecs
 import datetime
 import enum
@@ -41,7 +41,10 @@ Base = declarative.declarative_base()
 
 
 class RunId(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
-  """A run ID."""
+  """A run ID. This single-column table enables one-to-many foreign key
+  relationships to {parameters,batches,checkpoints}. Deleting a run ID then
+  cascades to all other tables.
+  """
 
   run_id: str = sql.Column(
     run_id_lib.RunId.SqlStringColumnType(),
@@ -50,7 +53,7 @@ class RunId(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     nullable=False,
   )
 
-  # Relationships to data.
+  # Relationships to logs.
   parameters: "Parameter" = sql.orm.relationship(
     "Parameter",
     back_populates="run_id_relationship",
@@ -78,15 +81,24 @@ class RunId(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
 
 class ParameterType(enum.Enum):
-  """The parameter type."""
+  """The type of a parameter."""
 
+  # Parameters that are the values of command line flags. E.g. a parameter of
+  # this type with value 'foo' is the value of the '--foo' flag.
   FLAG = 1
+  # Parameters that are statistics describing the graph database that was used
+  # to train/val/test a model.
   INPUT_GRAPHS_INFO = 2
+  # Build information such as the current repo commit, hostname, etc.
   BUILD_INFO = 3
 
 
 class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
-  """A description of an experimental parameter."""
+  """An experimental parameter. These describe the environment and configuration
+  options used to run a model.
+
+  Don't instantiate these objects directly, use Parameter.Create().
+  """
 
   id: int = sql.Column(sql.Integer, primary_key=True)
 
@@ -109,7 +121,8 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The name of the parameter.
   name: str = sql.Column(sql.String(128), nullable=False, index=True)
 
-  # The value for the parameter.
+  # The value for the parameter. These are stored as pickled bytes to preserve
+  # the type.
   binary_value: bytes = sql.Column(
     sqlutil.ColumnTypes.LargeBinary(), nullable=False
   )
@@ -118,10 +131,12 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   @property
   def type(self) -> ParameterType:
+    """Returns the ParameterType enum value."""
     return ParameterType(self.type_num)
 
   @property
   def value(self) -> Any:
+    """Returns the pickled value."""
     return pickle.loads(self.binary_value)
 
   __table_args__ = (
@@ -132,17 +147,22 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   def Create(
     cls, run_id: run_id_lib.RunId, type: ParameterType, name: str, value: Any
   ):
-    if isinstance(value, flags_parsers.DatabaseFlag):
-      binary_value = pickle.dumps(value.url)
-    elif isinstance(value, flags_parsers.EnumFlag):
-      binary_value = pickle.dumps(value.name)
-    else:
-      binary_value = pickle.dumps(value)
+    """Construct an experimental parameter.
+
+    Args:
+      run_id: The run ID.
+      type: The parameter type.
+      name: The name of the parameter.
+      value: The value to of the parameter.
+
+    Returns:
+      A Parameter instance.
+    """
     return cls(
       run_id=str(run_id),
       type_num=type.value,
       name=str(name),
-      binary_value=binary_value,
+      binary_value=value,
     )
 
   @classmethod
@@ -152,15 +172,25 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     type: ParameterType,
     parameters: Dict[str, Any],
   ):
+    """Construct a list of parameters from a <name,value> dictionary.
+
+    Args:
+      run_id: The run ID.
+      type: The parameter type.
+      parameters: A <name, value> dictionary.
+
+    Returns:
+      A list of parameters.
+    """
     return [
       Parameter.Create(run_id=run_id, type=type, name=name, value=value,)
       for name, value in parameters.items()
     ]
 
 
-# ###############################################################################
-# # Batches.
-# ###############################################################################
+###############################################################################
+# Batches.
+###############################################################################
 
 
 class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
@@ -485,38 +515,55 @@ class Database(sqlutil.Database):
   ############################################################################
 
   @database_statistic
+  def last_batch(self) -> Optional[datetime.datetime]:
+    """Returns the timestamp of the most recent batch."""
+    with self.Session() as session:
+      return (
+        session.query(Batch.timestamp)
+        .order_by(Batch.timestamp.desc())
+        .limit(1)
+        .scalar()
+      )
+
+  @database_statistic
   def run_count(self) -> int:
+    """Returns the number of unique runs in the database."""
     with self.Session() as session:
       return session.query(sql.func.count(RunId.run_id)).scalar()
 
   @database_statistic
   def parameters_count(self) -> int:
+    """Returns the number of parameters in the database."""
     with self.Session() as session:
       return session.query(sql.func.count(Parameter.id)).scalar()
 
   @database_statistic
   def batch_count(self) -> int:
+    """Returns the number of batches in the database."""
     with self.Session() as session:
       return session.query(sql.func.count(Batch.id)).scalar()
 
   @database_statistic
   def batch_details_count(self) -> int:
+    """Returns the number of batch details in the database."""
     with self.Session() as session:
       return session.query(sql.func.count(BatchDetails.id)).scalar()
 
   @database_statistic
   def checkpoint_count(self) -> int:
+    """Returns the number of checkpoints in the database."""
     with self.Session() as session:
       return session.query(sql.func.count(Checkpoint.id)).scalar()
 
   @database_statistic
   def run_ids(self) -> List[run_id_lib.RunId]:
+    """Returns the list of run IDs."""
     with self.Session() as session:
       return [row.run_id for row in session.query(RunId.run_id)]
 
   @property
   def stats_json(self) -> Dict[str, Any]:
-    """Fetch the database statics as a JSON dictionary."""
+    """Returns the database statics as a JSON dictionary."""
     return {
       name: function(self) for name, function in database_statistics_registry
     }
@@ -525,13 +572,21 @@ class Database(sqlutil.Database):
   # Export.
   ############################################################################
 
-  def GetParametersType(
+  def GetParametersJson(
     self,
     type: ParameterType,
     name: str,
     session: sqlutil.Database.SessionType = None,
   ) -> Dict[str, Any]:
-    """Get a table of parameter values.
+    """Returns a <run_id, value> dictionary of a parameter value.
+
+    Args:
+      type: The type of parameter.
+      name: The name of the parameter.
+      session: An existing session object to re-use.
+
+    Returns:
+      A <run_id, value> dictionary of all values for this parameter.
     """
     with self.Session(session=session):
       count = (
@@ -541,10 +596,6 @@ class Database(sqlutil.Database):
         )
         .scalar()
       )
-      if not count:
-        raise ValueError(
-          f"No values found for {type.name.lower()} name '{name}'"
-        )
       return {
         row.run_id: pickle.loads(row.binary_value)
         for row in session.query(
@@ -556,22 +607,22 @@ class Database(sqlutil.Database):
 
   def GetTables(
     self,
-    run_id: List[run_id_lib.RunId] = [],
-    extra_flags: List[str] = [],
-    session: sqlutil.Database.SessionType = None,
+    run_id: List[run_id_lib.RunId] = None,
+    extra_flags: List[str] = None,
+    session: Optional[sqlutil.Database.SessionType] = None,
   ) -> Iterable[Tuple[str, pd.DataFrame]]:
     """Compute tables of database statisics.
 
     Args:
       run_id: An optional list of run IDs to generate the tables for. If not
         provided, all runs are used.
-      extra_flags: A list of optional flag names to dump.
+      extra_flags: A list of additional flag parameters to dump.
       session: An optional session to re-use.
 
     Returns:
       An iterator over <name, dataframe> tuples.
     """
-    extra_flag_names = ["graph_db"] + extra_flags
+    extra_flag_names = ["graph_db"] + (extra_flags or [])
 
     with self.Session(session=session) as session:
 
@@ -581,7 +632,7 @@ class Database(sqlutil.Database):
 
       # A map from parameter name to values.
       extra_flags: Dict[str, Dict[str, Any]] = {
-        flag: self.GetParametersType(ParameterType.FLAG, flag, session=session)
+        flag: self.GetParametersJson(ParameterType.FLAG, flag, session=session)
         for flag in extra_flag_names
       }
 
