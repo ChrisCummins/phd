@@ -6,6 +6,7 @@ import pickle
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import Iterable
 from typing import List
 from typing import NamedTuple
 from typing import Optional
@@ -13,6 +14,7 @@ from typing import Tuple
 from typing import Union
 
 import numpy as np
+import pandas as pd
 import sqlalchemy as sql
 from sqlalchemy.ext import declarative
 
@@ -21,15 +23,29 @@ from deeplearning.ml4pl.models import batch as batches
 from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import epoch
 from labm8.py import app
+from labm8.py import google_sheets
 from labm8.py import humanize
 from labm8.py import jsonutil
 from labm8.py import pdutil
 from labm8.py import prof
 from labm8.py import sqlutil
+from labm8.py.internal import flags_parsers
 
 FLAGS = app.FLAGS
 # Note that log_db flag is declared at the bottom of this file, after Database
 # class is defined.
+
+app.DEFINE_output_path("log_outdir", None, "The database to write logs to.")
+app.DEFINE_list(
+  "log_run_id",
+  [],
+  "A list of run IDs to export. If not set, all runs are exported.",
+)
+app.DEFINE_string(
+  "worksheet",
+  None,
+  "If set, this is the name of Google Sheets worksheet to export to.",
+)
 
 Base = declarative.declarative_base()
 
@@ -118,17 +134,9 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   def type(self) -> ParameterType:
     return ParameterType(self.type_num)
 
-  @type.setter
-  def type(self, value: ParameterType) -> None:
-    self.type_num = value.value
-
   @property
   def value(self) -> Any:
     return pickle.loads(self.binary_value)
-
-  @value.setter
-  def value(self, data: Any) -> None:
-    self.binary_value = pickle.dumps(data)
 
   __table_args__ = (
     sql.UniqueConstraint("run_id", "type_num", "name", name="unique_parameter"),
@@ -138,11 +146,17 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   def Create(
     cls, run_id: run_id_lib.RunId, type: ParameterType, name: str, value: Any
   ):
+    if isinstance(value, flags_parsers.DatabaseFlag):
+      binary_value = pickle.dumps(value.url)
+    elif isinstance(value, flags_parsers.EnumFlag):
+      binary_value = pickle.dumps(value.name)
+    else:
+      binary_value = pickle.dumps(value)
     return cls(
       run_id=str(run_id),
       type_num=type.value,
       name=str(name),
-      binary_value=pickle.dumps(value),
+      binary_value=binary_value,
     )
 
   @classmethod
@@ -161,8 +175,8 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 # ###############################################################################
 # # Batches.
 # ###############################################################################
-#
-#
+
+
 class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   """A description running a batch of graphs through a model."""
 
@@ -221,17 +235,10 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   @property
   def elapsed_time(self) -> float:
-    return self.elapsed_time_ms * 1000
+    return self.elapsed_time_ms / 1000
 
   @property
   def graphs_per_second(self) -> float:
-    if self.elapsed_time:
-      return self.graph_count / self.elapsed_time
-    else:
-      return 0
-
-  @property
-  def nodes_per_second(self) -> float:
     if self.elapsed_time:
       return self.graph_count / self.elapsed_time
     else:
@@ -461,16 +468,6 @@ class Database(sqlutil.Database):
   def __init__(self, url: str, must_exist: bool = False):
     super(Database, self).__init__(url, Base, must_exist=must_exist)
 
-  @database_statistic
-  def run_ids(self):
-    with self.Session() as session:
-      return [
-        run_id_lib.RunId.FromString(row.run_id)
-        for row in session.query(
-          sql.func.distinct(Parameter.run_id).label("run_id")
-        )
-      ]
-
   def GetRunLogs(
     self,
     run_id=run_id_lib.RunId,
@@ -497,60 +494,240 @@ class Database(sqlutil.Database):
         checkpoints=checkpoints.all(),
       )
 
-  def BatchLogsToDataFrame(self, run_id: str, per_global_step: bool = False):
-    """Return a table of log stats for the given run_id.
+  ############################################################################
+  # Properties.
+  ############################################################################
+
+  @database_statistic
+  def run_count(self) -> int:
+    with self.Session() as session:
+      return session.query(sql.func.count(RunId.run_id)).scalar()
+
+  @database_statistic
+  def parameters_count(self) -> int:
+    with self.Session() as session:
+      return session.query(sql.func.count(Parameter.id)).scalar()
+
+  @database_statistic
+  def batch_count(self) -> int:
+    with self.Session() as session:
+      return session.query(sql.func.count(Batch.id)).scalar()
+
+  @database_statistic
+  def batch_details_count(self) -> int:
+    with self.Session() as session:
+      return session.query(sql.func.count(BatchDetails.id)).scalar()
+
+  @database_statistic
+  def checkpoint_count(self) -> int:
+    with self.Session() as session:
+      return session.query(sql.func.count(Checkpoint.id)).scalar()
+
+  @database_statistic
+  def run_ids(self) -> List[run_id_lib.RunId]:
+    with self.Session() as session:
+      return [row.run_id for row in session.query(RunId.run_id)]
+
+  @property
+  def stats_json(self) -> Dict[str, Any]:
+    """Fetch the database statics as a JSON dictionary."""
+    return {
+      name: function(self) for name, function in database_statistics_registry
+    }
+
+  ############################################################################
+  # Export.
+  ############################################################################
+
+  def GetParametersType(
+    self,
+    type: ParameterType,
+    name: str,
+    session: sqlutil.Database.SessionType = None,
+  ) -> Dict[str, Any]:
+    """Get a table of parameter values.
+    """
+    with self.Session(session=session):
+      count = (
+        session.query(sql.func.count(Parameter.run_id))
+        .filter(
+          Parameter.type_num == ParameterType.FLAG.value, Parameter.name == name
+        )
+        .scalar()
+      )
+      if not count:
+        raise ValueError(
+          f"No values found for {type.name.lower()} name '{name}'"
+        )
+      return {
+        row.run_id: pickle.loads(row.binary_value)
+        for row in session.query(
+          Parameter.run_id, Parameter.binary_value
+        ).filter(
+          Parameter.type_num == ParameterType.FLAG.value, Parameter.name == name
+        )
+      }
+
+  def GetTables(
+    self,
+    run_id: List[run_id_lib.RunId] = [],
+    extra_flags: List[str] = [],
+    session: sqlutil.Database.SessionType = None,
+  ) -> Iterable[Tuple[str, pd.DataFrame]]:
+    """Compute tables of database statisics.
 
     Args:
-      run_id: The run ID to return the logs for.
-      per_global_step: If true, return the raw stats for each global step. Else,
-        aggregate stats across each epoch.
+      run_id: An optional list of run IDs to generate the tables for. If not
+        provided, all runs are used.
+      extra_flags: A list of optional flag names to dump.
+      session: An optional session to re-use.
 
     Returns:
-      A pandas dataframe.
+      An iterator over <name, dataframe> tuples.
     """
-    with self.Session() as session:
-      q = session.query(
-        BatchLogMeta.epoch,
-        BatchLogMeta.type,
-        sql.func.count(BatchLogMeta.epoch).label("num_batches"),
-        sql.func.min(BatchLogMeta.date_added).label("timestamp"),
-        sql.func.min(BatchLogMeta.global_step).label("global_step"),
-        sql.func.avg(BatchLogMeta.loss).label("loss"),
-        sql.func.avg(BatchLogMeta.iteration_count).label("iteration_count"),
-        sql.func.avg(BatchLogMeta.model_converged).label("converged"),
-        sql.func.avg(BatchLogMeta.accuracy * 100).label("accuracy"),
-        sql.func.avg(BatchLogMeta.precision).label("precision"),
-        sql.func.avg(BatchLogMeta.recall).label("recall"),
-        sql.func.avg(BatchLogMeta.f1).label("f1"),
-        sql.func.sum(BatchLogMeta.elapsed_time_seconds).label(
-          "elapsed_time_seconds"
-        ),
-        sql.sql.expression.cast(
-          sql.func.sum(BatchLogMeta.graph_count), sql.Integer
-        ).label("graph_count"),
-        sql.sql.expression.cast(
-          sql.func.sum(BatchLogMeta.node_count), sql.Integer
-        ).label("node_count"),
+    extra_flag_names = ["graph_db"] + extra_flags
+
+    with self.Session(session=session) as session:
+
+      #########################################################################
+      # Parameters.
+      #########################################################################
+
+      # A map from parameter name to values.
+      extra_flags: Dict[str, Dict[str, Any]] = {
+        flag: self.GetParametersType(ParameterType.FLAG, flag, session=session)
+        for flag in extra_flag_names
+      }
+
+      # Table of parameters.
+      query = session.query(
+        Parameter.timestamp,
+        Parameter.run_id,
+        Parameter.name,
+        Parameter.type_num.label("type"),
+        Parameter.binary_value.label("value"),
+      ).order_by(Parameter.run_id, Parameter.type_num, Parameter.name)
+      if run_id:
+        query = query.filter(Parameter.run_id.in_(run_id))
+
+      df = pdutil.QueryToDataFrame(session, query)
+      pdutil.RewriteColumn(df, "type", lambda x: ParameterType(x).name.lower())
+      pdutil.RewriteColumn(df, "value", lambda x: pickle.loads(x))
+      yield "parameters", df
+
+      #########################################################################
+      # Per-epoch stats.
+      #########################################################################
+
+      per_epoch_stats = session.query(
+        Batch.run_id,
+        sql.func.min(Batch.timestamp).label("timestamp"),
+        Batch.epoch_num,
+        Batch.epoch_type_num.label("epoch_type"),
+        sql.func.count(Batch.run_id).label("batch_count"),
+        sql.func.sum(Batch.graph_count).label("graph_count"),
+        sql.func.avg(Batch.iteration_count).label("iteration_count"),
+        sql.func.avg(Batch.model_converged).label("model_converged"),
+        sql.func.avg(Batch.loss).label("loss"),
+        sql.func.avg(Batch.accuracy).label("accuracy"),
+        sql.func.avg(Batch.precision).label("precision"),
+        sql.func.avg(Batch.recall).label("recall"),
+        sql.func.avg(Batch.f1).label("f1"),
+        (
+          sql.sql.expression.cast(
+            sql.func.sum(Batch.elapsed_time_ms), sql.Float
+          )
+          / 1000
+        ).label("runtime"),
+        (
+          (sql.func.avg(Batch.graph_count) * 1000)
+          / sql.sql.expression.cast(Batch.elapsed_time_ms, sql.Float)
+        ).label("throughput"),
+      ).group_by(Batch.run_id, Batch.epoch_num, Batch.epoch_type_num)
+      if run_id:
+        per_epoch_stats = per_epoch_stats.filter(Batch.run_id.in_(run_id))
+      per_epoch_df = pdutil.QueryToDataFrame(session, per_epoch_stats)
+      pdutil.RewriteColumn(
+        per_epoch_df, "epoch_type", lambda x: epoch.Type(x).name.lower()
       )
 
-      q = q.filter(BatchLogMeta.run_id == run_id)
+      # Flatten the {train,val,test} rows into an array of columns.
+      rows = []
+      epoch_type_columns = [
+        "batch_count",
+        "graph_count",
+        "iteration_count",
+        "model_converged",
+        "loss",
+        "accuracy",
+        "precision",
+        "recall",
+        "f1",
+        "runtime",
+        "throughput",
+      ]
 
-      q = q.group_by(BatchLogMeta.epoch, BatchLogMeta.type)
+      for run_id in set(per_epoch_df["run_id"].values):
+        run_df = per_epoch_df[per_epoch_df["run_id"] == run_id]
+        for epoch_num in set(run_df["epoch_num"].values):
+          row = {"run_id": run_id, "epoch": epoch_num}
+          for flag in extra_flag_names:
+            row[flag] = extra_flags[flag].get(run_id)
 
-      # Group each individual step. Since there is only one log per step,
-      # this means return all rows without grouping.
-      if per_global_step:
-        q = q.group_by(BatchLogMeta.global_step).order_by(
-          BatchLogMeta.global_step
-        )
+          for i, epoch_type in enumerate(["train", "val", "test"]):
+            epoch_df = run_df[
+              (run_df["epoch_num"] == epoch_num)
+              & (run_df["epoch_type"] == epoch_type)
+            ]
 
-      q = q.order_by(BatchLogMeta.epoch, BatchLogMeta.type)
+            if not i:
+              row["timestamp"] = epoch_df["timestamp"].values[0]
 
-      df = pdutil.QueryToDataFrame(session, q)
+            if len(epoch_df) == 1:
+              for column in epoch_type_columns:
+                row[f"{epoch_type}_{column}"] = epoch_df.iloc[0][column]
+            elif len(epoch_df) == 0:
+              for column in epoch_type_columns:
+                row[f"{epoch_type}_{column}"] = "-"
+            else:
+              raise ValueError
 
-      df["reltime"] = [t - df["timestamp"][0] for t in df["timestamp"]]
+          rows.append(row)
 
-      return df
+      # Build the column name list.
+      columns = ["run_id", "timestamp", "epoch"] + extra_flag_names
+      for epoch_type in ["train", "val", "test"]:
+        columns += [f"{epoch_type}_{column}" for column in epoch_type_columns]
+
+      # Put it into a dataframe.
+      per_epoch_df = pd.DataFrame(rows, columns=columns)
+      per_epoch_df.sort_values(["run_id", "timestamp", "epoch"], inplace=True)
+
+      yield "epochs", per_epoch_df
+
+      #########################################################################
+      # Per-run stats.
+      #########################################################################
+
+      rows = []
+      epoch_counts = []
+      for run_id in set(per_epoch_df.run_id.values):
+        run_df = per_epoch_df[per_epoch_df["run_id"] == run_id]
+        epoch_counts.append(len(run_df))
+        rows.append(run_df.loc[run_df["val_accuracy"].idxmax()])
+
+      per_run_df = pd.DataFrame(rows)
+      per_run_df["epoch_count"] = epoch_counts
+      per_run_df.sort_values(["run_id", "timestamp"], inplace=True)
+      per_run_df.rename(columns={"epoch": "best_epoch",}, inplace=True)
+
+      # Rejig the columns so that epoch_count comes after best_epoch.
+      columns = per_run_df.columns.tolist()
+      i = columns.index("best_epoch")
+      columns = columns[:i] + [columns[-1]] + columns[i:-1]
+      per_run_df = per_run_df[columns]
+
+      yield "runs", per_run_df
 
 
 app.DEFINE_database(
@@ -561,7 +738,23 @@ app.DEFINE_database(
 def Main():
   """Main entry point."""
   log_db = FLAGS.log_db()
-  print(jsonutil.format_json(log_db.stats_json))
+
+  # Export tables.
+  if FLAGS.log_outdir:
+    FLAGS.log_outdir.mkdir(exist_ok=True, parents=True)
+    for name, df in log_db.GetTables(FLAGS.log_run_id):
+      outpath = FLAGS.log_outdir / f"{name}.csv"
+      print(outpath)
+      df.to_csv(outpath, index=False)
+  elif FLAGS.worksheet:
+    with prof.Profile("Created google worksheet"):
+      g = google_sheets.GoogleSheets.FromFlagsOrDie()
+      s = g.GetOrCreateSpreadsheet(FLAGS.worksheet)
+      for name, df in log_db.GetTables(FLAGS.log_run_id):
+        ws = g.GetOrCreateWorksheet(s, name)
+        g.ExportDataFrame(ws, df, index=False)
+  else:
+    print(jsonutil.format_json(log_db.stats_json))
 
 
 if __name__ == "__main__":

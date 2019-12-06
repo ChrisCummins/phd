@@ -141,7 +141,7 @@ py_test(
     ],
 )
 
-py_library(
+py_binary(
     name = "log_database",
     srcs = ["log_database.py"],
     visibility = ["//visibility:public"],
@@ -152,6 +152,7 @@ py_library(
         "//deeplearning/ml4pl:run_id",
         "//labm8/py:app",
         "//labm8/py:decorators",
+        "//labm8/py:google_sheets",
         "//labm8/py:humanize",
         "//labm8/py:jsonutil",
         "//labm8/py:labdate",
