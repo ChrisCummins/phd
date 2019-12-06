@@ -6,8 +6,6 @@ import enum
 from typing import Any
 from typing import Optional
 
-import sqlalchemy as sql
-
 import build_info
 from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
