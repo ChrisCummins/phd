@@ -56,7 +56,7 @@ class ZeroR(classifier_base.ClassifierBase):
         break
 
       # Add the graph data to the batch.
-      graph_ids.append(graph)
+      graph_ids.append(graph.id)
       if self.node_y_dimensionality:
         batch_size += graph.tuple.node_y.size
         targets.append(graph.tuple.node_y)
