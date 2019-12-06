@@ -24,11 +24,16 @@ class Results(NamedTuple):
   batch_count: int = 0
   iteration_count: float = 0
   model_converged: float = 1
+  learning_rate: Optional[float] = None
   loss: Optional[float] = None
   accuracy: float = 0
   precision: float = 0
   recall: float = 0
   f1: float = 0
+
+  @property
+  def has_learning_rate(self) -> bool:
+    return self.learning_rate is not None
 
   @property
   def has_loss(self) -> bool:
@@ -76,6 +81,7 @@ class Results(NamedTuple):
       batch_count=rolling_results.batch_count,
       iteration_count=rolling_results.iteration_count,
       model_converged=rolling_results.model_converged,
+      learning_rate=rolling_results.learning_rate,
       loss=rolling_results.loss,
       accuracy=rolling_results.accuracy,
       precision=rolling_results.precision,

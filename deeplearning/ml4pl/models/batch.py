@@ -45,7 +45,10 @@ class BatchIterator(NamedTuple):
 
 
 class Results(NamedTuple):
-  """The results of running a batch through a model."""
+  """The results of running a batch through a model.
+
+  Don't instantiate this tuple directly, use Results.Create().
+  """
 
   targets: np.array
   predictions: np.array
@@ -55,15 +58,21 @@ class Results(NamedTuple):
   # For iterative models, this indicates whether the state of the model at
   # iteration_count had converged on a solution.
   model_converged: bool
-  # Batch-level average performance metrics.
+  # The learning rate and loss of models, if applicable.
+  learning_rate: Optional[float]
   loss: Optional[float]
+  # Batch-level average performance metrics.
   accuracy: float
   precision: float
   recall: float
   f1: float
 
   @property
-  def has_loss(self):
+  def has_learning_rate(self) -> bool:
+    return self.learning_rate is not None
+
+  @property
+  def has_loss(self) -> bool:
     return self.loss is not None
 
   @property
@@ -98,6 +107,7 @@ class Results(NamedTuple):
     predictions: np.array,
     iteration_count: int = 1,
     model_converged: bool = True,
+    learning_rate: Optional[float] = None,
     loss: Optional[float] = None,
   ):
     """Construct a results instance from 1-hot targets and predictions.
@@ -114,7 +124,8 @@ class Results(NamedTuple):
       iteration_count: For iterative models, the number of model iterations to
         compute the final result.
       model_converged: For iterative models, whether model converged.
-      loss: The model loss, or None if model does not have loss.
+      learning_rate: The model learning rate, if applicable.
+      loss: The model loss, if applicable.
 
     Returns:
       A Results instance.
@@ -144,6 +155,7 @@ class Results(NamedTuple):
       predictions=predictions,
       iteration_count=iteration_count,
       model_converged=model_converged,
+      learning_rate=learning_rate,
       loss=loss,
       accuracy=sklearn.metrics.accuracy_score(true_y, pred_y),
       precision=sklearn.metrics.precision_score(
@@ -172,6 +184,8 @@ class RollingResults:
     self.batch_count = 0
     self.iteration_count_sum = 0
     self.model_converged_sum = 0
+    self.has_learning_rate = False
+    self.learning_rate_sum = 0
     self.has_loss = False
     self.loss_sum = 0
     self.accuracy_sum = 0
@@ -183,6 +197,9 @@ class RollingResults:
     self.batch_count += 1
     self.iteration_count_sum += 1
     self.model_converged_sum += 1 if results.model_converged else 0
+    if results.has_learning_rate:
+      self.has_learning_rate = True
+      self.learning_rate_sum += results.learning_rate
     if results.has_loss:
       self.has_loss = True
       self.loss_sum += results.loss
@@ -198,6 +215,11 @@ class RollingResults:
   @property
   def model_converged(self) -> float:
     return self.model_converged_sum / max(self.batch_count, 1)
+
+  @property
+  def learning_rate(self) -> Optional[float]:
+    if self.has_learning_rate:
+      return self.learning_rate_sum / max(self.batch_count, 1)
 
   @property
   def loss(self) -> Optional[float]:

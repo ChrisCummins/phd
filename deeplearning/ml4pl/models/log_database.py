@@ -229,6 +229,7 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # Batch-level average performance metrics.
   iteration_count: int = sql.Column(sql.Integer, nullable=False)
   model_converged: bool = sql.Column(sql.Boolean, nullable=False)
+  learning_rate: float = sql.Column(sql.Float, nullable=True)
   loss: float = sql.Column(sql.Float, nullable=True)
   accuracy: float = sql.Column(sql.Float, nullable=False)
   precision: float = sql.Column(sql.Float, nullable=False)
@@ -289,6 +290,7 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
       graph_count=data.graph_count,
       iteration_count=results.iteration_count,
       model_converged=results.model_converged,
+      learning_rate=results.learning_rate,
       loss=results.loss,
       accuracy=results.accuracy,
       precision=results.precision,
@@ -665,6 +667,7 @@ class Database(sqlutil.Database):
         sql.func.sum(Batch.graph_count).label("graph_count"),
         sql.func.avg(Batch.iteration_count).label("iteration_count"),
         sql.func.avg(Batch.model_converged).label("model_converged"),
+        sql.func.avg(Batch.learning_rate).label("learning_rate"),
         sql.func.avg(Batch.loss).label("loss"),
         sql.func.avg(Batch.accuracy).label("accuracy"),
         sql.func.avg(Batch.precision).label("precision"),
@@ -695,6 +698,7 @@ class Database(sqlutil.Database):
         "graph_count",
         "iteration_count",
         "model_converged",
+        "learning_rate",
         "loss",
         "accuracy",
         "precision",
