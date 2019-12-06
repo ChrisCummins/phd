@@ -2,7 +2,6 @@
 
 TODO: Detailed explanation of the file.
 """
-import enum
 from typing import Optional
 
 import sqlalchemy as sql
@@ -14,6 +13,7 @@ from deeplearning.ml4pl.models import batch
 from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import log_database
+from deeplearning.ml4pl.models import schedules
 from labm8.py import app
 from labm8.py import pbutil
 from labm8.py import prof
@@ -24,28 +24,16 @@ from labm8.py import sqlutil
 FLAGS = app.FLAGS
 
 
-class KeepCheckpoints(enum.Enum):
-  NONE = 0
-  ALL = 1
-  LAST_EPOCH = 2
-
-
-class KeepDetailedBatches(enum.Enum):
-  NONE = 0
-  ALL = 1
-  LAST_EPOCH = 2
-
-
 app.DEFINE_enum(
   "keep_checkpoints",
-  KeepCheckpoints,
-  KeepCheckpoints.ALL,
+  schedules.KeepCheckpoints,
+  schedules.KeepCheckpoints.ALL,
   "The type of checkpoints to keep.",
 )
 app.DEFINE_enum(
   "keep_detailed_batches",
-  KeepDetailedBatches,
-  KeepDetailedBatches.ALL,
+  schedules.KeepDetailedBatches,
+  schedules.KeepDetailedBatches.ALL,
   "The type of detailed batches to keep.",
 )
 app.DEFINE_string(
@@ -175,13 +163,13 @@ class Logger(object):
     epoch_num: epoch.Type,
     results: epoch.Results,
   ):
-    option = FLAGS.keep_detailed_batches()
+    schedule = FLAGS.keep_detailed_batches()
 
-    if option == KeepDetailedBatches.NONE:
+    if schedule == schedules.KeepDetailedBatches.NONE:
       pass
-    elif option == KeepDetailedBatches.ALL:
+    elif schedule == schedules.KeepDetailedBatches.ALL:
       pass
-    elif option == KeepDetailedBatches.LAST_EPOCH:
+    elif schedule == schedules.KeepDetailedBatches.LAST_EPOCH:
 
       def DeleteOldDetailedBatchLogs(session):
         """Delete old detailed batch logs."""
@@ -209,13 +197,13 @@ class Logger(object):
   #############################################################################
 
   def Save(self, checkpoint: checkpoints.Checkpoint) -> None:
-    option = FLAGS.keep_checkpoints()
+    schedule = FLAGS.keep_checkpoints()
 
-    if option == KeepCheckpoints.NONE:
+    if schedule == schedules.KeepCheckpoints.NONE:
       pass
-    elif option == KeepCheckpoints.ALL:
+    elif schedule == schedules.KeepCheckpoints.ALL:
       self._writer.AddOne(log_database.Checkpoint.Create(checkpoint))
-    elif option == KeepCheckpoints.LAST_EPOCH:
+    elif schedule == schedules.KeepCheckpoints.LAST_EPOCH:
       self._writer.AddLambdaOp(
         lambda session: session.query(log_database.Checkpoint)
         .filter(log_database.Checkpoint.run_id == checkpoint.run_id)

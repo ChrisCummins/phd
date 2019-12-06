@@ -25,7 +25,7 @@ from typing import List
 import pandas as pd
 
 from deeplearning.ml4pl.models import log_database
-from deeplearning.ml4pl.models import logger
+from deeplearning.ml4pl.models import schedules
 from labm8.py import app
 from labm8.py import google_sheets
 from labm8.py import pdutil
@@ -34,7 +34,7 @@ from labm8.py import prof
 # During table export, we be able to de-pickle any of the class objects from
 # this project. Import the modules which define these classes here.
 
-_unused_modules_ = (logger, log_database)
+_unused_modules_ = (log_database, schedules)
 
 
 FLAGS = app.FLAGS

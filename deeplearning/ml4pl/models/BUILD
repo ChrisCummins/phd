@@ -130,6 +130,7 @@ py_binary(
     deps = [
         ":log_database",
         ":logger",
+        ":schedules",
         "//labm8/py:app",
         "//labm8/py:google_sheets",
         "//labm8/py:pdutil",
@@ -214,6 +215,7 @@ py_library(
         ":checkpoints",
         ":epoch",
         ":log_database",
+        ":schedules",
         "//:build_info",
         "//deeplearning/ml4pl:run_id",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
@@ -239,5 +241,13 @@ py_binary(
         "//labm8/py:app",
         "//labm8/py:prof",
         "//labm8/py:progress",
+    ],
+)
+
+py_library(
+    name = "schedules",
+    srcs = ["schedules.py"],
+    deps = [
+        "//labm8/py:app",
     ],
 )
