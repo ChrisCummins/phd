@@ -17,10 +17,25 @@ FLAGS = app.FLAGS
 
 
 class Checkpoint(NamedTuple):
+  """A model checkpoint."""
+
   run_id: run_id_lib.RunId
   epoch_num: int
   best_results: Dict[epoch.Type, epoch.BestResults]
   model_data: Any
+
+
+def RunIdAndEpochNumToString(run_id: run_id_lib.RunId, epoch_num: int) -> str:
+  """Return the string representation of a run ID and epoch_num.
+
+  Args:
+    run_id: The run ID.
+    epoch_num: The epoch number.
+
+  Returns:
+    A string.
+  """
+  return f"{run_id}@{epoch_num}"
 
 
 def RunIdAndEpochNumFromString(

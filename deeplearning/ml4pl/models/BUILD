@@ -58,17 +58,17 @@ py_library(
 
 py_test(
     name = "classifier_base_test",
+    timeout = "long",
     srcs = ["classifier_base_test.py"],
     deps = [
+        ":batch",
         ":classifier_base",
-        ":log_database",
-        "//deeplearning/ml4pl/graphs:graph_database",
-        "//deeplearning/ml4pl/graphs/unlabelled/cdfg:random_cdfg_generator",
-        "//labm8/py:app",
+        ":conftest",
+        ":epoch",
+        ":logger",
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
+        "//labm8/py:progress",
         "//labm8/py:test",
-        "//third_party/py/numpy",
-        "//third_party/py/pytest",
-        "//third_party/py/tensorflow",
     ],
 )
 
@@ -83,6 +83,22 @@ py_library(
         "//deeplearning/ml4pl/models:log_database",
         "//labm8/py:app",
         "//third_party/py/numpy",
+    ],
+)
+
+py_library(
+    name = "conftest",
+    testonly = 1,
+    srcs = ["conftest.py"],
+    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
+    deps = [
+        ":epoch",
+        ":log_database",
+        ":logger",
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
+        "//deeplearning/ml4pl/testing:random_graph_tuple_database_generator",
+        "//deeplearning/ml4pl/testing:testing_databases",
+        "//labm8/py:test",
     ],
 )
 

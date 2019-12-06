@@ -3,8 +3,9 @@
 TODO: Detailed explanation of the file.
 """
 import enum
-from typing import Any
 from typing import Optional
+
+import sqlalchemy as sql
 
 import build_info
 from deeplearning.ml4pl import run_id as run_id_lib
@@ -121,22 +122,22 @@ class Logger(object):
     # Record the run ID and experimental parameters.
     flags = {k.split(".")[-1]: v for k, v in app.FlagsToDict().items()}
     self._writer.AddMany(
-      # Run ID.
+      # Record run ID.
       [log_database.RunId(run_id=run_id)]
       +
-      # Flags.
+      # Record flag values.
       log_database.Parameter.CreateManyFromDict(
         run_id, log_database.ParameterType.FLAG, flags
       )
       +
-      # Graph database stats.
+      # Record graph database stats.
       log_database.Parameter.CreateManyFromDict(
         run_id,
         log_database.ParameterType.INPUT_GRAPHS_INFO,
         graph_db.stats_json,
       )
       +
-      # Build info.
+      # Record build info.
       log_database.Parameter.CreateManyFromDict(
         run_id,
         log_database.ParameterType.BUILD_INFO,
@@ -226,7 +227,7 @@ class Logger(object):
 
   def Load(
     self, run_id: run_id_lib.RunId, epoch_num: Optional[int] = None
-  ) -> Any:
+  ) -> checkpoints.Checkpoint:
     """Load model data.
 
     Args:
@@ -234,12 +235,36 @@ class Logger(object):
       epoch_num: An optional epoch number to restore model data from. If None,
         the most recent epoch is used.
 
+    Returns:
+      A checkpoint instance.
+
     Raises:
-      LookupError: If no corresponding entry in the checkpoint table exists.
-      EnvironmentError: If the flags in the saved model do not match the current
-        model flags.
+      KeyError: If no corresponding entry in the checkpoint table exists.
     """
-    self.ctx.Log(1, "Load")
+    # The results of previous Save() call might still be buffered. Flush the
+    # buffer before loading from the database.
+    self._writer.Flush()
+
+    # Check that the requested run ID exists.
+    with self.db.Session() as session:
+      checkpoint = (
+        session.query(log_database.Checkpoint)
+        .filter(
+          log_database.Checkpoint.run_id == run_id,
+          log_database.Checkpoint.epoch_num == epoch_num,
+        )
+        .options(sql.orm.joinedload(log_database.Checkpoint.data))
+        .first()
+      )
+
+      if not checkpoint:
+        raise KeyError(
+          f"No checkpoint exists for '"
+          f"{checkpoints.RunIdAndEpochNumToString(run_id, epoch_num)}'"
+        )
+
+      return checkpoint.ToCheckpoint(session)
+
     # TODO(github.com/ChrisCummins/ProGraML/issues/24): Port old code:
     #     with self.log_db.Session() as session:
     #       # Fetch the corresponding checkpoint from the database.

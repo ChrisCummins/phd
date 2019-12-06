@@ -407,6 +407,20 @@ class Checkpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     # Checkpoints are stored with zlib compression.
     return pickle.loads(codecs.decode(self.data.binary_model_data, "zlib"))
 
+  def ToCheckpoint(self, session: sqlutil.Database.SessionType):
+    best_results = {}
+
+    # TODO(github.com/ChrisCummins/ProGraML/issues/24): Construct best_results
+    # by aggregating from Batch table:
+    # session.query()
+
+    return checkpoints.Checkpoint(
+      run_id=run_id_lib.RunId.FromString(self.run_id),
+      epoch_num=self.epoch_num,
+      best_results=best_results,
+      model_data=self.model_data,
+    )
+
   @classmethod
   def Create(
     cls, checkpoint: checkpoints.Checkpoint,

@@ -4,7 +4,7 @@ from typing import Dict
 from typing import Iterable
 from typing import Optional
 
-from deeplearning.ml4pl import run_id
+from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch as batchs
 from deeplearning.ml4pl.models import checkpoints
@@ -39,7 +39,8 @@ class ClassifierBase(object):
     node_y_dimensionality: int,
     graph_y_dimensionality: int,
     edge_position_max: int,
-    restored_from: Optional[run_id.RunId] = None,
+    restored_from: Optional[run_id_lib.RunId] = None,
+    run_id: Optional[run_id_lib.RunId] = None,
   ):
     """Constructor.
 
@@ -56,8 +57,11 @@ class ClassifierBase(object):
     self._initialized = False
 
     # The unique ID of this model instance.
-    self.run_id: run_id.RunId = run_id.RunId.GenerateUnique(type(self).__name__)
+    self.run_id: run_id_lib.RunId = (
+      run_id or run_id_lib.RunId.GenerateUnique(type(self).__name__)
+    )
 
+    # Model properties.
     self.restored_from = restored_from
     self.node_y_dimensionality = node_y_dimensionality
     self.graph_y_dimensionality = graph_y_dimensionality
@@ -131,9 +135,20 @@ class ClassifierBase(object):
     pass
 
   def LoadModelData(self, data_to_load: Any) -> None:
+    """Set the model state from the given model data.
+
+    Args:
+      data_to_load: The return value of GetModelData().
+    """
     return None
 
   def GetModelData(self) -> Any:
+    """Return the model state.
+
+    Returns:
+      A  model-defined blob of data that can later be passed to LoadModelData()
+      to restore the current model state.
+    """
     return None
 
   #############################################################################
@@ -164,7 +179,7 @@ class ClassifierBase(object):
     batch_iterator: batchs.BatchIterator,
     logger: logging.Logger,
   ) -> epoch.Results:
-    """Run the model over the given graphs.
+    """Run the model over the inputs.
 
     Args:
       epoch_type: The type of epoch to run.
@@ -172,7 +187,7 @@ class ClassifierBase(object):
       logger: A logger instance to log results to.
 
     Returns:
-      The average accuracy of the model over all batches.
+      An epoch results instance.
     """
     if not self._initialized:
       raise TypeError(
@@ -189,7 +204,19 @@ class ClassifierBase(object):
     epoch_num: int,
     results: epoch.Results,
     ctx: progress.ProgressContext = progress.NullContext,
-  ):
+  ) -> bool:
+    """Update the 'best results' state of a model.
+
+    Args:
+      epoch_type: The epoch type of the new results.
+      epoch_num: The epoch number of the new results.
+      results: The new epoch results.
+      ctx: A logging context.
+
+    Returns:
+      True if the new results are an improvement over the previous best, else
+      False.
+    """
     if results > self.best_results[epoch_type].results:
       new_best = epoch.BestResults(epoch_num=epoch_num, results=results)
       ctx.Log(
@@ -209,6 +236,7 @@ class ClassifierBase(object):
   #############################################################################
 
   def Initialize(self) -> None:
+    """Initialize an untrained model."""
     if self._initialized:
       raise TypeError("CreateModelData() called on already-initialized model")
 
@@ -216,14 +244,18 @@ class ClassifierBase(object):
     self.CreateModelData()
 
   @classmethod
-  def FromCheckpoint(cls, checkpoint: checkpoints.Checkpoint):
+  def FromCheckpoint(
+    cls,
+    checkpoint: checkpoints.Checkpoint,
+    node_y_dimensionality: int,
+    graph_y_dimensionality: int,
+    edge_position_max: int,
+  ):
     """Construct a model from checkpoint data."""
-    if self._initialized:
-      raise TypeError("LoadModelData() called on already-initialized model")
-
     model = cls(
       node_y_dimensionality=node_y_dimensionality,
       graph_y_dimensionality=graph_y_dimensionality,
+      edge_position_max=edge_position_max,
       restored_from=checkpoint.run_id,
     )
     model._initialized = True
@@ -233,6 +265,11 @@ class ClassifierBase(object):
     return model
 
   def GetCheckpoint(self) -> checkpoints.Checkpoint:
+    """Construct a checkpoint from the current model state.
+
+    Returns:
+      A checkpoint instance.
+    """
     return checkpoints.Checkpoint(
       run_id=self.run_id,
       epoch_num=self.epoch_num,
@@ -242,7 +279,11 @@ class ClassifierBase(object):
 
 
 class EpochThread(progress.Progress):
-  """A thread which runs a single epoch of a model."""
+  """A thread which runs a single epoch of a model.
+
+  After running this thread, the results of the epoch may be accessed through
+  the 'results' parameter.
+  """
 
   def __init__(
     self,
@@ -254,10 +295,10 @@ class EpochThread(progress.Progress):
     """Constructor.
 
     Args:
-      model:
-      epoch_type:
-      batch_iterator:
-      logger:
+      model: A model instance.
+      epoch_type: The type of epoch to run.
+      batch_iterator: A batch iterator.
+      logger: A logger.
     """
     self.model = model
     self.epoch_type = epoch_type
@@ -276,8 +317,8 @@ class EpochThread(progress.Progress):
       leave=False,
     )
 
-  def Run(self):
-    """Run the epoch."""
+  def Run(self) -> None:
+    """Run the epoch worker thread."""
     rolling_results = batchs.RollingResults()
 
     for i, batch in enumerate(self.batch_iterator.batches):
