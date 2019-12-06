@@ -16,7 +16,7 @@ from labm8.py import progress
 FLAGS = app.FLAGS
 
 
-class ZeroRClassifier(classifier_base.ClassifierBase):
+class ZeroR(classifier_base.ClassifierBase):
   """A Zero-R classifier that supports node-level or graph-level labels.
 
   Zero-R classifiers predict the mode value from the training set. It is used
@@ -24,7 +24,7 @@ class ZeroRClassifier(classifier_base.ClassifierBase):
   """
 
   def __init__(self, *args, **kwargs):
-    super(ZeroRClassifier, self).__init__(*args, **kwargs)
+    super(ZeroR, self).__init__(*args, **kwargs)
     # The table used to count training labels.
     self.class_counts = np.zeros(self.y_dimensionality, dtype=np.int32)
 
@@ -112,7 +112,7 @@ class ZeroRClassifier(classifier_base.ClassifierBase):
 
 def main():
   """Main entry point."""
-  run.Run(ZeroRClassifier)
+  run.Run(ZeroR)
 
 
 if __name__ == "__main__":

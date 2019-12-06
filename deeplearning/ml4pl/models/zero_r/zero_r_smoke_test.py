@@ -14,7 +14,7 @@ FLAGS = app.FLAGS
 def test_binary_node_labels():
   """Test classification with binary node labels."""
   classifier_smoke_tester.RunSmokeTest(
-    zero_r.ZeroRClassifier,
+    zero_r.ZeroR,
     node_y_choices=[
       np.array([1, 0], dtype=np.int32),
       np.array([0, 1], dtype=np.int32),
@@ -25,7 +25,7 @@ def test_binary_node_labels():
 def test_graph_features_and_labels():
   """Test classification with graph-level features and labels."""
   classifier_smoke_tester.RunSmokeTest(
-    zero_r.ZeroRClassifier,
+    zero_r.ZeroR,
     graph_x_choices=[
       np.array([32, 64], dtype=np.int32),
       np.array([128, 1024], dtype=np.int32),
