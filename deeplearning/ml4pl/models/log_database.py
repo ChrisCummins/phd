@@ -604,8 +604,8 @@ class Database(sqlutil.Database):
         Parameter.timestamp,
         Parameter.run_id,
         Parameter.name,
-        Parameter.type_num.label("type"),
         Parameter.binary_value.label("value"),
+        Parameter.type_num.label("type"),
       ).order_by(Parameter.run_id, Parameter.type_num, Parameter.name)
       if run_id:
         query = query.filter(Parameter.run_id.in_(run_id))
