@@ -118,7 +118,12 @@ class IntermediateRepresentation(
   @property
   def ir(self) -> Any:
     """Return the intermediate representation."""
-    return pickle.loads(codecs.decode(self.details.binary_true_y, "zlib"))
+    return self.DecodeBinaryIr(self.binary_ir)
+
+  @staticmethod
+  def DecodeBinaryIr(binary_ir: bytes) -> Any:
+    """Decode a binary IR."""
+    return pickle.loads(codecs.decode(binary_ir, "zlib"))
 
   timestamp: datetime.datetime = sqlutil.ColumnFactory.MillisecondDatetime()
 
