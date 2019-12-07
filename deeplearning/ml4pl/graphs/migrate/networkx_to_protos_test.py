@@ -143,7 +143,7 @@ def populated_graph_db() -> graph_database.Database:
     )
 
 
-@test.Fixture(scope="function", params=testing_databases.TEST_DB_URLS)
+@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
 def empty_output_db(request) -> unlabelled_graph_database.Database:
   """Test fixture which returns an empty output database."""
   yield from testing_databases.YieldDatabase(

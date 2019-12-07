@@ -14,7 +14,7 @@ from labm8.py import test
 FLAGS = test.FLAGS
 
 
-@test.Fixture(scope="function", params=testing_databases.TEST_DB_URLS)
+@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
 def db(request) -> graph_tuple_database.Database:
   """A test fixture which yields an empty graph proto database."""
   yield from testing_databases.YieldDatabase(
