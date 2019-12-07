@@ -687,22 +687,22 @@ class Database(sqlutil.Database):
         sql.func.avg(Batch.precision).label("precision"),
         sql.func.avg(Batch.recall).label("recall"),
         sql.func.avg(Batch.f1).label("f1"),
-        (
-          sql.sql.expression.cast(
-            sql.func.sum(Batch.elapsed_time_ms), sql.Float
-          )
-          / 1000
-        ).label("runtime"),
-        (
-          (sql.func.avg(Batch.graph_count) * 1000)
-          / sql.sql.expression.cast(Batch.elapsed_time_ms, sql.Float)
-        ).label("throughput"),
+        sql.func.sum(Batch.elapsed_time_ms).label("runtime"),
       ).group_by(Batch.run_id, Batch.epoch_num, Batch.epoch_type_num)
       if run_id:
         per_epoch_stats = per_epoch_stats.filter(Batch.run_id.in_(run_id))
       per_epoch_df = pdutil.QueryToDataFrame(session, per_epoch_stats)
       pdutil.RewriteColumn(
         per_epoch_df, "epoch_type", lambda x: epoch.Type(x).name.lower()
+      )
+      # Convert ints to floats. We can't do this in the query because MySQL
+      # does not support casting to FLOAT.
+      per_epoch_df["runtime"] = (
+        per_epoch_df["runtime"].values.astype(np.float32) / 1000
+      )
+      # Add the computed throughput column.
+      per_epoch_df["throughput"] = (
+        per_epoch_df["graph_count"] / per_epoch_df["runtime"]
       )
 
       # Flatten the {train,val,test} rows into an array of columns.

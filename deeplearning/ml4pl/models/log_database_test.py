@@ -1,6 +1,7 @@
 """Unit tests for //deeplearning/ml4pl/models:log_database."""
 from typing import NamedTuple
 
+import numpy as np
 import sqlalchemy as sql
 
 from deeplearning.ml4pl import run_id
@@ -29,7 +30,20 @@ def db_session(db: log_database.Database) -> log_database.Database.SessionType:
 
 @test.Fixture(scope="session")
 def generator() -> random_log_database_generator.RandomLogDatabaseGenerator:
+  """A test fixture which returns a log generator."""
   return random_log_database_generator.RandomLogDatabaseGenerator()
+
+
+@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+def populated_log_db(
+  request, generator: random_log_database_generator.RandomLogDatabaseGenerator
+) -> log_database.Database:
+  """A test fixture which yields an empty log database."""
+  with testing_databases.DatabaseContext(
+    log_database.Database, request.param
+  ) as db:
+    db._run_ids = generator.PopulateLogDatabase(db, run_count=10)
+    yield db
 
 
 def test_RunId_add_one(db_session: log_database.Database.SessionType):
@@ -155,6 +169,39 @@ def test_RunId_cascaded_delete(two_run_id_session: DatabaseSessionWithRunLogs):
     .scalar()
     == 0
   )
+
+
+@test.Parametrize("extra_flags", (None, [], ["foo"], ["foo", "vmodule"]))
+def test_GetTables_smoke_test(
+  populated_log_db: log_database.Database, extra_flags
+):
+  """Test GetTables()."""
+  tables = {
+    name: df for name, df in populated_log_db.GetTables(extra_flags=extra_flags)
+  }
+
+  assert "parameters" in tables
+  assert "epochs" in tables
+  assert "runs" in tables
+
+  # Test epoch column types.
+  for table in ["epochs", "runs"]:
+    assert "run_id" in tables[table]
+    for type in ["train", "val"]:
+      test.Log("table=%s, type=%s", table, type)
+      assert tables[table][f"{type}_batch_count"].values.dtype == np.int64
+      assert tables[table][f"{type}_graph_count"].values.dtype in {
+        np.dtype("int64"),
+        np.dtype("float64"),
+      }
+      assert tables[table][f"{type}_iteration_count"].values.dtype == np.float64
+      assert tables[table][f"{type}_loss"].values.dtype == np.float64
+      assert tables[table][f"{type}_accuracy"].values.dtype == np.float64
+      assert tables[table][f"{type}_precision"].values.dtype == np.float64
+      assert tables[table][f"{type}_recall"].values.dtype == np.float64
+      assert tables[table][f"{type}_f1"].values.dtype == np.float64
+      assert tables[table][f"{type}_runtime"].values.dtype == np.float64
+      assert tables[table][f"{type}_throughput"].values.dtype == np.float64
 
 
 if __name__ == "__main__":
