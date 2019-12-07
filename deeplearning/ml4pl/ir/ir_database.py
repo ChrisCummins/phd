@@ -1,4 +1,8 @@
-"""A database of compiler intermediate representation files."""
+"""A database of compiler intermediate representation files.
+
+When executed as a script, this prints summary statistics of the contents of
+the database.
+"""
 import codecs
 import datetime
 import enum
@@ -15,6 +19,8 @@ from deeplearning.ml4pl import run_id as run_id_lib
 from labm8.py import app
 from labm8.py import crypto
 from labm8.py import humanize
+from labm8.py import jsonutil
+from labm8.py import progress
 from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
@@ -233,8 +239,16 @@ def database_statistic(func):
 class Database(sqlutil.Database):
   """A database of compiler intermediate representations."""
 
-  def __init__(self, url: str, must_exist: bool = False):
+  def __init__(
+    self,
+    url: str,
+    must_exist: bool = False,
+    ctx: progress.ProgressContext = progress.NullContext,
+  ):
     super(Database, self).__init__(url, Base, must_exist=must_exist)
+    self.ctx = ctx
+
+    # Lazily evaluated attributes.
     self._db_stats = None
 
   @database_statistic
@@ -317,3 +331,13 @@ class Database(sqlutil.Database):
 app.DEFINE_database(
   "ir_db", Database, None, "A database of intermediate representations."
 )
+
+
+def Main():
+  """Main entry point."""
+  ir_db = FLAGS.ir_db()
+  print(jsonutil.format_json(ir_db.stats_json))
+
+
+if __name__ == "__main__":
+  app.Run(Main)

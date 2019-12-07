@@ -1,6 +1,6 @@
 # Intermediate representations.
 
-py_library(
+py_binary(
     name = "ir_database",
     srcs = ["ir_database.py"],
     visibility = ["//deeplearning/ml4pl:__subpackages__"],
@@ -9,6 +9,8 @@ py_library(
         "//labm8/py:app",
         "//labm8/py:crypto",
         "//labm8/py:humanize",
+        "//labm8/py:jsonutil",
+        "//labm8/py:progress",
         "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
