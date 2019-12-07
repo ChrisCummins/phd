@@ -264,17 +264,17 @@ class Database(sqlutil.Database):
   @database_statistic
   def ir_data_size(self) -> int:
     """The sum of non-empty IR binary data sizes."""
-    return self.db_stats.ir_data_size
+    return self.db_stats.ir_data_size or 0
 
   @database_statistic
   def char_count(self) -> int:
     """The sum of non-empty IR char counts."""
-    return self.db_stats.char_count
+    return self.db_stats.char_count or 0
 
   @database_statistic
   def line_count(self) -> int:
     """The sum of non-empty IR line counts."""
-    return self.db_stats.line_count
+    return self.db_stats.line_count or 0
 
   def RefreshStats(self):
     """Compute the database stats for access via the instance properties.
@@ -287,7 +287,7 @@ class Database(sqlutil.Database):
       2,
       lambda t: (
         "Computed stats over "
-        f"{humanize.BinaryPrefix(stats.ir_data_size, 'B')} database "
+        f"{humanize.BinaryPrefix(stats.ir_data_size or 0, 'B')} database "
         f"({humanize.Plural(stats.ir_count, 'intermediate representation')})"
       ),
     ), self.Session() as session:
