@@ -208,7 +208,7 @@ class IntermediateRepresentation(
       cflags=cflags,
       compilation_succeeded=True,
       char_count=len(text),
-      line_count=len(text),
+      line_count=len(text.split("\n")),
       ir_sha1=crypto.sha1(binary_ir),
       binary_ir_size=len(binary_ir),
       binary_ir=binary_ir,
