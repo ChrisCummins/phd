@@ -5,9 +5,12 @@ py_library(
     srcs = ["graph2seq.py"],
     deps = [
         ":ir2seq",
+        "//deeplearning/ml4pl/graphs:programl",
+        "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//labm8/py:app",
         "//third_party/py/lru_dict",
+        "//third_party/py/networkx",
         "//third_party/py/numpy",
     ],
 )
@@ -27,6 +30,7 @@ py_test(
         "//deeplearning/ml4pl/testing:testing_databases",
         "//labm8/py:decorators",
         "//labm8/py:test",
+        "//third_party/py/sqlalchemy",
     ],
 )
 

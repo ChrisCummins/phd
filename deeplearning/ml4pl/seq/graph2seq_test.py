@@ -3,6 +3,8 @@ import random
 import string
 from typing import Set
 
+import sqlalchemy as sql
+
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.graphs.labelled.devmap import make_devmap_dataset
@@ -104,23 +106,50 @@ def ir2seq_encoder(
   return request.param(populated_ir_db)
 
 
-@test.Fixture(scope="function",)
+@test.Fixture(scope="session", params=(None, 256))
+def cache_size(request) -> int:
+  """A test fixture to enumerate cache sizes."""
+  return request.param
+
+
+@test.Fixture(
+  scope="function",
+  params=(
+    graph2seq.GraphEncoder,
+    graph2seq.StatementEncoder,
+    graph2seq.IdentifierEncoder,
+  ),
+)
 def graph2seq_encoder(
   ir2seq_encoder: ir2seq.EncoderBase,
   populated_graph_db: graph_tuple_database.Database,
+  cache_size: int,
 ) -> graph2seq.EncoderBase:
-  """Test fixture an encoder with IR IDs in range [1,256]."""
-  return graph2seq.GraphToEncodedSequence(populated_graph_db, ir2seq_encoder)
+  """Test fixture that returns a graph encoder."""
+  return graph2seq.GraphEncoder(
+    populated_graph_db, ir2seq_encoder, cache_size=cache_size
+  )
 
 
-@decorators.loop_for(seconds=30)
+@decorators.loop_for(seconds=10)
 def test_fuzz_Encode(graph2seq_encoder: ir2seq.EncoderBase):
   """Fuzz the encoder."""
-  graph_ids = [random.randint(1, 256) for _ in range(random.randint(1, 200))]
+  with graph2seq_encoder.graph_db.Session() as session:
+    # Load a random collection of graphs. Note the joined load that is required
+    # by StatementEncoder and IdentifierEncoder.
+    graphs = (
+      session.query(graph_tuple_database.GraphTuple)
+      .order_by(graph2seq_encoder.graph_db.Random())
+      .options(sql.orm.joinedload(graph_tuple_database.GraphTuple.data))
+      .limit(random.randint(1, 200))
+      .all()
+    )
+    # Sanity check that graphs are returned.
+    assert graphs
 
-  encodeds = graph2seq_encoder.Encode(graph_ids)
+  encodeds = graph2seq_encoder.Encode(graphs)
 
-  assert len(encodeds) == len(graph_ids)
+  assert len(encodeds) == len(graphs)
 
 
 if __name__ == "__main__":

@@ -68,7 +68,7 @@ class Lstm(classifier_base.ClassifierBase):
     utils.SetAllowedGrowthOnKerasSession()
 
     # The encoder which performs translation from graphs to encoded sequences.
-    self.encoder = graph2seq.GraphToEncodedSequence(
+    self.encoder = graph2seq.GraphEncoder(
       self.batcher.db, FLAGS.encoder().ToEncoder()
     )
 
