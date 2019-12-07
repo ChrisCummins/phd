@@ -1,82 +1,165 @@
 """Unit tests for //deeplearning/ml4pl/models:log_analysis."""
-import pathlib
 import random
 
 import numpy as np
-import pytest
+import sqlalchemy as sql
 
-from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import log_analysis
 from deeplearning.ml4pl.models import log_database
-from labm8.py import app
+from deeplearning.ml4pl.testing import random_graph_tuple_database_generator
+from deeplearning.ml4pl.testing import random_log_database_generator
+from deeplearning.ml4pl.testing import testing_databases
+from labm8.py import decorators
 from labm8.py import test
 
-FLAGS = app.FLAGS
+FLAGS = test.FLAGS
+
+###############################################################################
+# Fixtures.
+###############################################################################
 
 
-@test.Fixture(scope="function")
-def graph_db(tempdir: pathlib.Path) -> graph_database.Database:
-  return graph_database.Database(f"sqlite:///{tempdir}/graphs.db")
+@test.Fixture(scope="session", params=((0, 2), (2, 0)))
+def graph_db(request) -> graph_tuple_database.Database:
+  """A test fixture which returns a graph database with random graphs."""
+  graph_y_dimensionality, node_y_dimensionality = request.param
+  db = graph_tuple_database.Database(testing_databases.GetDatabaseUrls()[0])
+  random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
+    db,
+    graph_count=100,
+    graph_y_dimensionality=graph_y_dimensionality,
+    node_y_dimensionality=node_y_dimensionality,
+  )
+  return db
 
 
-@test.Fixture(scope="function")
-def db(tempdir: pathlib.Path) -> log_database.Database:
-  return log_database.Database(f"sqlite:///{tempdir}/db")
+@test.Fixture(scope="session")
+def generator(
+  graph_db: graph_tuple_database.Database,
+) -> random_log_database_generator.RandomLogDatabaseGenerator:
+  """A test fixture which returns a log generator."""
+  return random_log_database_generator.RandomLogDatabaseGenerator(graph_db)
 
 
-def GenerateRandomBatchLogs(run_id: str, epoch_count: int = 3):
-  """Generate batch logs with fake data."""
-  global_step = 0
-  for epoch_num in range(epoch_count):
-    for epoch_type in ["train", "val", "test"]:
-      for batch_num in range(100):
-        log = log_database.BatchLogMeta(
-          run_id=run_id,
-          epoch=epoch_num,
-          batch=batch_num,
-          global_step=global_step,
-          elapsed_time_seconds=random.random(),
-          graph_count=random.randint(10, 50),
-          node_count=random.randint(100, 1000),
-          loss=random.random(),
-          precision=random.random(),
-          recall=random.random(),
-          f1=random.random(),
-          accuracy=random.random(),
-          type=epoch_type,
-          group=epoch_type,
-          batch_log=log_database.BatchLog(),
-        )
-        log.graph_indices = [0, 1, 2, 3]
-        log.predictions = np.array([0, 1, 2, 3])
-        log.accuracies = np.array([True, False, False])
-        yield log
-        global_step += 1
+@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+def empty_log_db(request) -> log_database.Database:
+  """A test fixture which yields an empty log database."""
+  yield from testing_databases.YieldDatabase(
+    log_database.Database, request.param
+  )
 
 
-def test_RunLogAnalyzer_epoch_logs(
-  graph_db: graph_database.Database, db: log_database.Database
+@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+def populated_log_db(
+  request, generator: random_log_database_generator.RandomLogDatabaseGenerator
+) -> log_database.Database:
+  """A test fixture which yields an empty log database."""
+  with testing_databases.DatabaseContext(
+    log_database.Database, request.param
+  ) as db:
+    db._run_ids = generator.PopulateLogDatabase(db, run_count=10)
+    yield db
+
+
+###############################################################################
+# Tests.
+###############################################################################
+
+
+def test_RunLogAnalyser_empty_db(empty_log_db: log_database.Database):
+  """Test that cannot analyse non-existing run."""
+  with test.Raises(ValueError):
+    log_analysis.RunLogAnalyzer(empty_log_db, "foo")
+
+
+def test_RunLogAnalyser_smoke_tests(populated_log_db: log_database.Database):
+  """Black-box test that run log properties work."""
+  for run_id in populated_log_db._run_ids:
+    run = log_analysis.RunLogAnalyzer(populated_log_db, run_id)
+    assert run.graph_db
+    assert run.tables.keys() == {"parameters", "epochs", "runs"}
+
+
+@test.Parametrize(
+  "metric",
+  (
+    "best accuracy",
+    "best precision",
+    "best recall",
+    "best f1",
+    "90% val acc",
+    "95% val acc",
+    "99.9% val acc",
+  ),
+)
+def test_RunLogAnalyser_best_epoch_num(
+  populated_log_db: log_database.Database, metric: str
 ):
-  with db.Session(commit=True) as session:
-    session.add_all(list(GenerateRandomBatchLogs("foo")))
-    session.add_all(list(GenerateRandomBatchLogs("bar")))
-  run = log_analysis.RunLogAnalyzer(graph_db, db, "foo")
+  """Black-box test that run log properties work."""
+  for run_id in populated_log_db._run_ids:
+    run = log_analysis.RunLogAnalyzer(populated_log_db, run_id)
+    try:
+      assert run.GetBestEpochNum(metric=metric)
+    except ValueError as e:
+      # Some metrics will raise an error if they are not met. This is fine.
+      assert str(e) == f"No {run_id} epochs reached {metric}"
 
-  assert len(run.epoch_logs) == 3 * 3  # epoch_count * type
+
+def test_GetGraphsForBatch(populated_log_db: log_database.Database):
+  """Test reconstructing graphs from a detailed batch."""
+  # Select a random run to analyze.
+  run_id = random.choice(populated_log_db._run_ids)
+  run = log_analysis.RunLogAnalyzer(populated_log_db, run_id)
+
+  with populated_log_db.Session() as session:
+    # Select some random detailed batches to reconstruct the graphs of.
+    detailed_batches = (
+      session.query(log_database.Batch)
+      .join(log_database.BatchDetails)
+      .options(sql.orm.joinedload(log_database.Batch.details))
+      .order_by(populated_log_db.Random())
+      .limit(50)
+      .all()
+    )
+    # Sanity check that there are detailed batches.
+    assert detailed_batches
+
+  for batch in detailed_batches:
+    graphs = list(run.GetGraphsForBatch(batch))
+    # Check that the number of graphs returned matches the unique batch graph
+    # count.
+    assert len(graphs) == len(set(batch.graph_ids))
 
 
-def test_RunLogAnalyzer_batch_logs(
-  graph_db: graph_database.Database, db: log_database.Database
-):
-  with db.Session(commit=True) as session:
-    session.add_all(list(GenerateRandomBatchLogs("foo")))
-    session.add_all(list(GenerateRandomBatchLogs("bar")))
-  run = log_analysis.RunLogAnalyzer(graph_db, db, "foo")
+def test_GetInputOutputGraphs(populated_log_db: log_database.Database):
+  """Test reconstructing graphs from a detailed batch."""
+  # Select a random run to analyze.
+  run_id = random.choice(populated_log_db._run_ids)
+  run = log_analysis.RunLogAnalyzer(populated_log_db, run_id)
 
-  assert len(run.batch_logs) == 3 * 3 * 100  # epoch_count * type * num_batches
+  with populated_log_db.Session() as session:
+    # Select some random detailed batches to reconstruct the graphs of.
+    detailed_batches = (
+      session.query(log_database.Batch)
+      .join(log_database.BatchDetails)
+      .options(sql.orm.joinedload(log_database.Batch.details))
+      .order_by(populated_log_db.Random())
+      .limit(50)
+      .all()
+    )
+    # Sanity check that there are detailed batches.
+    assert detailed_batches
+
+  for batch in detailed_batches:
+    input_output_graphs = list(run.GetInputOutputGraphs(batch))
+    # Check that the number of input_output_graphs matches the size of the
+    # batch.
+    assert len(input_output_graphs) == len(batch.graph_ids)
 
 
 def test_BuildConfusionMatrix():
+  """Test confusion matrix with known values."""
   confusion_matrix = log_analysis.BuildConfusionMatrix(
     targets=np.array(
       [
@@ -99,6 +182,21 @@ def test_BuildConfusionMatrix():
   assert np.array_equal(
     confusion_matrix, np.array([[0, 1, 0], [0, 0, 0], [1, 0, 1],])
   )
+
+
+@decorators.loop_for(seconds=10)
+def test_fuzz_BuildConfusionMatrix():
+  """Fuzz confusion matrix construction."""
+  num_instances = random.randint(1, 100)
+  y_dimensionality = random.randint(2, 5)
+
+  targets = np.random.rand(num_instances, y_dimensionality)
+  predictions = np.random.rand(num_instances, y_dimensionality)
+
+  confusion_matrix = log_analysis.BuildConfusionMatrix(targets, predictions)
+
+  assert confusion_matrix.shape == (y_dimensionality, y_dimensionality)
+  assert confusion_matrix.sum() == num_instances
 
 
 if __name__ == "__main__":

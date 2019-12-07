@@ -1,20 +1,24 @@
 """A module for analyzing log databases."""
-import random
-import typing
+import copy
+from typing import Dict
+from typing import Iterable
+from typing import List
+from typing import Tuple
 
-import networkx as nx
 import numpy as np
 import pandas as pd
 import sklearn.metrics
 import sqlalchemy as sql
 
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled import graph_batcher
+from deeplearning.ml4pl import run_id as run_id_lib
+from deeplearning.ml4pl.graphs.labelled import graph_database_reader
+from deeplearning.ml4pl.graphs.labelled import graph_tuple
+from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import log_database
 from labm8.py import app
 from labm8.py import decorators
 from labm8.py import humanize
-from labm8.py import prof
+from labm8.py import progress
 
 FLAGS = app.FLAGS
 
@@ -24,52 +28,52 @@ class RunLogAnalyzer(object):
 
   def __init__(
     self,
-    graph_db: graph_database.Database,
     log_db: log_database.Database,
-    run_id: str,
+    run_id: run_id_lib.RunId,
+    ctx: progress.ProgressContext = progress.NullContext,
   ):
-    self.graph_db = graph_db
     self.log_db = log_db
     self.run_id = run_id
-
-    # A graph batcher is used to re-construct networkx graphs from the graph
-    # tuples in the database.
-    self.batcher = graph_batcher.GraphBatcher(self.graph_db)
+    self.ctx = ctx
 
     with self.log_db.Session() as session:
       num_logs = (
-        session.query(log_database.BatchLogMeta.run_id)
-        .filter(log_database.BatchLogMeta.run_id == self.run_id)
-        .count()
+        session.query(sql.func.count(log_database.Batch.id))
+        .filter(log_database.Batch.run_id == self.run_id)
+        .scalar()
       )
       if not num_logs:
         raise ValueError(f"Run `{self.run_id}` not found in log database")
 
-    app.Log(
-      1, "Found %s logs for run `%s`", humanize.Commas(num_logs), self.run_id
+    self.ctx.Log(
+      1, "Found %s logs for run %s", humanize.Commas(num_logs), self.run_id
     )
 
   @decorators.memoized_property
-  def batch_logs(self) -> pd.DataFrame:
-    with prof.Profile(f"Read batch logs"):
-      return self.log_db.BatchLogsToDataFrame(self.run_id, per_global_step=True)
+  def graph_db(self) -> graph_tuple_database.Database:
+    with self.log_db.Session() as session:
+      graph_param: log_database.Parameter = session.query(
+        log_database.Parameter
+      ).filter(
+        log_database.Parameter.type_num
+        == log_database.ParameterType.FLAG.value,
+        log_database.Parameter.run_id == self.run_id,
+        log_database.Parameter.name == "graph_db",
+      ).scalar()
+      if not graph_param:
+        raise ValueError("Unable to determine graph_db flag")
+      graph_db_url = str(graph_param.value)
+
+    return graph_tuple_database.Database(graph_db_url, must_exist=True)
 
   @decorators.memoized_property
-  def epoch_logs(self) -> pd.DataFrame:
-    with prof.Profile(f"Read epoch logs"):
-      return self.log_db.BatchLogsToDataFrame(
-        self.run_id, per_global_step=False
-      )
+  def tables(self) -> Dict[str, pd.DataFrame]:
+    """Get the {parameters, epochs, runs} tables for the run."""
+    return {
+      name: df for name, df in self.log_db.GetTables(run_id=[self.run_id])
+    }
 
-  def GetEpochLogs(self, epoch_num: int) -> pd.DataFrame:
-    """Return the logs for the given epoch number, index by type."""
-    if epoch_num not in self.epoch_logs.epoch.values:
-      raise ValueError(
-        f"Epoch `{epoch_num}` not in logs: " f"{set(self.epoch_logs.epoch)}"
-      )
-    return self.epoch_logs[self.epoch_logs.epoch == epoch_num].set_index("type")
-
-  def GetBestEpoch(self, metric="best accuracy"):
+  def GetBestEpochNum(self, metric="best accuracy") -> int:
     """Select the train/val/test epoch logs using the given metric.
 
     Supported metrics are:
@@ -82,203 +86,121 @@ class RunLogAnalyzer(object):
       99% val acc
       99.9% val acc
     """
-    if metric in {"best accuracy", "brest precision", "best recall", "best f1"}:
-      column = metric[len("best ") :]
-      validation_metric = getattr(
-        self.epoch_logs[self.epoch_logs["type"] == "val"], column
-      )
-      best_validation_metric = self.epoch_logs.iloc[validation_metric.idxmax()]
-      epoch_num = best_validation_metric.epoch
+    epochs: pd.DataFrame = self.tables["epochs"]
+
+    if metric in {"best accuracy", "best precision", "best recall", "best f1"}:
+      column_name = "val_" + metric[len("best ") :]
+      best_epoch = epochs.iloc[epochs[column_name].idxmax()]
+      epoch_num = best_epoch.epoch_num
     elif metric in {
       "90% val acc",
       "95% val acc",
       "99% val acc",
       "99.9% val acc",
     }:
-      accuracy = float(metric.split("%")[0])
-      matching_rows = self.epoch_logs[
-        (self.epoch_logs["type"] == "val")
-        & (self.epoch_logs["accuracy"] > accuracy)
-      ]
-      epoch_num = self.epoch_logs.iloc[matching_rows.index[0]].epoch
+      accuracy = float(metric.split("%")[0]) / 100
+      matching_rows = epochs[epochs["val_accuracy"] >= accuracy]
+      if not len(matching_rows):
+        raise ValueError(f"No {self.run_id} epochs reached {metric}")
+      # Select the first epoch when there are more than one matching rows.
+      epoch_num = epochs.iloc[matching_rows.index[0]].epoch
     else:
       raise ValueError(f"Unknown metric `{metric}`")
 
-    return self.GetEpochLogs(epoch_num)
+    return epoch_num
 
-  def ReconstructBatchFromLog(
-    self, log: log_database.BatchLogMeta
-  ) -> graph_batcher.GraphBatch:
-    """Reconstruct a graph batch at the given global step."""
-    if not log.batch_log:
-      raise OSError("Cannot re-create batch without detailed logs")
-
-    with prof.Profile(
-      lambda t: (
-        "Reconstructed graph batch with " f"{graph_batch.graph_count} graphs"
-      )
-    ):
-      with self.graph_db.Session() as session:
-        query = session.query(graph_database.GraphMeta)
-        query = query.options(
-          sql.orm.joinedload(graph_database.GraphMeta.graph)
-        )
-        query = query.filter(graph_database.GraphMeta.id.in_(log.graph_indices))
-        # Load the graphs in the same order as in the batch.
-        graphs = sorted(
-          query.all(), key=lambda g: log.graph_indices.index(g.id)
-        )
-
-      graph_batch = graph_batcher.GraphBatch.CreateFromGraphMetas(
-        graphs=(g for g in graphs),
-        stats=self.batcher.stats,
-        options=graph_batcher.GraphBatchOptions(),
-      )
-
-    return graph_batch
-
-  def ReconstructBatchAtStep(
-    self, global_step: int
-  ) -> graph_batcher.GraphBatch:
-    """Reconstruct a graph batch at the given global step."""
-    with self.log_db.Session() as session:
-      query = session.query(log_database.BatchLogMeta)
-      query = query.filter(log_database.BatchLogMeta.run_id == self.run_id)
-      query = query.filter(log_database.BatchLogMeta.global_step == global_step)
-      query = query.limit(1)
-
-      log: log_database.BatchLogMeta = query.first()
-
-      if not log:
-        raise OSError(
-          f"No log found for run {self.run_id} at global step " f"{global_step}"
-        )
-
-      return self.ReconstructBatchFromLog(log)
-
-  def GetInputOutputGraphsFromLog(self, log: log_database.BatchLogMeta):
-    batch = self.ReconstructBatchFromLog(log)
-
-    with prof.Profile(f"Recreated {batch.graph_count} input graphs"):
-      input_graphs = list(batch.ToNetworkXGraphs())
-
-    with prof.Profile(f"Recreated {batch.graph_count} output graphs"):
-      # Create a duplicate graph batch which has the model predictions set
-      # in place of the node_y or graph_y attributes.
-      output_graph_batch = graph_batcher.GraphBatch(
-        adjacency_lists=batch.adjacency_lists,
-        edge_positions=batch.edge_positions,
-        incoming_edge_counts=batch.incoming_edge_counts,
-        node_x_indices=np.zeros(len(batch.node_x_indices)),
-        node_y=log.predictions if batch.has_node_y else None,
-        graph_x=None,
-        graph_y=log.predictions if batch.has_graph_y else None,
-        graph_nodes_list=batch.graph_nodes_list,
-        graph_count=batch.graph_count,
-        log=batch.log,
-      )
-
-    output_graphs = list(output_graph_batch.ToNetworkXGraphs())
-
-    # Annotate the graphs with their GraphMeta.id column value.
-    for graph_id, input_graph, output_graph in zip(
-      log.graph_indices, input_graphs, output_graphs
-    ):
-      input_graph.id = graph_id
-      output_graph.id = graph_id
-
-    return list(zip(input_graphs, output_graphs))
-
-  def GetInputOutputGraphsForRandomBatch(
-    self, epoch_num: int, epoch_type: str = "test"
-  ):
-    """Reconstruct nx.MultiDiGraphs for a random batch from the given epoch_num
-    where the accuracy was < 100%.
-
-    Each graph has a 'id' property set, which is the value of GraphMeta.id
-    column for the given graph.
+  def GetGraphsForBatch(
+    self, batch: log_database.Batch
+  ) -> Iterable[graph_tuple_database.GraphTuple]:
+    """Reconstruct the graphs for a batch.
 
     Returns:
-      A list of <input,output> graph tuples, where each input graph is annotated
-      with features and labels, and each output graph is annotated with
-      predictions.
+      A iterable sequence of the unique graphs from a batch. Note that order may
+      not be the same as the order they appeared in the batch, and that
+      duplicate graphs in the batch will only be returned once.
     """
-    # Select a random batch with imperfect results.
-    batches = self.batch_logs[
-      (self.batch_logs["epoch"] == epoch_num)
-      & (self.batch_logs["type"] == epoch_type)
-      & (self.batch_logs["accuracy"] < 100)
+    if not batch.details:
+      raise OSError("Cannot re-create batch without detailed logs")
+
+    filters = [lambda: graph_tuple_database.GraphTuple.id.in_(batch.graph_ids)]
+    return graph_database_reader.BufferedGraphReader(
+      self.graph_db, filters=filters
+    )
+
+  def GetInputOutputGraphs(
+    self, batch: log_database.Batch
+  ) -> Iterable[Tuple[graph_tuple.GraphTuple, graph_tuple.GraphTuple]]:
+    """Reconstruct the input/output graphs for a batch.
+
+    This returns the raw GraphTuples for a batch, with node_y or graph_y
+    attributes on the output graphs set to the raw model predictions.
+    """
+    # Read the graphs from the batch.
+    unique_graphs: List[graph_tuple_database.GraphTuple] = list(
+      self.GetGraphsForBatch(batch)
+    )
+    id_to_graphs = {graph.id: graph for graph in unique_graphs}
+
+    # Re-construct the full set of graphs from the batch.
+    input_graphs: List[graph_tuple_database.GraphTuple] = [
+      id_to_graphs[id] for id in batch.graph_ids
     ]
 
-    random_row = batches.iloc[random.randint(0, len(batches) - 1)]
+    # Reconstruct the output graphs.
+    predictions = batch.predictions
 
-    input_graph_batch = self.ReconstructBatchAtStep(random_row.global_step)
-
-    with prof.Profile(
-      f"Recreated {input_graph_batch.graph_count} input graphs"
-    ):
-      input_graphs = list(input_graph_batch.ToNetworkXGraphs())
-
-    with prof.Profile(
-      f"Recreated {input_graph_batch.graph_count} output graphs"
-    ):
-      # Create a duplicate graph batch which has the model predictions set
-      # in place of the node_y or graph_y attributes.
-      output_graph_batch = graph_batcher.GraphBatch(
-        adjacency_lists=input_graph_batch.adjacency_lists,
-        edge_positions=input_graph_batch.edge_positions,
-        incoming_edge_counts=input_graph_batch.incoming_edge_counts,
-        node_x_indices=np.zeros(len(input_graph_batch.node_x_indices)),
-        node_y=log.predictions if input_graph_batch.has_node_y else None,
-        graph_x=None,
-        graph_y=log.predictions if input_graph_batch.has_graph_y else None,
-        graph_nodes_list=input_graph_batch.graph_nodes_list,
-        graph_count=input_graph_batch.graph_count,
-        log=input_graph_batch.log,
-      )
-
-    output_graphs = list(output_graph_batch.ToNetworkXGraphs())
-
-    # Annotate the graphs with their GraphMeta.id column value.
-    for graph_id, input_graph, output_graph in zip(
-      log.graph_indices, input_graphs, output_graphs
-    ):
-      input_graph.id = graph_id
-      output_graph.id = graph_id
-
-    return list(zip(input_graphs, output_graphs))
+    if input_graphs[0].node_y_dimensionality:
+      # Node-level predictions:
+      node_count = 0
+      for graph in input_graphs:
+        input_graph = graph.tuple
+        output_graph = input_graph.SetLabels(
+          node_y=predictions[node_count : node_count + input_graph.node_count],
+          copy=False,
+        )
+        node_count += input_graph.node_count
+        yield input_graph, output_graph
+    elif input_graphs[0].graph_y_dimensionality:
+      # Graph-level predictions:
+      for graph_count, graph in enumerate(input_graphs):
+        input_graph = graph.tuple
+        output_graph = input_graph.SetLabels(
+          graph_y=predictions[graph_count], copy=False
+        )
+        yield input_graph, output_graph
+    else:
+      raise NotImplementedError("neither node_y or graph_y set")
 
   @staticmethod
   def NodeConfusionMatrix(
-    input_graph: nx.MultiDiGraph, output_graph: nx.MultiDiGraph
+    input_graph: graph_tuple.GraphTuple, output_graph: graph_tuple.GraphTuple
   ) -> pd.DataFrame:
     """Build a confusion matrix for the given input/output graph pair."""
-    targets = np.array([data["y"] for _, data in input_graph.nodes(data=True)])
-    predictions = np.array(
-      [data["y"] for _, data in output_graph.nodes(data=True)]
-    )
+    targets = input_graph.node_y
+    predictions = output_graph.node_y
 
-    cm = BuildConfusionMatrix(targets=targets, predictions=predictions)
+    confusion_matrix = BuildConfusionMatrix(
+      targets=targets, predictions=predictions
+    )
     return pd.DataFrame(
-      cm,
-      columns=[f"pred_{i}" for i in range(len(cm))],
-      index=[f"true_{i}" for i in range(len(cm))],
+      confusion_matrix,
+      columns=[f"pred_{i}" for i in range(len(confusion_matrix))],
+      index=[f"true_{i}" for i in range(len(confusion_matrix))],
     )
 
 
 def SortGraphsByAccuracy(
-  input_output_graphs: typing.List[
-    typing.Tuple[nx.MultiDiGraph, nx.MultiDiGraph]
+  input_output_graphs: Iterable[
+    Tuple[graph_tuple.GraphTuple, graph_tuple.GraphTuple]
   ]
-) -> typing.List[typing.Tuple[nx.MultiDiGraph, nx.MultiDiGraph]]:
+) -> List[Tuple[graph_tuple.GraphTuple, graph_tuple.GraphTuple]]:
   """Sort the list of input/output graphs by their accuracy."""
+  input_output_graphs = list(input_output_graphs)
   return sorted(input_output_graphs, key=lambda x: ComputeGraphAccuracy(*x))
 
 
 def ComputeGraphAccuracy(
-  input_graph: nx.MultiDiGraph,
-  output_graph: nx.MultiDiGraph,
-  averaging_method: str = "weighted",
+  input_graph: graph_tuple.GraphTuple, output_graph: graph_tuple.GraphTuple,
 ):
   """Return the classification accuracy of the given input/output graph.
 
@@ -287,38 +209,26 @@ def ComputeGraphAccuracy(
   Returns:
     Accuracy in the range 0 <= x <= 1.
   """
-  try:
-    true_y = np.argmax(input_graph.y)
-    pred_y = np.argmax(output_graph.y)
-    output_graph.correct = true_y == pred_y
-    labels = np.arange(2, dtype=np.int32)
-  except AttributeError:
-    true_y = np.argmax([y for _, y in input_graph.nodes(data="y")], axis=1)
-    pred_y = np.argmax([y for _, y in output_graph.nodes(data="y")], axis=1)
-    labels = np.arange(len(input_graph.nodes[0]["y"]), dtype=np.int32)
-    correct = true_y == pred_y
-    for i, (_, data) in enumerate(output_graph.nodes(data=True)):
-      data["correct"] = correct[i]
+  if input_graph.has_node_y:
+    true_y = np.argmax(input_graph.node_y, axis=1)
+    pred_y = np.argmax(output_graph.node_y, axis=1)
+  elif input_graph.has_graph_y:
+    true_y = np.argmax(input_graph.graph_y)
+    pred_y = np.argmax(output_graph.graph_y)
+  else:
+    raise NotImplementedError("unreachable")
 
-  output_graph.accuracy = (true_y == pred_y).mean()
-  output_graph.precision = sklearn.metrics.precision_score(
-    true_y, pred_y, labels=labels, average=averaging_method
-  )
-  output_graph.recall = sklearn.metrics.recall_score(
-    true_y, pred_y, labels=labels, average=averaging_method
-  )
-  output_graph.f1 = sklearn.metrics.f1_score(
-    true_y, pred_y, labels=labels, average=averaging_method
-  )
-  return output_graph.accuracy
+  return sklearn.metrics.accuracy_score(true_y, pred_y)
 
 
 def BuildConfusionMatrix(targets: np.array, predictions: np.array) -> np.array:
   """Build a confusion matrix.
 
   Args:
-    targets: A list of 1-hot vectors with shape [num_instances,num_classes].
-    predictions: A list of 1-hot vectors with shape [num_instances,num_classes].
+    targets: A list of 1-hot vectors with shape
+      (num_instances, num_classes), dtype int32.
+    predictions: A list of 1-hot vectors with shape
+      (num_instances, num_classes), dtype float32.
 
   Returns:
     A pickled confusion matrix, which is a matrix of shape
@@ -326,7 +236,13 @@ def BuildConfusionMatrix(targets: np.array, predictions: np.array) -> np.array:
     the columns indicate predicted target class, and the element values are
     the number of instances of this type in the batch.
   """
-  num_classes = len(targets[0])
+  if targets.shape != predictions.shape:
+    raise TypeError(
+      f"Predictions shape {predictions.shape} must match targets "
+      f"shape {targets.shape}"
+    )
+
+  num_classes = targets.shape[1]
 
   # Convert 1-hot vectors to dense lists of integers.
   targets = np.argmax(targets, axis=1)
