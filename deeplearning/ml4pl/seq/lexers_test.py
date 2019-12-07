@@ -38,7 +38,7 @@ def lexer(
 ) -> lexers.Lexer:
   """A test fixture which returns a lexer."""
   return lexers.Lexer(
-    type=lexer_type, initial_vocab=initial_vocab, max_chunksize=max_chunk_size
+    type=lexer_type, initial_vocab=initial_vocab, max_chunk_size=max_chunk_size
   )
 
 
