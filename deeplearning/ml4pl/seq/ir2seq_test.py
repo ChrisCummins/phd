@@ -42,8 +42,8 @@ def opencl_relpaths() -> Set[str]:
 
 
 @test.Fixture(scope="function")
-def populated_db(
-  db: ir_database.Database, opencl_relpaths: Set[str]
+def populated_ir_db(
+  ir_db: ir_database.Database, opencl_relpaths: Set[str]
 ) -> ir_database.Database:
   """A test fixture which yields an IR database with 256 OpenCL entries."""
   rows = []
@@ -60,19 +60,21 @@ def populated_db(
     ir.id = i + 1
     rows.append(ir)
 
-  with db.Session(commit=True) as session:
+  with ir_db.Session(commit=True) as session:
     session.add_all(rows)
 
-  return db
+  return ir_db
 
 
 @test.Fixture(
   scope="function",
   params=(ir2seq.LlvmEncoder, ir2seq.OpenClEncoder, ir2seq.Inst2VecEncoder),
 )
-def encoder(request, populated_db: ir_database.Database) -> ir2seq.EncoderBase:
+def encoder(
+  request, populated_ir_db: ir_database.Database
+) -> ir2seq.EncoderBase:
   """Test fixture an encoder with IR IDs in range [1,100]."""
-  return request.param(populated_db)
+  return request.param(populated_ir_db)
 
 
 @decorators.loop_for(seconds=30)

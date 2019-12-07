@@ -1,5 +1,34 @@
 # This moduel defines sequence representations for programs.
 
+py_library(
+    name = "graph2seq",
+    srcs = ["graph2seq.py"],
+    deps = [
+        ":ir2seq",
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
+        "//labm8/py:app",
+        "//third_party/py/lru_dict",
+        "//third_party/py/numpy",
+    ],
+)
+
+py_test(
+    name = "graph2seq_test",
+    srcs = ["graph2seq_test.py"],
+    deps = [
+        ":graph2seq",
+        ":ir2seq",
+        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
+        "//deeplearning/ml4pl/graphs/labelled/devmap:make_devmap_dataset",
+        "//deeplearning/ml4pl/ir:ir_database",
+        "//deeplearning/ml4pl/testing:random_graph_tuple_database_generator",
+        "//deeplearning/ml4pl/testing:testing_databases",
+        "//labm8/py:decorators",
+        "//labm8/py:test",
+    ],
+)
+
 py_binary(
     name = "ir2seq",
     srcs = ["ir2seq.py"],
