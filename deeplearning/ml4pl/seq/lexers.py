@@ -267,6 +267,11 @@ class Lexer(object):
     )
     self.ctx = ctx
 
+  @property
+  def vocabulary_size(self) -> int:
+    """Get the size of the vocabulary."""
+    return len(self.vocab)
+
   def _Lex(self, texts: List[str]) -> Tuple[List[np.array], Dict[str, int]]:
     """Run lexer on a list of texts.
 
