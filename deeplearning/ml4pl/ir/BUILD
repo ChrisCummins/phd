@@ -15,3 +15,16 @@ py_binary(
         "//third_party/py/sqlalchemy",
     ],
 )
+
+py_test(
+    name = "ir_database_test",
+    srcs = ["ir_database_test.py"],
+    visibility = ["//deeplearning/ml4pl:__subpackages__"],
+    deps = [
+        ":ir_database",
+        "//deeplearning/ml4pl:run_id",
+        "//deeplearning/ml4pl/testing:testing_databases",
+        "//labm8/py:decorators",
+        "//labm8/py:test",
+    ],
+)
