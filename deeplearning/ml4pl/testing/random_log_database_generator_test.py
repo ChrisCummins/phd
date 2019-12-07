@@ -2,6 +2,7 @@
 import sqlalchemy as sql
 
 from deeplearning.ml4pl import run_id as run_id_lib
+from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.testing import random_log_database_generator
 from deeplearning.ml4pl.testing import testing_databases
@@ -37,15 +38,19 @@ def db_session(db: log_database.Database) -> log_database.Database.SessionType:
 
 
 @test.Parametrize("max_param_count", (1, 10))
+@test.Parametrize(
+  "graph_db", (None, graph_tuple_database.Database("sqlite://"))
+)
 def test_parameters(
   generator: random_log_database_generator.RandomLogDatabaseGenerator,
   run_id: run_id_lib.RunId,
   max_param_count: int,
   db_session: log_database.Database.SessionType,
+  graph_db: graph_tuple_database.Database,
 ):
   """Black-box test of generator properties."""
   logs = generator.CreateRandomRunLogs(
-    run_id=run_id, max_param_count=max_param_count,
+    run_id=run_id, max_param_count=max_param_count, graph_db=graph_db
   )
   assert 1 <= len(logs.parameters) <= max_param_count
   for param in logs.parameters:

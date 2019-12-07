@@ -14,6 +14,7 @@ from typing import Optional
 import numpy as np
 
 from deeplearning.ml4pl import run_id as run_id_lib
+from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch as batches
 from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import log_database
@@ -43,6 +44,7 @@ class RandomLogDatabaseGenerator(object):
     max_param_count: Optional[int] = None,
     max_epoch_count: Optional[int] = None,
     max_batch_count: Optional[int] = None,
+    graph_db: Optional[graph_tuple_database.Database] = None,
   ) -> log_database.RunLogs:
     """Create random logs for a run.
 
@@ -52,6 +54,7 @@ class RandomLogDatabaseGenerator(object):
       max_epoch_count: The maximum number of epochs to generate logs for.
       max_batch_count: The maximum number of batches to generate for an epoch of
         a given type.
+      graph_db: If set, add a --graph_db flag parameter with this URL.
     """
     run_id = log_database.RunId(
       run_id=(
@@ -62,7 +65,7 @@ class RandomLogDatabaseGenerator(object):
       )
     )
     parameters = self._CreateRandomParameters(
-      run_id, max_param_count=max_param_count
+      run_id, max_param_count=max_param_count, graph_db=graph_db
     )
     batches = self._CreateRandomBatches(
       run_id, max_epoch_count=max_epoch_count, max_batch_count=max_batch_count
@@ -79,30 +82,40 @@ class RandomLogDatabaseGenerator(object):
     max_param_count: Optional[int] = None,
     max_epoch_count: Optional[int] = None,
     max_batch_count: Optional[int] = None,
-  ):
+    graph_db: Optional[graph_tuple_database.Database] = None,
+  ) -> List[run_id_lib.RunId]:
+    run_ids = []
     for i in range(run_count):
+      run_id = run_id_lib.RunId.GenerateUnique(f"rand{i:04d}")
+      run_ids.append(run_id)
       with db.Session(commit=True) as session:
         session.add_all(
           self.CreateRandomRunLogs(
-            run_id=run_id_lib.RunId.GenerateUnique(f"rand{i:04d}"),
+            run_id=run_id,
             max_param_count=max_param_count,
             max_epoch_count=max_epoch_count,
             max_batch_count=max_batch_count,
+            graph_db=graph_db,
           ).all
         )
+    return run_ids
 
   #############################################################################
   # Private members.
   #############################################################################
 
   def _CreateRandomParameters(
-    self, run_id: log_database.RunId, max_param_count: Optional[int] = None
+    self,
+    run_id: log_database.RunId,
+    max_param_count: Optional[int] = None,
+    graph_db: Optional[graph_tuple_database.Database] = None,
   ) -> List[log_database.Parameter]:
     """Generate random parameter logs.
 
     Args:
       run_id: The run to generate parameters for. This is assumed to be unique.
       max_param_count: The maximum number of parameters to generate.
+      graph_db: If set, add a --graph_db flag parameter with this URL.
     """
     param_count = min(
       max_param_count or random.randint(20, 50), len(self.random_parameters)
@@ -112,6 +125,17 @@ class RandomLogDatabaseGenerator(object):
     ]
     for param in params:
       param.run_id = run_id.run_id
+
+    if graph_db:
+      params.append(
+        log_database.Parameter.Create(
+          run_id=run_id.run_id,
+          type=log_database.ParameterType.FLAG,
+          name="graph_db",
+          value=graph_db.url,
+        )
+      )
+
     return params
 
   def _CreateRandomBatches(
@@ -226,6 +250,7 @@ class RandomLogDatabaseGenerator(object):
           predictions=np.random.rand(target_count, 5),
           iteration_count=random.randint(1, 3),
           model_converged=random.choice([False, True]),
+          learning_rate=random.random(),
           loss=random.random(),
         )
       )
