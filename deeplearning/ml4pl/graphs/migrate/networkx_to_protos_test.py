@@ -1,17 +1,13 @@
 """Unit tests for //deeplearning/ml4pl/graphs/migrate:networkx_to_protos."""
-import pathlib
 import pickle
 from typing import Iterable
 from typing import Tuple
 
 import networkx as nx
 
-from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.migrate import networkx_to_protos
-from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import random_cdfg_generator
-from deeplearning.ml4pl.testing import testing_databases
 from labm8.py import bazelutil
 from labm8.py import decorators
 from labm8.py import test
@@ -20,10 +16,6 @@ FLAGS = test.FLAGS
 
 NETWORKX_GRAPHS_ARCHIVE = bazelutil.DataArchive(
   "phd/deeplearning/ml4pl/testing/data/100_unlabelled_networkx_graphs.tar.bz2"
-)
-
-GRAPH_DB = bazelutil.DataArchive(
-  "phd/deeplearning/ml4pl/testing/data/100_unlabelled_networkx_graphs.db.tar.bz2"
 )
 
 
@@ -131,36 +123,6 @@ def test_NetworkXGraphToProgramGraphProto_random_100(
   assert len(proto.edge) == g.number_of_edges()
   # Check the root node.
   assert proto.node[0].text == "root"
-
-
-@test.Fixture(scope="function")
-def populated_graph_db() -> graph_database.Database:
-  """Test fixture which returns a database of 100 "real" networkx graphs."""
-  with GRAPH_DB as db_dir:
-    assert (db_dir / "100_unlabelled_networkx_graphs.db").is_file()
-    yield graph_database.Database(
-      f"sqlite:///{db_dir}/100_unlabelled_networkx_graphs.db"
-    )
-
-
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
-def empty_output_db(request) -> unlabelled_graph_database.Database:
-  """Test fixture which returns an empty output database."""
-  yield from testing_databases.YieldDatabase(
-    unlabelled_graph_database.Database, request.param
-  )
-
-
-@test.Parametrize("nproc", (1, 2, 4))
-def test_MigrateGraphDatabase_random_100(
-  populated_graph_db: graph_database.Database,
-  empty_output_db: unlabelled_graph_database.Database,
-  nproc: int,
-):
-  """Run database migration on a test database of 100 "real" networkx graphs."""
-  networkx_to_protos.MigrateGraphDatabase(
-    populated_graph_db, empty_output_db, nproc
-  )
 
 
 @decorators.loop_for(seconds=10)
