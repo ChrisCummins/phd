@@ -288,6 +288,11 @@ class Lexer(object):
       [str(LEXER_BINARY)], message, timeout_seconds=3600
     )
     encoded = [np.array(j.token, dtype=np.int32) for j in message.input]
+    if len(encoded) != len(texts):
+      raise OSError(
+        f"Lexer returned {len(texts)} sequences for " f"{len(encoded)} inputs"
+      )
+
     vocabulary_out = dict(message.vocabulary)
     return encoded, vocabulary_out
 
