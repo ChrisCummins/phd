@@ -85,7 +85,7 @@ class IntermediateRepresentation(
   source: str = sql.Column(sql.String(256), nullable=False, index=True)
 
   # The relative path of the compiler intermediate representation file.
-  relpath: str = sql.Column(sql.String(512), nullable=False)
+  relpath: str = sql.Column(sql.String(256), nullable=False)
 
   # The source language.
   source_language: SourceLanguage = sql.Column(
@@ -200,7 +200,7 @@ class IntermediateRepresentation(
     """
     if len(source) > 256:
       raise TypeError("source column is too long")
-    if len(relpath) > 512:
+    if len(relpath) > 256:
       raise TypeError("relpath column is too long")
     if len(cflags) > 4096:
       raise TypeError("cflags column is too long")
