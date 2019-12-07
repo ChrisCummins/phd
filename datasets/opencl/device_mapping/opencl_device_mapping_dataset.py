@@ -17,12 +17,14 @@ import typing
 import numpy as np
 import pandas as pd
 
-from deeplearning.deeptune.opencl.adversary import (
-  opencl_deadcode_inserter as dci,
-)
 from labm8.py import app
 from labm8.py import bazelutil
 from labm8.py import decorators
+# TODO(cec): Temporarily removing this import to break the dependency of CLgen
+# rewriter:
+# from deeplearning.deeptune.opencl.adversary import (
+#   opencl_deadcode_inserter as dci,
+# )
 
 FLAGS = app.FLAGS
 
