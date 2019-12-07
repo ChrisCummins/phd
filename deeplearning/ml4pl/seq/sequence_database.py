@@ -1,6 +1,8 @@
+"""A database backend for storing sequences."""
 import codecs
 import pickle
 from typing import Dict
+from typing import Optional
 
 import numpy as np
 import sqlalchemy as sql
@@ -13,10 +15,6 @@ from labm8.py import sqlutil
 FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
-
-###############################################################################
-# Bytecode sequences.
-###############################################################################
 
 
 class SequenceEncoder(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
@@ -59,18 +57,22 @@ class Sequence(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     cascade="all, delete-orphan",
   )
 
+  sequence_length: int = sql.Column(sql.Integer, nullable=False)
+  vocab_size: int = sql.Column(sql.Integer, nullable=False)
+
   binary_encoded_sequence: bytes = sql.Column(
     sqlutil.ColumnTypes.LargeBinary(), nullable=False
   )
-  binary_segment_ids: bytes = sql.Column(
+  binary_segment_ids: Optional[bytes] = sql.Column(
     sqlutil.ColumnTypes.LargeBinary(), nullable=False
   )
-  binary_node_mask: bytes = sql.Column(
+  binary_node_mask: Optional[bytes] = sql.Column(
     sqlutil.ColumnTypes.LargeBinary(), nullable=False
   )
 
   @property
   def encoded_sequence(self) -> np.array:
+    """Return the encoded sequence, with shape (sequence_length, vocab_size)"""
     return pickle.loads(codecs.decode(self.binary_encoded_sequence, "zlib"))
 
   @property
