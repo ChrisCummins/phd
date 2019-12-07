@@ -1,6 +1,26 @@
 # This package constructs program graphs from LLVM intermediate representation.
 
 py_library(
+    name = "graph_builder",
+    srcs = ["graph_builder.py"],
+    deps = [
+        "//deeplearning/ml4pl/graphs:programl_pb_py",
+        "//labm8/py:app",
+    ],
+)
+
+py_binary(
+    name = "llvm2graph",
+    srcs = ["llvm2graph.py"],
+    deps = [
+        ":graph_builder",
+        "//deeplearning/ml4pl/graphs:programl_pb_py",
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
+    ],
+)
+
+py_library(
     name = "llvm_statements",
     srcs = ["llvm_statements.py"],
     deps = [
@@ -19,22 +39,14 @@ py_library(
     ],
 )
 
-py_binary(
-    name = "llvm2graph",
-    srcs = ["llvm2graph.py"],
-    deps = [
-        ":graph_builder",
-        "//deeplearning/ml4pl/graphs:programl_pb_py",
-        "//labm8/py:app",
-        "//labm8/py:pbutil",
-    ],
-)
-
 py_library(
-    name = "graph_builder",
-    srcs = ["graph_builder.py"],
+    name = "node_encoder",
+    srcs = ["node_encoder.py"],
+    data = ["//deeplearning/ml4pl/graphs/unlabelled/cdfg/node_embeddings:embeddings"],
     deps = [
-        "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:decorators",
+        "//third_party/py/numpy",
     ],
 )

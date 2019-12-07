@@ -50,7 +50,7 @@ def GetPoj104BytecodeGroups(
   }
 
 
-def GetTrainValTestGroups(
+def GetTrainValTestSplits(
   db: graph_database.Database,
   train_val_test_ratio: typing.Iterable[float] = (3, 1, 1),
 ) -> typing.Dict[str, typing.List[int]]:
@@ -160,7 +160,7 @@ def main():
   if FLAGS.k_fold:
     groups = StratifiedKFold(graph_db, FLAGS.k_fold)
   else:
-    groups = GetTrainValTestGroups(graph_db)
+    groups = GetTrainValTestSplits(graph_db)
 
   for group, ids in groups.items():
     with graph_db.Session(commit=True) as session:

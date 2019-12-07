@@ -7,7 +7,7 @@ import time
 import typing
 
 from deeplearning.ml4pl.bytecode import bytecode_database
-from deeplearning.ml4pl.bytecode import splitters
+from deeplearning.ml4pl.ir import splitters
 from deeplearning.ml4pl.graphs import graph_database
 from labm8.py import app
 from labm8.py import fs

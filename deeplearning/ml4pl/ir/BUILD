@@ -28,3 +28,27 @@ py_test(
         "//labm8/py:test",
     ],
 )
+
+py_library(
+    name = "splitters",
+    srcs = ["splitters.py"],
+    deps = [
+        ":ir_database",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//third_party/py/numpy",
+        "//third_party/py/scikit_learn",
+        "//third_party/py/sqlalchemy",
+    ],
+)
+
+py_test(
+    name = "splitters_test",
+    srcs = ["splitters_test.py"],
+    deps = [
+        ":ir_database",
+        ":splitters",
+        "//labm8/py:app",
+        "//labm8/py:test",
+    ],
+)
