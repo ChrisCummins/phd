@@ -14,19 +14,20 @@ from labm8.py import fs
 from labm8.py import prof
 from labm8.py import sqlutil
 
-app.DEFINE_database(
-  "input_db",
-  graph_database.Database,
-  None,
-  "URL of database to read unlabelled graphs from.",
-  must_exist=True,
-)
-app.DEFINE_database(
-  "output_db",
-  graph_database.Database,
-  "sqlite:////tmp/phd/ml4pl/graphs.db",
-  "URL of the database to write labelled graphs to.",
-)
+# TODO(cec): Temporarily disabled duplicate flags.
+# app.DEFINE_database(
+#   "input_db",
+#   graph_database.Database,
+#   None,
+#   "URL of database to read unlabelled graphs from.",
+#   must_exist=True,
+# )
+# app.DEFINE_database(
+#   "output_db",
+#   graph_database.Database,
+#   "sqlite:////tmp/phd/ml4pl/graphs.db",
+#   "URL of the database to write labelled graphs to.",
+# )
 app.DEFINE_string(
   "gpu", None, "The gpu to use. One of: {amd_tahiti_7970,nvidia_gtx_960}"
 )
