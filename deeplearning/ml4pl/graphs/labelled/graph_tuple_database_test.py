@@ -22,6 +22,14 @@ def db(request) -> graph_tuple_database.Database:
   )
 
 
+def db(
+  db: graph_tuple_database.Database,
+) -> graph_tuple_database.Database.SessionType:
+  """A test fixture which yields an empty graph proto database session."""
+  with db.Session() as session:
+    yield session
+
+
 @test.Fixture(scope="function")
 def two_graph_db_session(
   db: graph_tuple_database.Database,
