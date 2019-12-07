@@ -14,6 +14,7 @@ py_library(
 
 py_test(
     name = "graph2seq_test",
+    timeout = "long",
     srcs = ["graph2seq_test.py"],
     deps = [
         ":graph2seq",
