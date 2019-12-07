@@ -1,6 +1,7 @@
 """Unit tests for //deeplearning/ml4pl/graphs/labelled:graph_tuple."""
 import pickle
 import random
+from typing import Tuple
 
 import networkx as nx
 import numpy as np
@@ -422,6 +423,36 @@ def test_FromGraphTuples_two_tuples(
       "and /tmp/graph_tuple_out.pickle"
     )
     raise e
+
+
+@decorators.loop_for(seconds=5)
+@test.Parametrize("dimensionalities", ((0, 2), (2, 0)))
+@test.Parametrize("copy", (False, True))
+def test_SetLabels(dimensionalities: Tuple[int, int], copy: bool):
+  """Test new label setting."""
+  node_y_dimensionality, graph_y_dimensionality = dimensionalities
+  in_tuple = random_graph_tuple_generator.CreateRandomGraphTuple(
+    node_y_dimensionality=node_y_dimensionality,
+    graph_y_dimensionality=graph_y_dimensionality,
+  )
+  old_node_y = np.copy(in_tuple.node_y)
+  old_graph_y = np.copy(in_tuple.graph_y)
+
+  new_node_y = np.random.rand(
+    in_tuple.node_count, in_tuple.node_y_dimensionality
+  )
+  new_graph_y = np.random.rand(in_tuple.graph_y_dimensionality)
+  out_tuple = in_tuple.SetLabels(
+    node_y=np.copy(new_node_y), graph_y=np.copy(new_graph_y), copy=copy,
+  )
+
+  # Test that input tuple is not modified.
+  assert np.array_equal(in_tuple.node_y, old_node_y)
+  assert np.array_equal(in_tuple.graph_y, old_graph_y)
+
+  # Test that output tuple has correct labels.
+  assert np.array_equal(out_tuple.node_y, new_node_y)
+  assert np.array_equal(out_tuple.graph_y, new_graph_y)
 
 
 # Fuzzers:
