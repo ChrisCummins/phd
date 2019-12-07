@@ -16,7 +16,7 @@ from labm8.py import pbutil
 from labm8.py import progress
 
 app.DEFINE_integer(
-  "lexer_max_chunksize_mb",
+  "lexer_chunk_size_mb",
   32,
   "The maximum number of megabytes of strings to feed into a single lexer "
   "invocation.",
@@ -253,7 +253,7 @@ class Lexer(object):
     self,
     type: LexerType,
     initial_vocab: Dict[str, int],
-    max_chunksize: Optional[int] = None,
+    max_chunk_size: Optional[int] = None,
     ctx: progress.ProgressContext = progress.NullContext,
   ):
     self.candidate_tokens = {
@@ -262,8 +262,8 @@ class Lexer(object):
     }[type]
 
     self.vocab = copy.deepcopy(initial_vocab)
-    self.max_chunksize = max_chunksize or (
-      FLAGS.lexer_max_chunksize_mb * 1024 * 1024
+    self.max_chunk_size = max_chunk_size or (
+      FLAGS.lexer_chunk_size_mb * 1024 * 1024
     )
     self.ctx = ctx
 
@@ -310,16 +310,16 @@ class Lexer(object):
     ):
       lexed = []
       strings_to_lex = []
-      chunksize = 0
+      chunk_size = 0
 
       for text in texts:
-        if chunksize >= self.max_chunksize:
+        if chunk_size >= self.max_chunk_size:
           chunk, self.vocab = self._Lex(strings_to_lex)
           lexed += chunk
-          chunksize = 0
+          chunk_size = 0
           strings_to_lex = []
         strings_to_lex.append(text)
-        chunksize += len(text)
+        chunk_size += len(text)
 
       if strings_to_lex:
         chunk, self.vocab = self._Lex(strings_to_lex)
@@ -364,18 +364,18 @@ class Lexer(object):
 
       lexed = []
       strings_to_lex = []
-      chunksize = 0
+      chunk_size = 0
 
       for text in texts:
-        if chunksize >= self.max_chunksize:
+        if chunk_size >= self.max_chunk_size:
           chunk, vocab = self._Lex(strings_to_lex)
           if len(vocab) > len(self.vocab):
             chunk = [self.ClampVocab(x, max_vocab_element) for x in chunk]
           lexed += chunk
-          chunksize = 0
+          chunk_size = 0
           strings_to_lex = []
         strings_to_lex.append(text)
-        chunksize += len(text)
+        chunk_size += len(text)
 
       if strings_to_lex:
         chunk, vocab = self._Lex(strings_to_lex)
