@@ -1,470 +1,137 @@
-"""Module to convert bytecode IDs into vocabulary sequences."""
+"""Module to convert intermediate representations into vocabulary sequences."""
 import json
-import typing
+from typing import List
+from typing import Tuple
 
-import keras
 import numpy as np
 import sqlalchemy as sql
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
-from deeplearning.clgen.proto import internal_pb2
-from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs.labelled.devmap import make_devmap_dataset
+from deeplearning.ml4pl.ir import ir_database
+from deeplearning.ml4pl.seq import lexers
 from deeplearning.ncc import vocabulary as inst2vec_vocab
 from deeplearning.ncc.inst2vec import api as inst2vec
 from labm8.py import app
 from labm8.py import bazelutil
-from labm8.py import pbutil
-
-app.DEFINE_database(
-  "bytecode_db",
-  bytecode_database.Database,
-  None,
-  "URL of database to read bytecodes from.",
-  must_exist=True,
-)
+from labm8.py import humanize
+from labm8.py import progress
 
 app.DEFINE_input_path(
-  "bytecode_vocabulary",
-  bazelutil.DataPath("phd/deeplearning/ml4pl/models/lstm/llvm_vocab.json"),
-  "Override the default LLVM vocabulary file. Use "
-  "//deeplearning/ml4pl/models/lstm:derive_vocabulary to generate a "
-  "vocabulary.",
-)
-
-app.DEFINE_integer(
-  "max_encoded_length",
-  None,
-  "Override the max_encoded_length value loaded from the vocabulary.",
+  "llvm_vocab",
+  bazelutil.DataPath("phd/deeplearning/ml4pl/seq/llvm_vocab.json"),
+  "The vocabulary to use for LLVM encoders. Use "
+  "//deeplearning/ml4pl/seq:derive_vocab to generate a vocabulary.",
 )
 
 FLAGS = app.FLAGS
-
-LEXER_WORKER = bazelutil.DataPath(
-  "phd/deeplearning/clgen/corpuses/lexer/lexer_worker"
-)
-
-LLVM_IR_TOKENS = [
-  # Primitive types
-  "void",
-  "half",
-  "float",
-  "double",
-  "fp128",
-  "x86_fp80",
-  "ppc_fp128",
-  # Note that ints can have any bit width up to 2^23 - 1, so this is
-  # non-exhaustive.
-  "i32",
-  "i64",
-  "i128",
-  # Terminator ops
-  "ret",
-  "br",
-  "switch",
-  "indirectbr",
-  "invoke",
-  "callbr",
-  "resume",
-  "catchswitch",
-  "catchret",
-  "cleanupret",
-  "unreachable",
-  "unreachable",
-  # Unary ops
-  "fneg",
-  # Binary ops
-  "add",
-  "fadd",
-  "sub",
-  "fsub",
-  "mul",
-  "fmul",
-  "udiv",
-  "sdiv",
-  "fdiv",
-  "urem",
-  "srem",
-  "frem",
-  # Bitwise binary ops
-  "shl",
-  "lshr",
-  "ashr",
-  "and",
-  "or",
-  "xor",
-  # Vector ops
-  "extractelement",
-  "insertelement",
-  "shufflevector",
-  # Aggregate ops
-  "extractvalue",
-  "insertvalue",
-  # Memory Access
-  "alloca",
-  "load",
-  "store",
-  "fence",
-  "cmpxchg",
-  "atomicrmw",
-  "getelementptr",
-  # Conversion ops
-  "trunc",
-  "to",
-  "zext",
-  "sext",
-  "fptrunc",
-  "fpext",
-  "fptoui",
-  "fptose",
-  "uitofp",
-  "sitofp",
-  "ptrtoint",
-  "inttoptr",
-  "bitcast",
-  "addrspacecast",
-  # Other ops
-  "icmp",
-  "fcmp",
-  "phi",
-  "select",
-  "call",
-  "va_arg",
-  "landingpad",
-  "catchpad",
-  "cleanuppad",
-  # Misc keywords
-  "define",
-  "declare",
-  "private",
-  "unnamed_addr",
-  "constant",
-  "nounwind",
-  "nocapture",
-]
-
-# The vocabulary used in PACT'17 work.
-OPENCL_TOKENS = [
-  "__assert",
-  "__attribute",
-  "__builtin_astype",
-  "__clc_fabs",
-  "__clc_fma",
-  "__constant",
-  "__global",
-  "__inline",
-  "__kernel",
-  "__local",
-  "__private",
-  "__read_only",
-  "__read_write",
-  "__write_only",
-  "abs",
-  "alignas",
-  "alignof",
-  "atomic_add",
-  "auto",
-  "barrier",
-  "bool",
-  "break",
-  "case",
-  "char",
-  "clamp",
-  "complex",
-  "const",
-  "constant",
-  "continue",
-  "default",
-  "define",
-  "defined",
-  "do",
-  "double",
-  "elif",
-  "else",
-  "endif",
-  "enum",
-  "error",
-  "event_t",
-  "extern",
-  "fabs",
-  "false",
-  "float",
-  "for",
-  "get_global_id",
-  "get_global_size",
-  "get_local_id",
-  "get_local_size",
-  "get_num_groups",
-  "global",
-  "goto",
-  "half",
-  "if",
-  "ifdef",
-  "ifndef",
-  "image1d_array_t",
-  "image1d_buffer_t",
-  "image1d_t",
-  "image2d_array_t",
-  "image2d_t",
-  "image3d_t",
-  "imaginary",
-  "include",
-  "inline",
-  "int",
-  "into",
-  "kernel",
-  "line",
-  "local",
-  "long",
-  "noreturn",
-  "pragma",
-  "private",
-  "quad",
-  "read_only",
-  "read_write",
-  "register",
-  "restrict",
-  "return",
-  "sampler_t",
-  "short",
-  "shuffle",
-  "signed",
-  "size_t",
-  "sizeof",
-  "sqrt",
-  "static",
-  "struct",
-  "switch",
-  "true",
-  "typedef",
-  "u32",
-  "uchar",
-  "uint",
-  "ulong",
-  "undef",
-  "union",
-  "unsigned",
-  "void",
-  "volatile",
-  "while",
-  "wide",
-  "write_only",
-]
-
-
-def Encode(
-  bytecodes: typing.List[str],
-  vocab: typing.Dict[str, int],
-  language: str = "llvm",
-) -> typing.Tuple[typing.List[typing.List[int]], typing.Dict[str, int]]:
-  """Encode the given bytecodes using the vocabulary.
-
-  The vocabulary is lazily constructed. If a token is found that is not in the
-  vocabulary, it is added.
-
-  There is non-negligible overhead in calling this method. For the sake of
-  efficiency try to minimize the number of calls to this method.
-
-  Returns:
-    A list of encoded bytecodes, and the output vocabulary.
-  """
-  tokens = {"llvm": LLVM_IR_TOKENS, "opencl": OPENCL_TOKENS,}[language]
-
-  message = internal_pb2.LexerBatchJob(
-    input=[internal_pb2.LexerJob(string=s) for s in bytecodes],
-    candidate_token=tokens,
-    vocabulary=vocab,
-  )
-  pbutil.RunProcessMessageInPlace([LEXER_WORKER], message, timeout_seconds=3600)
-  return [list(j.token) for j in message.input], dict(message.vocabulary)
-
-
-def EncodeWithFixedVocab(
-  bytecodes: typing.List[str],
-  vocab: typing.Dict[str, int],
-  language: str = "llvm",
-) -> typing.List[typing.List[int]]:
-  encoded_sequences, vocab_out = Encode(bytecodes, vocab, language)
-  if len(vocab_out) != len(vocab):
-    app.Error(
-      "Encoded vocabulary has different size "
-      f"({len(vocab_out)}) than the input "
-      f"({len(vocab)})"
-    )
-  return encoded_sequences
 
 
 class EncoderBase(object):
   """Base class for implementing bytecode encoders."""
 
-  def __init__(self):
-    self._bytecode_db = None
+  def __init__(
+    self,
+    ir_db: ir_database.Database,
+    ctx: progress.ProgressContext = progress.NullContext,
+  ):
+    self.ir_db = ir_db
+    self.ctx = ctx
 
-  def Encode(
-    self, bytecode_ids: typing.List[int]
-  ) -> typing.List[typing.List[int]]:
-    """Convert a list of bytecode IDs to a list of encoded sequences."""
+  def Encode(self, ids: List[int]) -> List[np.array]:
+    """Convert a list of IR IDs to a list of encoded sequences."""
     raise NotImplementedError("abstract class")
 
   @property
-  def bytecode_db(self) -> bytecode_database.Database:
-    """Get the bytecode database."""
-    if self._bytecode_db:
-      return self._bytecode_db
-    elif FLAGS.bytecode_db:
-      self._bytecode_db = FLAGS.bytecode_db()
-      return self._bytecode_db
-    else:
-      raise app.UsageError("--bytecode_db must be set")
+  def vocabulary_size(self) -> int:
+    """Get the size of the vocabulary, including the unknown-vocab element."""
+    raise NotImplementedError("abstract class")
+
+  @property
+  def max_encoded_length(self) -> int:
+    """Return an upper bound on the length of the encoded sequences."""
+    raise NotImplementedError("abstract class")
 
 
-class BytecodeEncoder(EncoderBase):
-  def __init__(self):
-    super(BytecodeEncoder, self).__init__()
+class LlvmEncoder(EncoderBase):
+  """An encoder for LLVM intermediate representations."""
+
+  def __init__(self, *args, **kwargs):
+    super(LlvmEncoder, self).__init__(*args, **kwargs)
 
     # Load the vocabulary used for encoding LLVM bytecode.
-    with open(FLAGS.bytecode_vocabulary) as f:
+    with open(FLAGS.llvm_vocab) as f:
       data_to_load = json.load(f)
-    self.vocabulary = data_to_load["vocab"]
-    self.max_sequence_length = data_to_load["max_encoded_length"]
-    self.language = "llvm"
+    vocab = data_to_load["vocab"]
+    self._max_encoded_length = data_to_load["max_encoded_length"]
 
-    # Allow the --max_encoded_length to override the value stored in the
-    # vocabulary file.
-    if FLAGS.max_encoded_length:
-      app.Log(
-        1,
-        "Changing max sequence length from %s to %s",
-        self.max_sequence_length,
-        FLAGS.max_encoded_length,
-      )
-      self.max_sequence_length = FLAGS.max_encoded_length
-
-    # The out-of-vocabulary padding value, used to pad sequences to the same
-    # length.
-    self.pad_val = len(self.vocabulary)
-    assert self.pad_val not in self.vocabulary
-
-    app.Log(
-      1,
-      "Bytecode encoder using %s-element vocabulary with maximum "
-      "sequence length %s",
-      self.vocabulary_size_with_padding_token,
-      self.max_sequence_length,
+    self.lexer = lexers.Lexer(
+      type=lexers.LexerType.LLVM, initial_vocab=vocab, ctx=self.ctx
     )
 
-  @property
-  def vocabulary_size_with_padding_token(self) -> int:
-    return len(self.vocabulary) + 1
+  def Encode(self, ids: List[int]) -> List[np.array]:
+    """Encode a list of IR IDs.
 
-  def Encode(self, bytecode_ids: typing.List[int]) -> np.array:
-    with self.bytecode_db.Session() as session:
-      query = session.query(
-        bytecode_database.LlvmBytecode.id,
-        bytecode_database.LlvmBytecode.bytecode,
-      )
-      query = query.filter(bytecode_database.LlvmBytecode.id.in_(bytecode_ids))
+    Args:
+      ids: Intermediate representation IDs.
 
-      bytecode_id_to_string = {
-        bytecode_id: bytecode for bytecode_id, bytecode in query
-      }
-      if len(set(bytecode_ids)) != len(bytecode_id_to_string):
-        raise EnvironmentError(
-          f"len(bytecode_ids)={len(bytecode_ids)} != "
-          f"len(bytecode_id_to_string)={len(bytecode_id_to_string)}"
+    Returns:
+      A list of encoded sequences.
+    """
+    sorted_unique_ids: List[int] = list(sorted(set(ids)))
+    with self.ir_db.Session() as session:
+      sorted_unique_ir: List[str] = [
+        ir_database.IntermediateRepresentation.DecodeBinaryIr(row.binary_ir)
+        for row in session.query(
+          ir_database.IntermediateRepresentation.binary_ir,
         )
-
-    return self.EncodeBytecodeStrings(
-      [bytecode_id_to_string[bytecode_id] for bytecode_id in bytecode_ids]
-    )
-
-  def EncodeBytecodeStrings(self, strings: typing.List[str], pad: bool = True):
-    # Encode the requested bytecodes.
-    encoded_sequences = EncodeWithFixedVocab(
-      strings, self.vocabulary, self.language
-    )
-    if len(strings) != len(encoded_sequences):
-      raise EnvironmentError(
-        f"len(strings)={len(strings)} != "
-        f"len(encoded_sequences)={len(encoded_sequences)}"
-      )
-    if pad:
-      return np.array(
-        keras.preprocessing.sequence.pad_sequences(
-          encoded_sequences, maxlen=self.max_sequence_length, value=self.pad_val
+        .filter(
+          ir_database.IntermediateRepresentation.id.in_(ids),
+          ir_database.IntermediateRepresentation.compilation_succeeded == True,
         )
-      )
-    else:
-      return np.array(encoded_sequences)
-
-
-class Inst2VecEncoder(BytecodeEncoder):
-  """Translate bytecode IDs to inst2vec encoded sequences."""
-
-  # TODO(github.com/ChrisCummins/ProGraML/issues/20): There is no need to
-  # inherit from BytecodeEncoder, and this causes confusion with having to set
-  # the max_sequence_length twice. Refactor.
-
-  def __init__(self):
-    self.vocab = inst2vec_vocab.VocabularyZipFile.CreateFromPublishedResults()
-
-    # Unpack the vocabulary zipfile.
-    self.vocab.__enter__()
-
-    self.pad_val = len(self.vocab.dictionary)
-    assert self.pad_val not in self.vocab.dictionary.values()
-
-    # We must call the superclass constructor *after* unpacking the vocabulary
-    # zipfile.
-    super(Inst2VecEncoder, self).__init__()
-
-    with self.bytecode_db.Session() as session:
-      max_linecount = session.query(
-        sql.func.max(bytecode_database.LlvmBytecode.linecount)
-      ).one()[0]
-      self.max_sequence_length = max_linecount
-
-    # Allow the --max_encoded_length to override the value stored in the
-    # vocabulary file.
-    if FLAGS.max_encoded_length:
-      app.Log(
-        1,
-        "Changing inst2vec max sequence length from %s to %s",
-        self.max_sequence_length,
-        FLAGS.max_encoded_length,
-      )
-      self.max_sequence_length = FLAGS.max_encoded_length
-
-  def __del__(self):
-    # Tidy up the unpacked vocabulary zipfile.
-    self.vocab.__exit__()
-
-  def EncodeBytecodeStrings(self, strings: typing.List[str]):
-    with self.vocab as vocab:
-      encoded_sequences = [
-        inst2vec.EncodeLlvmBytecode(bytecode, vocab) for bytecode in strings
+        .order_by(ir_database.IntermediateRepresentation.id)
       ]
 
-    return np.array(
-      keras.preprocessing.sequence.pad_sequences(
-        encoded_sequences, maxlen=self.max_sequence_length, value=self.pad_val,
-      )
-    )
+      if len(sorted_unique_ir) != len(sorted_unique_ids):
+        raise KeyError(
+          f"Requested {len(sorted_unique_ids)} IRs from database but received "
+          f"{len(sorted_unique_ir)}"
+        )
+
+      sorted_unique_encodeds: List[np.array] = self.lexer.Lex(sorted_unique_ir)
+
+      id_to_encoded = {
+        id: encoded
+        for id, encoded in zip(sorted_unique_ids, sorted_unique_encodeds)
+      }
+
+    return [id_to_encoded[id] for id in ids]
 
   @property
-  def vocabulary_size_with_padding_token(self) -> int:
-    return len(self.vocab.dictionary) + 1
+  def vocabulary_size(self) -> int:
+    """Return the size of the encoder vocabulary."""
+    return self.lexer.vocabulary_size
+
+  @property
+  def max_encoded_length(self) -> int:
+    """Return an upper bound on the length of the encoded sequences."""
+    return self._max_encoded_length
 
 
 class OpenClEncoder(EncoderBase):
-  """Translate bytecode IDs to encoded OpenCL sources.
+  """An OpenCL source-level encoder.
 
   This pre-computes the encoded sequences for all values during construction
   time.
   """
 
-  def __init__(self):
-    super(OpenClEncoder, self).__init__()
+  def __init__(self, *args, **kwargs):
+    super(OpenClEncoder, self).__init__(*args, **kwargs)
+
+    # We start with an empty vocabulary and build it from inputs.
+    self.lexer = lexers.Lexer(
+      type=lexers.LexerType.OPENCL, initial_vocab={}, ctx=self.ctx
+    )
 
     # Map relpath -> src.
     df = make_devmap_dataset.MakeGpuDataFrame(
@@ -476,62 +143,148 @@ class OpenClEncoder(EncoderBase):
     }
 
     # Map relpath -> bytecode ID.
-    with self.bytecode_db.Session() as session:
-      query = session.query(
-        bytecode_database.LlvmBytecode.id,
-        bytecode_database.LlvmBytecode.relpath,
-      )
-      query = query.filter(
-        bytecode_database.LlvmBytecode.source_name == "pact17_opencl_devmap"
-      )
-      relpath_to_bytecode_id = {
-        relpath: bytecode_id for bytecode_id, relpath in query
+    with self.ir_db.Session() as session:
+      relpath_to_id = {
+        row.relpath: row.id
+        for row in session.query(
+          ir_database.IntermediateRepresentation.id,
+          ir_database.IntermediateRepresentation.relpath,
+        ).filter(
+          ir_database.IntermediateRepresentation.source_language
+          == ir_database.SourceLanguage.OPENCL,
+          ir_database.IntermediateRepresentation.compilation_succeeded == True,
+          ir_database.IntermediateRepresentation.source
+          == "pact17_opencl_devmap",
+          ir_database.IntermediateRepresentation.relpath.in_(
+            relpath_to_src.keys()
+          ),
+        )
       }
 
-    not_found = set(relpath_to_src.keys()) - set(relpath_to_bytecode_id.keys())
+    not_found = set(relpath_to_src.keys()) - set(relpath_to_id.keys())
     if not_found:
-      raise OSError(f"Relpaths not bound in bytecode database: {not_found}")
+      raise OSError(
+        f"{humanize.Plural(len(not_found), 'OpenCL relpath')} not"
+        " found in IR database"
+      )
 
-    # Map bytecode ID -> OpenCL.
-    bytecode_id_src_pairs = {
-      (relpath_to_bytecode_id[relpath], src)
-      for relpath, src in relpath_to_src.items()
+    # Encode the OpenCL sources.
+    sorted_id_src_pairs: List[Tuple[int, str]] = {
+      (relpath_to_id[relpath], relpath_to_src[relpath])
+      for relpath in sorted(relpath_to_src.keys())
     }
-
-    encoded, self.vocabulary = Encode(
-      [x[1] for x in bytecode_id_src_pairs], {}, "opencl"
+    sorted_encodeds: List[np.array] = self.lexer.Lex(
+      [src for id, src in sorted_id_src_pairs]
     )
 
-    self.max_sequence_length = max(len(m) for m in encoded)
-    # Allow the --max_encoded_length to override the value stored in the
-    # vocabulary file.
-    if FLAGS.max_encoded_length:
-      app.Log(
-        1,
-        "Changing max sequence length from %s to %s",
-        self.max_sequence_length,
-        FLAGS.max_encoded_length,
-      )
-      self.max_sequence_length = FLAGS.max_encoded_length
+    self._max_encoded_length = max(len(encoded) for encoded in sorted_encodeds)
 
-    self.bytecode_to_encoded = {
-      bytecode_id: encoded
-      for (bytecode_id, src), encoded in zip(bytecode_id_src_pairs, encoded)
+    # Map id -> encoded.
+    self.id_to_encoded = {
+      id: encoded
+      for (id, _), encoded in zip(sorted_id_src_pairs, sorted_encodeds)
     }
 
-    self.pad_val = len(self.vocabulary)
-    assert self.pad_val not in self.vocabulary.values()
+  def Encode(self, ids: List[int]) -> List[np.array]:
+    """Encode a list of IR IDs.
+
+    Args:
+      ids: Intermediate representation IDs.
+
+    Returns:
+      A list of encoded OpenCL sequences.
+    """
+    return [self.id_to_encoded[id] for id in ids]
 
   @property
-  def vocabulary_size_with_padding_token(self) -> int:
-    return len(self.vocabulary) + 1
+  def vocabulary_size(self) -> int:
+    """Return the size of the encoder vocabulary."""
+    return self.lexer.vocabulary_size
 
-  def Encode(self, bytecode_ids: typing.List[int]):
-    encoded_sequences = [
-      self.bytecode_to_encoded[bytecode_id] for bytecode_id in bytecode_ids
-    ]
-    return np.array(
-      keras.preprocessing.sequence.pad_sequences(
-        encoded_sequences, maxlen=self.max_sequence_length, value=self.pad_val,
-      )
-    )
+  @property
+  def max_encoded_length(self) -> int:
+    """Return an upper bound on the length of the encoded sequences."""
+    return self._max_encoded_length
+
+
+class Inst2VecEncoder(EncoderBase):
+  """Translate intermediate representations to inst2vec encoded sequences."""
+
+  def __init__(self, *args, **kwargs):
+    super(Inst2VecEncoder, self).__init__(*args, **kwargs)
+
+    self.vocab = inst2vec_vocab.VocabularyZipFile.CreateFromPublishedResults()
+
+    # Unpack the vocabulary zipfile.
+    self.vocab.__enter__()
+
+    # inst2vec encodes one element per line of IR.
+    with self.ir_db.Session() as session:
+      max_line_count = session.query(
+        sql.func.max(ir_database.IntermediateRepresentation.line_count)
+      ).scalar()
+      self._max_encoded_length = max_line_count
+
+  def __del__(self):
+    # Tidy up the unpacked vocabulary zipfile.
+    self.vocab.__exit__()
+
+  def Encode(self, ids: List[int]):
+    """Encode a list of IR IDs.
+
+    Args:
+      ids: Intermediate representation IDs.
+
+    Returns:
+      A list of encoded OpenCL sequences.
+    """
+    sorted_unique_ids: List[int] = list(sorted(set(ids)))
+    with self.ir_db.Session() as session:
+      sorted_unique_ir: List[str] = [
+        ir_database.IntermediateRepresentation.DecodeBinaryIr(row.binary_ir)
+        for row in session.query(
+          ir_database.IntermediateRepresentation.binary_ir,
+        )
+        .filter(
+          ir_database.IntermediateRepresentation.id.in_(ids),
+          ir_database.IntermediateRepresentation.compilation_succeeded == True,
+        )
+        .order_by(ir_database.IntermediateRepresentation.id)
+      ]
+
+      if len(sorted_unique_ir) != len(sorted_unique_ids):
+        raise KeyError(
+          f"Requested {len(sorted_unique_ids)} IRs from database but received "
+          f"{len(sorted_unique_ir)}"
+        )
+
+      token_count = 0
+      with self.ctx.Profile(
+        3,
+        lambda t: (
+          f"Encoded {len(sorted_unique_ir)} strings "
+          f"({humanize.DecimalPrefix(token_count / t, ' tokens/sec')})"
+        ),
+      ):
+        sorted_unique_encodeds: List[np.array] = [
+          np.array(inst2vec.EncodeLlvmBytecode(ir, self.vocab), dtype=np.int32)
+          for ir in sorted_unique_ir
+        ]
+        token_count = sum(len(encoded) for encoded in sorted_unique_encodeds)
+
+      id_to_encoded = {
+        id: encoded
+        for id, encoded in zip(sorted_unique_ids, sorted_unique_encodeds)
+      }
+
+    return [id_to_encoded[id] for id in ids]
+
+  @property
+  def vocabulary_size(self) -> int:
+    """Get the size of the vocabulary."""
+    return len(self.vocab.dictionary)
+
+  @property
+  def max_encoded_length(self) -> int:
+    """Return an upper bound on the length of the encoded sequences."""
+    return self._max_encoded_length

@@ -1,6 +1,42 @@
 # This moduel defines sequence representations for programs.
 
 py_binary(
+    name = "ir2seq",
+    srcs = ["ir2seq.py"],
+    data = [":llvm_vocab"],
+    deps = [
+        ":lexers",
+        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
+        "//deeplearning/ml4pl/graphs/labelled/devmap:make_devmap_dataset",
+        "//deeplearning/ml4pl/ir:ir_database",
+        "//deeplearning/ncc:vocabulary",
+        "//deeplearning/ncc/inst2vec:api",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:humanize",
+        "//labm8/py:progress",
+        "//third_party/py/numpy",
+        "//third_party/py/sqlalchemy",
+    ],
+)
+
+py_test(
+    name = "ir2seq_test",
+    timeout = "long",
+    srcs = ["ir2seq_test.py"],
+    deps = [
+        ":ir2seq",
+        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
+        "//deeplearning/ml4pl/graphs/labelled/devmap:make_devmap_dataset",
+        "//deeplearning/ml4pl/ir:ir_database",
+        "//deeplearning/ml4pl/testing:testing_databases",
+        "//labm8/py:decorators",
+        "//labm8/py:test",
+        "//third_party/py/numpy",
+    ],
+)
+
+py_binary(
     name = "lexers",
     srcs = ["lexers.py"],
     data = [
@@ -26,4 +62,9 @@ py_test(
         "//labm8/py:test",
         "//third_party/py/numpy",
     ],
+)
+
+filegroup(
+    name = "llvm_vocab",
+    srcs = ["llvm_vocab.json"],
 )
