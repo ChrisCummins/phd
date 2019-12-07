@@ -725,7 +725,7 @@ class Database(sqlutil.Database):
       for run_id in set(per_epoch_df["run_id"].values):
         run_df = per_epoch_df[per_epoch_df["run_id"] == run_id]
         for epoch_num in set(run_df["epoch_num"].values):
-          row = {"run_id": run_id, "epoch": epoch_num}
+          row = {"run_id": run_id, "epoch_num": epoch_num}
           for flag in extra_flag_names:
             row[flag] = extra_flags[flag].get(run_id)
 
@@ -750,13 +750,15 @@ class Database(sqlutil.Database):
           rows.append(row)
 
       # Build the column name list.
-      columns = ["run_id", "timestamp", "epoch"] + extra_flag_names
+      columns = ["run_id", "timestamp", "epoch_num"] + extra_flag_names
       for epoch_type in ["train", "val", "test"]:
         columns += [f"{epoch_type}_{column}" for column in epoch_type_columns]
 
       # Put it into a dataframe.
       per_epoch_df = pd.DataFrame(rows, columns=columns)
-      per_epoch_df.sort_values(["run_id", "timestamp", "epoch"], inplace=True)
+      per_epoch_df.sort_values(
+        ["run_id", "timestamp", "epoch_num"], inplace=True
+      )
 
       yield "epochs", per_epoch_df
 
@@ -774,7 +776,7 @@ class Database(sqlutil.Database):
       per_run_df = pd.DataFrame(rows)
       per_run_df["epoch_count"] = epoch_counts
       per_run_df.sort_values(["run_id", "timestamp"], inplace=True)
-      per_run_df.rename(columns={"epoch": "best_epoch",}, inplace=True)
+      per_run_df.rename(columns={"epoch_num": "best_epoch"}, inplace=True)
 
       # Rejig the columns so that epoch_count comes after best_epoch.
       columns = per_run_df.columns.tolist()
