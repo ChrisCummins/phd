@@ -29,8 +29,8 @@ from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
 from labm8.py import app
 from labm8.py import humanize
 from labm8.py import ppar
-from labm8.py import prof
 from labm8.py import progress
+from labm8.py import sqlutil
 
 app.DEFINE_string("analysis", None, "The name of the analysis to run.")
 app.DEFINE_database(
@@ -81,7 +81,7 @@ app.DEFINE_integer(
   "a batch.",
 )
 app.DEFINE_integer(
-  "max_reader_queue_size", 1, "Tuning parameter. The maximum number of proto."
+  "max_reader_queue_size", 3, "Tuning parameter. The maximum number of proto."
 )
 app.DEFINE_integer(
   "chunk_size", 32, "Tuning parameter. The number of processes to spawn."
@@ -309,7 +309,7 @@ class DatasetGenerator(progress.Progress):
 
   def Run(self):
     """Run the dataset generation."""
-    pool = multiprocessing.Pool(FLAGS.nproc)
+    pool = multiprocessing.Pool(processes=FLAGS.nproc, maxtasksperchild=32)
 
     def MakeAnnotatedGraphsArgsGenerator(graph_reader):
       """Generate packed arguments for a multiprocessing worker."""
@@ -320,20 +320,19 @@ class DatasetGenerator(progress.Progress):
     # them.
     worker_args = MakeAnnotatedGraphsArgsGenerator(self.graph_reader)
     workers = pool.imap_unordered(MakeAnnotatedGraphs, worker_args)
-    for elapsed_time, graph_count, graph_tuples in workers:
-      self.ctx.i += graph_count
-      # Record the generated annotated graphs.
-      tuples_size = sum(t.pickled_graph_tuple_size for t in graph_tuples)
-      with self.output_db.Session(commit=True) as out_session:
-        out_session.add_all(graph_tuples)
-      self.ctx.Log(
-        2,
-        "[writer] Processed %s graphs (%s graph tuples, %s) in %s",
-        graph_count,
-        len(graph_tuples),
-        humanize.BinaryPrefix(tuples_size, "B"),
-        humanize.Duration(elapsed_time),
-      )
+
+    with sqlutil.BufferedDatabaseWriter(
+      self.ir_db,
+      max_buffer_size=128 * 1024 * 1024,
+      max_buffer_length=4096,
+      log_level=1,
+      ctx=self.ctx.ToProgressContext(),
+    ) as writer:
+      for elapsed_time, graph_count, graph_tuples in workers:
+        self.ctx.i += graph_count
+        # Record the generated annotated graphs.
+        tuples_size = sum(t.pickled_graph_tuple_size for t in graph_tuples)
+        writer.AddMany(graph_tuples, sizes=tuples_size)
 
     # Sanity check the number of generated program graphs.
     if self.ctx.i != self.ctx.n:
