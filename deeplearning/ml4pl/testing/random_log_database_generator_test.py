@@ -4,6 +4,7 @@ import sqlalchemy as sql
 from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import log_database
+from deeplearning.ml4pl.testing import random_graph_tuple_database_generator
 from deeplearning.ml4pl.testing import random_log_database_generator
 from deeplearning.ml4pl.testing import testing_databases
 from labm8.py import test
@@ -11,10 +12,29 @@ from labm8.py import test
 FLAGS = test.FLAGS
 
 
-@test.Fixture(scope="session")
-def generator() -> random_log_database_generator.RandomLogDatabaseGenerator:
+@test.Fixture(scope="session", params=((0, 2), (2, 0)))
+def graph_db(request) -> graph_tuple_database.Database:
+  """A test fixture which returns a graph database with random graphs."""
+  graph_y_dimensionality, node_y_dimensionality = request.param
+  db = graph_tuple_database.Database(testing_databases.GetDatabaseUrls()[0])
+  random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
+    db,
+    graph_count=100,
+    graph_y_dimensionality=graph_y_dimensionality,
+    node_y_dimensionality=node_y_dimensionality,
+  )
+  return db
+
+
+@test.Fixture(scope="session", params=(False, True))
+def generator(
+  request, graph_db: graph_tuple_database.Database
+) -> random_log_database_generator.RandomLogDatabaseGenerator:
   """A test fixture which returns a log generator."""
-  return random_log_database_generator.RandomLogDatabaseGenerator()
+  graph_db = graph_db if request.param else None
+  return random_log_database_generator.RandomLogDatabaseGenerator(
+    graph_db=graph_db
+  )
 
 
 @test.Fixture(scope="session")
@@ -38,19 +58,15 @@ def db_session(db: log_database.Database) -> log_database.Database.SessionType:
 
 
 @test.Parametrize("max_param_count", (1, 10))
-@test.Parametrize(
-  "graph_db", (None, graph_tuple_database.Database("sqlite://"))
-)
 def test_parameters(
   generator: random_log_database_generator.RandomLogDatabaseGenerator,
   run_id: run_id_lib.RunId,
   max_param_count: int,
   db_session: log_database.Database.SessionType,
-  graph_db: graph_tuple_database.Database,
 ):
   """Black-box test of generator properties."""
   logs = generator.CreateRandomRunLogs(
-    run_id=run_id, max_param_count=max_param_count, graph_db=graph_db
+    run_id=run_id, max_param_count=max_param_count
   )
   assert 1 <= len(logs.parameters) <= max_param_count
   for param in logs.parameters:

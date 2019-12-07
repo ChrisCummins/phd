@@ -10,6 +10,7 @@ import copy
 import random
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 import numpy as np
 
@@ -38,13 +39,32 @@ app.DEFINE_integer(
 class RandomLogDatabaseGenerator(object):
   """A generator for random logs."""
 
+  def __init__(self, graph_db: Optional[graph_tuple_database.Database] = None):
+    """Constructor.
+
+    Args:
+      graph_db: A graph database to generate batch data from. If set, batch
+        details will reference graphs from this database, and the
+        targets / predictions of detailed batches will have correct
+        shapes for graphs from this database.
+    """
+    self.graph_db = graph_db
+    if self.graph_db:
+      self.node_y_dimensionality = self.graph_db.node_y_dimensionality
+      self.graph_y_dimensionality = self.graph_db.graph_y_dimensionality
+    elif random.random() < 0.5:
+      self.node_y_dimensionality = random.randint(2, 4)
+      self.graph_y_dimensionality = 0
+    else:
+      self.node_y_dimensionality = 0
+      self.graph_y_dimensionality = random.randint(2, 4)
+
   def CreateRandomRunLogs(
     self,
     run_id: Optional[run_id_lib.RunId] = None,
     max_param_count: Optional[int] = None,
     max_epoch_count: Optional[int] = None,
     max_batch_count: Optional[int] = None,
-    graph_db: Optional[graph_tuple_database.Database] = None,
   ) -> log_database.RunLogs:
     """Create random logs for a run.
 
@@ -65,7 +85,7 @@ class RandomLogDatabaseGenerator(object):
       )
     )
     parameters = self._CreateRandomParameters(
-      run_id, max_param_count=max_param_count, graph_db=graph_db
+      run_id, max_param_count=max_param_count
     )
     batches = self._CreateRandomBatches(
       run_id, max_epoch_count=max_epoch_count, max_batch_count=max_batch_count
@@ -82,7 +102,6 @@ class RandomLogDatabaseGenerator(object):
     max_param_count: Optional[int] = None,
     max_epoch_count: Optional[int] = None,
     max_batch_count: Optional[int] = None,
-    graph_db: Optional[graph_tuple_database.Database] = None,
   ) -> List[run_id_lib.RunId]:
     run_ids = []
     for i in range(run_count):
@@ -95,7 +114,6 @@ class RandomLogDatabaseGenerator(object):
             max_param_count=max_param_count,
             max_epoch_count=max_epoch_count,
             max_batch_count=max_batch_count,
-            graph_db=graph_db,
           ).all
         )
     return run_ids
@@ -105,10 +123,7 @@ class RandomLogDatabaseGenerator(object):
   #############################################################################
 
   def _CreateRandomParameters(
-    self,
-    run_id: log_database.RunId,
-    max_param_count: Optional[int] = None,
-    graph_db: Optional[graph_tuple_database.Database] = None,
+    self, run_id: log_database.RunId, max_param_count: Optional[int] = None,
   ) -> List[log_database.Parameter]:
     """Generate random parameter logs.
 
@@ -126,13 +141,13 @@ class RandomLogDatabaseGenerator(object):
     for param in params:
       param.run_id = run_id.run_id
 
-    if graph_db:
+    if self.graph_db:
       params.append(
         log_database.Parameter.Create(
           run_id=run_id.run_id,
           type=log_database.ParameterType.FLAG,
           name="graph_db",
-          value=graph_db.url,
+          value=self.graph_db.url,
         )
       )
 
@@ -200,17 +215,34 @@ class RandomLogDatabaseGenerator(object):
     ]
 
   @decorators.memoized_property
+  def graph_ids(self) -> List[int]:
+    """Get a pool of random graph IDs."""
+    # If we have a graph database, use IDs from that database for populating
+    # the batch details.
+    if self.graph_db:
+      with self.graph_db.Session() as session:
+        graph_ids = [
+          row.id
+          for row in session.query(graph_tuple_database.GraphTuple.id).limit(
+            FLAGS.random_pool_size
+          )
+        ]
+        assert graph_ids
+      return graph_ids
+    else:
+      return list(range(100))
+
+  @decorators.memoized_property
   def random_batches(self) -> List[log_database.Batch]:
     """Get a pool of random batch logs.
 
-    Calling code must set the run_id, epoch_type, epoch_num, and batch_num
-    values.
+    Calling code must set the run_id, epoch_type, epoch_num, batch_num, and
+    details.predictions values.
     """
     batches = []
 
     for batch_num in range(1, FLAGS.random_pool_size):
-      data = random.choice(self.random_batch_data)
-      results = random.choice(self.random_batch_results)
+      data, results = random.choice(self.random_batch_data_and_results)
       batch = log_database.Batch.Create(
         run_id=None,
         epoch_type=epoch.Type.TRAIN,
@@ -228,41 +260,70 @@ class RandomLogDatabaseGenerator(object):
     return batches
 
   @decorators.memoized_property
-  def random_batch_data(self) -> List[batches.Data]:
-    """Get a pool of random batch data."""
+  def random_batch_data_and_results(
+    self,
+  ) -> List[Tuple[batches.Data, batches.Results]]:
+    """Get a pool of random batch data and results."""
     return [
-      batches.Data(
-        graph_ids=list(range(random.randint(10, 1000))),
-        data=list(range(random.randint(10000, 100000))),
-      )
-      for _ in range(FLAGS.random_pool_size)
+      self._CreateBatchDataAndResults() for _ in range(FLAGS.random_pool_size)
     ]
 
-  @decorators.memoized_property
-  def random_batch_results(self) -> List[batches.Results]:
-    """Get a pool of random batch results."""
-    results = []
-    for i in range(FLAGS.random_pool_size):
-      target_count = random.randint(10, 1000)
-      results.append(
-        batches.Results.Create(
-          targets=np.random.rand(target_count, 5),
-          predictions=np.random.rand(target_count, 5),
-          iteration_count=random.randint(1, 3),
-          model_converged=random.choice([False, True]),
-          learning_rate=random.random(),
-          loss=random.random(),
-        )
-      )
-    return results
+  def _CreateBatchDataAndResults(self) -> Tuple[batches.Data, batches.Results]:
+    """Create a random batch data and results instance."""
+    graph_ids = [
+      random.choice(self.graph_ids) for _ in range(random.randint(1, 200))
+    ]
+
+    if self.node_y_dimensionality:
+      # Generate per-node predictions/targets.
+      if self.graph_db:
+        with self.graph_db.Session() as session:
+          id_to_node_count = {
+            row.id: row.node_count
+            for row in session.query(
+              graph_tuple_database.GraphTuple.id,
+              graph_tuple_database.GraphTuple.node_count,
+            ).filter(
+              graph_tuple_database.GraphTuple.id.in_(graph_ids)
+            )
+          }
+        node_counts = [id_to_node_count[id] for id in graph_ids]
+      else:
+        node_counts = [random.randint(5, 50) for _ in range(len(graph_ids))]
+      instance_count = sum(node_counts)
+      y_dimensionality = self.node_y_dimensionality
+    else:
+      # Generate graph predictions/targets.
+      instance_count = len(graph_ids)
+      y_dimensionality = self.graph_y_dimensionality
+
+    data = batches.Data(
+      graph_ids=graph_ids, data=list(range(random.randint(10000, 100000))),
+    )
+    results = batches.Results.Create(
+      targets=np.random.rand(instance_count, y_dimensionality),
+      predictions=np.random.rand(instance_count, y_dimensionality),
+      iteration_count=random.randint(1, 3),
+      model_converged=random.choice([False, True]),
+      learning_rate=random.random(),
+      loss=random.random(),
+    )
+    return data, results
 
 
 def Main():
   """Main entry point"""
   log_db = FLAGS.log_db()
 
+  if FLAGS.graph_db:
+    graph_db = FLAGS.graph_db()
+  else:
+    graph_db = None
+
   log_db_generator = RandomLogDatabaseGenerator()
-  log_db_generator.PopulateLogDatabase(log_db, run_count=FLAGS.run_count)
+  log_db_generator.PopulateLogDatabase(
+    log_db, run_count=FLAGS.run_count, graph_db=graph_db
+  )
 
 
 if __name__ == "__main__":

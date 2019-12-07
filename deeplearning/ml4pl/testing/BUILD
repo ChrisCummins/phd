@@ -55,6 +55,7 @@ py_binary(
     srcs = ["random_log_database_generator.py"],
     visibility = ["//deeplearning/ml4pl:__subpackages__"],
     deps = [
+        ":random_graph_tuple_database_generator",
         "//deeplearning/ml4pl:run_id",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//deeplearning/ml4pl/models:log_database",
