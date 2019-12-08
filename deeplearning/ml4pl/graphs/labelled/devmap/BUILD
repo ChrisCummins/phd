@@ -32,7 +32,7 @@ py_test(
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//deeplearning/ml4pl/graphs/unlabelled:unlabelled_graph_database",
         "//deeplearning/ml4pl/ir:ir_database",
-        "//deeplearning/ml4pl/testing:random_log_database_generator",
+        "//deeplearning/ml4pl/testing:random_graph_tuple_database_generator",
         "//deeplearning/ml4pl/testing:testing_databases",
         "//labm8/py:progress",
         "//labm8/py:test",
