@@ -43,7 +43,7 @@ class EncodedSubsequences(NamedTuple):
   """
 
   # An array of encoded sequences representing an encoded serialization of the
-  # nodes in teh graph.
+  # graph.
   # Shape (?, vocab_size), dtype int32
   encoded_sequence: np.array
   # An array of segment IDs in the range [0, node_count] which groups the
@@ -88,7 +88,7 @@ class EncoderBase(object):
     self,
     graphs: List[graph_tuple_database.GraphTuple],
     ctx: progress.ProgressContext = progress.NullContext,
-  ) -> Union[List[np.array], EncodedSubsequences]:
+  ) -> List[Union[np.array, EncodedSubsequences]]:
     """Translate a list of graph IDs to encoded sequences."""
     raise NotImplementedError("abstract class")
 
