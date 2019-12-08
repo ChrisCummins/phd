@@ -60,19 +60,6 @@ py_binary(
 )
 
 py_binary(
-    name = "recreate_graphs",
-    srcs = ["recreate_graphs.py"],
-    deps = [
-        "//deeplearning/ml4pl/graphs:graph_database",
-        "//deeplearning/ml4pl/models:log_analysis",
-        "//deeplearning/ml4pl/models:log_database",
-        "//labm8/py:app",
-        "//labm8/py:prof",
-        "//third_party/py/sqlalchemy",
-    ],
-)
-
-py_binary(
     name = "test_leaderboard",
     srcs = ["test_leaderboard.py"],
     visibility = ["//visibility:public"],
