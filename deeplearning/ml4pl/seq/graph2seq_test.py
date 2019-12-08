@@ -82,7 +82,7 @@ def populated_ir_db(request, opencl_relpaths: Set[str]) -> ir_database.Database:
     ir_database.Database, request.param
   ) as db:
     rows = []
-    # Create random rows using OpenCL relpaths.
+    # Create IRs using OpenCL relpaths.
     for i, relpath in enumerate(opencl_relpaths):
       ir = ir_database.IntermediateRepresentation.CreateFromText(
         source="pact17_opencl_devmap",
@@ -95,10 +95,10 @@ def populated_ir_db(request, opencl_relpaths: Set[str]) -> ir_database.Database:
       ir.id = i + 1
       rows.append(ir)
 
-    with ir_db.Session(commit=True) as session:
+    with db.Session(commit=True) as session:
       session.add_all(rows)
 
-  return ir_db
+    yield db
 
 
 @test.Fixture(
