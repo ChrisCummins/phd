@@ -11,6 +11,7 @@ from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import logger as logging
 from labm8.py import app
+from labm8.py import decorators
 from labm8.py import humanize
 from labm8.py import progress
 
@@ -289,6 +290,10 @@ class ClassifierBase(object):
     return checkpoints.CheckpointReference(
       run_id=self.run_id, epoch_num=self.epoch_num
     )
+
+  @decorators.memoized_property
+  def parameters(self) -> pd.DataFrame:
+    return self.logger.GetParameters(self.run_id)
 
 
 class EpochThread(progress.Progress):

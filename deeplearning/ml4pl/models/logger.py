@@ -4,6 +4,7 @@ TODO: Detailed explanation of the file.
 """
 from typing import Optional
 
+import pandas as pd
 import sqlalchemy as sql
 
 import build_info
@@ -127,7 +128,7 @@ class Logger(object):
     flags = {k.split(".")[-1]: v for k, v in app.FlagsToDict().items()}
     self._writer.AddMany(
       # Record run ID.
-      [log_database.RunId(run_id=run_id)]
+      [log_database.RunId(run_id=str(run_id))]
       +
       # Record flag values.
       log_database.Parameter.CreateManyFromDict(
@@ -286,6 +287,10 @@ class Logger(object):
       )
 
     return checkpoint
+
+  def GetParameters(self, run_id: run_id_lib.RunId) -> pd.DataFrame:
+    self._writer.Flush()
+    return self.db.GetRunParameters(run_id)
 
   @classmethod
   def FromFlags(cls, ctx: progress.ProgressContext = progress.NullContext):

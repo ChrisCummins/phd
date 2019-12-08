@@ -488,22 +488,24 @@ class Database(sqlutil.Database):
 
   def GetRunLogs(
     self,
-    run_id=run_id_lib.RunId,
+    run_id: run_id_lib.RunId,
     eager_batch_details: bool = True,
     eager_checkpoint_data: bool = True,
     session: Optional[sqlutil.Database.SessionType] = None,
   ):
     with self.Session(session=session) as session:
-      if not session.query(RunId).filter(RunId.run_id == run_id).scalar():
+      if not session.query(RunId).filter(RunId.run_id == str(run_id)).scalar():
         raise ValueError(f"Run not found: {run_id}")
 
-      parameters = session.query(Parameter).filter(Parameter.run_id == run_id)
-      batches = session.query(Batch).filter(Batch.run_id == run_id)
+      parameters = session.query(Parameter).filter(
+        Parameter.run_id == str(run_id)
+      )
+      batches = session.query(Batch).filter(Batch.run_id == str(run_id))
       if eager_batch_details:
         batches = batches.options(sql.orm.joinedload(Batch.details))
 
       checkpoints = session.query(Checkpoint).filter(
-        Checkpoint.run_id == run_id
+        Checkpoint.run_id == str(run_id)
       )
       if eager_checkpoint_data:
         checkpoints = checkpoints.options(sql.orm.joinedload(Checkpoint.data))
@@ -514,6 +516,40 @@ class Database(sqlutil.Database):
         batches=batches.all(),
         checkpoints=checkpoints.all(),
       )
+
+  def GetRunParameters(
+    self,
+    run_id: run_id_lib.RunId,
+    session: Optional[sqlutil.Database.SessionType] = None,
+  ):
+    """Return a table of parameters for the given run.
+
+    Args:
+      run_id: The run ID.
+      session: A session object to re-use.
+
+    Returns:
+      A dataframe with timestamp, name, value, type columns.
+    """
+    with self.Session(session=session) as session:
+      query = (
+        session.query(
+          Parameter.timestamp,
+          Parameter.name,
+          Parameter.binary_value.label("value"),
+          Parameter.type_num.label("type"),
+        )
+        .filter(Parameter.run_id == str(run_id))
+        .order_by(Parameter.run_id, Parameter.type_num, Parameter.name)
+      )
+
+      df = pdutil.QueryToDataFrame(session, query)
+      if not len(df):
+        raise ValueError(f"Run not found: {run_id}")
+
+      pdutil.RewriteColumn(df, "type", lambda x: ParameterType(x).name.lower())
+      pdutil.RewriteColumn(df, "value", lambda x: pickle.loads(x))
+      return df
 
   def GetBestResults(
     self,
@@ -528,7 +564,7 @@ class Database(sqlutil.Database):
     """
     with self.Session(session=session) as session:
       # Check that the epoch exists:
-      if not session.query(RunId).filter(RunId.run_id == run_id).scalar():
+      if not session.query(RunId).filter(RunId.run_id == str(run_id)).scalar():
         raise ValueError(f"Run not found: {run_id}")
 
       best_results: Dict[epoch.Type, epoch.BestResults] = {}
@@ -539,7 +575,8 @@ class Database(sqlutil.Database):
             Batch.epoch_num, sql.func.avg(Batch.accuracy).label("accuracy")
           )
           .filter(
-            Batch.run_id == run_id, Batch.epoch_type_num == epoch_type.value
+            Batch.run_id == str(run_id),
+            Batch.epoch_type_num == epoch_type.value,
           )
           .group_by(Batch.epoch_num)
         }
@@ -576,12 +613,12 @@ class Database(sqlutil.Database):
     """
     with self.Session(session=session) as session:
       # Check that the epoch exists:
-      if not session.query(RunId).filter(RunId.run_id == run_id).scalar():
+      if not session.query(RunId).filter(RunId.run_id == str(run_id)).scalar():
         raise ValueError(f"Run not found: {run_id}")
       if (
         not session.query(Batch.id)
         .filter(
-          Batch.run_id == run_id,
+          Batch.run_id == str(run_id),
           Batch.epoch_num == epoch_num,
           Batch.epoch_type_num == epoch_type.value,
         )
@@ -604,7 +641,7 @@ class Database(sqlutil.Database):
           sql.func.avg(Batch.f1).label("f1"),
         )
         .filter(
-          Batch.run_id == run_id,
+          Batch.run_id == str(run_id),
           Batch.epoch_num == epoch_num,
           Batch.epoch_type_num == epoch_type.value,
         )
@@ -647,7 +684,7 @@ class Database(sqlutil.Database):
         for name, value in session.query(
           Parameter.name, Parameter.binary_value
         ).filter(
-          Parameter.run_id == run_id,
+          Parameter.run_id == str(run_id),
           Parameter.type_num == ParameterType.INPUT_GRAPHS_INFO.value,
           Parameter.name.in_(arg_names),
         )
@@ -755,7 +792,7 @@ class Database(sqlutil.Database):
 
   def GetTables(
     self,
-    run_id: List[run_id_lib.RunId] = None,
+    run_ids: List[run_id_lib.RunId] = None,
     extra_flags: List[str] = None,
     session: Optional[sqlutil.Database.SessionType] = None,
   ) -> Iterable[Tuple[str, pd.DataFrame]]:
@@ -792,8 +829,10 @@ class Database(sqlutil.Database):
         Parameter.binary_value.label("value"),
         Parameter.type_num.label("type"),
       ).order_by(Parameter.run_id, Parameter.type_num, Parameter.name)
-      if run_id:
-        query = query.filter(Parameter.run_id.in_(run_id))
+      if run_ids:
+        query = query.filter(
+          Parameter.run_id.in_([str(run_id) for run_id in run_ids])
+        )
 
       df = pdutil.QueryToDataFrame(session, query)
       pdutil.RewriteColumn(df, "type", lambda x: ParameterType(x).name.lower())
@@ -821,8 +860,10 @@ class Database(sqlutil.Database):
         sql.func.avg(Batch.f1).label("f1"),
         sql.func.sum(Batch.elapsed_time_ms).label("runtime"),
       ).group_by(Batch.run_id, Batch.epoch_num, Batch.epoch_type_num)
-      if run_id:
-        per_epoch_stats = per_epoch_stats.filter(Batch.run_id.in_(run_id))
+      if run_ids:
+        per_epoch_stats = per_epoch_stats.filter(
+          Batch.run_id.in_([str(run_id) for run_id in run_ids])
+        )
       per_epoch_df = pdutil.QueryToDataFrame(session, per_epoch_stats)
       pdutil.RewriteColumn(
         per_epoch_df, "epoch_type", lambda x: epoch.Type(x).name.lower()

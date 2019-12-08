@@ -77,10 +77,12 @@ class RandomLogDatabaseGenerator(object):
       graph_db: If set, add a --graph_db flag parameter with this URL.
     """
     run_id = log_database.RunId(
-      run_id=(
-        run_id
-        or run_id_lib.RunId.GenerateUnique(
-          f"rand{random.randint(0, 10000):04d}"
+      run_id=str(
+        (
+          run_id
+          or run_id_lib.RunId.GenerateUnique(
+            f"rand{random.randint(0, 10000):04d}"
+          )
         )
       )
     )

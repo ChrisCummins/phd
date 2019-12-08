@@ -48,8 +48,8 @@ py_library(
         "//deeplearning/ml4pl/graphs/labelled:graph_database_reader",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//labm8/py:app",
+        "//labm8/py:decorators",
         "//labm8/py:humanize",
-        "//labm8/py:ppar",
         "//labm8/py:progress",
         "//third_party/py/numpy",
         "//third_party/py/scikit_learn",
@@ -180,6 +180,7 @@ py_test(
         "//labm8/py:app",
         "//labm8/py:test",
         "//third_party/py/numpy",
+        "//third_party/py/pandas",
         "//third_party/py/pytest",
     ],
 )
@@ -202,6 +203,7 @@ py_library(
         "//labm8/py:prof",
         "//labm8/py:progress",
         "//labm8/py:sqlutil",
+        "//third_party/py/pandas",
         "//third_party/py/sqlalchemy",
     ],
 )

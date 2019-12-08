@@ -4,6 +4,7 @@ from typing import NamedTuple
 from typing import Tuple
 
 import numpy as np
+import pandas as pd
 import sqlalchemy as sql
 
 from deeplearning.ml4pl import run_id
@@ -111,26 +112,28 @@ def two_run_id_session(
 
 def test_RunId_add_one(db_session: log_database.Database.SessionType):
   """Test adding a run ID to the database."""
-  db_session.add(log_database.RunId(run_id="foo"))
+  run = run_id.RunId.GenerateUnique("test")
+  db_session.add(log_database.RunId(run_id=str(run)))
   db_session.commit()
 
 
 def test_Parameter_CreateManyFromDict(
   db_session: log_database.Database.SessionType,
 ):
+  run = run_id.RunId.GenerateUnique("test")
   params = log_database.Parameter.CreateManyFromDict(
-    run_id="foo",
+    run_id=run,
     type=log_database.ParameterType.BUILD_INFO,
     parameters={"a": 1, "b": "foo",},
   )
 
   assert len(params) == 2
   for param in params:
-    assert param.run_id == "foo"
+    assert param.run_id == run
     assert param.type == log_database.ParameterType.BUILD_INFO
     assert param.name in {"a", "b"}
     assert param.value in {1, "foo"}
-  db_session.add_all([log_database.RunId(run_id="foo")] + params)
+  db_session.add_all([log_database.RunId(run_id=str(run))] + params)
   db_session.commit()
 
 
@@ -233,6 +236,20 @@ def test_GetRunLogs_invalid_run_id(populated_log_db: log_database.Database):
   """Test that error is raised when run not found."""
   with test.Raises(ValueError):
     populated_log_db.GetRunLogs("foo")
+
+
+def test_GetRunParameters(populated_log_db: log_database.Database):
+  """Test that parameters are returned."""
+  run_id = random.choice(populated_log_db._run_ids)
+  assert isinstance(populated_log_db.GetRunParameters(run_id), pd.DataFrame)
+
+
+def test_GetRunParameters_invalid_run_id(
+  populated_log_db: log_database.Database,
+):
+  """Test that error is raised when run not found."""
+  with test.Raises(ValueError):
+    populated_log_db.GetRunParameters("foo")
 
 
 def test_GetBestResults(populated_log_db: log_database.Database):
