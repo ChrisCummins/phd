@@ -3,6 +3,7 @@
 py_library(
     name = "graph2seq",
     srcs = ["graph2seq.py"],
+    visibility = ["//deeplearning/ml4pl/models/lstm:__subpackages__"],
     deps = [
         ":ir2seq",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
@@ -38,6 +39,7 @@ py_binary(
     name = "ir2seq",
     srcs = ["ir2seq.py"],
     data = [":llvm_vocab"],
+    visibility = ["//deeplearning/ml4pl/models/lstm:__subpackages__"],
     deps = [
         ":lexers",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
