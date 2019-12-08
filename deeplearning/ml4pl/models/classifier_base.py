@@ -205,6 +205,8 @@ class ClassifierBase(object):
       raise ValueError("No batches")
 
     results = thread.results
+    if not results:
+      raise OSError("Epoch produced no results. Did the model crash?")
 
     # Update the record of best results.
     if results > self.best_results[epoch_type].results:
@@ -336,6 +338,10 @@ class EpochThread(progress.Progress):
       # Check that at least one batch is produced.
       if not i and not batch.graph_count:
         raise OSError("No batches generated!")
+
+      # We have run out of graphs.
+      if not batch.graph_count:
+        break
 
       # Run the batch through the model.
       with self.ctx.Profile(
