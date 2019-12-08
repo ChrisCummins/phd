@@ -55,36 +55,43 @@ def db(request) -> graph_tuple_database.Database:
 
 @test.Fixture(scope="function", params=(1, 1000, 5000))
 def graph_count(request) -> int:
+  """Test fixture to enumerate graph counts."""
   return request.param
 
 
 @test.Fixture(scope="function", params=(1, 3))
 def node_x_dimensionality(request) -> int:
+  """Test fixture to enumerate node feature dimensionalities."""
   return request.param
 
 
 @test.Fixture(scope="function", params=(0, 3))
 def node_y_dimensionality(request) -> int:
+  """Test fixture to enumerate node label dimensionalities."""
   return request.param
 
 
 @test.Fixture(scope="function", params=(0, 3))
 def graph_x_dimensionality(request) -> int:
+  """Test fixture to enumerate graph feature dimensionalities."""
   return request.param
 
 
 @test.Fixture(scope="function", params=(0, 3))
 def graph_y_dimensionality(request) -> int:
+  """Test fixture to enumerate graph label dimensionalities."""
   return request.param
 
 
 @test.Fixture(scope="function", params=(False, True))
 def with_data_flow(request) -> int:
+  """Test fixture to enumerate data flows."""
   return request.param
 
 
 @test.Fixture(scope="function", params=(0, 2))
 def split_count(request) -> int:
+  """Test fixture to enumerate split counts."""
   return request.param
 
 
