@@ -77,7 +77,7 @@ jupyter==1.0.0
 # https://research.google.com/colaboratory/local-runtimes.html
 jupyter_http_over_ws==0.0.1a3
 jwt==0.6.1  # Dependency PyGithub.
-Keras==2.3.0
+Keras==2.3.1
 kiwisolver==1.0.1
 lazy-object-proxy==1.3.1
 lru-dict==1.1.6
@@ -178,7 +178,7 @@ tabulate==0.8.5
 # TensorFlow release notes for the required version of CUDA, and if necessary
 # update the hardcoded $CUDA_HOME default in GetCudaHome() of the configure
 # script.
-tensorflow==1.14.0
+tensorflow==1.15.0
 terminado==0.8.1
 testpath==0.3.1
 TogglPy==0.1.1
