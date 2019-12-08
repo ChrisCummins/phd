@@ -199,6 +199,11 @@ class ClassifierBase(object):
 
     thread = EpochThread(self, epoch_type, batch_iterator, logger)
     progress.Run(thread)
+
+    # Check that there were batches.
+    if not thread.batch_count:
+      raise ValueError("No batches")
+
     results = thread.results
 
     # Update the record of best results.
@@ -212,11 +217,12 @@ class ClassifierBase(object):
       )
       self.best_results[epoch_type] = new_best
 
-    return thread.results
+    return results
 
   def BatchIterator(
-    self, graphs: Iterable[graph_tuple_database.GraphTuple],
-    ctx: progress.ProgressContext = progress.NullContext
+    self,
+    graphs: Iterable[graph_tuple_database.GraphTuple],
+    ctx: progress.ProgressContext = progress.NullContext,
   ) -> Iterable[batches.Data]:
     """Generate model batches from a iterator of graphs.
 
@@ -305,9 +311,10 @@ class EpochThread(progress.Progress):
     self.epoch_type = epoch_type
     self.batch_iterator = batch_iterator
     self.logger = logger
+    self.batch_count = 0
 
     # Set at the end of Run().
-    self.results: epoch.Results = epoch.Results()
+    self.results: epoch.Results = None
 
     super(EpochThread, self).__init__(
       f"{epoch_type.name.capitalize()} epoch {model.epoch_num}",
@@ -323,6 +330,7 @@ class EpochThread(progress.Progress):
     rolling_results = batches.RollingResults()
 
     for i, batch in enumerate(self.batch_iterator.batches):
+      self.batch_count += 1
       self.ctx.i += batch.graph_count
 
       # Check that at least one batch is produced.
