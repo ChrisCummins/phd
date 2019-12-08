@@ -114,6 +114,10 @@ def AnnotateGraphMetas(
           )
         proto: programl_pb2.ProgramGraph = proto_row.proto
 
+        # Add the null "selector vector" value.
+        for node in proto.node:
+          node.x.append(0)
+
         # Add the graph-level features.
         proto.x[:] = [row["wgsize"], row["transfer"]]
         # Add 'y' graph feature as target.

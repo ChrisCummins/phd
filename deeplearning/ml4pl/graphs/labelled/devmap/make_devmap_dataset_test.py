@@ -122,6 +122,13 @@ def test_MakeOpenClDevmapDataset(
       session.query(sql.func.count(graph_tuple_database.GraphTuple.id)).scalar()
       >= 256
     )
+    # Check that there are 2-D node features.
+    assert (
+      session.query(graph_tuple_database.GraphTuple.node_x_dimensionality)
+      .first()
+      .node_x_dimensionality
+      == 2
+    )
 
 
 if __name__ == "__main__":
