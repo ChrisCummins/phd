@@ -82,7 +82,7 @@ def AnnotateGraphMetas(
     for _, row in df.iterrows():
       relpath = row["relpath"]
       with ctx.Profile(
-        1, f"Processed graph {row['relpath']}:{row['data:dataset_name']}"
+        2, f"Processed graph {row['relpath']}:{row['data:dataset_name']}"
       ):
         # Select the corresponding IR.
         ir_id = (
