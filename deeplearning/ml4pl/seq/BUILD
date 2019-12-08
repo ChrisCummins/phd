@@ -8,6 +8,7 @@ py_library(
         "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//labm8/py:app",
+        "//labm8/py:progress",
         "//third_party/py/lru_dict",
         "//third_party/py/networkx",
         "//third_party/py/numpy",

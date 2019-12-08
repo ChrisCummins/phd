@@ -17,6 +17,7 @@ from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.seq import ir2seq
 from labm8.py import app
+from labm8.py import progress
 
 FLAGS = app.FLAGS
 
@@ -62,13 +63,31 @@ class EncoderBase(object):
   def __init__(
     self,
     graph_db: graph_tuple_database.Database,
+    ir2seq_encoder: ir2seq.EncoderBase,
     cache_size: Optional[int] = None,
   ):
     self.graph_db = graph_db
-    self.cache_size = cache_size or FLAGS.graph2seq_cache_entries
+    self.ir2seq_encoder = ir2seq_encoder
+
+    # Maintain a mapping from IR IDs to encoded sequences to amortize the
+    # cost of encoding.
+    cache_size = cache_size or FLAGS.graph2seq_cache_entries
+    self.ir_id_to_encoded: Dict[int, np.array] = lru.LRU(cache_size)
+
+  @property
+  def max_encoded_length(self) -> int:
+    """Return an upper bound on the length of the encoded sequences."""
+    return self.ir2seq_encoder.max_encoded_length
+
+  @property
+  def vocabulary_size(self) -> int:
+    """Get the size of the vocabulary, including the unknown-vocab element."""
+    return self.ir2seq_encoder.vocabulary_size
 
   def Encode(
-    self, graphs: List[graph_tuple_database.GraphTuple]
+    self,
+    graphs: List[graph_tuple_database.GraphTuple],
+    ctx: progress.ProgressContext = progress.NullContext,
   ) -> Union[List[np.array], EncodedSubsequences]:
     """Translate a list of graph IDs to encoded sequences."""
     raise NotImplementedError("abstract class")
@@ -81,22 +100,10 @@ class GraphEncoder(EncoderBase):
   sequence, entirely discarding the graph structure.
   """
 
-  def __init__(
-    self,
-    graph_db: graph_tuple_database.Database,
-    ir2seq_encoder: ir2seq.EncoderBase,
-    cache_size: Optional[int] = None,
-  ):
-    super(GraphEncoder, self).__init__(graph_db, cache_size=cache_size)
-
-    self.ir2seq_encoder = ir2seq_encoder
-
-    # Maintain a mapping from IR IDs to encoded sequences to amortize the
-    # cost of encoding.
-    self.ir_id_to_encoded: Dict[int, np.array] = lru.LRU(self.cache_size)
-
   def Encode(
-    self, graphs: List[graph_tuple_database.GraphTuple]
+    self,
+    graphs: List[graph_tuple_database.GraphTuple],
+    ctx: progress.ProgressContext = progress.NullContext,
   ) -> List[np.array]:
     """Return encoded sequences for the given graph IDs.
 
@@ -142,25 +149,17 @@ class StatementEncoderBase(EncoderBase):
   within the encoded output.
   """
 
-  def __init__(
+  def GraphToSubsequences(
     self,
-    graph_db: graph_tuple_database.Database,
-    ir2seq_encoder: ir2seq.EncoderBase,
-    cache_size: Optional[int] = None,
-  ):
-    super(StatementEncoderBase, self).__init__(graph_db, cache_size=cache_size)
-
-    self.ir2seq_encoder = ir2seq_encoder
-
-    # Maintain a mapping from IR IDs to encoded sub-sbequences to amortize the
-    # cost of encoding.
-    self.ir_id_to_encoded: Dict[int, np.array] = lru.LRU(self.cache_size)
-
-  def GraphToSequences(self, graph: nx.MultiDiGraph) -> EncodedSubsequences:
+    graph: nx.MultiDiGraph,
+    ctx: progress.ProgressContext = progress.NullContext,
+  ) -> EncodedSubsequences:
     raise NotImplementedError("abstract class")
 
   def Encode(
-    self, graphs: List[graph_tuple_database.GraphTuple]
+    self,
+    graphs: List[graph_tuple_database.GraphTuple],
+    ctx: progress.ProgressContext = progress.NullContext,
   ) -> List[EncodedSubsequences]:
     """Serialize a graph into an encoded sequence.
 
@@ -222,7 +221,7 @@ class StatementEncoderBase(EncoderBase):
       # Encode and cache the unknown graphs.
       for ir_id, graph in graphs_to_encode.items():
         self.ir_id_to_encoded[ir_id] = self.GraphToSubsequences(
-          graph.tuple.ToNetworkx()
+          graph.tuple.ToNetworkx(), ctx=ctx
         )
 
     return [self.ir_id_to_encoded[graph.ir_id] for graph in graphs]
@@ -247,7 +246,11 @@ class StatementEncoderBase(EncoderBase):
 
 
 class StatementEncoder(StatementEncoderBase):
-  def GraphToSubsequences(self, graph: nx.MultiDiGraph) -> EncodedSubsequences:
+  def GraphToSubsequences(
+    self,
+    graph: nx.MultiDiGraph,
+    ctx: progress.ProgressContext = progress.NullContext,
+  ) -> EncodedSubsequences:
     """Serialize a graph to an encoded sequence of statements."""
     serialized_node_list = list(SerializeGraphToStatementNodes(graph))
 
@@ -282,7 +285,11 @@ class StatementEncoder(StatementEncoderBase):
 
 
 class IdentifierEncoder(StatementEncoderBase):
-  def GraphToSubsequences(self, graph: nx.MultiDiGraph) -> EncodedSubsequences:
+  def GraphToSubsequences(
+    self,
+    graph: nx.MultiDiGraph,
+    ctx: progress.ProgressContext = progress.NullContext,
+  ) -> EncodedSubsequences:
     """Serialize a graph to an encoded sequence of identifier statement groups.
     """
     identifier_nodes, identifier_node_mask = [], []
