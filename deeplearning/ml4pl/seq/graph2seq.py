@@ -1,7 +1,5 @@
 """Module for conversion from labelled graphs to encoded sequences."""
-import collections
 import enum
-import pickle
 from typing import Dict
 from typing import Iterable
 from typing import List
@@ -15,7 +13,6 @@ import lru
 import networkx as nx
 import numpy as np
 
-from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.seq import ir2seq
