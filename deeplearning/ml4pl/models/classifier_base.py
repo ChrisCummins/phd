@@ -66,13 +66,13 @@ class ClassifierBase(object):
       )
 
     # Model properties.
-    self.logger = logger
-    self.graph_db = graph_db
-    self.restored_from = restore_from
+    self.logger: logging.Logger = logger
+    self.graph_db: graph_tuple_database.Database = graph_db
+    self.restored_from: Optional[checkpoints.CheckpointReference] = restore_from
     self.run_id: run_id_lib.RunId = (
       run_id or run_id_lib.RunId.GenerateUnique(type(self).__name__)
     )
-    self.y_dimensionality = (
+    self.y_dimensionality: int = (
       self.graph_db.node_y_dimensionality
       or self.graph_db.graph_y_dimensionality
     )
