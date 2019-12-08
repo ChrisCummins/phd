@@ -57,7 +57,7 @@ class ZeroR(classifier_base.ClassifierBase):
 
       # Add the graph data to the batch.
       graph_ids.append(graph.id)
-      if self.node_y_dimensionality:
+      if self.graph_db.node_y_dimensionality:
         batch_size += graph.tuple.node_y.size
         targets.append(graph.tuple.node_y)
       else:
@@ -65,7 +65,7 @@ class ZeroR(classifier_base.ClassifierBase):
         targets = graph.tuple.graph_y
 
     # Flatten per-graph node y to a single array.
-    if self.graph.node_y_dimensionality and targets:
+    if self.graph_db.node_y_dimensionality and targets:
       targets = np.vstack(targets)
 
     return batchs.Data(graph_ids=graph_ids, data=targets)
