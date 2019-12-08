@@ -24,6 +24,13 @@ class Checkpoint(NamedTuple):
   best_results: Dict[epoch.Type, epoch.BestResults]
   model_data: Any
 
+  # Input graph stats.
+  node_x_dimensionality: int
+  node_y_dimensionality: int
+  graph_x_dimensionality: int
+  graph_y_dimensionality: int
+  edge_position_max: int
+
 
 def RunIdAndEpochNumToString(run_id: run_id_lib.RunId, epoch_num: int) -> str:
   """Return the string representation of a run ID and epoch_num.

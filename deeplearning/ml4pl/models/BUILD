@@ -63,42 +63,10 @@ py_test(
     deps = [
         ":batch",
         ":classifier_base",
-        ":conftest",
         ":epoch",
         ":logger",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//labm8/py:progress",
-        "//labm8/py:test",
-    ],
-)
-
-# TODO(github.com/ChrisCummins/ProGraML/issues/28): Fix me.
-#py_library(
-#    name = "classifier_smoke_tester",
-#    testonly = 1,
-#    srcs = ["classifier_smoke_tester.py"],
-#    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
-#    deps = [
-#        "//deeplearning/ml4pl/graphs:graph_database",
-#        "//deeplearning/ml4pl/graphs/unlabelled/cdfg:random_cdfg_generator",
-#        "//deeplearning/ml4pl/models:log_database",
-#        "//labm8/py:app",
-#        "//third_party/py/numpy",
-#    ],
-#)
-
-py_library(
-    name = "conftest",
-    testonly = 1,
-    srcs = ["conftest.py"],
-    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
-    deps = [
-        ":epoch",
-        ":log_database",
-        ":logger",
-        "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
-        "//deeplearning/ml4pl/testing:random_graph_tuple_database_generator",
-        "//deeplearning/ml4pl/testing:testing_databases",
         "//labm8/py:test",
     ],
 )
@@ -151,20 +119,18 @@ py_library(
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//labm8/py:app",
         "//labm8/py:decorators",
-        "//labm8/py:humanize",
         "//labm8/py:progress",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
         "//third_party/py/scikit_learn",
-        "//third_party/py/sqlalchemy",
     ],
 )
 
 py_test(
     name = "log_analysis_test",
+    timeout = "long",
     srcs = ["log_analysis_test.py"],
     deps = [
-        ":conftest",
         ":log_analysis",
         ":log_database",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
@@ -200,9 +166,9 @@ py_binary(
 
 py_test(
     name = "log_database_test",
+    timeout = "long",
     srcs = ["log_database_test.py"],
     deps = [
-        ":conftest",
         ":log_database",
         "//deeplearning/ml4pl/testing:random_log_database_generator",
         "//deeplearning/ml4pl/testing:testing_databases",

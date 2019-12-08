@@ -1,23 +1,22 @@
 """A module for analyzing log databases."""
-import copy
 from typing import Dict
 from typing import Iterable
 from typing import List
+from typing import Optional
 from typing import Tuple
 
 import numpy as np
 import pandas as pd
 import sklearn.metrics
-import sqlalchemy as sql
 
 from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
+from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import log_database
 from labm8.py import app
 from labm8.py import decorators
-from labm8.py import humanize
 from labm8.py import progress
 
 FLAGS = app.FLAGS
@@ -30,27 +29,30 @@ class RunLogAnalyzer(object):
     self,
     log_db: log_database.Database,
     run_id: run_id_lib.RunId,
+    graph_db: Optional[graph_tuple_database.Database] = None,
     ctx: progress.ProgressContext = progress.NullContext,
   ):
     self.log_db = log_db
     self.run_id = run_id
     self.ctx = ctx
+    self._graph_db = graph_db
 
+    # Check that the requested run exists in the database.
     with self.log_db.Session() as session:
-      num_logs = (
-        session.query(sql.func.count(log_database.Batch.id))
-        .filter(log_database.Batch.run_id == self.run_id)
+      if (
+        not session.query(log_database.RunId)
+        .filter(log_database.RunId.run_id == run_id)
         .scalar()
-      )
-      if not num_logs:
-        raise ValueError(f"Run `{self.run_id}` not found in log database")
-
-    self.ctx.Log(
-      1, "Found %s logs for run %s", humanize.Commas(num_logs), self.run_id
-    )
+      ):
+        raise ValueError(f"Run not found: {self.run_id}")
 
   @decorators.memoized_property
   def graph_db(self) -> graph_tuple_database.Database:
+    """Return the graph database for a run. This is reconstructed from the
+    --graph_db flag value recorded for the run."""
+    if self._graph_db:
+      return self._graph_db
+
     with self.log_db.Session() as session:
       graph_param: log_database.Parameter = session.query(
         log_database.Parameter
@@ -72,6 +74,16 @@ class RunLogAnalyzer(object):
     return {
       name: df for name, df in self.log_db.GetTables(run_id=[self.run_id])
     }
+
+  @decorators.memoized_property
+  def best_results(self) -> Dict[epoch.Type, epoch.BestResults]:
+    """Get the best results dict.
+
+    Returns:
+      A mapping from <epoch_type, epoch.BestResults> for the best accuracy on
+      each of the epoch types.
+    """
+    return self.log_db.GetBestResults(run_id=self.run_id)
 
   def GetBestEpochNum(self, metric="best accuracy") -> int:
     """Select the train/val/test epoch logs using the given metric.

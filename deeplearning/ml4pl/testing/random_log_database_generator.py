@@ -142,6 +142,7 @@ class RandomLogDatabaseGenerator(object):
       param.run_id = run_id.run_id
 
     if self.graph_db:
+      # Generate the parameters derived from the graph database.
       params.append(
         log_database.Parameter.Create(
           run_id=run_id.run_id,
@@ -149,6 +150,11 @@ class RandomLogDatabaseGenerator(object):
           name="graph_db",
           value=self.graph_db.url,
         )
+      )
+      params += log_database.Parameter.CreateManyFromDict(
+        run_id,
+        log_database.ParameterType.INPUT_GRAPHS_INFO,
+        self.graph_db.stats_json,
       )
 
     return params

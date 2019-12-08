@@ -11,23 +11,114 @@ from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch as batches
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import epoch
+from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models import logger as logging
+from deeplearning.ml4pl.testing import random_graph_tuple_database_generator
+from deeplearning.ml4pl.testing import testing_databases
 from labm8.py import progress
 from labm8.py import test
 
 FLAGS = test.FLAGS
 
 
-@test.Fixture(scope="session", params=(False, True))
-def has_loss(request) -> bool:
-  """A test fixture which enumerates losses."""
+###############################################################################
+# Fixtures and mocks.
+###############################################################################
+
+
+@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+def log_db(request) -> log_database.Database:
+  """A test fixture which yields an empty log database."""
+  yield from testing_databases.YieldDatabase(
+    log_database.Database, request.param
+  )
+
+
+@test.Fixture(scope="session")
+def logger(log_db: log_database.Database) -> logging.Logger:
+  """A test fixture which yields a logger."""
+  with logging.Logger(
+    log_db,
+    max_buffer_size=None,
+    max_buffer_length=128,
+    max_seconds_since_flush=None,
+  ) as logger:
+    yield logger
+
+
+@test.Fixture(scope="session", params=((0, 2), (0, 3), (2, 0), (10, 0)))
+def y_dimensionalities(request) -> Tuple[int, int]:
+  """A test fixture which enumerates node and graph label dimensionalities."""
   return request.param
 
 
-@test.Fixture(scope="session", params=(False, True))
-def has_learning_rate(request) -> bool:
-  """A test fixture which enumerates learning rates."""
+@test.Fixture(scope="session", params=(0, 3))
+def edge_position_max(request) -> int:
+  """A test fixture which enumerates edge positions."""
   return request.param
+
+
+@test.Fixture(scope="session", params=(None, "foo"))
+def restored_from(request) -> str:
+  """A test fixture for 'restored_from' values."""
+  return request.param
+
+
+@test.Fixture(scope="session", params=list(epoch.Type))
+def epoch_type(request) -> epoch.Type:
+  """A test fixture which enumerates epoch types."""
+  return request.param
+
+
+# Currently, only 2-dimension node features are supported.
+@test.Fixture(scope="session", params=(2,))
+def node_x_dimensionality(request) -> int:
+  """A test fixture which enumerates node feature dimensionalities."""
+  return request.param
+
+
+@test.Fixture(scope="session", params=(0, 2))
+def graph_x_dimensionality(request) -> int:
+  """A test fixture which enumerates graph feature dimensionalities."""
+  return request.param
+
+
+@test.Fixture(scope="session", params=(True,))
+def with_data_flow(request) -> int:
+  """A test fixture which enumerates 'with dataflow' values."""
+  return request.param
+
+
+@test.Fixture(scope="session", params=(10, 100))
+def graph_count(request) -> int:
+  """A test fixture which enumerates graph counts."""
+  return request.param
+
+
+@test.Fixture(scope="session")
+def graphs(
+  graph_count: int,
+  y_dimensionalities: Tuple[int, int],
+  node_x_dimensionality: int,
+  with_data_flow: bool,
+) -> Iterable[graph_tuple_database.GraphTuple]:
+  """A test fixture which enumerates graph tuples."""
+  node_y_dimensionality, graph_y_dimensionality = y_dimensionalities
+
+  def MakeIterator(list):
+    yield from list
+
+  return MakeIterator(
+    [
+      random_graph_tuple_database_generator.CreateRandomGraphTuple(
+        node_x_dimensionality=node_x_dimensionality,
+        node_y_dimensionality=node_y_dimensionality,
+        graph_y_dimensionality=graph_y_dimensionality,
+        with_data_flow=with_data_flow,
+      )
+      for _ in range(graph_count)
+    ]
+  )
 
 
 class MockModel(classifier_base.ClassifierBase):
@@ -93,23 +184,39 @@ class MockModel(classifier_base.ClassifierBase):
     self.model_data = copy.deepcopy(data_to_load)
 
 
+@test.Fixture(scope="session", params=(False, True))
+def has_loss(request) -> bool:
+  """A test fixture which enumerates losses."""
+  return request.param
+
+
+@test.Fixture(scope="session", params=(False, True))
+def has_learning_rate(request) -> bool:
+  """A test fixture which enumerates learning rates."""
+  return request.param
+
+
 @test.Fixture(scope="function")
 def model(
-  dimensionalities: Tuple[int, int],
+  node_x_dimensionality: int,
+  graph_x_dimensionality: int,
+  y_dimensionalities: Tuple[int, int],
   has_loss: bool,
   has_learning_rate: bool,
   edge_position_max: int,
   restored_from: str,
 ) -> MockModel:
   """A test fixture which enumerates mock models."""
-  node_y_dimensionality, graph_y_dimensionality = dimensionalities
+  node_y_dimensionality, graph_y_dimensionality = y_dimensionalities
   run_id = run_id_lib.RunId.GenerateUnique(
     f"mock{random.randint(0, int(1e6)):06}"
   )
 
   return MockModel(
     run_id=run_id,
+    node_x_dimensionality=node_x_dimensionality,
     node_y_dimensionality=node_y_dimensionality,
+    graph_x_dimensionality=graph_x_dimensionality,
     graph_y_dimensionality=graph_y_dimensionality,
     edge_position_max=edge_position_max,
     restored_from=restored_from,
@@ -167,6 +274,11 @@ def epoch_num(request) -> int:
   return request.param
 
 
+###############################################################################
+# Tests.
+###############################################################################
+
+
 def test_FromCheckpoint_direct(model: MockModel, epoch_num: int):
   """Test restoring directly from a model checkpoint."""
   model.Initialize()
@@ -181,6 +293,31 @@ def test_FromCheckpoint_direct(model: MockModel, epoch_num: int):
     node_y_dimensionality=model.node_y_dimensionality,
     graph_y_dimensionality=model.graph_y_dimensionality,
     edge_position_max=model.edge_position_max,
+  )
+
+  assert restored_model.restored_from == model.run_id
+
+  # Check that mutated model state was restored.
+  assert restored_model.epoch_num == epoch_num
+  assert "some_new_data" in restored_model.model_data
+  assert restored_model.model_data == model.model_data
+
+
+def test_FromCheckpoint_via_logger(
+  model: MockModel, epoch_num: int, logger: logging.Logger
+):
+  """Test restoring from a logged checkpoint."""
+  model.Initialize()
+
+  # Mutate model state.
+  model.epoch_num = epoch_num
+  model.model_data["some_new_data"] = 10
+
+  # Create a new model from this checkpoint
+  logger.Save(model.GetCheckpoint())
+
+  restored_model = MockModel.FromCheckpoint(
+    logger.Load(model.run_id, model.epoch_num)
   )
 
   assert restored_model.restored_from == model.run_id

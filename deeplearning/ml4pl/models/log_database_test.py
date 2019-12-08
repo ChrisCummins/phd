@@ -1,17 +1,25 @@
 """Unit tests for //deeplearning/ml4pl/models:log_database."""
+import random
 from typing import NamedTuple
+from typing import Tuple
 
 import numpy as np
 import sqlalchemy as sql
 
 from deeplearning.ml4pl import run_id
+from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import log_database
+from deeplearning.ml4pl.testing import random_graph_tuple_database_generator
 from deeplearning.ml4pl.testing import random_log_database_generator
 from deeplearning.ml4pl.testing import testing_databases
 from labm8.py import app
 from labm8.py import test
 
 FLAGS = app.FLAGS
+
+###############################################################################
+# Fixtures and mocks.
+###############################################################################
 
 
 @test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
@@ -28,10 +36,38 @@ def db_session(db: log_database.Database) -> log_database.Database.SessionType:
     yield session
 
 
+@test.Fixture(scope="session", params=((0, 2), (2, 0)))
+def y_dimensionalities(request) -> Tuple[int, int]:
+  """A test fixture which enumerates node and graph label dimensionalities."""
+  return request.param
+
+
+@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+def populated_graph_db(
+  request, y_dimensionalities: Tuple[int, int]
+) -> graph_tuple_database.Database:
+  """Test fixture which returns a populated graph database."""
+  node_y_dimensionality, graph_y_dimensionality = y_dimensionalities
+  with testing_databases.DatabaseContext(
+    graph_tuple_database.Database, request.param
+  ) as db:
+    random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
+      db,
+      graph_count=100,
+      node_y_dimensionality=node_y_dimensionality,
+      graph_y_dimensionality=graph_y_dimensionality,
+    )
+    yield db
+
+
 @test.Fixture(scope="session")
-def generator() -> random_log_database_generator.RandomLogDatabaseGenerator:
+def generator(
+  populated_graph_db: graph_tuple_database.Database,
+) -> random_log_database_generator.RandomLogDatabaseGenerator:
   """A test fixture which returns a log generator."""
-  return random_log_database_generator.RandomLogDatabaseGenerator()
+  return random_log_database_generator.RandomLogDatabaseGenerator(
+    populated_graph_db
+  )
 
 
 @test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
@@ -44,6 +80,33 @@ def populated_log_db(
   ) as db:
     db._run_ids = generator.PopulateLogDatabase(db, run_count=10)
     yield db
+
+
+class DatabaseSessionWithRunLogs(NamedTuple):
+  """Tuple for a test fixture which returns a database session with run logs."""
+
+  session: log_database.Database.SessionType
+  a: log_database.RunLogs
+  b: log_database.RunLogs
+
+
+@test.Fixture(scope="function")
+def two_run_id_session(
+  db: log_database.Database,
+  generator: random_log_database_generator.RandomLogDatabaseGenerator,
+) -> log_database.Database.SessionType:
+  """A test fixture which yields a database with two runs."""
+  a = generator.CreateRandomRunLogs(run_id=run_id.RunId.GenerateUnique("a"))
+  b = generator.CreateRandomRunLogs(run_id=run_id.RunId.GenerateUnique("b"))
+
+  with db.Session() as session:
+    session.add_all(a.all + b.all)
+    yield DatabaseSessionWithRunLogs(session=session, a=a, b=b)
+
+
+###############################################################################
+# Tests.
+###############################################################################
 
 
 def test_RunId_add_one(db_session: log_database.Database.SessionType):
@@ -69,28 +132,6 @@ def test_Parameter_CreateManyFromDict(
     assert param.value in {1, "foo"}
   db_session.add_all([log_database.RunId(run_id="foo")] + params)
   db_session.commit()
-
-
-class DatabaseSessionWithRunLogs(NamedTuple):
-  """Tuple for a test fixture which returns a database session with run logs."""
-
-  session: log_database.Database.SessionType
-  a: log_database.RunLogs
-  b: log_database.RunLogs
-
-
-@test.Fixture(scope="function")
-def two_run_id_session(
-  db: log_database.Database,
-  generator: random_log_database_generator.RandomLogDatabaseGenerator,
-) -> log_database.Database.SessionType:
-  """A test fixture which yields a database with two runs."""
-  a = generator.CreateRandomRunLogs(run_id=run_id.RunId.GenerateUnique("a"))
-  b = generator.CreateRandomRunLogs(run_id=run_id.RunId.GenerateUnique("b"))
-
-  with db.Session() as session:
-    session.add_all(a.all + b.all)
-    yield DatabaseSessionWithRunLogs(session=session, a=a, b=b)
 
 
 def test_Batch_cascaded_delete(two_run_id_session: DatabaseSessionWithRunLogs):
@@ -169,6 +210,55 @@ def test_RunId_cascaded_delete(two_run_id_session: DatabaseSessionWithRunLogs):
     .scalar()
     == 0
   )
+
+
+@test.Parametrize("eager_batch_details", (False, True))
+@test.Parametrize("eager_checkpoint_data", (False, True))
+def test_GetRunLogs(
+  populated_log_db: log_database.Database,
+  eager_batch_details: bool,
+  eager_checkpoint_data: bool,
+):
+  """Test that run logs are returned."""
+  run_id = random.choice(populated_log_db._run_ids)
+  run_logs = populated_log_db.GetRunLogs(
+    run_id,
+    eager_batch_details=eager_batch_details,
+    eager_checkpoint_data=eager_checkpoint_data,
+  )
+  assert isinstance(run_logs, log_database.RunLogs)
+
+
+def test_GetRunLogs_invalid_run_id(populated_log_db: log_database.Database):
+  """Test that error is raised when run not found."""
+  with test.Raises(ValueError):
+    populated_log_db.GetRunLogs("foo")
+
+
+def test_GetBestResults(populated_log_db: log_database.Database):
+  """Test that run logs are returned."""
+  run_id = random.choice(populated_log_db._run_ids)
+  assert populated_log_db.GetBestResults(run_id)
+
+
+def test_GetBestResults_invalid_run_id(populated_log_db: log_database.Database):
+  """Test that error is raised when run not found."""
+  with test.Raises(ValueError):
+    populated_log_db.GetBestResults("foo")
+
+
+def test_GetModelConstructorArgs(populated_log_db: log_database.Database):
+  """Test that run logs are returned."""
+  run_id = random.choice(populated_log_db._run_ids)
+  assert populated_log_db.GetModelConstructorArgs(run_id)
+
+
+def test_GetModelConstructorArgs_invalid_run_id(
+  populated_log_db: log_database.Database,
+):
+  """Test that error is raised when run not found."""
+  with test.Raises(ValueError):
+    populated_log_db.GetModelConstructorArgs("foo")
 
 
 @test.Parametrize("extra_flags", (None, [], ["foo"], ["foo", "vmodule"]))

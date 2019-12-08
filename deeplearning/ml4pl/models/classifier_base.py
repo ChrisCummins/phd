@@ -36,7 +36,9 @@ class ClassifierBase(object):
 
   def __init__(
     self,
+    node_x_dimensionality: int,
     node_y_dimensionality: int,
+    graph_x_dimensionality: int,
     graph_y_dimensionality: int,
     edge_position_max: int,
     restored_from: Optional[run_id_lib.RunId] = None,
@@ -56,16 +58,17 @@ class ClassifierBase(object):
     # Set by FromCheckpoint() or Initialize().
     self._initialized = False
 
-    # The unique ID of this model instance.
+    # Model properties.
+    self.node_x_dimensionality = node_x_dimensionality
+    self.node_y_dimensionality = node_y_dimensionality
+    self.graph_x_dimensionality = graph_x_dimensionality
+    self.graph_y_dimensionality = graph_y_dimensionality
+    self.edge_position_max = edge_position_max
+
+    self.restored_from = restored_from
     self.run_id: run_id_lib.RunId = (
       run_id or run_id_lib.RunId.GenerateUnique(type(self).__name__)
     )
-
-    # Model properties.
-    self.restored_from = restored_from
-    self.node_y_dimensionality = node_y_dimensionality
-    self.graph_y_dimensionality = graph_y_dimensionality
-    self.edge_position_max = edge_position_max
 
     # Determine the label dimensionality.
     if node_y_dimensionality and graph_y_dimensionality:
@@ -77,7 +80,7 @@ class ClassifierBase(object):
     if not self.y_dimensionality:
       raise TypeError("Neither node or graph dimensionalities are set")
 
-    # Progress counters. These are saved and restored from file.
+    # Progress counters. These are saved and restored from checkpoints.
     self.epoch_num = 0
     self.best_results: Dict[epoch.Type, epoch.BestResults] = {
       epoch.Type.TRAIN: epoch.BestResults(),
@@ -245,17 +248,15 @@ class ClassifierBase(object):
 
   @classmethod
   def FromCheckpoint(
-    cls,
-    checkpoint: checkpoints.Checkpoint,
-    node_y_dimensionality: int,
-    graph_y_dimensionality: int,
-    edge_position_max: int,
+    cls, checkpoint: checkpoints.Checkpoint,
   ):
     """Construct a model from checkpoint data."""
     model = cls(
-      node_y_dimensionality=node_y_dimensionality,
-      graph_y_dimensionality=graph_y_dimensionality,
-      edge_position_max=edge_position_max,
+      node_x_dimensionality=checkpoint.node_x_dimensionality,
+      node_y_dimensionality=checkpoint.node_y_dimensionality,
+      graph_x_dimensionality=checkpoint.graph_x_dimensionality,
+      graph_y_dimensionality=checkpoint.graph_y_dimensionality,
+      edge_position_max=checkpoint.edge_position_max,
       restored_from=checkpoint.run_id,
     )
     model._initialized = True
@@ -275,6 +276,11 @@ class ClassifierBase(object):
       epoch_num=self.epoch_num,
       best_results=self.best_results,
       model_data=self.GetModelData(),
+      node_x_dimensionality=self.node_x_dimensionality,
+      node_y_dimensionality=self.node_y_dimensionality,
+      graph_x_dimensionality=self.graph_x_dimensionality,
+      graph_y_dimensionality=self.graph_y_dimensionality,
+      edge_position_max=self.edge_position_max,
     )
 
 

@@ -407,20 +407,6 @@ class Checkpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     # Checkpoints are stored with zlib compression.
     return pickle.loads(codecs.decode(self.data.binary_model_data, "zlib"))
 
-  def ToCheckpoint(self, session: sqlutil.Database.SessionType):
-    best_results = {}
-
-    # TODO(github.com/ChrisCummins/ProGraML/issues/24): Construct best_results
-    # by aggregating from Batch table:
-    # session.query()
-
-    return checkpoints.Checkpoint(
-      run_id=run_id_lib.RunId.FromString(self.run_id),
-      epoch_num=self.epoch_num,
-      best_results=best_results,
-      model_data=self.model_data,
-    )
-
   @classmethod
   def Create(
     cls, checkpoint: checkpoints.Checkpoint,
@@ -508,13 +494,16 @@ class Database(sqlutil.Database):
     session: Optional[sqlutil.Database.SessionType] = None,
   ):
     with self.Session(session=session) as session:
+      if not session.query(RunId).filter(RunId.run_id == run_id).scalar():
+        raise ValueError(f"Run not found: {run_id}")
+
       parameters = session.query(Parameter).filter(Parameter.run_id == run_id)
       batches = session.query(Batch).filter(Batch.run_id == run_id)
       if eager_batch_details:
         batches = batches.options(sql.orm.joinedload(Batch.details))
 
-      checkpoints = (
-        session.query(Checkpoint).filter(Checkpoint.run_id == run_id).all()
+      checkpoints = session.query(Checkpoint).filter(
+        Checkpoint.run_id == run_id
       )
       if eager_checkpoint_data:
         checkpoints = checkpoints.options(sql.orm.joinedload(Checkpoint.data))
@@ -525,6 +514,149 @@ class Database(sqlutil.Database):
         batches=batches.all(),
         checkpoints=checkpoints.all(),
       )
+
+  def GetBestResults(
+    self,
+    run_id: run_id_lib.RunId,
+    session: Optional[sqlutil.Database.SessionType] = None,
+  ) -> Dict[epoch.Type, epoch.BestResults]:
+    """Get the best results for a given run.
+
+    Returns:
+      A mapping from <epoch_type, epoch.Results> for the best accuracy on each
+      of the epoch types.
+    """
+    with self.Session(session=session) as session:
+      # Check that the epoch exists:
+      if not session.query(RunId).filter(RunId.run_id == run_id).scalar():
+        raise ValueError(f"Run not found: {run_id}")
+
+      best_results: Dict[epoch.Type, epoch.BestResults] = {}
+      for epoch_type in list(epoch.Type):
+        accuracy_to_epoch_num = {
+          row.accuracy: row.epoch_num
+          for row in session.query(
+            Batch.epoch_num, sql.func.avg(Batch.accuracy).label("accuracy")
+          )
+          .filter(
+            Batch.run_id == run_id, Batch.epoch_type_num == epoch_type.value
+          )
+          .group_by(Batch.epoch_num)
+        }
+        if accuracy_to_epoch_num:
+          epoch_num = accuracy_to_epoch_num[max(accuracy_to_epoch_num.keys())]
+          epoch_results = self.GetEpochResults(
+            run_id=run_id, epoch_num=epoch_num, epoch_type=epoch_type
+          )
+          best_results_for_type = epoch.BestResults(
+            epoch_num=epoch_num, results=epoch_results
+          )
+        else:
+          best_results_for_type = epoch.BestResults()
+        best_results[epoch_type] = best_results_for_type
+    return best_results
+
+  def GetEpochResults(
+    self,
+    run_id: run_id_lib.RunId,
+    epoch_num: int,
+    epoch_type: epoch.Type,
+    session: Optional[sqlutil.Database.SessionType] = None,
+  ) -> epoch.Results:
+    """Get the aggregate results for a single epoch.
+
+    Args:
+      run_id: The run ID.
+      epoch_num: The epoch num.
+      epoch_type: The epoch type.
+      session: A session instance.
+
+    Returns:
+      An epoch.Results tuple.
+    """
+    with self.Session(session=session) as session:
+      # Check that the epoch exists:
+      if not session.query(RunId).filter(RunId.run_id == run_id).scalar():
+        raise ValueError(f"Run not found: {run_id}")
+      if (
+        not session.query(Batch.id)
+        .filter(
+          Batch.run_id == run_id,
+          Batch.epoch_num == epoch_num,
+          Batch.epoch_type_num == epoch_type.value,
+        )
+        .first()
+      ):
+        raise ValueError(
+          f"Epoch not found: {run_id}@{epoch_num} {epoch_type.name.lower()}"
+        )
+
+      epoch_results = (
+        session.query(
+          sql.func.count(Batch.batch_num).label("batch_count"),
+          sql.func.avg(Batch.iteration_count).label("iteration_count"),
+          sql.func.avg(Batch.model_converged).label("model_converged"),
+          sql.func.avg(Batch.learning_rate).label("learning_rate"),
+          sql.func.avg(Batch.loss).label("loss"),
+          sql.func.avg(Batch.accuracy).label("accuracy"),
+          sql.func.avg(Batch.precision).label("precision"),
+          sql.func.avg(Batch.recall).label("recall"),
+          sql.func.avg(Batch.f1).label("f1"),
+        )
+        .filter(
+          Batch.run_id == run_id,
+          Batch.epoch_num == epoch_num,
+          Batch.epoch_type_num == epoch_type.value,
+        )
+        .one()
+      )
+
+    return epoch.Results(
+      batch_count=epoch_results.batch_count,
+      iteration_count=epoch_results.iteration_count,
+      model_converged=epoch_results.model_converged,
+      learning_rate=epoch_results.learning_rate,
+      loss=epoch_results.loss,
+      accuracy=epoch_results.accuracy,
+      precision=epoch_results.precision,
+      recall=epoch_results.recall,
+      f1=epoch_results.f1,
+    )
+
+  def GetModelConstructorArgs(
+    self,
+    run_id: run_id_lib.RunId,
+    session: Optional[sqlutil.Database.SessionType] = None,
+  ):
+    """Get the keyword arguments used to construct the model.
+
+    Returns:
+      A <name, value> dictionary of model constructor arguments.
+    """
+    arg_names = [
+      "node_x_dimensionality",
+      "node_y_dimensionality",
+      "graph_x_dimensionality",
+      "graph_y_dimensionality",
+      "edge_position_max",
+    ]
+
+    with self.Session(session=session) as session:
+      args = {
+        name: pickle.loads(value)
+        for name, value in session.query(
+          Parameter.name, Parameter.binary_value
+        ).filter(
+          Parameter.run_id == run_id,
+          Parameter.type_num == ParameterType.INPUT_GRAPHS_INFO.value,
+          Parameter.name.in_(arg_names),
+        )
+      }
+      if len(args) != len(arg_names):
+        raise ValueError(
+          f"Incomplete model constructor args for {run_id}: {args}"
+        )
+    return args
 
   ############################################################################
   # Properties.
