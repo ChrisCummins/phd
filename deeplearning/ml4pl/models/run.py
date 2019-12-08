@@ -2,10 +2,12 @@
 
 TODO: Detailed explanation of the file.
 """
-from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Tuple
+
+import pandas as pd
+import pyfiglet
 
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
@@ -16,6 +18,7 @@ from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import logger as logger_lib
 from deeplearning.ml4pl.models import schedules
 from labm8.py import app
+from labm8.py import pdutil
 from labm8.py import ppar
 from labm8.py import prof
 from labm8.py import progress
@@ -289,6 +292,20 @@ def Run(model_class):
         print_to=lambda msg: app.Log(2, msg),
       ):
         model.Initialize()
+
+    # Pretty print the experimental setup.
+    print("==================================================================")
+    print(pyfiglet.figlet_format(model.run_id.script_name))
+    print("Run ID:", model.run_id)
+    params = model.parameters[["type", "name", "value"]]
+    params.rename(columns=({"type": "parameter"}), inplace=True)
+    print(pdutil.FormatDataFrameAsAsciiTable(params))
+    print(
+      pdutil.FormatDataFrameAsAsciiTable(pd.DataFrame([1, 2], columns=["foo"]))
+    )
+    print()
+    print(model.Summary())
+    print("==================================================================")
 
     if FLAGS.test_only:
       batch_iterator = MakeBatchIterator(

@@ -1,5 +1,6 @@
 """This module defines an LSTM classifier."""
 import enum
+import io
 import pathlib
 import tempfile
 from typing import Any
@@ -176,6 +177,12 @@ class LstmBase(classifier_base.ClassifierBase):
 
     # Set by subclasses.
     self.model = None
+
+  def Summary(self) -> str:
+    """Get a summary"""
+    buf = io.StringIO()
+    self.model.summary(print_fn=lambda msg: print(msg, file=buf))
+    return buf.getvalue()
 
   @property
   def padded_vocabulary_size(self) -> int:
