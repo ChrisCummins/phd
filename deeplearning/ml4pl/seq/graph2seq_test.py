@@ -61,7 +61,7 @@ def populated_graph_db(
   for i, relpath in enumerate(opencl_relpaths):
     graph_tuple = random_graph_tuple_database_generator.CreateRandomGraphTuple()
     graph_tuple.ir_id = i + 1
-    graph_tuple.id = 256 - i
+    graph_tuple.id = len(opencl_relpaths) - i
     rows.append(graph_tuple)
 
   with graph_db.Session(commit=True) as session:
