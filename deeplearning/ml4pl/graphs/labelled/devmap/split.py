@@ -16,6 +16,7 @@ FLAGS = app.FLAGS
 app.DEFINE_integer("k", 10, "The number of splits for K-fold splitter.")
 app.DEFINE_database(
   "copy_splits_to",
+  graph_tuple_database.Database,
   None,
   "If set, this is a database to copy the split column to.",
 )
@@ -41,10 +42,7 @@ class StratifiedGraphLabelKFold(object):
         graph_ids.append(graph.id)
         graph_y.append(np.argmax(graph.tuple.graph_y))
 
-    seed = 0xCEC
-    splitter = model_selection.StratifiedKFold(
-      n_splits=self.k, shuffle=True, random_state=seed
-    )
+    splitter = model_selection.StratifiedKFold(n_splits=self.k, shuffle=True)
     dataset_splits = splitter.split(graph_ids, graph_y)
 
     return [

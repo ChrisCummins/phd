@@ -30,12 +30,13 @@ def populated_graph_db(request) -> graph_tuple_database.Database:
 
 
 @test.Parametrize("k", (3, 5))
-@decorators.loop_for(seconds=10, min_iteration_count=3)
-def test_fuzz_ApplySplit(
+@decorators.loop_for(seconds=5, min_iteration_count=3)
+def test_fuzz(
   populated_graph_db: graph_tuple_database.Database,
   k: int,
   empty_graph_db: graph_tuple_database.Database,
 ):
+  """Opaque fuzzing of the public methods."""
   splitter = split.StratifiedGraphLabelKFold(k)
   splitter.ApplySplit(populated_graph_db)
   split.CopySplits(populated_graph_db, empty_graph_db)
