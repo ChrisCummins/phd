@@ -143,13 +143,13 @@ class MockModel(classifier_base.ClassifierBase):
     ctx: progress.ProgressContext = progress.NullContext,
   ) -> batches.Data:
     """Generate a fake batch of data."""
-    self.make_batch_count += 1
     graph_ids = []
     while len(graph_ids) < 100:
       try:
         graph_ids.append(next(graphs).id)
       except StopIteration:
         break
+    self.make_batch_count += 1
     return batches.Data(graph_ids=graph_ids, data=123)
 
   def RunBatch(
@@ -255,7 +255,7 @@ def epoch_num(request) -> int:
 ###############################################################################
 
 
-def test_load_restore(
+def test_load_restore_model_from_checkpoint(
   logger: logging.Logger,
   graph_db: graph_tuple_database.Database,
   has_loss: bool,
@@ -311,10 +311,12 @@ def test_call(
     epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger
   )
   assert isinstance(results, epoch.Results)
-  # Test that the model saw all input graphs.
+  # Test that the model saw all of the input graphs.
   assert model.graph_count == batch_iterator.graph_count
-  # Test that batch counts match up.
-  assert results.batch_count == model.make_batch_count == model.run_batch_count
+  # Test that batch counts match up. More batches can be made than are used
+  # (because the last batch could be empty).
+  assert results.batch_count <= model.make_batch_count
+  assert results.batch_count == model.run_batch_count
   # Check that result properties are propagated.
   # FIXME:
   # assert results.has_loss == model.has_loss
