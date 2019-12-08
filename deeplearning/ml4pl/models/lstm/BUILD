@@ -21,7 +21,7 @@ py_binary(
 
 py_test(
     name = "lstm_test",
-    timeout = "long",
+    size = "enormous",
     srcs = ["lstm_test.py"],
     deps = [
         ":lstm",

@@ -59,7 +59,7 @@ py_library(
 
 py_test(
     name = "classifier_base_test",
-    timeout = "long",
+    size = "enormous",
     srcs = ["classifier_base_test.py"],
     deps = [
         ":batch",
@@ -133,7 +133,7 @@ py_library(
 
 py_test(
     name = "log_analysis_test",
-    timeout = "long",
+    size = "enormous",
     srcs = ["log_analysis_test.py"],
     deps = [
         ":log_analysis",
@@ -171,7 +171,7 @@ py_binary(
 
 py_test(
     name = "log_database_test",
-    timeout = "long",
+    size = "enormous",
     srcs = ["log_database_test.py"],
     deps = [
         ":log_database",

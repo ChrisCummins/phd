@@ -14,7 +14,7 @@ py_library(
 
 py_test(
     name = "reachability_test",
-    timeout = "long",
+    size = "enormous",
     srcs = ["reachability_test.py"],
     data = [
         "//deeplearning/ml4pl/testing/data:100_unlabelled_networkx_graphs",

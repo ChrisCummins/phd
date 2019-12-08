@@ -18,7 +18,7 @@ py_library(
 
 py_test(
     name = "graph2seq_test",
-    timeout = "long",
+    size = "enormous",
     srcs = ["graph2seq_test.py"],
     deps = [
         ":graph2seq",
@@ -58,7 +58,7 @@ py_binary(
 
 py_test(
     name = "ir2seq_test",
-    timeout = "long",
+    size = "enormous",
     srcs = ["ir2seq_test.py"],
     deps = [
         ":ir2seq",
@@ -90,7 +90,7 @@ py_binary(
 
 py_test(
     name = "lexers_test",
-    timeout = "long",
+    size = "enormous",
     srcs = ["lexers_test.py"],
     deps = [
         ":lexers",

@@ -14,7 +14,7 @@ py_library(
 
 py_test(
     name = "random_graph_tuple_generator_test",
-    timeout = "long",
+    size = "enormous",
     srcs = ["random_graph_tuple_generator_test.py"],
     deps = [
         ":random_graph_tuple_generator",
@@ -37,7 +37,7 @@ py_binary(
 
 py_test(
     name = "random_graph_tuple_database_generator_test",
-    timeout = "long",
+    size = "enormous",
     srcs = ["random_graph_tuple_database_generator_test.py"],
     deps = [
         ":random_graph_tuple_database_generator",
@@ -65,7 +65,7 @@ py_binary(
 
 py_test(
     name = "random_log_database_generator_test",
-    timeout = "long",
+    size = "enormous",
     srcs = ["random_log_database_generator_test.py"],
     deps = [
         ":random_log_database_generator",
@@ -93,7 +93,7 @@ py_library(
 
 py_test(
     name = "random_networkx_generator_test",
-    timeout = "long",
+    size = "enormous",
     srcs = ["random_networkx_generator_test.py"],
     deps = [
         ":random_graph_tuple_generator",
