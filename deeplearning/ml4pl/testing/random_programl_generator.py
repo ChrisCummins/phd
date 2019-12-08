@@ -89,7 +89,7 @@ def CreateRandomProto(
     else:
       return n
 
-  functions = []
+  function_count = 0
 
   # Create the nodes.
   for i in range(node_count):
@@ -106,11 +106,12 @@ def CreateRandomProto(
       if node.type == programl_pb2.Node.STATEMENT:
         node.text = "statement"
         node.preprocessed_text = "!UNK"
-        if functions and random.random() < 0.85:
-          node.function = random.choice(functions)
+        # Assign the node to a function, or create a new function.
+        if function_count and random.random() < 0.85:
+          node.function = random.randint(0, function_count - 1)
         else:
-          node.function = len(functions)
-        functions.append(len(functions))
+          function_count += 1
+          node.function = function_count - 1
       elif node.type == programl_pb2.Node.IDENTIFIER:
         node.text = "%0"
         node.preprocessed_text = "!IDENTIFIER"
@@ -129,9 +130,15 @@ def CreateRandomProto(
       node.y[:] = _CreateRandomList(node_y_dimensionality)
 
   # Create the functions.
-  for i in functions:
+  for i in range(0, function_count):
     function = proto.function.add()
-    function.name = f"fn_{i}"
+    # In NetworkXToProgramGraph(), functions are sorted lexicographically by
+    # their name. To preserve equivalence between proto <-> nx function names,
+    # we create zero-padded function names, e.g. function 10 -> fn_000010.
+    # This will not work if the number of digits required to name the functions
+    # overflows the padding size! I.e. if there are more than 999999 function
+    # names in a randomly generated proto.
+    function.name = f"fn_{i + 1:06d}"
 
   # Keep track of the edges that we have created to avoid generating parallel
   # edges of the same flow.
