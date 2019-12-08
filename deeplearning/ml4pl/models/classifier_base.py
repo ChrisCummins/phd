@@ -4,6 +4,8 @@ from typing import Dict
 from typing import Iterable
 from typing import Optional
 
+import pandas as pd
+
 from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch as batches
