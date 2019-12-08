@@ -24,6 +24,7 @@ py_binary(
 
 py_test(
     name = "make_devmap_dataset_test",
+    timeout = "long",
     srcs = ["make_devmap_dataset_test.py"],
     deps = [
         ":make_devmap_dataset",
