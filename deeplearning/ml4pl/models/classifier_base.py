@@ -11,6 +11,7 @@ from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import logger as logging
 from labm8.py import app
+from labm8.py import humanize
 from labm8.py import progress
 
 
@@ -214,7 +215,8 @@ class ClassifierBase(object):
     return thread.results
 
   def BatchIterator(
-    self, graphs: Iterable[graph_tuple_database.GraphTuple]
+    self, graphs: Iterable[graph_tuple_database.GraphTuple],
+    ctx: progress.ProgressContext = progress.NullContext
   ) -> Iterable[batches.Data]:
     """Generate model batches from a iterator of graphs.
 
@@ -225,7 +227,14 @@ class ClassifierBase(object):
       A batch iterator.
     """
     while True:
-      batch = self.MakeBatch(graphs)
+      with ctx.Profile(
+        4,
+        lambda t: (
+          f"Constructed batch of "
+          f"{humanize.Plural(batch.graph_count, 'graph')}"
+        ),
+      ):
+        batch = self.MakeBatch(graphs)
       if batch.graph_count:
         yield batch
       else:
