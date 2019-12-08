@@ -265,16 +265,13 @@ class Train(progress.Progress):
     )
 
 
-# Type annotation for a classifier_base.ClassifierBase subclass. Note this is
-# the type itself, not an instance of that type.
-ModelClass = Callable[
-  [graph_tuple_database.Database], classifier_base.ClassifierBase
-]
-
-
-def Run(model_class: ModelClass):
+def Run(model_class):
   graph_db: graph_tuple_database.Database = FLAGS.graph_db()
   with logger_lib.Logger.FromFlags() as logger:
+    model: classifier_base.ClassifierBase = model_class(
+      logger=logger, graph_db=graph_db
+    )
+
     # Create the model.
     if FLAGS.restore_model:
       with prof.Profile(
@@ -284,17 +281,13 @@ def Run(model_class: ModelClass):
         checkpoint_ref = checkpoints.CheckpointReference.FromString(
           FLAGS.restore_model
         )
-        model = model_class(
-          logger=logger, graph_db=graph_db, restored_from=checkpoint_ref
-        )
+        model.RestoreFrom(checkpoint_ref)
     else:
       with prof.Profile(
         lambda t: f"Initialized {model.run_id}",
         print_to=lambda msg: app.Log(2, msg),
       ):
-        model = model_class(
-          logger=logger, graph_db=graph_db, restore_from=FLAGS.restore_model
-        )
+        model.Initialize()
 
     if FLAGS.test_only:
       batch_iterator = MakeBatchIterator(

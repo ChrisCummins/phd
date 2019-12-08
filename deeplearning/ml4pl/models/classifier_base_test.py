@@ -263,6 +263,7 @@ def test_load_restore_model_from_checkpoint(
 ):
   """Test creating and restoring model from checkpoint."""
   model = MockModel(logger, graph_db)
+  model.Initialize()
 
   # Mutate model state.
   model.epoch_num = 5
@@ -275,12 +276,9 @@ def test_load_restore_model_from_checkpoint(
 
   # Create a new model from this checkpoint.
   restored_model = MockModel(
-    logger,
-    graph_db,
-    restore_from=checkpoint_ref,
-    has_loss=has_loss,
-    has_learning_rate=has_learning_rate,
+    logger, graph_db, has_loss=has_loss, has_learning_rate=has_learning_rate,
   )
+  restored_model.RestoreFrom(checkpoint_ref)
 
   # The first model was initialized with Initialize(), the second was not.
   assert model.create_model_data_count == 1
@@ -307,6 +305,7 @@ def test_call(
   logger: logging.Logger,
 ):
   """Test that call returns results."""
+  model.Initialize()
   results = model(
     epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger
   )

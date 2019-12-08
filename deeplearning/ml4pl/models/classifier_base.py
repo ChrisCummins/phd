@@ -20,9 +20,8 @@ FLAGS = app.FLAGS
 class ClassifierBase(object):
   """Abstract base class for implementing classifiers.
 
-  Before feeding any data through a model, you must call Initialize(). Else
-  use the FromCheckpoint() class constructor to construct and initialize a
-  model from a checkpoint.
+  Before using the model, it must be initialized bu calling Initialize(), or
+  restored from a checkpoint using RestoreFrom(checkpoint).
 
   Subclasses must implement the following methods:
     MakeBatch()        # construct a batch from input graphs.
@@ -38,10 +37,12 @@ class ClassifierBase(object):
     self,
     logger: logging.Logger,
     graph_db: graph_tuple_database,
-    restore_from: Optional[checkpoints.CheckpointReference] = None,
     run_id: Optional[run_id_lib.RunId] = None,
   ):
     """Constructor.
+
+    This creates an uninitialized model. Initialize the model before use by
+    calling Initialize() or RestoreFrom(checkpoint).
 
     Args:
       logger: A logger to write {batch, epoch, checkpoint} data to.
@@ -68,7 +69,6 @@ class ClassifierBase(object):
     # Model properties.
     self.logger: logging.Logger = logger
     self.graph_db: graph_tuple_database.Database = graph_db
-    self.restored_from: Optional[checkpoints.CheckpointReference] = restore_from
     self.run_id: run_id_lib.RunId = (
       run_id or run_id_lib.RunId.GenerateUnique(type(self).__name__)
     )
@@ -77,22 +77,17 @@ class ClassifierBase(object):
       or self.graph_db.graph_y_dimensionality
     )
 
-    # Load the model state from the checkpoint, or initialize a new model.
-    if restore_from:
-      self._initialized = True
-      checkpoint = logger.Load(restore_from)
-      self.epoch_num = checkpoint.epoch_num
-      self.best_results = checkpoint.best_results
-      self.LoadModelData(checkpoint.model_data)
-    else:
-      self._initialized = False
-      self.epoch_num = 0
-      self.best_results: Dict[epoch.Type, epoch.BestResults] = {
-        epoch.Type.TRAIN: epoch.BestResults(),
-        epoch.Type.VAL: epoch.BestResults(),
-        epoch.Type.TEST: epoch.BestResults(),
-      }
-      self.Initialize()
+    # Set by Initialize() and RestoredFrom()
+    self._initialized = False
+    self.restored_from: Optional[checkpoints.CheckpointReference] = None
+
+    # Progress counters that are saved and loaded from checkpoints.
+    self.epoch_num = 0
+    self.best_results: Dict[epoch.Type, epoch.BestResults] = {
+      epoch.Type.TRAIN: epoch.BestResults(),
+      epoch.Type.VAL: epoch.BestResults(),
+      epoch.Type.TEST: epoch.BestResults(),
+    }
 
     # Register this model with the logger.
     self.logger.OnStartRun(self.run_id, self.graph_db)
@@ -244,12 +239,24 @@ class ClassifierBase(object):
     self._initialized = True
     self.CreateModelData()
 
+  def RestoreFrom(self, checkpoint_ref: checkpoints.CheckpointReference):
+    """Restore a model from a checkpoint."""
+    self._initialized = True
+    self.restored_from = checkpoint_ref
+    checkpoint = self.logger.Load(checkpoint_ref)
+    self.epoch_num = checkpoint.epoch_num
+    self.best_results = checkpoint.best_results
+    self.LoadModelData(checkpoint.model_data)
+
   def SaveCheckpoint(self) -> checkpoints.CheckpointReference:
     """Construct a checkpoint from the current model state.
 
     Returns:
       A checkpoint reference.
     """
+    if not self._initialized:
+      raise TypeError("Cannot save an unitialized model.")
+
     self.logger.Save(
       checkpoints.Checkpoint(
         run_id=self.run_id,
