@@ -38,3 +38,31 @@ py_test(
         "//labm8/py:test",
     ],
 )
+
+py_binary(
+    name = "split",
+    srcs = ["split.py"],
+    deps = [
+        "//deeplearning/ml4pl/graphs/labelled:graph_database_reader",
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:prof",
+        "//third_party/py/numpy",
+        "//third_party/py/scikit_learn",
+        "//third_party/py/sqlalchemy",
+    ],
+)
+
+py_test(
+    name = "split_test",
+    srcs = ["split_test.py"],
+    deps = [
+        ":split",
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
+        "//deeplearning/ml4pl/testing:random_graph_tuple_database_generator",
+        "//deeplearning/ml4pl/testing:testing_databases",
+        "//labm8/py:decorators",
+        "//labm8/py:test",
+    ],
+)
