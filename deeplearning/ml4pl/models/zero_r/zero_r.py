@@ -65,7 +65,7 @@ class ZeroR(classifier_base.ClassifierBase):
         targets = graph.tuple.graph_y
 
     # Flatten per-graph node y to a single array.
-    if self.node_y_dimensionality and targets:
+    if self.graph.node_y_dimensionality and targets:
       targets = np.vstack(targets)
 
     return batchs.Data(graph_ids=graph_ids, data=targets)
@@ -103,7 +103,7 @@ class ZeroR(classifier_base.ClassifierBase):
 
     return batchs.Results.Create(targets=targets, predictions=predictions)
 
-  def ModelDataToSave(self) -> Any:
+  def GetModelData(self) -> Any:
     return self.class_counts
 
   def LoadModelData(self, data_to_load: Any) -> None:

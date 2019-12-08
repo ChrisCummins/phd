@@ -15,16 +15,3 @@ py_binary(
         "//third_party/py/numpy",
     ],
 )
-
-# TODO(github.com/ChrisCummins/ProGraML/issues/28): Fix me.
-#py_test(
-#    name = "zero_r_smoke_test",
-#    srcs = ["zero_r_smoke_test.py"],
-#    deps = [
-#        ":zero_r",
-#        "//deeplearning/ml4pl/models:classifier_smoke_tester",
-#        "//labm8/py:app",
-#        "//labm8/py:test",
-#        "//third_party/py/numpy",
-#    ],
-#)
