@@ -68,7 +68,9 @@ def test_parameters(
   logs = generator.CreateRandomRunLogs(
     run_id=run_id, max_param_count=max_param_count
   )
-  assert 1 <= len(logs.parameters) <= max_param_count
+  # We can't test on max_param_count as an upper bound because the log generator
+  # can add additional graph_db parameters.
+  assert 1 <= len(logs.parameters)
   for param in logs.parameters:
     assert isinstance(param, log_database.Parameter)
     assert param.run_id == run_id
