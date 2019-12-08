@@ -120,6 +120,17 @@ def test_cascaded_delete_using_query(
   )
 
 
+# Database stats tests.
+
+# Repeat test repeatedly to test memoized property accessor.
+@decorators.loop_for(min_iteration_count=3)
+def test_fuzz_database_stats_on_empty_db(
+  db: unlabelled_graph_database.Database,
+):
+  assert db.proto_count == 0
+  assert db.stats_json
+
+
 # Global counter for test_fuzz_ProgramGraph_Create() to generate unique values.
 ir_id = 0
 

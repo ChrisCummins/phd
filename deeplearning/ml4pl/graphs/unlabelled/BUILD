@@ -15,7 +15,7 @@
 #    ],
 #)
 
-py_library(
+py_binary(
     name = "unlabelled_graph_database",
     srcs = ["unlabelled_graph_database.py"],
     visibility = ["//visibility:public"],
@@ -24,7 +24,10 @@ py_library(
         "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//labm8/py:app",
         "//labm8/py:crypto",
+        "//labm8/py:humanize",
+        "//labm8/py:jsonutil",
         "//labm8/py:labdate",
+        "//labm8/py:progress",
         "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],

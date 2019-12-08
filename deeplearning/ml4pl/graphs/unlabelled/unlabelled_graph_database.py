@@ -2,7 +2,11 @@
 import datetime
 import pickle
 from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
 from typing import Optional
+from typing import Tuple
 
 import sqlalchemy as sql
 
@@ -10,9 +14,14 @@ from deeplearning.ml4pl import run_id
 from deeplearning.ml4pl.graphs import programl_pb2
 from labm8.py import app
 from labm8.py import crypto
+from labm8.py import humanize
+from labm8.py import jsonutil
+from labm8.py import progress
 from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
+# Note that --proto_db flag is defined at the end of this file after Database
+# class is defined.
 
 Base = sql.ext.declarative.declarative_base()
 
@@ -225,8 +234,234 @@ class ProgramGraphData(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   )
 
 
+# A registry of database statics, where each entry is a <name, property> tuple.
+database_statistics_registry: List[Tuple[str, Callable[["Database"], Any]]] = []
+
+
+def database_statistic(func):
+  """A decorator to mark a method on a Database as a database static.
+
+  Database statistics can be accessed using Database.stats_json property to
+  retrieve a <name, vale> dictionary.
+  """
+  global database_statistics_registry
+  database_statistics_registry.append((func.__name__, func))
+  return property(func)
+
+
 class Database(sqlutil.Database):
   """A database of ProgramGraph protocol buffers."""
 
-  def __init__(self, url: str, must_exist: bool = False):
+  def __init__(
+    self,
+    url: str,
+    must_exist: bool = False,
+    ctx: progress.ProgressContext = progress.NullContext,
+  ):
     super(Database, self).__init__(url, Base, must_exist=must_exist)
+    self.ctx = ctx
+
+    # Attributes evaluated lazily.
+    self._db_stats = None
+
+  @database_statistic
+  def proto_count(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.proto_count)
+
+  @database_statistic
+  def split_count(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.split_count)
+
+  @database_statistic
+  def node_count(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.node_count or 0)
+
+  @database_statistic
+  def edge_count(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.edge_count or 0)
+
+  @database_statistic
+  def node_count_max(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.node_count_max or 0)
+
+  @database_statistic
+  def edge_count_max(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.edge_count_max or 0)
+
+  @database_statistic
+  def edge_position_max(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.edge_position_max or 0)
+
+  @database_statistic
+  def node_type_count_max(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.node_type_count_max or 0)
+
+  @database_statistic
+  def edge_flow_count_max(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.edge_flow_count_max or 0)
+
+  @database_statistic
+  def node_unique_text_count_avg(self) -> float:
+    """The node x dimensionality of all graph protos."""
+    return float(self.db_stats.node_unique_text_count_avg or 0)
+
+  @database_statistic
+  def node_unique_text_count_max(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.node_unique_text_count_max or 0)
+
+  @database_statistic
+  def node_unique_preprocessed_text_count_avg(self) -> float:
+    """The node x dimensionality of all graph protos."""
+    return float(self.db_stats.node_unique_preprocessed_text_count_avg or 0)
+
+  @database_statistic
+  def node_unique_preprocessed_text_count_max(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.node_unique_preprocessed_text_count_max or 0)
+
+  @database_statistic
+  def node_x_dimensionality_count(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.node_x_dimensionality_count or 0)
+
+  @database_statistic
+  def node_y_dimensionality_count(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.node_y_dimensionality_count or 0)
+
+  @database_statistic
+  def graph_x_dimensionality_count(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.graph_x_dimensionality_count or 0)
+
+  @database_statistic
+  def graph_y_dimensionality_count(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.graph_y_dimensionality_count or 0)
+
+  @database_statistic
+  def proto_data_size(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.proto_data_size or 0)
+
+  @database_statistic
+  def proto_data_size_min(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.proto_data_size_min or 0)
+
+  @database_statistic
+  def proto_data_size_avg(self) -> float:
+    """The node x dimensionality of all graph protos."""
+    return float(self.db_stats.proto_data_size_avg or 0)
+
+  @database_statistic
+  def proto_data_size_max(self) -> int:
+    """The node x dimensionality of all graph protos."""
+    return int(self.db_stats.proto_data_size_max or 0)
+
+  def RefreshStats(self) -> None:
+    """Compute the database stats for access via the instance properties."""
+    with self.ctx.Profile(
+      2,
+      lambda t: (
+        "Computed stats over "
+        f"{humanize.BinaryPrefix(stats.proto_data_size, 'B')} database "
+        f"({humanize.Plural(stats.proto_count, 'protocol buffer')})"
+      ),
+    ), self.Session() as session:
+      # Compute the stats.
+      stats = session.query(
+        sql.func.count(ProgramGraph.ir_id).label("proto_count"),
+        sql.func.count(sql.func.distinct(ProgramGraph.split)).label(
+          "split_count"
+        ),
+        # Node and edge attribute sums.
+        sql.func.sum(ProgramGraph.node_count).label("node_count"),
+        sql.func.sum(ProgramGraph.edge_count).label("edge_count"),
+        # Node and edge attribute maximums.
+        sql.func.max(ProgramGraph.node_count).label("node_count_max"),
+        sql.func.max(ProgramGraph.edge_count).label("edge_count_max"),
+        sql.func.max(ProgramGraph.edge_position_max).label("edge_position_max"),
+        # Type counts.
+        sql.func.max(ProgramGraph.node_type_count).label("node_type_count_max"),
+        sql.func.max(ProgramGraph.edge_flow_count).label("edge_flow_count_max"),
+        # Node unique text counts.
+        sql.func.avg(ProgramGraph.node_unique_text_count).label(
+          "node_unique_text_count_avg"
+        ),
+        sql.func.max(ProgramGraph.node_unique_text_count).label(
+          "node_unique_text_count_max"
+        ),
+        sql.func.avg(ProgramGraph.node_unique_preprocessed_text_count).label(
+          "node_unique_preprocessed_text_count_avg"
+        ),
+        sql.func.max(ProgramGraph.node_unique_preprocessed_text_count).label(
+          "node_unique_preprocessed_text_count_max"
+        ),
+        # Dimensionality counts.
+        sql.func.count(
+          sql.func.distinct(ProgramGraph.graph_x_dimensionality)
+        ).label("node_x_dimensionality_count"),
+        sql.func.count(
+          sql.func.distinct(ProgramGraph.graph_x_dimensionality)
+        ).label("node_y_dimensionality_count"),
+        sql.func.count(
+          sql.func.distinct(ProgramGraph.graph_x_dimensionality)
+        ).label("graph_x_dimensionality_count"),
+        sql.func.count(
+          sql.func.distinct(ProgramGraph.graph_x_dimensionality)
+        ).label("graph_y_dimensionality_count"),
+        # Proto sizes.
+        sql.func.sum(ProgramGraph.serialized_proto_size).label(
+          "proto_data_size"
+        ),
+        sql.func.min(ProgramGraph.serialized_proto_size).label(
+          "proto_data_size_min"
+        ),
+        sql.func.avg(ProgramGraph.serialized_proto_size).label(
+          "proto_data_size_avg"
+        ),
+        sql.func.max(ProgramGraph.serialized_proto_size).label(
+          "proto_data_size_max"
+        ),
+      ).one()
+      self._db_stats = stats
+
+  @property
+  def db_stats(self):
+    """Fetch aggregate database stats, or compute them if not set."""
+    if self._db_stats is None:
+      self.RefreshStats()
+    return self._db_stats
+
+  @property
+  def stats_json(self) -> Dict[str, Any]:
+    """Fetch the database statistics as a JSON dictionary."""
+    return {
+      name: function(self) for name, function in database_statistics_registry
+    }
+
+
+app.DEFINE_database(
+  "proto_db", Database, None, "A database of graph protocol buffers."
+)
+
+
+def Main():
+  """Main entry point."""
+  proto_db = FLAGS.proto_db()
+  print(jsonutil.format_json(proto_db.stats_json))
+
+
+if __name__ == "__main__":
+  app.Run(Main)
