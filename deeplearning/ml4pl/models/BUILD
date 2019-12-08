@@ -186,6 +186,7 @@ py_test(
 py_library(
     name = "logger",
     srcs = ["logger.py"],
+    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
     deps = [
         ":batch",
         ":checkpoints",
