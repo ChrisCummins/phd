@@ -5,7 +5,6 @@ py_library(
     srcs = ["control_flow_graph.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//deeplearning/ml4pl:ml4pl_pb_py",
         "//labm8/py:app",
         "//labm8/py:pbutil",
         "//third_party/py/networkx",
@@ -30,7 +29,6 @@ py_library(
     deps = [
         ":control_flow_graph",
         "//compilers/llvm:opt_util",
-        "//deeplearning/ml4pl:ml4pl_pb_py",
         "//labm8/py:app",
         "//labm8/py:humanize",
         "//labm8/py:pbutil",

@@ -9,7 +9,6 @@ py_binary(
         "//deeplearning/deeptune/opencl/heterogeneous_mapping/models",
         "//deeplearning/ml4pl:ml4pl_pb_py",
         "//deeplearning/ml4pl/bytecode:bytecode_database",
-        "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs:graph_viz",
         "//deeplearning/ml4pl/graphs/labelled:graph_batcher",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple",

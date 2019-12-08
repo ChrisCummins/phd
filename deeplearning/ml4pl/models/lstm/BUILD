@@ -9,7 +9,7 @@
 #    deps = [
 #        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
 #        "//deeplearning/clgen/proto:clgen_pb_py",
-#        "//deeplearning/ml4pl/bytecode:bytecode_database",
+#        "//deeplearning/ml4pl/ir:ir_database",
 #        "//deeplearning/ml4pl/graphs/labelled/devmap:make_devmap_dataset",
 #        "//labm8/py:app",
 #        "//labm8/py:bazelutil",
@@ -25,7 +25,7 @@
 #    deps = [
 #        ":bytecode2seq",
 #        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
-#        "//deeplearning/ml4pl/bytecode:bytecode_database",
+#        "//deeplearning/ml4pl/ir:ir_database",
 #        "//deeplearning/ml4pl/graphs:graph_database",
 #        "//deeplearning/ml4pl/graphs/labelled/devmap:make_devmap_dataset",
 #        "//labm8/py:app",
@@ -40,7 +40,7 @@
 #    srcs = ["derive_vocabulary.py"],
 #    deps = [
 #        ":bytecode2seq",
-#        "//deeplearning/ml4pl/bytecode:bytecode_database",
+#        "//deeplearning/ml4pl/ir:ir_database",
 #        "//labm8/py:app",
 #        "//labm8/py:humanize",
 #        "//labm8/py:jsonutil",
@@ -65,7 +65,7 @@
 #    data = [":llvm_vocab"],
 #    deps = [
 #        ":bytecode2seq",
-#        "//deeplearning/ml4pl/bytecode:bytecode_database",
+#        "//deeplearning/ml4pl/ir:ir_database",
 #        "//deeplearning/ml4pl/graphs:graph_database",
 #        "//deeplearning/ml4pl/graphs/unlabelled/cdfg:control_and_data_flow_graph",
 #        "//labm8/py:app",
@@ -82,7 +82,7 @@
 #    deps = [
 #        ":bytecode2seq",
 #        ":graph2seq",
-#        "//deeplearning/ml4pl/bytecode:bytecode_database",
+#        "//deeplearning/ml4pl/ir:ir_database",
 #        "//deeplearning/ml4pl/graphs:graph_database",
 #        "//labm8/py:app",
 #        "//labm8/py:test",
@@ -103,7 +103,7 @@
 #    deps = [
 #        ":graph2seq",
 #        ":lstm_utils",
-#        "//deeplearning/ml4pl/bytecode:bytecode_database",
+#        "//deeplearning/ml4pl/ir:ir_database",
 #        "//deeplearning/ml4pl/graphs:graph_database",
 #        "//deeplearning/ml4pl/graphs/labelled:graph_batcher",
 #        "//deeplearning/ml4pl/models:base_utils",
@@ -124,7 +124,7 @@
 #        ":encoded_bytecode_database",
 #        ":graph2seq",
 #        ":lstm_utils",
-#        "//deeplearning/ml4pl/bytecode:bytecode_database",
+#        "//deeplearning/ml4pl/ir:ir_database",
 #        "//deeplearning/ml4pl/graphs:graph_database",
 #        "//deeplearning/ml4pl/graphs/labelled:graph_batcher",
 #        "//deeplearning/ml4pl/models:base_utils",
