@@ -152,7 +152,7 @@ class MakeOpenClDevmapDataset(progress.Progress):
 
     self.dataset = opencl_device_mapping_dataset.OpenClDeviceMappingsDataset()
     super(MakeOpenClDevmapDataset, self).__init__(
-      gpu, i=0, n=len(self.dataset.df)
+      gpu, i=0, n=len(self.dataset.df), unit="protos"
     )
 
   def Run(self):
