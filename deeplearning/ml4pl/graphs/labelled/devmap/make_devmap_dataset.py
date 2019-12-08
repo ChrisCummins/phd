@@ -1,38 +1,23 @@
 """This module prepares a CPU/GPU OpenCL device-mapping dataset."""
-import pathlib
-import tempfile
-import typing
+from typing import Iterable
 
 import numpy as np
 import pandas as pd
 import sqlalchemy as sql
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
-from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs import programl
+from deeplearning.ml4pl.graphs import programl_pb2
+from deeplearning.ml4pl.graphs.labelled import graph_tuple as graph_tuples
+from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
+from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
+from deeplearning.ml4pl.ir import ir_database
 from labm8.py import app
-from labm8.py import fs
-from labm8.py import prof
+from labm8.py import progress
 from labm8.py import sqlutil
 
-# TODO(cec): Temporarily disabled duplicate flags.
-# app.DEFINE_database(
-#   "input_db",
-#   graph_database.Database,
-#   None,
-#   "URL of database to read unlabelled graphs from.",
-#   must_exist=True,
-# )
-# app.DEFINE_database(
-#   "output_db",
-#   graph_database.Database,
-#   "sqlite:////tmp/phd/ml4pl/graphs.db",
-#   "URL of the database to write labelled graphs to.",
-# )
 app.DEFINE_string(
   "gpu", None, "The gpu to use. One of: {amd_tahiti_7970,nvidia_gtx_960}"
-)
-app.DEFINE_boolean(
-  "log1p_graph_x", True, "If set, compute log(x + 1) for each graph feature."
 )
 
 FLAGS = app.FLAGS
@@ -87,94 +72,107 @@ def MakeGpuDataFrame(df: pd.DataFrame, gpu: str):
 
 
 def AnnotateGraphMetas(
-  input_db: graph_database.Database, df: pd.DataFrame
-) -> typing.Iterable[graph_database.GraphMeta]:
+  ir_db: ir_database.Database,
+  proto_db: unlabelled_graph_database.Database,
+  df: pd.DataFrame,
+  ctx: progress.ProgressContext = progress.NullContext,
+) -> Iterable[graph_tuple_database.GraphTuple]:
   """Add features and labels to graph metas in database."""
-  with input_db.Session() as session:
+  with ir_db.Session() as ir_session, proto_db.Session() as proto_session:
     for _, row in df.iterrows():
-      with prof.Profile(
-        f"Processed graph {row['relpath']}:{row['data:dataset_name']}"
+      relpath = row["relpath"]
+      with ctx.Profile(
+        1, f"Processed graph {row['relpath']}:{row['data:dataset_name']}"
       ):
-        q = session.query(graph_database.GraphMeta)
-
-        # Select the corresponding graph from the input database.
-        q = q.filter(
-          graph_database.GraphMeta.source_name == "pact17_opencl_devmap"
-        )
-        q = q.filter(graph_database.GraphMeta.relpath == row["relpath"])
-
-        # Check that we have an exact 1:1 mapping from the opencl devmap dataset
-        # to graphs in the input database.
-        if q.count() != 1:
-          app.Error(
-            "Expected one graph with relpath %s, but found %s",
-            row["relpath"],
-            q.count(),
+        # Select the corresponding IR.
+        ir_id = (
+          ir_session.query(ir_database.IntermediateRepresentation.id)
+          .filter(
+            ir_database.IntermediateRepresentation.source
+            == "pact17_opencl_devmap",
+            ir_database.IntermediateRepresentation.relpath == relpath,
           )
-          continue
+          .scalar()
+        )
+        # Check that we have an exact 1:1 mapping from the opencl devmap dataset
+        # to IR.
+        if ir_id is None:
+          raise ValueError(f"Expected one IR with relpath {relpath}")
 
-        # Load the graph data.
-        q = q.options(sql.orm.joinedload(graph_database.GraphMeta.graph))
-        input_graph_meta = q.first()
-        graph = input_graph_meta.data
-
-        # Add a second embedding table index with constant value.
-        # This is a workaround for github.com/ChrisCummins/ProGraML/issues/12,
-        # which means that the input graphs have a single embedding index,
-        # wheras we want to produce labelled graphs with a 2D embedding index.
-        for _, data in graph.nodes(data=True):
-          data["x"] = [data["x"], 0]
+        # Load the program graph.
+        proto_row = (
+          proto_session.query(unlabelled_graph_database.ProgramGraph)
+          .filter(unlabelled_graph_database.ProgramGraph.ir_id == ir_id)
+          .options(
+            sql.orm.joinedload(unlabelled_graph_database.ProgramGraph.data)
+          )
+          .scalar()
+        )
+        if proto_row is None:
+          raise ValueError(f"Expected one graph with ID {ir_id}")
+        proto: programl_pb2.ProgramGraph = proto_row.proto
 
         # Add the graph-level features.
-        graph.x = np.array([row["wgsize"], row["transfer"]], dtype=np.int64)
-        if FLAGS.log1p_graph_x:
-          graph.x = np.log1p(graph.x.astype(np.float64))
+        proto.x[:] = [row["wgsize"], row["transfer"]]
         # Add 'y' graph feature as target.
-        graph.y = row["y"]
+        proto.y[:] = row["y"].tolist()
 
-        graph_meta = graph_database.GraphMeta.CreateFromNetworkX(graph)
-        graph_meta.group = input_graph_meta.group
-      yield graph_meta
+        # Create the graph tuple. Note the jumping through hoops with converting
+        # proto -> nx -> graph_tuple, because there is currently no direct
+        # proto -> graph_tuple conversion.
+        graph_tuple = graph_tuple_database.GraphTuple.CreateFromGraphTuple(
+          graph_tuple=graph_tuples.GraphTuple.CreateFromNetworkX(
+            programl.ProgramGraphToNetworkX(proto)
+          ),
+          ir_id=ir_id,
+        )
+      yield graph_tuple
 
 
-def MakeOpenClDevmapDataset(
-  input_db: graph_database.Database,
-  output_db: graph_database.Database,
-  gpu: str,
-):
+class MakeOpenClDevmapDataset(progress.Progress):
   """Create a labelled dataset for the given GPU."""
-  dataset = opencl_device_mapping_dataset.OpenClDeviceMappingsDataset()
 
-  with sqlutil.BufferedDatabaseWriter(output_db, max_buffer_length=8) as writer:
-    df = MakeGpuDataFrame(dataset.df, gpu)
+  def __init__(
+    self,
+    ir_db: ir_database.Database,
+    proto_db: unlabelled_graph_database.Database,
+    graph_db: graph_tuple_database.Database,
+    gpu: str,
+  ):
+    self.ir_db = ir_db
+    self.proto_db = proto_db
+    self.graph_db = graph_db
+    self.gpu = gpu
 
-    for graph in AnnotateGraphMetas(input_db, df):
-      writer.AddOne(graph)
+    self.dataset = opencl_device_mapping_dataset.OpenClDeviceMappingsDataset()
+    super(MakeOpenClDevmapDataset, self).__init__(
+      gpu, i=0, n=len(self.dataset.df)
+    )
+
+  def Run(self):
+    with sqlutil.BufferedDatabaseWriter(
+      self.graph_db, max_buffer_size=32 * 1024 * 1024, max_buffer_length=1024
+    ) as writer:
+      df = MakeGpuDataFrame(self.dataset.df, self.gpu)
+
+      for graph in AnnotateGraphMetas(
+        self.ir_db, self.proto_db, df, ctx=self.ctx
+      ):
+        self.ctx.i += 1
+        writer.AddOne(graph)
 
 
 def main():
   """Main entry point."""
-  input_db = FLAGS.input_db()
-  output_db = FLAGS.output_db()
+  ir_db = FLAGS.ir_db()
+  proto_db = FLAGS.proto_db()
+  graph_db = FLAGS.graph_db()
   gpu = FLAGS.gpu
 
   if gpu not in {"amd_tahiti_7970", "nvidia_gtx_960"}:
     raise app.UsageError("Unknown GPU")
 
-  # Temporarily redirect logs to a file, which we will later import into the
-  # database's meta table.
-  with tempfile.TemporaryDirectory() as d:
-    FLAGS.alsologtostderr = True
-    app.LogToDirectory(d, "log")
-
-    MakeOpenClDevmapDataset(input_db, output_db, gpu)
-
-    log = fs.Read(pathlib.Path(d) / "log.INFO")
-    with output_db.Session(commit=True) as s:
-      s.query(graph_database.Meta).filter(
-        graph_database.Meta.key == "log"
-      ).delete()
-      s.add(graph_database.Meta(key="log", value=log))
+  progress.Run(MakeOpenClDevmapDataset(ir_db, proto_db, graph_db, gpu))
 
 
 if __name__ == "__main__":
