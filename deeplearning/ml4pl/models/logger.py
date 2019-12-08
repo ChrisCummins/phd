@@ -2,7 +2,6 @@
 
 TODO: Detailed explanation of the file.
 """
-from typing import Dict
 from typing import Optional
 
 import sqlalchemy as sql
@@ -13,7 +12,6 @@ from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch
 from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import epoch
-from deeplearning.ml4pl.models import log_analysis
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models import schedules
 from labm8.py import app
@@ -59,6 +57,9 @@ app.DEFINE_integer(
   10,
   "Tuning parameter. The maximum number of seconds between flushes.",
 )
+app.DEFINE_boolean(
+  "fail_on_logger_error", True, "Raise an error if log writing fails."
+)
 
 
 class Logger(object):
@@ -96,6 +97,19 @@ class Logger(object):
     del exc_val
     del exc_tb
     self._writer.Close()
+    self.CheckForError()
+
+  def CheckForError(self) -> None:
+    """Check for errors in log writing.
+
+    Raises:
+      OSError: If log writing has failed.
+    """
+    if self._writer.error_count and FLAGS.fail_on_logger_error:
+      raise OSError(
+        f"{len(self._writer.error_count)} failures during log writing. "
+        "Disable this error using --fail_on_logger_error=false"
+      )
 
   #############################################################################
   # Event callbacks.
@@ -164,6 +178,9 @@ class Logger(object):
     epoch_num: epoch.Type,
     results: epoch.Results,
   ):
+    del epoch_type
+    del results
+
     schedule = FLAGS.keep_detailed_batches()
 
     if schedule == schedules.KeepDetailedBatches.NONE:
@@ -192,6 +209,7 @@ class Logger(object):
           )
 
       self._writer.AddLambdaOp(DeleteOldDetailedBatchLogs)
+      self.CheckForError()
 
   #############################################################################
   # Save and restore checkpoints.
