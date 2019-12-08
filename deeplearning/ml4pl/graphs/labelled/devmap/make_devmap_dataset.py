@@ -109,7 +109,9 @@ def AnnotateGraphMetas(
           .scalar()
         )
         if proto_row is None:
-          raise ValueError(f"Expected one graph with ID {ir_id}")
+          raise ValueError(
+            f"Expected one proto for relpath {relpath} with ID {ir_id}"
+          )
         proto: programl_pb2.ProgramGraph = proto_row.proto
 
         # Add the graph-level features.
