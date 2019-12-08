@@ -18,18 +18,6 @@ from labm8.py import app
 FLAGS = app.FLAGS
 
 app.DEFINE_integer("graph_count", 1000, "The number of graphs to generate.")
-app.DEFINE_integer(
-  "node_x_dimensionality", 1, "The dimensionality of node x vectors."
-)
-app.DEFINE_integer(
-  "node_y_dimensionality", 1, "The dimensionality of node y vectors."
-)
-app.DEFINE_integer(
-  "graph_x_dimensionality", 1, "The dimensionality of graph x vectors."
-)
-app.DEFINE_integer(
-  "graph_y_dimensionality", 1, "The dimensionality of graph y vectors."
-)
 app.DEFINE_boolean(
   "with_data_flow", False, "Whether to generate data flow columns."
 )

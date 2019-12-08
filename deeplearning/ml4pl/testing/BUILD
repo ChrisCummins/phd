@@ -102,7 +102,7 @@ py_test(
     ],
 )
 
-py_library(
+py_binary(
     name = "random_programl_generator",
     testonly = 1,
     srcs = ["random_programl_generator.py"],
@@ -114,8 +114,8 @@ py_library(
         "//deeplearning/ml4pl/graphs:programl",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//deeplearning/ml4pl/graphs/migrate:networkx_to_protos",
+        "//labm8/py:app",
         "//labm8/py:bazelutil",
-        "//labm8/py:test",
     ],
 )
 

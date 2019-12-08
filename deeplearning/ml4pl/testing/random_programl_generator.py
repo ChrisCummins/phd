@@ -1,4 +1,14 @@
-"""This module defines a generator for random program graph protos."""
+"""This module defines a generator for random program graph protos.
+
+When executed as a binary, this script generates a random program graph proto
+and prints it to stdout. Example usage:
+
+    $ bazel run //deeplearning/ml4pl/testing:random_programl_generator -- \
+          --node_x_dimensionality=2
+          --node_y_dimensionality=3
+          --graph_x_dimensionality=2
+          --graph_y_dimensionality=0
+"""
 import functools
 import pickle
 import random
@@ -11,10 +21,24 @@ import numpy as np
 
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.migrate import networkx_to_protos
+from labm8.py import app
 from labm8.py import bazelutil
-from labm8.py import test
 
-FLAGS = test.FLAGS
+
+FLAGS = app.FLAGS
+
+app.DEFINE_integer(
+  "node_x_dimensionality", 2, "The dimensionality of node x vectors."
+)
+app.DEFINE_integer(
+  "node_y_dimensionality", 0, "The dimensionality of node y vectors."
+)
+app.DEFINE_integer(
+  "graph_x_dimensionality", 0, "The dimensionality of graph x vectors."
+)
+app.DEFINE_integer(
+  "graph_y_dimensionality", 0, "The dimensionality of graph y vectors."
+)
 
 # A test set of unlabelled program graphs using the legacy networkx schema.
 # These must be migrated to the new program graph representation before use.
@@ -156,3 +180,19 @@ def EnumerateProtoTestSet() -> Iterable[programl_pb2.ProgramGraph]:
       with open(path, "rb") as f:
         old_nx_graph = pickle.load(f)
         yield networkx_to_protos.NetworkXGraphToProgramGraphProto(old_nx_graph)
+
+
+def Main():
+  """Main entry point"""
+  print(
+    CreateRandomProto(
+      node_x_dimensionality=FLAGS.node_x_dimensionality,
+      node_y_dimensionality=FLAGS.node_y_dimensionality,
+      graph_x_dimensionality=FLAGS.graph_x_dimensionality,
+      graph_y_dimensionality=FLAGS.graph_y_dimensionality,
+    )
+  )
+
+
+if __name__ == "__main__":
+  app.Run(Main)
