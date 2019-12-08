@@ -175,10 +175,10 @@ def benchmark_networkx(
   return [programl.ProgramGraphToNetworkX(p) for p in benchmark_protos]
 
 
-def Benchmark(fn, protos):
-  """A microbenchmark which calls the given function over all protos."""
-  for proto in protos:
-    fn(proto)
+def Benchmark(fn, inputs):
+  """A micro-benchmark which calls the given function over all inputs."""
+  for element in inputs:
+    fn(element)
 
 
 def test_benchmark_proto_to_networkx(
