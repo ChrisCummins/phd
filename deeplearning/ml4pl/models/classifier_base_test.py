@@ -7,8 +7,10 @@ from typing import Tuple
 import numpy as np
 
 from deeplearning.ml4pl import run_id as run_id_lib
+from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch as batches
+from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import log_database
@@ -37,19 +39,8 @@ def log_db(request) -> log_database.Database:
 @test.Fixture(scope="session")
 def logger(log_db: log_database.Database) -> logging.Logger:
   """A test fixture which yields a logger."""
-  with logging.Logger(
-    log_db,
-    max_buffer_size=None,
-    max_buffer_length=128,
-    max_seconds_since_flush=None,
-  ) as logger:
+  with logging.Logger(log_db, max_buffer_length=128) as logger:
     yield logger
-
-
-@test.Fixture(scope="session", params=((0, 2), (0, 3), (2, 0), (10, 0)))
-def y_dimensionalities(request) -> Tuple[int, int]:
-  """A test fixture which enumerates node and graph label dimensionalities."""
-  return request.param
 
 
 @test.Fixture(scope="session", params=(0, 3))
@@ -58,15 +49,9 @@ def edge_position_max(request) -> int:
   return request.param
 
 
-@test.Fixture(scope="session", params=(None, "foo"))
-def restored_from(request) -> str:
-  """A test fixture for 'restored_from' values."""
-  return request.param
-
-
-@test.Fixture(scope="session", params=list(epoch.Type))
-def epoch_type(request) -> epoch.Type:
-  """A test fixture which enumerates epoch types."""
+@test.Fixture(scope="session", params=(10, 100))
+def graph_count(request) -> int:
+  """A test fixture which enumerates graph counts."""
   return request.param
 
 
@@ -83,42 +68,50 @@ def graph_x_dimensionality(request) -> int:
   return request.param
 
 
+@test.Fixture(scope="session", params=((0, 2), (0, 3), (2, 0), (10, 0)))
+def y_dimensionalities(request) -> Tuple[int, int]:
+  """A test fixture which enumerates node and graph label dimensionalities.
+
+  We are interested in testing the following setups:
+    * Binary node classification.
+    * Multi-class node classification.
+    * Binary graph classification.
+    * Multi-class graph classification.
+  """
+  return request.param
+
+
 @test.Fixture(scope="session", params=(True,))
 def with_data_flow(request) -> int:
   """A test fixture which enumerates 'with dataflow' values."""
   return request.param
 
 
-@test.Fixture(scope="session", params=(10, 100))
-def graph_count(request) -> int:
-  """A test fixture which enumerates graph counts."""
-  return request.param
-
-
-@test.Fixture(scope="session")
-def graphs(
+@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+def graph_db(
+  request,
   graph_count: int,
-  y_dimensionalities: Tuple[int, int],
   node_x_dimensionality: int,
+  graph_x_dimensionality: int,
+  y_dimensionalities: Tuple[int, int],
   with_data_flow: bool,
-) -> Iterable[graph_tuple_database.GraphTuple]:
-  """A test fixture which enumerates graph tuples."""
+) -> graph_tuple_database.Database:
+  """A test fixture which enumerates graph databases."""
   node_y_dimensionality, graph_y_dimensionality = y_dimensionalities
 
-  def MakeIterator(list):
-    yield from list
-
-  return MakeIterator(
-    [
-      random_graph_tuple_database_generator.CreateRandomGraphTuple(
-        node_x_dimensionality=node_x_dimensionality,
-        node_y_dimensionality=node_y_dimensionality,
-        graph_y_dimensionality=graph_y_dimensionality,
-        with_data_flow=with_data_flow,
-      )
-      for _ in range(graph_count)
-    ]
-  )
+  with testing_databases.DatabaseContext(
+    graph_tuple_database.Database, request.param
+  ) as db:
+    random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
+      db,
+      graph_count=graph_count,
+      node_x_dimensionality=node_x_dimensionality,
+      node_y_dimensionality=node_y_dimensionality,
+      graph_x_dimensionality=graph_x_dimensionality,
+      graph_y_dimensionality=graph_y_dimensionality,
+      with_data_flow=with_data_flow,
+    )
+    yield db
 
 
 class MockModel(classifier_base.ClassifierBase):
@@ -127,23 +120,29 @@ class MockModel(classifier_base.ClassifierBase):
   def __init__(
     self, *args, has_loss: bool = True, has_learning_rate: bool = True, **kwargs
   ):
-    super(MockModel, self).__init__(*args, **kwargs)
-    # The "state" of the model.
-    self.model_data = {"foo": 1, "last_graph_id": None}
-
+    self.model_data = None
     self.has_loss = has_loss
     self.has_learning_rate = has_learning_rate
 
     # Counters for testing method calls.
+    self.create_model_data_count = 0
     self.make_batch_count = 0
     self.run_batch_count = 0
     self.graph_count = 0
+
+    super(MockModel, self).__init__(*args, **kwargs)
+
+  def CreateModelData(self) -> None:
+    """Generate the "state" of the model."""
+    self.create_model_data_count += 1
+    self.model_data = {"foo": 1, "last_graph_id": None}
 
   def MakeBatch(
     self,
     graphs: Iterable[graph_tuple_database.GraphTuple],
     ctx: progress.ProgressContext = progress.NullContext,
   ) -> batches.Data:
+    """Generate a fake batch of data."""
     self.make_batch_count += 1
     graph_ids = []
     while len(graph_ids) < 100:
@@ -151,7 +150,7 @@ class MockModel(classifier_base.ClassifierBase):
         graph_ids.append(next(graphs).id)
       except StopIteration:
         break
-    return batches.Data(graph_ids=graph_ids, data={"foo": 1})
+    return batches.Data(graph_ids=graph_ids, data=123)
 
   def RunBatch(
     self,
@@ -159,14 +158,18 @@ class MockModel(classifier_base.ClassifierBase):
     batch: batches.Data,
     ctx: progress.ProgressContext = progress.NullContext,
   ) -> batches.Results:
-    # Update the counters.
+    # Update the mock class counters.
     self.run_batch_count += 1
     self.graph_count += len(batch.graph_ids)
     self.model_data["last_graph_id"] = batch.graph_ids[-1]
 
+    # Sanity check that batch data is propagated.
+    assert batch.data == 123
+
     learning_rate = random.random() if self.has_learning_rate else None
     loss = random.random() if self.has_loss else None
-    return batches.Results.Create(
+
+    results = batches.Results.Create(
       targets=np.random.rand(batch.graph_count, self.y_dimensionality),
       predictions=np.random.rand(batch.graph_count, self.y_dimensionality),
       iteration_count=random.randint(1, 3),
@@ -174,6 +177,13 @@ class MockModel(classifier_base.ClassifierBase):
       learning_rate=learning_rate,
       loss=loss,
     )
+
+    # Sanity check results properties.
+    if self.has_learning_rate:
+      assert results.has_learning_rate
+    if self.has_loss:
+      assert results.has_loss
+    return results
 
   def GetModelData(self):
     """Prepare data to save."""
@@ -198,28 +208,20 @@ def has_learning_rate(request) -> bool:
 
 @test.Fixture(scope="function")
 def model(
-  node_x_dimensionality: int,
-  graph_x_dimensionality: int,
-  y_dimensionalities: Tuple[int, int],
+  logger: logging.Logger,
+  graph_db: graph_tuple_database.Database,
   has_loss: bool,
   has_learning_rate: bool,
-  edge_position_max: int,
-  restored_from: str,
 ) -> MockModel:
   """A test fixture which enumerates mock models."""
-  node_y_dimensionality, graph_y_dimensionality = y_dimensionalities
   run_id = run_id_lib.RunId.GenerateUnique(
     f"mock{random.randint(0, int(1e6)):06}"
   )
 
   return MockModel(
+    logger=logger,
+    graph_db=graph_db,
     run_id=run_id,
-    node_x_dimensionality=node_x_dimensionality,
-    node_y_dimensionality=node_y_dimensionality,
-    graph_x_dimensionality=graph_x_dimensionality,
-    graph_y_dimensionality=graph_y_dimensionality,
-    edge_position_max=edge_position_max,
-    restored_from=restored_from,
     has_loss=has_loss,
     has_learning_rate=has_learning_rate,
   )
@@ -227,46 +229,20 @@ def model(
 
 @test.Fixture(scope="function")
 def batch_iterator(
-  model: MockModel,
-  graph_count: int,
-  graphs: Iterable[graph_tuple_database.GraphTuple],
+  model: MockModel, graph_db: graph_tuple_database.Database,
 ) -> batches.BatchIterator:
   return batches.BatchIterator(
-    batches=model.BatchIterator(graphs), graph_count=graph_count
+    batches=model.BatchIterator(
+      graph_database_reader.BufferedGraphReader(graph_db)
+    ),
+    graph_count=graph_db.graph_count,
   )
 
 
-def test_call_before_initialize(
-  model: MockModel,
-  epoch_type: epoch.Type,
-  batch_iterator: batches.BatchIterator,
-  logger: logging.Logger,
-):
-  """Test that call before initialize raises a TypeError."""
-  with test.Raises(TypeError):
-    model(epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger)
-
-
-def test_call_returns_results(
-  model: MockModel,
-  epoch_type: epoch.Type,
-  batch_iterator: batches.BatchIterator,
-  logger: logging.Logger,
-):
-  """Test that call returns results."""
-  model.Initialize()
-  results = model(
-    epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger
-  )
-  assert isinstance(results, epoch.Results)
-  # Test that the model saw all graphs.
-  model.graph_count == batch_iterator.graph_count
-  # Test that batch counts match up.
-  results.batch_count == model.make_batch_count == model.run_batch_count
-  # Check that result properties are propagated.
-  # FIXME:
-  # assert results.has_loss == model.has_loss
-  # assert results.has_learning_rate == model.has_learning_rate
+@test.Fixture(scope="session", params=list(epoch.Type))
+def epoch_type(request) -> epoch.Type:
+  """A test fixture which enumerates epoch types."""
+  return request.param
 
 
 @test.Fixture(scope="session", params=(0, 5))
@@ -279,250 +255,70 @@ def epoch_num(request) -> int:
 ###############################################################################
 
 
-def test_FromCheckpoint_direct(model: MockModel, epoch_num: int):
-  """Test restoring directly from a model checkpoint."""
-  model.Initialize()
-
-  # Mutate model state.
-  model.epoch_num = epoch_num
-  model.model_data["some_new_data"] = 10
-
-  # Create a new model from this checkpoint
-  restored_model = MockModel.FromCheckpoint(
-    model.GetCheckpoint(),
-    node_y_dimensionality=model.node_y_dimensionality,
-    graph_y_dimensionality=model.graph_y_dimensionality,
-    edge_position_max=model.edge_position_max,
-  )
-
-  assert restored_model.restored_from == model.run_id
-
-  # Check that mutated model state was restored.
-  assert restored_model.epoch_num == epoch_num
-  assert "some_new_data" in restored_model.model_data
-  assert restored_model.model_data == model.model_data
-
-
-def test_FromCheckpoint_via_logger(
-  model: MockModel, epoch_num: int, logger: logging.Logger
+def test_load_restore(
+  logger: logging.Logger,
+  graph_db: graph_tuple_database.Database,
+  has_loss: bool,
+  has_learning_rate: bool,
 ):
-  """Test restoring from a logged checkpoint."""
-  model.Initialize()
+  """Test creating and restoring model from checkpoint."""
+  model = MockModel(logger, graph_db)
 
   # Mutate model state.
-  model.epoch_num = epoch_num
-  model.model_data["some_new_data"] = 10
+  model.epoch_num = 5
+  model.model_data = 15
 
-  # Create a new model from this checkpoint
-  logger.Save(model.GetCheckpoint())
+  # Create the checkpoint to restore from.
+  checkpoint_ref = model.SaveCheckpoint()
+  assert checkpoint_ref.run_id == model.run_id
+  assert checkpoint_ref.epoch_num == model.epoch_num
 
-  restored_model = MockModel.FromCheckpoint(
-    logger.Load(model.run_id, model.epoch_num)
+  # Create a new model from this checkpoint.
+  restored_model = MockModel(
+    logger,
+    graph_db,
+    restore_from=checkpoint_ref,
+    has_loss=has_loss,
+    has_learning_rate=has_learning_rate,
   )
 
-  assert restored_model.restored_from == model.run_id
+  # The first model was initialized with Initialize(), the second was not.
+  assert model.create_model_data_count == 1
+  assert restored_model.create_model_data_count == 0
+
+  # restored_from is a checkpoint reference
+  assert isinstance(
+    restored_model.restored_from, checkpoints.CheckpointReference
+  )
+  assert restored_model.restored_from.run_id == model.run_id
+  assert restored_model.restored_from.epoch_num == 5
+
+  assert restored_model.run_id != model.run_id
 
   # Check that mutated model state was restored.
-  assert restored_model.epoch_num == epoch_num
-  assert "some_new_data" in restored_model.model_data
-  assert restored_model.model_data == model.model_data
+  assert restored_model.epoch_num == 5
+  assert restored_model.model_data == 15
 
 
-#   """Test loading a model from file."""
-#
-#
-#   model = MockModel(graph_db, log_db)
-#   model.InitializeModel()
-#   model.epoch_num = 2
-#   model.global_training_step = 10
-#   model.mock_data = 100
-#   model.SaveModel(validation_accuracy=0.5)
-#
-#   model.epoch_num = 0
-#   model.mock_data = 0
-#   model.global_training_step = 0
-#   model.LoadModel(run_id=model.run_id, epoch_num=2)
-#   assert model.epoch_num == 2
-#   assert model.global_training_step == 10
-#   assert model.mock_data == 100
-#
-#
-# def test_LoadModel_unknown_saved_model_flag(
-#   tempdir2: pathlib.Path,
-#   graph_db: graph_database.Database,
-#   log_db: log_database.Database,
-# ):
-#   """Test that error is raised if saved model contains unknown flag."""
-#   FLAGS.working_dir = tempdir2
-#   model = MockModel(graph_db, log_db)
-#   model.InitializeModel()
-#   model.SaveModel(validation_accuracy=0.5)
-#
-#   with model.log_db.Session(commit=True) as session:
-#     # Insert a new "unknown" model flag.
-#     session.add(
-#       log_database.Parameter(
-#         run_id=model.run_id,
-#         type=log_database.ParameterType.MODEL_FLAG,
-#         parameter="a new flag",
-#         pickled_value=pickle.dumps(5),
-#       )
-#     )
-#
-#   with test.Raises(EnvironmentError) as e_ctx:
-#     model.LoadModel(run_id=model.run_id, epoch_num=model.epoch_num)
-#
-#   # Check that the LoadModel() specifically complains about the new flag value.
-#   assert "a new flag" in str(e_ctx.value)
-#
-#
-# def test_ModelFlagsToDict_subclass_model_name(
-#   tempdir2: pathlib.Path,
-#   graph_db: graph_database.Database,
-#   log_db: log_database.Database,
-# ):
-#   """Test that model name uses subclass name, not the base class."""
-#   FLAGS.working_dir = tempdir2
-#
-#   model = MockModel(graph_db, log_db)
-#   assert "model" in model.ModelFlagsToDict()
-#   assert model.ModelFlagsToDict()["model"] == "MockModel"
-#
-#
-# def test_Train(
-#   tempdir2: pathlib.Path,
-#   graph_db: graph_database.Database,
-#   log_db: log_database.Database,
-# ):
-#   """Test that training terminates and bumps the epoch number."""
-#   FLAGS.working_dir = tempdir2
-#
-#   model = MockModel(graph_db, log_db)
-#   model.InitializeModel()
-#   model.Train(epoch_count=1)
-#   assert model.best_epoch_num == 1
-#
-#
-# def test_Train_epoch_num(
-#   tempdir2: pathlib.Path,
-#   graph_db: graph_database.Database,
-#   log_db: log_database.Database,
-# ):
-#   """Test that epoch_num has expected value."""
-#   FLAGS.working_dir = tempdir2
-#
-#   model = MockModel(graph_db, log_db)
-#   model.InitializeModel()
-#   assert model.epoch_num == 0
-#   model.Train(epoch_count=1)
-#   assert model.epoch_num == 1
-#   model.Train(epoch_count=1)
-#   assert model.epoch_num == 2
-#   model.Train(epoch_count=2)
-#   assert model.epoch_num == 4
-#
-#
-# def test_Train_batch_log_count(
-#   tempdir2: pathlib.Path,
-#   graph_db: graph_database.Database,
-#   log_db: log_database.Database,
-# ):
-#   """Test that training produces only batch logs for {val,test} runs."""
-#   FLAGS.working_dir = tempdir2
-#
-#   model = MockModel(graph_db, log_db)
-#   model.InitializeModel()
-#   model.Train(epoch_count=1)
-#   with log_db.Session() as session:
-#     # 10 train + 10 val + 10 test logs
-#     assert session.query(log_database.BatchLogMeta).count() == 30
-#     # 10 val + 10 test logs
-#     assert session.query(log_database.BatchLog).count() == 20
-#
-#     query = session.query(log_database.BatchLogMeta)
-#     query = query.filter(log_database.BatchLogMeta.type == "test")
-#     for batch_log_meta in query:
-#       assert batch_log_meta.batch_log
-#
-#     query = session.query(log_database.BatchLogMeta)
-#     query = query.filter(log_database.BatchLogMeta.type == "train")
-#     for batch_log_meta in query:
-#       assert not batch_log_meta.batch_log
-#
-#   model.Train(epoch_count=1)
-#   with log_db.Session() as session:
-#     # + 10 train + 10 train (no change to val acc so there's no new test logs)
-#     assert session.query(log_database.BatchLogMeta).count() == 50
-#
-#
-# def test_Train_keeps_a_single_checkpoint_and_set_of_batch_logs(
-#   tempdir2: pathlib.Path,
-#   graph_db: graph_database.Database,
-#   log_db: log_database.Database,
-# ):
-#   """Check that only a single model checkpoint and set of detailed val logs
-#   are kept."""
-#   FLAGS.working_dir = tempdir2
-#
-#   model = MockModel(graph_db, log_db)
-#   model.InitializeModel()
-#   model.Train(epoch_count=1)
-#
-#   # Force the model to believe that it performed worse than it did so that when
-#   # we next call Train() it bumps the "best" accuracy.
-#   log_db.engine.execute(
-#     sql.update(log_database.ModelCheckpointMeta).values(
-#       {"validation_accuracy": -1,}
-#     )
-#   )
-#   assert model.best_epoch_validation_accuracy == -1  # Sanity check
-#
-#   model.Train(epoch_count=1)
-#   # assert model.best_epoch_validation_accuracy == 1  # Sanity check
-#
-#   with log_db.Session() as session:
-#     # There should still only be a single model checkpoint.
-#     assert session.query(log_database.ModelCheckpoint).count() == 1
-#     assert session.query(log_database.ModelCheckpointMeta).count() == 1
-#
-#     # The "best" epoch is the new one.
-#     assert session.query(log_database.ModelCheckpointMeta.epoch).one()[0] == 2
-#
-#     # 10 val + 10 test
-#     assert session.query(log_database.BatchLog).count() == 20
-#     # Check that the new batch logs replace the old ones.
-#     detailed_logs = session.query(log_database.BatchLogMeta)
-#     detailed_logs = detailed_logs.join(log_database.BatchLog)
-#     for log in detailed_logs:
-#       log.epoch == 2
-#
-#
-# def test_Test_creates_batch_logs(
-#   tempdir2: pathlib.Path,
-#   graph_db: graph_database.Database,
-#   log_db: log_database.Database,
-# ):
-#   """Test that testing produces batch logs."""
-#   FLAGS.working_dir = tempdir2
-#
-#   model = MockModel(graph_db, log_db)
-#   model.InitializeModel()
-#   model.RunEpoch(epoch_type="test")
-#   with log_db.Session() as session:
-#     assert session.query(log_database.BatchLogMeta).count() == 10
-#     assert session.query(log_database.BatchLog).count() == 10
-#
-#
-# def _MakeNRandomGraphs(n: int, group: str) -> typing.Iterable[nx.MultiDiGraph]:
-#   """Private helper to generate random graphs of the given group."""
-#   for i in range(n):
-#     g = random_cdfg_generator.FastCreateRandom()
-#     g.bytecode_id = 0
-#     g.relpath = str(i)
-#     g.language = "c"
-#     g.group = group
-#     g.source_name = "rand"
-#     yield g
+def test_call(
+  model: MockModel,
+  epoch_type: epoch.Type,
+  batch_iterator: batches.BatchIterator,
+  logger: logging.Logger,
+):
+  """Test that call returns results."""
+  results = model(
+    epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger
+  )
+  assert isinstance(results, epoch.Results)
+  # Test that the model saw all input graphs.
+  assert model.graph_count == batch_iterator.graph_count
+  # Test that batch counts match up.
+  assert results.batch_count == model.make_batch_count == model.run_batch_count
+  # Check that result properties are propagated.
+  # FIXME:
+  # assert results.has_loss == model.has_loss
+  # assert results.has_learning_rate == model.has_learning_rate
 
 
 if __name__ == "__main__":

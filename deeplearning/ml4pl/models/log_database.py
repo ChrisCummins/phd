@@ -405,7 +405,7 @@ class Checkpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   @property
   def model_data(self) -> Any:
     # Checkpoints are stored with zlib compression.
-    return pickle.loads(codecs.decode(self.data.binary_model_data, "zlib"))
+    return pickle.loads(codecs.decode(self.data.binary_data, "zlib"))
 
   @classmethod
   def Create(

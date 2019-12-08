@@ -107,8 +107,9 @@ class Logger(object):
     """
     if self._writer.error_count and FLAGS.fail_on_logger_error:
       raise OSError(
-        f"{len(self._writer.error_count)} failures during log writing. "
-        "Disable this error using --fail_on_logger_error=false"
+        f"Stopping now because since the last time I checked there have been "
+        f"been {self._writer.error_count} log writing failures. "
+        "Disable these checks using --fail_on_logger_error=false"
       )
 
   #############################################################################
@@ -242,7 +243,7 @@ class Logger(object):
     self._writer.AddOne(checkpoint)
 
   def Load(
-    self, run_id: run_id_lib.RunId, epoch_num: Optional[int] = None
+    self, checkpoint_ref: checkpoints.CheckpointReference
   ) -> checkpoints.Checkpoint:
     """Load model data.
 
@@ -255,9 +256,9 @@ class Logger(object):
       A checkpoint instance.
 
     Raises:
-      KeyError: If no corresponding entry in the checkpoint table exists.
+      ValueError: If no corresponding entry in the checkpoint table exists.
     """
-    # The results of previous Save() call might still be buffered. Flush the
+    # A previous Save() call from this logger might still be buffered. Flush the
     # buffer before loading from the database.
     self._writer.Flush()
 
@@ -265,25 +266,23 @@ class Logger(object):
       checkpoint_entry = (
         session.query(log_database.Checkpoint)
         .filter(
-          log_database.Checkpoint.run_id == run_id,
-          log_database.Checkpoint.epoch_num == epoch_num,
+          log_database.Checkpoint.run_id == checkpoint_ref.run_id,
+          log_database.Checkpoint.epoch_num == checkpoint_ref.epoch_num,
         )
         .options(sql.orm.joinedload(log_database.Checkpoint.data))
         .first()
       )
       # Check that the requested checkpoint exists.
       if not checkpoint_entry:
-        raise KeyError(
-          f"No checkpoint exists for '"
-          f"{checkpoints.RunIdAndEpochNumToString(run_id, epoch_num)}'"
-        )
+        raise ValueError(f"Checkpoint not found: {checkpoint_ref}")
 
       checkpoint = checkpoints.Checkpoint(
         run_id=run_id_lib.RunId.FromString(checkpoint_entry.run_id),
         epoch_num=checkpoint_entry.epoch_num,
-        best_results=self.db.GetBestResults(run_id=run_id, session=session),
+        best_results=self.db.GetBestResults(
+          run_id=checkpoint_ref.run_id, session=session
+        ),
         model_data=checkpoint_entry.model_data,
-        **self.db.GetModelConstructorArgs(run_id=run_id, session=session),
       )
 
     return checkpoint

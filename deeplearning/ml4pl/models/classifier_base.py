@@ -36,57 +36,66 @@ class ClassifierBase(object):
 
   def __init__(
     self,
-    node_x_dimensionality: int,
-    node_y_dimensionality: int,
-    graph_x_dimensionality: int,
-    graph_y_dimensionality: int,
-    edge_position_max: int,
-    restored_from: Optional[run_id_lib.RunId] = None,
+    logger: logging.Logger,
+    graph_db: graph_tuple_database,
+    restore_from: Optional[checkpoints.CheckpointReference] = None,
     run_id: Optional[run_id_lib.RunId] = None,
   ):
     """Constructor.
 
     Args:
-      node_y_dimensionality: The dimensionality of per-node labels.
-      graph_y_dimensionality: The dimensionality of per-graph labels.
-      edge_position_max: The maximum edge position.
+      logger: A logger to write {batch, epoch, checkpoint} data to.
+      graph_db: The graph database which will be used to feed inputs to the
+        model.
 
     Raises:
       NotImplementedError: If both node and graph labels are set.
       TypeError: If neither graph or node labels are set.
     """
-    # Set by FromCheckpoint() or Initialize().
-    self._initialized = False
-
-    # Model properties.
-    self.node_x_dimensionality = node_x_dimensionality
-    self.node_y_dimensionality = node_y_dimensionality
-    self.graph_x_dimensionality = graph_x_dimensionality
-    self.graph_y_dimensionality = graph_y_dimensionality
-    self.edge_position_max = edge_position_max
-
-    self.restored_from = restored_from
-    self.run_id: run_id_lib.RunId = (
-      run_id or run_id_lib.RunId.GenerateUnique(type(self).__name__)
-    )
-
-    # Determine the label dimensionality.
-    if node_y_dimensionality and graph_y_dimensionality:
+    # Sanity check the dimensionality of input graphs.
+    if (
+      not graph_db.node_y_dimensionality and not graph_db.graph_y_dimensionality
+    ):
+      raise NotImplementedError(
+        "Neither node or graph labels are set. What am I to do?"
+      )
+    if graph_db.node_y_dimensionality and graph_db.graph_y_dimensionality:
       raise NotImplementedError(
         "Both node and graph labels are set. This is currently not supported. "
         "See <github.com/ChrisCummins/ProGraML/issues/26>"
       )
-    self.y_dimensionality = node_y_dimensionality or graph_y_dimensionality
-    if not self.y_dimensionality:
-      raise TypeError("Neither node or graph dimensionalities are set")
 
-    # Progress counters. These are saved and restored from checkpoints.
-    self.epoch_num = 0
-    self.best_results: Dict[epoch.Type, epoch.BestResults] = {
-      epoch.Type.TRAIN: epoch.BestResults(),
-      epoch.Type.VAL: epoch.BestResults(),
-      epoch.Type.TEST: epoch.BestResults(),
-    }
+    # Model properties.
+    self.logger = logger
+    self.graph_db = graph_db
+    self.restored_from = restore_from
+    self.run_id: run_id_lib.RunId = (
+      run_id or run_id_lib.RunId.GenerateUnique(type(self).__name__)
+    )
+    self.y_dimensionality = (
+      self.graph_db.node_y_dimensionality
+      or self.graph_db.graph_y_dimensionality
+    )
+
+    # Load the model state from the checkpoint, or initialize a new model.
+    if restore_from:
+      self._initialized = True
+      checkpoint = logger.Load(restore_from)
+      self.epoch_num = checkpoint.epoch_num
+      self.best_results = checkpoint.best_results
+      self.LoadModelData(checkpoint.model_data)
+    else:
+      self._initialized = False
+      self.epoch_num = 0
+      self.best_results: Dict[epoch.Type, epoch.BestResults] = {
+        epoch.Type.TRAIN: epoch.BestResults(),
+        epoch.Type.VAL: epoch.BestResults(),
+        epoch.Type.TEST: epoch.BestResults(),
+      }
+      self.Initialize()
+
+    # Register this model with the logger.
+    self.logger.OnStartRun(self.run_id, self.graph_db)
 
   #############################################################################
   # Interface methods. Subclasses must implement these.
@@ -158,31 +167,22 @@ class ClassifierBase(object):
   # Automatic methods.
   #############################################################################
 
-  def BatchIterator(
-    self, graphs: Iterable[graph_tuple_database.GraphTuple]
-  ) -> Iterable[batches.Data]:
-    """Generate model batches from an input graph iterator.
-
-    Args:
-      graphs: The graphs to construct batches from.
-
-    Returns:
-      A batch iterator.
-    """
-    while True:
-      batch = self.MakeBatch(graphs)
-      if batch.graph_count:
-        yield batch
-      else:
-        break
-
   def __call__(
     self,
     epoch_type: epoch.Type,
     batch_iterator: batches.BatchIterator,
     logger: logging.Logger,
   ) -> epoch.Results:
-    """Run the model over the inputs.
+    """Run the model for over the input batches.
+
+    This is the heart of the model - where you run an epoch of batches through
+    the graph and produce results. The interface for training and inference is
+    the same, only the epoch_type value should change.
+
+    Side effects of calling a model are:
+      * The model bumps its epoch_num counter if on a training epoch.
+      * The model updates its best_results dictionary if the accuracy produced
+        by this epoch is greater than the previous best.
 
     Args:
       epoch_type: The type of epoch to run.
@@ -197,46 +197,44 @@ class ClassifierBase(object):
         "Model called before Initialize() or FromCheckpoint() invoked"
       )
 
+    # Only training epochs bumps the epoch count.
+    if epoch_type == epoch.Type.TRAIN:
+      self.epoch_num += 1
+
     thread = EpochThread(self, epoch_type, batch_iterator, logger)
     progress.Run(thread)
-    return thread.results
+    results = thread.results
 
-  def UpdateBestResults(
-    self,
-    epoch_type: epoch.Type,
-    epoch_num: int,
-    results: epoch.Results,
-    ctx: progress.ProgressContext = progress.NullContext,
-  ) -> bool:
-    """Update the 'best results' state of a model.
-
-    Args:
-      epoch_type: The epoch type of the new results.
-      epoch_num: The epoch number of the new results.
-      results: The new epoch results.
-      ctx: A logging context.
-
-    Returns:
-      True if the new results are an improvement over the previous best, else
-      False.
-    """
+    # Update the record of best results.
     if results > self.best_results[epoch_type].results:
-      new_best = epoch.BestResults(epoch_num=epoch_num, results=results)
-      ctx.Log(
+      new_best = epoch.BestResults(epoch_num=self.epoch_num, results=results)
+      logger.ctx.Log(
         2,
-        "%s results improved:\n  from: %s\n    to: %s",
+        "%s results improved from %s",
         epoch_type.name.capitalize(),
         self.best_results[epoch_type],
-        new_best,
       )
       self.best_results[epoch_type] = new_best
-      return True
-    else:
-      return False
 
-  #############################################################################
-  # Initializing, restoring, and saving models.
-  #############################################################################
+    return thread.results
+
+  def BatchIterator(
+    self, graphs: Iterable[graph_tuple_database.GraphTuple]
+  ) -> Iterable[batches.Data]:
+    """Generate model batches from a iterator of graphs.
+
+    Args:
+      graphs: The graphs to construct batches from.
+
+    Returns:
+      A batch iterator.
+    """
+    while True:
+      batch = self.MakeBatch(graphs)
+      if batch.graph_count:
+        yield batch
+      else:
+        break
 
   def Initialize(self) -> None:
     """Initialize an untrained model."""
@@ -246,41 +244,22 @@ class ClassifierBase(object):
     self._initialized = True
     self.CreateModelData()
 
-  @classmethod
-  def FromCheckpoint(
-    cls, checkpoint: checkpoints.Checkpoint,
-  ):
-    """Construct a model from checkpoint data."""
-    model = cls(
-      node_x_dimensionality=checkpoint.node_x_dimensionality,
-      node_y_dimensionality=checkpoint.node_y_dimensionality,
-      graph_x_dimensionality=checkpoint.graph_x_dimensionality,
-      graph_y_dimensionality=checkpoint.graph_y_dimensionality,
-      edge_position_max=checkpoint.edge_position_max,
-      restored_from=checkpoint.run_id,
-    )
-    model._initialized = True
-    model.epoch_num = checkpoint.epoch_num
-    model.best_results = checkpoint.best_results
-    model.LoadModelData(checkpoint.model_data)
-    return model
-
-  def GetCheckpoint(self) -> checkpoints.Checkpoint:
+  def SaveCheckpoint(self) -> checkpoints.CheckpointReference:
     """Construct a checkpoint from the current model state.
 
     Returns:
-      A checkpoint instance.
+      A checkpoint reference.
     """
-    return checkpoints.Checkpoint(
-      run_id=self.run_id,
-      epoch_num=self.epoch_num,
-      best_results=self.best_results,
-      model_data=self.GetModelData(),
-      node_x_dimensionality=self.node_x_dimensionality,
-      node_y_dimensionality=self.node_y_dimensionality,
-      graph_x_dimensionality=self.graph_x_dimensionality,
-      graph_y_dimensionality=self.graph_y_dimensionality,
-      edge_position_max=self.edge_position_max,
+    self.logger.Save(
+      checkpoints.Checkpoint(
+        run_id=self.run_id,
+        epoch_num=self.epoch_num,
+        best_results=self.best_results,
+        model_data=self.GetModelData(),
+      )
+    )
+    return checkpoints.CheckpointReference(
+      run_id=self.run_id, epoch_num=self.epoch_num
     )
 
 

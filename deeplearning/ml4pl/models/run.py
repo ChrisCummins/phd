@@ -124,6 +124,9 @@ def MakeBatchIterator(
   elif epoch_type == epoch.Type.TEST:
     splits = test_splits
     limit = None  # Never limit the test set.
+  else:
+    raise NotImplementedError("unreachable")
+
   ctx.Log(
     3, "Using %s graph splits %s", epoch_type.name.lower(), sorted(splits)
   )
@@ -151,7 +154,6 @@ def RunEpoch(
   batch_iterator: batchs.BatchIterator,
   epoch_type: epoch.Type,
   logger: logger_lib.Logger,
-  ctx: progress.Progress = progress.NullContext,
 ) -> Tuple[epoch.Results, int]:
   """Run a single epoch.
 
@@ -168,19 +170,20 @@ def RunEpoch(
   """
 
   def GetEpochLabel(results: epoch.Results) -> str:
-    """Generate the label for an epoch."""
+    """Generate the label for an epoch. This is printed to stdout."""
     return (
       f"{shell.ShellEscapeCodes.BLUE}{model.run_id}{shell.ShellEscapeCodes.END} "
       f"{epoch_name} "
       f"{results.ToFormattedString(model.best_results[epoch_type].results)}"
     )
 
-  with prof.Profile(lambda t: GetEpochLabel(results), print_to=ctx.print):
+  with prof.Profile(
+    lambda t: GetEpochLabel(results), print_to=logger.ctx.print
+  ):
     results = model(epoch_type, batch_iterator, logger)
 
-  improved = model.UpdateBestResults(
-    epoch_type, model.epoch_num, results, ctx=ctx
-  )
+  # Check if the model has improved.
+  improved = model.best_results[epoch_type].epoch_num == model.epoch_num
 
   return results, improved
 
@@ -226,11 +229,7 @@ class Train(progress.Progress):
         for epoch_type in [epoch.Type.TRAIN, epoch.Type.VAL, epoch.Type.TEST]
       }
 
-      self.model.epoch_num = self.ctx.i
       train_results, _ = self.RunEpoch(epoch.Type.TRAIN, batch_iterators)
-      self.model.UpdateBestResults(
-        epoch.Type.TRAIN, self.model.epoch_num, train_results, ctx=self.ctx
-      )
 
       val_results, val_improved = self.RunEpoch(epoch.Type.VAL, batch_iterators)
 
@@ -241,13 +240,10 @@ class Train(progress.Progress):
       if save_on == schedules.SaveOn.EVERY_EPOCH or (
         save_on == schedules.SaveOn.VAL_IMPROVED and val_improved
       ):
-        self.logger.Save(self.model.GetCheckpoint())
+        self.model.SaveCheckpoint()
 
       if test_on == schedules.TestOn.EVERY:
         test_results, _ = self.RunEpoch(epoch.Type.TEST, batch_iterators)
-        self.model.UpdateBestResults(
-          epoch.Type.TEST, self.model.epoch_num, train_results, ctx=self.ctx
-        )
 
     return test_results
 
@@ -266,7 +262,6 @@ class Train(progress.Progress):
       batch_iterator=batch_iterators[epoch_type],
       epoch_type=epoch_type,
       logger=self.logger,
-      ctx=self.ctx,
     )
 
 
@@ -277,53 +272,45 @@ ModelClass = Callable[
 ]
 
 
-def _RunWithLogger(
-  model_class: ModelClass,
-  graph_db: graph_tuple_database.Database,
-  logger: logger_lib.Logger,
-):
-  # Instantiate a model.
-  with prof.Profile(
-    lambda t: f"Initialized {model.run_id}",
-    print_to=lambda msg: app.Log(2, msg),
-  ):
-    if FLAGS.restore_model:
-      model_class.FromCheckpoint(
-        logger.Load(
-          *checkpoints.RunIdAndEpochNumFromString(FLAGS.restore_model)
-        )
-      )
-    else:
-      model = model_class(
-        node_y_dimensionality=graph_db.node_y_dimensionality,
-        graph_y_dimensionality=graph_db.graph_y_dimensionality,
-        edge_position_max=graph_db.edge_position_max,
-      )
-      model.Initialize()
-
-  logger.OnStartRun(model.run_id, graph_db)
-
-  if FLAGS.test_only:
-    batch_iterator = MakeBatchIterator(
-      epoch_type=epoch.Type.TEST, model=model, graph_db=graph_db
-    )
-    RunEpoch(
-      epoch_name="test",
-      model=model,
-      batch_iterator=batch_iterator,
-      epoch_type=epoch.Type.TEST,
-      logger=logger,
-    )
-  else:
-    progress.Run(Train(model, graph_db, logger))
-
-  print("\rdone")
-
-
 def Run(model_class: ModelClass):
   graph_db: graph_tuple_database.Database = FLAGS.graph_db()
   with logger_lib.Logger.FromFlags() as logger:
-    _RunWithLogger(model_class, graph_db, logger)
+    # Create the model.
+    if FLAGS.restore_model:
+      with prof.Profile(
+        lambda t: f"Restored {model.run_id} from {checkpoint_ref}",
+        print_to=lambda msg: app.Log(2, msg),
+      ):
+        checkpoint_ref = checkpoints.CheckpointReference.FromString(
+          FLAGS.restore_model
+        )
+        model = model_class(
+          logger=logger, graph_db=graph_db, restored_from=checkpoint_ref
+        )
+    else:
+      with prof.Profile(
+        lambda t: f"Initialized {model.run_id}",
+        print_to=lambda msg: app.Log(2, msg),
+      ):
+        model = model_class(
+          logger=logger, graph_db=graph_db, restore_from=FLAGS.restore_model
+        )
+
+    if FLAGS.test_only:
+      batch_iterator = MakeBatchIterator(
+        epoch_type=epoch.Type.TEST, model=model, graph_db=graph_db
+      )
+      RunEpoch(
+        epoch_name="test",
+        model=model,
+        batch_iterator=batch_iterator,
+        epoch_type=epoch.Type.TEST,
+        logger=logger,
+      )
+    else:
+      progress.Run(Train(model, graph_db, logger))
+
+    print("\rdone")
 
 
 # TODO(github.com/ChrisCummins/ProGraML/issues/24): Update to automatically run
