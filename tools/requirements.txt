@@ -137,6 +137,7 @@ pydot==1.4.1
 PyGithub==1.39
 Pygments==2.2.0
 pybind11==2.4.3  # Implicit dependency of pyopencl.
+pyfiglet==0.8.post1
 pylint==1.8.2
 pyopencl==2018.2.5
 pyparsing==2.2.0
