@@ -5,6 +5,7 @@ from typing import Iterable
 from typing import List
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
+from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.graphs.labelled.devmap import make_devmap_dataset
@@ -107,6 +108,12 @@ def graph_y_dimensionality(request) -> int:
   return request.param
 
 
+@test.Fixture(scope="session", params=(2, 3))
+def node_y_dimensionality(request) -> int:
+  """A test fixture which enumerates graph label dimensionalities."""
+  return request.param
+
+
 @test.Fixture(scope="session", params=list(epoch.Type))
 def epoch_type(request) -> epoch.Type:
   """A test fixture which enumerates epoch types."""
@@ -120,6 +127,24 @@ def opencl_relpaths() -> List[str]:
     "amd_tahiti_7970",
   )
   return list(set(opencl_df.relpath.values))
+
+
+@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+def node_y_db(
+  request, opencl_relpaths: List[str], node_y_dimensionality: int,
+) -> graph_tuple_database.Database:
+  """A test fixture which yields a graph database with 256 OpenCL IR entries."""
+  with testing_databases.DatabaseContext(
+    graph_tuple_database.Database, request.param
+  ) as db:
+    PopulateOpenClGraphs(
+      db,
+      opencl_relpaths,
+      node_y_dimensionality=node_y_dimensionality,
+      graph_x_dimensionality=0,
+      graph_y_dimensionality=0,
+    )
+    yield db
 
 
 @test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
@@ -171,22 +196,31 @@ def ir_db(request, opencl_relpaths: List[str]) -> ir_database.Database:
 ###############################################################################
 
 
-# @test.Parametrize(
-#   "model_class", (lstm.LstmGraphClassifier, lstm.LstmNodeClassifier)
-# )
-# def test_load_restore_model_from_checkpoint_smoke_test(
-#   logger: logging.Logger,
-#   graph_y_db: graph_tuple_database.Database,
-#   ir_db: ir_database.Database,
-#   model_class,
-# ):
-#   """Test creating and restoring model from checkpoint."""
-#   model: lstm.LstmBase = model_class(logger, graph_y_db, ir_db=ir_db)
-#   model.Initialize()
-#
-#   checkpoint_ref = model.SaveCheckpoint()
-#
-#   model.RestoreFrom(checkpoint_ref)
+@test.XFail(
+  reason="TODO(github.com/ChrisCummins/ProGraML/issues/24): Cannot use the given session to evaluate tensor: the tensor's graph is different from the session's graph"
+)
+@test.Parametrize(
+  "model_class", (lstm.LstmGraphClassifier, lstm.LstmNodeClassifier)
+)
+def test_load_restore_model_from_checkpoint_smoke_test(
+  logger: logging.Logger,
+  node_y_db: graph_tuple_database.Database,
+  ir_db: ir_database.Database,
+  model_class,
+):
+  """Test creating and restoring model from checkpoint."""
+  run_id = run_id_lib.RunId.GenerateUnique(
+    f"mock{random.randint(0, int(1e6)):06}"
+  )
+
+  model: lstm.LstmBase = model_class(
+    logger, node_y_db, ir_db=ir_db, run_id=run_id
+  )
+  model.Initialize()
+
+  checkpoint_ref = model.SaveCheckpoint()
+
+  model.RestoreFrom(checkpoint_ref)
 
 
 def test_graph_classifier_call(
@@ -195,13 +229,59 @@ def test_graph_classifier_call(
   graph_y_db: graph_tuple_database.Database,
   ir_db: ir_database.Database,
 ):
-  """Test calling a model."""
+  """Test running a graph classifier."""
+  run_id = run_id_lib.RunId.GenerateUnique(
+    f"mock{random.randint(0, int(1e6)):06}"
+  )
+
   model = lstm.LstmGraphClassifier(
-    logger, graph_y_db, ir_db=ir_db, batch_size=8, padded_sequence_length=100
+    logger,
+    graph_y_db,
+    ir_db=ir_db,
+    batch_size=8,
+    padded_sequence_length=100,
+    run_id=run_id,
   )
   model.Initialize()
 
   batch_iterator = MakeBatchIterator(model, graph_y_db)
+
+  results = model(
+    epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger,
+  )
+  assert isinstance(results, epoch.Results)
+
+  assert results.batch_count
+
+  # We only get loss for training.
+  if epoch_type == epoch.Type.TRAIN:
+    assert results.has_loss
+  else:
+    assert not results.has_loss
+
+
+def test_node_classifier_call(
+  epoch_type: epoch.Type,
+  logger: logging.Logger,
+  node_y_db: graph_tuple_database.Database,
+  ir_db: ir_database.Database,
+):
+  """Test running a node classifier."""
+  run_id = run_id_lib.RunId.GenerateUnique(
+    f"mock{random.randint(0, int(1e6)):06}"
+  )
+
+  model = lstm.LstmGraphClassifier(
+    logger,
+    node_y_db,
+    ir_db=ir_db,
+    batch_size=8,
+    padded_sequence_length=100,
+    run_id=run_id,
+  )
+  model.Initialize()
+
+  batch_iterator = MakeBatchIterator(model, node_y_db)
 
   results = model(
     epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger,

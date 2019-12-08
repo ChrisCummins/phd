@@ -207,7 +207,8 @@ class LstmBase(classifier_base.ClassifierBase):
     # mechanism to store the weights, and pickle that.
     with tempfile.TemporaryDirectory(prefix="lstm_pickle_") as d:
       path = pathlib.Path(d) / "weights.h5"
-      self.model.save_weights(path)
+      with self.graph.as_default():
+        self.model.save(path)
 
       with open(path, "rb") as f:
         model_data = f.read()
@@ -221,8 +222,8 @@ class LstmBase(classifier_base.ClassifierBase):
       with open(path, "wb") as f:
         f.write(data_to_load)
 
-      assert path.is_file()
-      self.model.load_weights(str(path))
+    with self.graph.as_default():
+      self.model = tf.keras.models.load_model(path)
 
 
 class LstmGraphClassifier(LstmBase):
@@ -286,6 +287,7 @@ class LstmGraphClassifier(LstmBase):
     self.model = keras.Model(
       inputs=[sequence_input, graph_x_input],
       outputs=[model_out, lang_model_out],
+      name="lstm",
     )
     self.model.compile(
       optimizer="adam",

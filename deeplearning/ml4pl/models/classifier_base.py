@@ -159,6 +159,10 @@ class ClassifierBase(object):
     """
     return None
 
+  def Summary(self) -> str:
+    """Return a long summary string describing the model."""
+    return type(self).__name__
+
   #############################################################################
   # Automatic methods.
   #############################################################################
