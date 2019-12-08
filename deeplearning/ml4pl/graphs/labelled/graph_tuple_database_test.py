@@ -13,6 +13,10 @@ from labm8.py import test
 
 FLAGS = test.FLAGS
 
+###############################################################################
+# Fixtures.
+###############################################################################
+
 
 @test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
 def db(request) -> graph_tuple_database.Database:
@@ -22,7 +26,8 @@ def db(request) -> graph_tuple_database.Database:
   )
 
 
-def db(
+@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+def db_session(
   db: graph_tuple_database.Database,
 ) -> graph_tuple_database.Database.SessionType:
   """A test fixture which yields an empty graph proto database session."""
@@ -61,6 +66,73 @@ def two_graph_db_session(
     )
 
     yield session
+
+
+# Fixtures for enumerating populated databases.
+
+
+@test.Fixture(scope="function", params=(1, 1000, 5000))
+def graph_count(request) -> int:
+  return request.param
+
+
+@test.Fixture(scope="function", params=(1, 3))
+def node_x_dimensionality(request) -> int:
+  return request.param
+
+
+@test.Fixture(scope="function", params=(0, 3))
+def node_y_dimensionality(request) -> int:
+  return request.param
+
+
+@test.Fixture(scope="function", params=(0, 3))
+def graph_x_dimensionality(request) -> int:
+  return request.param
+
+
+@test.Fixture(scope="function", params=(0, 3))
+def graph_y_dimensionality(request) -> int:
+  return request.param
+
+
+@test.Fixture(scope="function", params=(False, True))
+def with_data_flow(request) -> bool:
+  return request.param
+
+
+@test.Fixture(scope="function", params=(0, 2))
+def split_count(request) -> int:
+  return request.param
+
+
+@test.Fixture(scope="function")
+def populated_db_and_rows(
+  db: graph_tuple_database.Database,
+  graph_count: int,
+  node_x_dimensionality: int,
+  node_y_dimensionality: int,
+  graph_x_dimensionality: int,
+  graph_y_dimensionality: int,
+  with_data_flow: bool,
+  split_count: int,
+) -> random_graph_tuple_database_generator.DatabaseAndRows:
+  """Generate a populated database and a list of rows."""
+  return random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
+    db,
+    graph_count,
+    node_x_dimensionality=node_x_dimensionality,
+    node_y_dimensionality=node_y_dimensionality,
+    graph_x_dimensionality=graph_x_dimensionality,
+    graph_y_dimensionality=graph_y_dimensionality,
+    with_data_flow=with_data_flow,
+    split_count=split_count,
+  )
+
+
+###############################################################################
+# Tests.
+###############################################################################
 
 
 # Cascaded delete tests.
@@ -223,109 +295,46 @@ def test_CreateEmpty(db_session: graph_tuple_database.Database.SessionType):
   db_session.commit()
 
 
-@decorators.loop_for(seconds=10)
-def test_fuzz_GraphTuple_Create(db: graph_tuple_database.Database):
-  """Fuzz the networkx -> proto conversion using randomly generated graphs."""
-  with db.Session(commit=True) as session:
-    graph_tuple = random_graph_tuple_generator.CreateRandomGraphTuple()
-    t = graph_tuple_database.GraphTuple.CreateFromGraphTuple(
-      graph_tuple=graph_tuple, ir_id=random.randint(0, int(4e6))
-    )
-    assert t.edge_count == (
-      t.control_edge_count + t.data_edge_count + t.call_edge_count
-    )
-    assert len(t.sha1) == 40
-    assert t.node_count == graph_tuple.node_count
-    assert t.edge_count == graph_tuple.edge_count
-    assert t.tuple.node_count == graph_tuple.node_count
-    assert t.tuple.edge_count == graph_tuple.edge_count
-    assert len(t.tuple.adjacencies) == 3
-    assert len(t.tuple.edge_positions) == 3
-    session.add(t)
-
-
-# Fixtures for enumerating populated databases.
-
-
-@test.Fixture(scope="function", params=(1, 1000, 5000))
-def graph_count(request) -> int:
-  return request.param
-
-
-@test.Fixture(scope="function", params=(1, 3))
-def node_x_dimensionality(request) -> int:
-  return request.param
-
-
-@test.Fixture(scope="function", params=(0, 3))
-def node_y_dimensionality(request) -> int:
-  return request.param
-
-
-@test.Fixture(scope="function", params=(0, 3))
-def graph_x_dimensionality(request) -> int:
-  return request.param
-
-
-@test.Fixture(scope="function", params=(0, 3))
-def graph_y_dimensionality(request) -> int:
-  return request.param
-
-
-@test.Fixture(scope="function", params=(False, True))
-def with_data_flow(request) -> bool:
-  return request.param
-
-
-@test.Fixture(scope="function", params=(0, 2))
-def split_count(request) -> int:
-  return request.param
-
-
-@test.Fixture(scope="function")
-def populated_db_and_rows(
-  db: graph_tuple_database.Database,
-  graph_count: int,
-  node_x_dimensionality: int,
-  node_y_dimensionality: int,
-  graph_x_dimensionality: int,
-  graph_y_dimensionality: int,
-  with_data_flow: bool,
-  split_count: int,
-) -> random_graph_tuple_database_generator.DatabaseAndRows:
-  """Generate a populated database and a list of rows."""
-  return random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
-    db,
-    graph_count,
-    node_x_dimensionality=node_x_dimensionality,
-    node_y_dimensionality=node_y_dimensionality,
-    graph_x_dimensionality=graph_x_dimensionality,
-    graph_y_dimensionality=graph_y_dimensionality,
-    with_data_flow=with_data_flow,
-    split_count=split_count,
-  )
-
-
 # Database stats tests.
 
-# Repeat test repeatedly to test memoized property accessor.
+
 @decorators.loop_for(min_iteration_count=3)
-def test_fuzz_database_stats_on_empty_db(db: graph_tuple_database.Database):
-  assert db.graph_count == 0
-  assert db.ir_count == 0
+def test_database_stats_json_on_empty_db(db: graph_tuple_database.Database):
+  """Test computing stats on an empty database."""
+  assert db.stats_json
 
 
 # Repeat test repeatedly to test memoized property accessor.
 @decorators.loop_for(min_iteration_count=3)
-def test_fuzz_database_stats(
+def test_database_stats_on_empty_database(
   populated_db_and_rows: random_graph_tuple_database_generator.DatabaseAndRows,
 ):
+  """Test computing stats on an empty database."""
+  db, _ = populated_db_and_rows
+  assert db.stats_json
+
+
+# Repeat test repeatedly to test memoized property accessor.
+@decorators.loop_for(min_iteration_count=3)
+def test_database_stats_on_empty_db(db: graph_tuple_database.Database):
+  """Test accessing database stats on an empty database."""
+  assert db.graph_count == 0
+  assert db.ir_count == 0
+  assert not db.has_data_flow
+
+
+# Repeat test repeatedly to test memoized property accessor.
+@decorators.loop_for(min_iteration_count=3)
+def test_database_stats(
+  populated_db_and_rows: random_graph_tuple_database_generator.DatabaseAndRows,
+):
+  """Test accessing database stats on a populated database."""
   db, rows = populated_db_and_rows
 
   # Graph and IR counts.
   assert db.graph_count == len(rows)
   assert db.ir_count == len(set(r.ir_id for r in rows))
-  assert db.split_count == split_count
+  assert db.split_count <= len(set(r.split for r in rows))
 
   # Node and edge attributes.
   assert db.node_count == sum(r.node_count for r in rows)
@@ -359,6 +368,7 @@ def test_fuzz_database_stats(
   )
 
   if rows[0].data_flow_steps is None:
+    assert not db.has_data_flow
     assert db.data_flow_steps_min is None
     assert db.data_flow_steps_max is None
     assert db.data_flow_steps_avg is None
@@ -366,12 +376,45 @@ def test_fuzz_database_stats(
     assert db.data_flow_positive_node_count_max is None
     assert db.data_flow_positive_node_count_avg is None
   else:
+    assert db.has_data_flow
     assert db.data_flow_steps_min >= 0
     assert db.data_flow_steps_max >= 0
     assert db.data_flow_steps_avg >= 0
     assert db.data_flow_positive_node_count_min >= 0
     assert db.data_flow_positive_node_count_max >= 0
     assert db.data_flow_positive_node_count_avg >= 0
+
+
+###############################################################################
+# Fuzzers.
+###############################################################################
+
+
+@decorators.loop_for(seconds=30)
+def test_fuzz_GraphTuple_Create(
+  db_session: graph_tuple_database.Database.SessionType,
+):
+  """Fuzz the networkx -> proto conversion using randomly generated graphs."""
+  graph_tuple = random_graph_tuple_generator.CreateRandomGraphTuple()
+  t = graph_tuple_database.GraphTuple.CreateFromGraphTuple(
+    graph_tuple=graph_tuple, ir_id=random.randint(0, int(4e6))
+  )
+
+  # Test the derived properties of the generated graph tuple.
+  assert t.edge_count == (
+    t.control_edge_count + t.data_edge_count + t.call_edge_count
+  )
+  assert len(t.sha1) == 40
+  assert t.node_count == graph_tuple.node_count
+  assert t.edge_count == graph_tuple.edge_count
+  assert t.tuple.node_count == graph_tuple.node_count
+  assert t.tuple.edge_count == graph_tuple.edge_count
+  assert len(t.tuple.adjacencies) == 3
+  assert len(t.tuple.edge_positions) == 3
+
+  # Add it to the database to catch SQL integrity errors.
+  db_session.add(t)
+  db_session.commit()
 
 
 if __name__ == "__main__":
