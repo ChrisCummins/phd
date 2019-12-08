@@ -16,6 +16,35 @@
 #)
 
 py_binary(
+    name = "split",
+    srcs = ["split.py"],
+    deps = [
+        ":unlabelled_graph_database",
+        "//deeplearning/ml4pl/ir:ir_database",
+        "//deeplearning/ml4pl/ir:split",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:prof",
+        "//third_party/py/sqlalchemy",
+    ],
+)
+
+py_test(
+    name = "split_test",
+    srcs = ["split_test.py"],
+    deps = [
+        ":unlabelled_graph_database",
+        "//deeplearning/ml4pl/graphs/unlabelled:split",
+        "//deeplearning/ml4pl/ir:ir_database",
+        "//deeplearning/ml4pl/ir:split",
+        "//deeplearning/ml4pl/testing:random_programl_generator",
+        "//deeplearning/ml4pl/testing:testing_databases",
+        "//labm8/py:decorators",
+        "//labm8/py:test",
+    ],
+)
+
+py_binary(
     name = "unlabelled_graph_database",
     srcs = ["unlabelled_graph_database.py"],
     visibility = ["//visibility:public"],

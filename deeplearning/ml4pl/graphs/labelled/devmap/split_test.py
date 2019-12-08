@@ -12,7 +12,7 @@ FLAGS = test.FLAGS
 @test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
 def empty_graph_db(request) -> graph_tuple_database.Database:
   """A test fixture which yields a graph database with random graph tuples."""
-  yield testing_databases.YieldDatabase(
+  yield from testing_databases.YieldDatabase(
     graph_tuple_database.Database, request.param
   )
 

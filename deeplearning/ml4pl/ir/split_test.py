@@ -1,6 +1,6 @@
-"""Unit tests for //deeplearning/ml4pl/bytecode:splitters."""
-import pathlib
+"""Unit tests for //deeplearning/ml4pl/bytecode:split."""
 import numpy as np
+
 from deeplearning.ml4pl.ir import ir_database
 from deeplearning.ml4pl.ir import splitters
 from labm8.py import app

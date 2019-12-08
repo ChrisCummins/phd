@@ -41,6 +41,8 @@ class StratifiedGraphLabelKFold(object):
       for graph in reader:
         graph_ids.append(graph.id)
         graph_y.append(np.argmax(graph.tuple.graph_y))
+      graph_ids = np.array(graph_ids, dtype=np.int32)
+      graph_y = np.array(graph_y, dtype=np.int32)
 
     splitter = model_selection.StratifiedKFold(n_splits=self.k, shuffle=True)
     dataset_splits = splitter.split(graph_ids, graph_y)
@@ -52,7 +54,7 @@ class StratifiedGraphLabelKFold(object):
 
   def ApplySplit(self, db: graph_tuple_database.Database) -> None:
     """Set the split values on the given database."""
-    for split, ids in self.Split(db):
+    for split, ids in enumerate(self.Split(db)):
       with prof.Profile(
         f"Set {split} split on {humanize.Plural(len(ids), 'row')}"
       ):
@@ -76,7 +78,7 @@ def CopySplits(
 
   # Copy each split one at a time.
   for split in input_db.splits:
-    with prof.Profile(1, f"Copied split {split}"):
+    with prof.Profile(f"Copied split {split}"):
       with input_db.Session() as in_session:
         ids_to_set = [
           row.id

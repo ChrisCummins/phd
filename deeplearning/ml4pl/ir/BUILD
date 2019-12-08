@@ -29,9 +29,12 @@ py_test(
     ],
 )
 
-py_library(
-    name = "splitters",
-    srcs = ["splitters.py"],
+py_binary(
+    name = "split",
+    srcs = ["split.py"],
+    visibility = [
+        "//deeplearning/ml4pl/graphs:__subpackages__",
+    ],
     deps = [
         ":ir_database",
         "//labm8/py:app",
@@ -43,8 +46,8 @@ py_library(
 )
 
 py_test(
-    name = "splitters_test",
-    srcs = ["splitters_test.py"],
+    name = "split_test",
+    srcs = ["split_test.py"],
     deps = [
         ":ir_database",
         ":splitters",
