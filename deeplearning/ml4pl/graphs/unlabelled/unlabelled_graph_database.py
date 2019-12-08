@@ -22,6 +22,9 @@ from labm8.py import sqlutil
 FLAGS = app.FLAGS
 # Note that --proto_db flag is defined at the end of this file after Database
 # class is defined.
+app.DEFINE_integer(
+  "print_proto", None, "The numeric ID of a proto to print to stdout and exit."
+)
 
 Base = sql.ext.declarative.declarative_base()
 
@@ -460,6 +463,20 @@ app.DEFINE_database(
 def Main():
   """Main entry point."""
   proto_db = FLAGS.proto_db()
+
+  if FLAGS.print_proto is not None:
+    with proto_db.Session() as session:
+      proto = (
+        session.query(ProgramGraph)
+        .filter(ProgramGraph.ir_id == FLAGS.print_proto)
+        .options(sql.orm.joinedload(ProgramGraph.data))
+        .scalar()
+      )
+      if not proto:
+        app.FatalWithoutStackTrace("Proto not found: %s", FLAGS.print_proto)
+      print(proto.proto)
+      return
+
   print(jsonutil.format_json(proto_db.stats_json))
 
 
