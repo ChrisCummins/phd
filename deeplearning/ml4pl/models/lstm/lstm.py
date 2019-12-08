@@ -1,7 +1,6 @@
 """This module defines an LSTM classifier."""
 import enum
 import pathlib
-import pickle
 import tempfile
 from typing import Any
 from typing import Iterable
@@ -11,6 +10,7 @@ from typing import Optional
 
 import keras
 import numpy as np
+import tensorflow as tf
 
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.ir import ir_database
@@ -125,7 +125,9 @@ class LstmBase(classifier_base.ClassifierBase):
   ):
     super(LstmBase, self).__init__(*args, **kwargs)
 
-    utils.SetAllowedGrowthOnKerasSession()
+    # The Tensorflow session and graph for the model.
+    self.session = utils.SetAllowedGrowthOnKerasSession()
+    self.graph = tf.Graph()
 
     self.batch_size = batch_size or FLAGS.batch_size
 
@@ -183,6 +185,21 @@ class LstmBase(classifier_base.ClassifierBase):
   def padding_element(self) -> int:
     return self.encoder.vocabulary_size
 
+  def GetBatchOfGraphs(
+    self, graph_iterator: Iterable[graph_tuple_database.GraphTuple]
+  ) -> List[graph_tuple_database.GraphTuple]:
+    """Read a list of <= batch_size graphs from a graph_iterator."""
+    # Peel off a batch of graphs to process.
+    graphs: List[graph_tuple_database.GraphTuple] = []
+    while len(graphs) < self.batch_size:
+      try:
+        graph = next(graph_iterator)
+      except StopIteration:
+        # We have run out of graphs.
+        break
+      graphs.append(graph)
+    return graphs
+
   def GetModelData(self) -> Any:
     """Get the model state."""
     # According to https://keras.io/getting-started/faq/, it is not recommended
@@ -220,6 +237,11 @@ class LstmGraphClassifier(LstmBase):
   def __init__(self, *args, **kwargs):
     super(LstmGraphClassifier, self).__init__(*args, **kwargs)
 
+    with self.graph.as_default():
+      self.CreateTensorFlowModel()
+
+  def CreateTensorFlowModel(self):
+    """Construct the tensorflow computation graph."""
     sequence_input = keras.Input(
       shape=(self.padded_sequence_length,), dtype="int32", name="sequence_in",
     )
@@ -274,35 +296,23 @@ class LstmGraphClassifier(LstmBase):
 
   def MakeBatch(
     self,
-    graphs: Iterable[graph_tuple_database.GraphTuple],
+    graph_iterator: Iterable[graph_tuple_database.GraphTuple],
     ctx: progress.ProgressContext = progress.NullContext,
   ) -> batches.Data:
     """Create a mini-batch of LSTM data."""
     # Set the logging context for the encoder.
     self.encoder.ir2seq_encoder.ctx = ctx
 
-    batch_size = 0
-    encoded_sequences = []
-    graphs: List[graph_tuple_database.GraphTuple] = []
-
-    # Peel off a batch of graphs to process.
-    while batch_size < self.batch_size:
-      try:
-        graph = next(graphs)
-      except StopIteration:
-        # We have run out of graphs.
-        break
-      graphs.append(graph)
+    graphs = self.GetBatchOfGraphs(graph_iterator)
+    if not graphs:
+      return batches.Data(graph_ids=[], data=None)
 
     # Encode the graphs in the batch.
-    encoded_sequences: List[np.array] = []
+    encoded_sequences: List[np.array] = self.encoder.Encode(graphs)
     graph_x: List[np.array] = []
     graph_y: List[np.array] = []
     for graph in graphs:
-      # TODO(github.com/ChrisCummins/ProGraML/issues/24): Support
-      # EncodedSubsequences from encoder.
-      encoded_sequences.append(self.encoder.Encode(graph))
-      graph_x.append(graph.tuple.graph_y)
+      graph_x.append(graph.tuple.graph_x)
       graph_y.append(graph.tuple.graph_y)
 
     # Pad and truncate encoded sequences.
@@ -348,10 +358,11 @@ class LstmGraphClassifier(LstmBase):
     # We can only get the loss on training.
     loss = None
 
-    if epoch_type == epoch.Type.TRAIN:
-      loss, lang_model_loss = self.model.train_on_batch(x, y)
+    with self.graph.as_default():
+      if epoch_type == epoch.Type.TRAIN:
+        loss, *_ = self.model.train_on_batch(x, y)
 
-    predictions = self.model.predict_on_batch(x)
+      predictions, *_ = self.model.predict_on_batch(x)
 
     return batches.Results.Create(
       targets=batch_data.graph_y, predictions=predictions, loss=loss
@@ -383,7 +394,10 @@ class LstmNodeClassifier(LstmBase):
         "OpenCL encoder is not supported for node-level " "classification"
       )
 
-    self.max_nodes_in_graph = max_nodes_in_graph or FLAGS.max_nodes_in_graph
+    self.max_nodes_in_graph = min(
+      self.padded_sequence_length,
+      max_nodes_in_graph or FLAGS.max_nodes_in_graph,
+    )
 
     sequence_input = keras.Input(
       batch_shape=(self.batch_size, self.padded_sequence_length,),
@@ -461,17 +475,12 @@ class LstmNodeClassifier(LstmBase):
     # Set the logging context for the encoder.
     self.encoder.ir2seq_encoder.ctx = ctx
 
-    batch_size = 0
-    graphs: List[graph_tuple_database.GraphTuple] = []
-
-    # Peel off a batch of graphs to process.
-    while batch_size < self.batch_size:
-      try:
-        graph = next(graphs)
-      except StopIteration:
-        # We have run out of graphs.
-        break
-      graphs.append(graph)
+    graphs = self.GetBatchOfGraphs(graphs)
+    # For node classification we require all batches to be of batch_size.
+    # In the future we could work around this by padding an incomplete
+    # batch with arrays of zeros.
+    if not graphs or len(graphs) != self.batch_size:
+      return batches.Data(graph_ids=[], data=None)
 
     # Encode the graphs in the batch.
 
@@ -483,11 +492,8 @@ class LstmNodeClassifier(LstmBase):
     selector_vectors: List[np.array] = []
     # A list of arrays of shape (node_mask_count, node_y_dimensionality)
     node_y: List[np.array] = []
-    for graph in graphs:
-      encoded: graph2seq.EncodedSubsequences = encoded_sequences.append(
-        self.encoder.Encode(graph)
-      )
 
+    for graph, encoded in zip(graphs, self.encoder.Encoder(graphs)):
       encoded_sequences.append(encoded.encoded_sequence)
       segment_ids.append(encoded.segment_ids)
       # Use only the 'binary selector' feature and convert to an array of
@@ -573,7 +579,8 @@ class LstmNodeClassifier(LstmBase):
 
     predictions = self.model.predict_on_batch(x)
 
-    # TODO(cec): Reshape node_y to match actual graph shapes.
+    # TODO(github.com/ChrisCummins/ProGraML/issues/24): Reshape node_y and
+    # to predictions to match the actual graph shapes.
 
     return batches.Results.Create(
       targets=batch_data.node_y, predictions=predictions, loss=loss

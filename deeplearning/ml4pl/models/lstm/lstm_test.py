@@ -1,13 +1,16 @@
 """Unit tests for //deeplearning/ml4pl/models/lstm."""
 import random
 import string
+from typing import Iterable
 from typing import List
-from typing import Set
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
+from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.graphs.labelled.devmap import make_devmap_dataset
 from deeplearning.ml4pl.ir import ir_database
+from deeplearning.ml4pl.models import batch as batches
+from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models import logger as logging
 from deeplearning.ml4pl.models.lstm import lstm
@@ -16,6 +19,54 @@ from deeplearning.ml4pl.testing import testing_databases
 from labm8.py import test
 
 FLAGS = test.FLAGS
+
+###############################################################################
+# Utility functions.
+###############################################################################
+
+
+def PopulateOpenClGraphs(
+  db: graph_tuple_database.Database,
+  relpaths: List[str],
+  node_y_dimensionality: int,
+  graph_x_dimensionality: int,
+  graph_y_dimensionality: int,
+):
+  """Populate a database with """
+  rows = []
+  # Create random rows using OpenCL relpaths.
+  for i, relpath in enumerate(relpaths):
+    graph_tuple = random_graph_tuple_database_generator.CreateRandomGraphTuple(
+      node_x_dimensionality=2,
+      node_y_dimensionality=node_y_dimensionality,
+      graph_x_dimensionality=graph_x_dimensionality,
+      graph_y_dimensionality=graph_y_dimensionality,
+    )
+    graph_tuple.ir_id = i + 1
+    graph_tuple.id = len(relpaths) - i
+    rows.append(graph_tuple)
+
+  with db.Session(commit=True) as session:
+    session.add_all(rows)
+
+
+def CreateRandomString(min_length: int = 1, max_length: int = 1024) -> str:
+  """Generate a random string."""
+  return "".join(
+    random.choice(string.ascii_lowercase)
+    for _ in range(random.randint(min_length, max_length))
+  )
+
+
+def MakeBatchIterator(
+  model: lstm.LstmBase, graph_db: graph_tuple_database.Database
+) -> Iterable[graph_tuple_database.GraphTuple]:
+  return batches.BatchIterator(
+    batches=model.BatchIterator(
+      graph_database_reader.BufferedGraphReader(graph_db)
+    ),
+    graph_count=graph_db.graph_count,
+  )
 
 
 ###############################################################################
@@ -56,6 +107,12 @@ def graph_y_dimensionality(request) -> int:
   return request.param
 
 
+@test.Fixture(scope="session", params=list(epoch.Type))
+def epoch_type(request) -> epoch.Type:
+  """A test fixture which enumerates epoch types."""
+  return request.param
+
+
 @test.Fixture(scope="session")
 def opencl_relpaths() -> List[str]:
   opencl_df = make_devmap_dataset.MakeGpuDataFrame(
@@ -63,31 +120,6 @@ def opencl_relpaths() -> List[str]:
     "amd_tahiti_7970",
   )
   return list(set(opencl_df.relpath.values))
-
-
-def PopulateOpenClGraphs(
-  db: graph_tuple_database.Database,
-  relpaths: List[str],
-  node_y_dimensionality: int,
-  graph_x_dimensionality: int,
-  graph_y_dimensionality: int,
-):
-  """Populate a database with """
-  rows = []
-  # Create random rows using OpenCL relpaths.
-  for i, relpath in enumerate(relpaths):
-    graph_tuple = random_graph_tuple_database_generator.CreateRandomGraphTuple(
-      node_x_dimensionality=2,
-      node_y_dimensionality=node_y_dimensionality,
-      graph_x_dimensionality=graph_x_dimensionality,
-      graph_y_dimensionality=graph_y_dimensionality,
-    )
-    graph_tuple.ir_id = i + 1
-    graph_tuple.id = len(relpaths) - i
-    rows.append(graph_tuple)
-
-  with db.Session(commit=True) as session:
-    session.add_all(rows)
 
 
 @test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
@@ -106,14 +138,6 @@ def graph_y_db(
       graph_y_dimensionality=graph_y_dimensionality,
     )
     yield db
-
-
-def CreateRandomString(min_length: int = 1, max_length: int = 1024) -> str:
-  """Generate a random string."""
-  return "".join(
-    random.choice(string.ascii_lowercase)
-    for _ in range(random.randint(min_length, max_length))
-  )
 
 
 @test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
@@ -147,45 +171,50 @@ def ir_db(request, opencl_relpaths: List[str]) -> ir_database.Database:
 ###############################################################################
 
 
-@test.Parametrize(
-  "model_class", (lstm.LstmGraphClassifier, lstm.LstmNodeClassifier)
-)
-def test_load_restore_model_from_checkpoint_smoke_test(
+# @test.Parametrize(
+#   "model_class", (lstm.LstmGraphClassifier, lstm.LstmNodeClassifier)
+# )
+# def test_load_restore_model_from_checkpoint_smoke_test(
+#   logger: logging.Logger,
+#   graph_y_db: graph_tuple_database.Database,
+#   ir_db: ir_database.Database,
+#   model_class,
+# ):
+#   """Test creating and restoring model from checkpoint."""
+#   model: lstm.LstmBase = model_class(logger, graph_y_db, ir_db=ir_db)
+#   model.Initialize()
+#
+#   checkpoint_ref = model.SaveCheckpoint()
+#
+#   model.RestoreFrom(checkpoint_ref)
+
+
+def test_graph_classifier_call(
+  epoch_type: epoch.Type,
   logger: logging.Logger,
   graph_y_db: graph_tuple_database.Database,
   ir_db: ir_database.Database,
-  model_class,
 ):
-  """Test creating and restoring model from checkpoint."""
-  model: lstm.LstmBase = model_class(logger, graph_y_db, ir_db=ir_db)
+  """Test calling a model."""
+  model = lstm.LstmGraphClassifier(
+    logger, graph_y_db, ir_db=ir_db, batch_size=8, padded_sequence_length=100
+  )
   model.Initialize()
 
-  checkpoint_ref = model.SaveCheckpoint()
+  batch_iterator = MakeBatchIterator(model, graph_y_db)
 
-  model.RestoreFrom(checkpoint_ref)
+  results = model(
+    epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger,
+  )
+  assert isinstance(results, epoch.Results)
 
+  assert results.batch_count
 
-# def test_call(
-#     epoch_type: epoch.Type,
-#     logger: logging.Logger,
-# ):
-#   """Test that call returns results."""
-#
-#   results = model(
-#       epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger
-#   )
-#   assert isinstance(results, epoch.Results)
-#   # Test that the model saw all of the input graphs.
-#   assert model.graph_count == batch_iterator.graph_count
-#   # Test that batch counts match up. More batches can be made than are used
-#   # (because the last batch could be empty).
-#   assert results.batch_count <= model.make_batch_count
-#   assert results.batch_count == model.run_batch_count
-#
-#   # Check that result properties are propagated.
-#   # FIXME:
-#   # assert results.has_loss == model.has_loss
-#   # assert results.has_learning_rate == model.has_learning_rate
+  # We only get loss for training.
+  if epoch_type == epoch.Type.TRAIN:
+    assert results.has_loss
+  else:
+    assert not results.has_loss
 
 
 if __name__ == "__main__":

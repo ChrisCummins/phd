@@ -19,6 +19,7 @@ def SetAllowedGrowthOnKerasSession():
   config.gpu_options.allow_growth = True
   session = tf.compat.v1.Session(config=config)
   tf.compat.v1.keras.backend.set_session(session)
+  return session
 
 
 def LstmLayer(*args, **kwargs):
