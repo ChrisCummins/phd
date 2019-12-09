@@ -179,7 +179,7 @@ tabulate==0.8.5
 # TensorFlow release notes for the required version of CUDA, and if necessary
 # update the hardcoded $CUDA_HOME default in GetCudaHome() of the configure
 # script.
-tensorflow==1.15.0
+tensorflow==1.14.0
 terminado==0.8.1
 testpath==0.3.1
 TogglPy==0.1.1
