@@ -72,7 +72,10 @@ app.DEFINE_enum(
   "ir2seq", Ir2SeqType, Ir2SeqType.LLVM, "The type of ir2seq encoder to use."
 )
 app.DEFINE_enum(
-  "nodes", NodeEncoder, None, "The types of nodes ssegmentation to perform."
+  "nodes",
+  NodeEncoder,
+  NodeEncoder.STATEMENT,
+  "The types of nodes segmentation to perform.",
 )
 app.DEFINE_integer(
   "lang_model_hidden_size",
@@ -134,7 +137,7 @@ class LstmBase(classifier_base.ClassifierBase):
 
     # Create the sequence encoder.
     if not ir_db and not FLAGS.ir_db:
-      raise TypeError("--ir_db is required")
+      raise app.UsageError("--ir_db is required")
     self.ir2seq_encoder = ir2seq_encoder or FLAGS.ir2seq().ToEncoder(
       ir_db or FLAGS.ir_db()
     )
@@ -143,7 +146,7 @@ class LstmBase(classifier_base.ClassifierBase):
     if graph2seq_encoder:
       self.encoder = graph2seq_encoder
     elif self.graph_db.graph_y_dimensionality:
-      # Create a graph-level encoder.
+      # Graph-level classification.
       self.encoder = graph2seq.GraphEncoder(
         graph_db=self.graph_db, ir2seq_encoder=self.ir2seq_encoder
       )
@@ -151,10 +154,10 @@ class LstmBase(classifier_base.ClassifierBase):
       self.graph_db.node_y_dimensionality
       and self.graph_db.node_x_dimensionality == 2
     ):
-      # Support for node-wise classification with selector vector.
-      self.encoder = FLAGS.graph2seq().ToEncoder(
-        self.graph_db, self.ir2seq_encoder
-      )
+      # Node-wise classification with selector vector.
+      if not FLAGS.nodes:
+        raise app.UsageError("--nodes is required")
+      self.encoder = FLAGS.nodes().ToEncoder(self.graph_db, self.ir2seq_encoder)
     else:
       raise TypeError("Unsupported graph dimensionalities")
 
@@ -166,14 +169,6 @@ class LstmBase(classifier_base.ClassifierBase):
     self.padded_sequence_length = min(
       padded_sequence_length, self.encoder.max_encoded_length
     )
-    app.Log(
-      1,
-      "Using padded sequence length %s from maximum %s "
-      "(max %.3f%% sequence truncation)",
-      humanize.DecimalPrefix(padded_sequence_length, ""),
-      humanize.DecimalPrefix(self.encoder.max_encoded_length, ""),
-      (100 - (padded_sequence_length / self.encoder.max_encoded_length) * 100),
-    )
 
     # Set by subclasses.
     self.model = None
@@ -182,6 +177,14 @@ class LstmBase(classifier_base.ClassifierBase):
     """Get a summary"""
     buf = io.StringIO()
     self.model.summary(print_fn=lambda msg: print(msg, file=buf))
+    print(
+      "Using padded sequence length "
+      f"{humanize.DecimalPrefix(self.padded_sequence_length, '')} from maximum "
+      f"humanize.DecimalPrefix(self.encoder.max_encoded_length, '') "
+      f"(max {(1 - (self.padded_sequence_length / self.encoder.max_encoded_length)):.3%} "
+      "sequence truncation)",
+      file=buf,
+    )
     return buf.getvalue()
 
   @property
@@ -231,6 +234,11 @@ class LstmBase(classifier_base.ClassifierBase):
 
     with self.graph.as_default():
       self.model = tf.keras.models.load_model(path)
+
+      # Enable multi-threaded access to model. See:
+      # https://stackoverflow.com/a/46801607
+      self.model._make_predict_function()
+    self.graph.finalize()
 
 
 class LstmGraphClassifier(LstmBase):
