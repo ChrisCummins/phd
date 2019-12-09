@@ -21,14 +21,25 @@ class Type(enum.Enum):
 
 
 class Results(NamedTuple):
+  """The results of an epoch."""
+
+  # The number of batches in the epoch.
   batch_count: int = 0
+  # The average iteration count of the model.
   iteration_count: float = 0
+  # The ratio of batches that resulted in the model converging.
   model_converged: float = 1
+  # The average model learning rate, if applicable.
   learning_rate: Optional[float] = None
+  # The average model loss, if applicable.
   loss: Optional[float] = None
+  # The average accuracy across all predictions.
   accuracy: float = 0
+  # The average precision across all predictions.
   precision: float = 0
+  # The average recall across all predictions.
   recall: float = 0
+  # The average f1 score across all predictions.
   f1: float = 0
 
   @property
