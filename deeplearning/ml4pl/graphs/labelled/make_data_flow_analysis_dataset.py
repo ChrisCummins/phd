@@ -324,8 +324,10 @@ class DatasetGenerator(progress.Progress):
       for elapsed_time, graph_count, graph_tuples in workers:
         self.ctx.i += graph_count
         # Record the generated annotated graphs.
-        tuples_size = sum(t.pickled_graph_tuple_size for t in graph_tuples)
-        writer.AddMany(graph_tuples, sizes=tuples_size)
+        tuple_sizes = [t.pickled_graph_tuple_size for t in graph_tuples]
+        writer.AddMany(graph_tuples, sizes=tuple_sizes)
+      if writer.error_count:
+        app.FatalWithoutStackTrace("Database writer had errors")
 
     # Sanity check the number of generated program graphs.
     if self.ctx.i != self.ctx.n:
