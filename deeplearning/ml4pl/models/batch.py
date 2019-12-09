@@ -180,33 +180,45 @@ class Results(NamedTuple):
 
 
 class RollingResults:
+  """Maintain weighted rolling averages across batches."""
+
   def __init__(self):
+    self.weight_sum = 0
     self.batch_count = 0
     self.iteration_count_sum = 0
     self.model_converged_sum = 0
     self.has_learning_rate = False
-    self.learning_rate_sum = 0
+    self.weighted_learning_rate_sum = 0
     self.has_loss = False
-    self.loss_sum = 0
-    self.accuracy_sum = 0
-    self.precision_sum = 0
-    self.recall_sum = 0
-    self.f1_sum = 0
+    self.weighted_loss_sum = 0
+    self.weighted_accuracy_sum = 0
+    self.weighted_precision_sum = 0
+    self.weighted_recall_sum = 0
+    self.weighted_f1_sum = 0
 
-  def Update(self, results: Results):
+  def Update(self, results: Results, weight: float = 1) -> None:
+    """Update the rolling results with a new batch.
+
+    Args:
+      results: The batch results to update the current state with.
+      weight: A weight to assign to weighted sums. E.g. to weight results
+        across all targets, use weight=results.target_count. To weight across
+        graphs, use weight=batch.graph_count.
+    """
+    self.weight_sum += results.t
     self.batch_count += 1
-    self.iteration_count_sum += 1
+    self.iteration_count_sum += results.iteration_count
     self.model_converged_sum += 1 if results.model_converged else 0
     if results.has_learning_rate:
       self.has_learning_rate = True
-      self.learning_rate_sum += results.learning_rate
+      self.weighted_learning_rate_sum += results.learning_rate * weight
     if results.has_loss:
       self.has_loss = True
-      self.loss_sum += results.loss
-    self.accuracy_sum += results.accuracy
-    self.precision_sum += results.precision
-    self.recall_sum += results.recall
-    self.f1_sum += results.f1
+      self.weighted_loss_sum += results.loss * weight
+    self.weighted_accuracy_sum += results.accuracy * weight
+    self.weighted_precision_sum += results.precision * weight
+    self.weighted_recall_sum += results.recall * weight
+    self.weighted_f1_sum += results.f1 * weight
 
   @property
   def iteration_count(self) -> float:
@@ -219,25 +231,25 @@ class RollingResults:
   @property
   def learning_rate(self) -> Optional[float]:
     if self.has_learning_rate:
-      return self.learning_rate_sum / max(self.batch_count, 1)
+      return self.weighted_learning_rate_sum / max(self.batch_count, 1)
 
   @property
   def loss(self) -> Optional[float]:
     if self.has_loss:
-      return self.loss_sum / max(self.batch_count, 1)
+      return self.weighted_loss_sum / max(self.weight_sum, 1)
 
   @property
   def accuracy(self) -> float:
-    return self.accuracy_sum / max(self.batch_count, 1)
+    return self.weighted_accuracy_sum / max(self.weight_sum, 1)
 
   @property
   def precision(self) -> float:
-    return self.precision_sum / max(self.batch_count, 1)
+    return self.weighted_precision_sum / max(self.weight_sum, 1)
 
   @property
   def recall(self) -> float:
-    return self.recall_sum / max(self.batch_count, 1)
+    return self.weighted_recall_sum / max(self.weight_sum, 1)
 
   @property
   def f1(self) -> float:
-    return self.f1_sum / max(self.batch_count, 1)
+    return self.weighted_f1_sum / max(self.weight_sum, 1)

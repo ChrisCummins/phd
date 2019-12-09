@@ -375,7 +375,7 @@ class EpochThread(progress.Progress):
         data=batch,
         results=batch_results,
       )
-      rolling_results.Update(batch_results)
+      rolling_results.Update(batch_results, weight=batch_results.target_count)
       self.ctx.bar.set_postfix(
         loss=rolling_results.loss,
         acc=rolling_results.accuracy,
