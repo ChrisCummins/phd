@@ -221,6 +221,7 @@ py_binary(
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//labm8/py:app",
         "//labm8/py:pdutil",
+        "//labm8/py:ppar",
         "//labm8/py:prof",
         "//labm8/py:progress",
         "//third_party/py/pyfiglet",
