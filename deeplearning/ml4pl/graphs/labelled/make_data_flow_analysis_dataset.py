@@ -368,11 +368,8 @@ class DatasetGenerator(progress.Progress):
       for i, graph_batch in enumerate(graph_reader):
         yield (i, self.analysis, graph_batch, self.ctx.ToProgressContext())
 
-    # Have a thread generating inputs, and a multiprocessing pool consuming
-    # them.
-    worker_args = ProcessProgramGraphsArgsGenerator(self.graph_reader)
-    workers = pool.imap_unordered(ProcessProgramGraphs, worker_args)
-
+    # Have a thread generating inputs, a multiprocessing pool processing them,
+    # and another thread writing their results to the database.
     with sqlutil.BufferedDatabaseWriter(
       self.output_db,
       max_buffer_size=FLAGS.write_buffer_mb * 1024 * 1024,
@@ -380,6 +377,13 @@ class DatasetGenerator(progress.Progress):
       log_level=1,
       ctx=self.ctx.ToProgressContext(),
     ) as writer:
+      worker_args = ProcessProgramGraphsArgsGenerator(self.graph_reader)
+      # Process the inputs using an iterator, and enforce that the results
+      # arrive *in order*, as we process the input database in-order.
+      workers = pool.imap(
+        ProcessProgramGraphs, worker_args, chunksize=FLAGS.chunk_size
+      )
+
       for elapsed_time, proto_count, graph_tuples in workers:
         self.ctx.i += proto_count
         # Record the generated annotated graphs.
