@@ -219,7 +219,7 @@ class Train(progress.Progress):
     save_on = FLAGS.save_on()
 
     # Epoch loop.
-    for self.ctx.i in range(self.ctx.i + 1, self.ctx.n + 1):
+    for self.ctx.i in range(self.ctx.i, self.ctx.n):
       # Create the batch iterators ahead of time so that they can asynchronously
       # start reading from the graph database.
       batch_iterators = {
@@ -245,6 +245,9 @@ class Train(progress.Progress):
       if test_on == schedules.TestOn.EVERY:
         self.RunEpoch(epoch.Type.TEST, batch_iterators)
 
+    # Record the final epoch.
+    self.ctx.i += 1
+
   def RunEpoch(
     self,
     epoch_type: epoch.Type,
@@ -252,7 +255,8 @@ class Train(progress.Progress):
   ) -> Tuple[epoch.Results, int]:
     """Run an epoch of the given type."""
     epoch_name = (
-      f"{epoch_type.name.lower():>5} " f"[{self.ctx.i:3d} / {self.ctx.n:3d}]"
+      f"{epoch_type.name.lower():>5} "
+      f"[{self.model.epoch_num:3d} / {self.ctx.n:3d}]"
     )
     return RunEpoch(
       epoch_name=epoch_name,
