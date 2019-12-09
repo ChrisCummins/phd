@@ -62,13 +62,11 @@ class ZeroR(classifier_base.ClassifierBase):
         targets.append(graph.tuple.node_y)
       else:
         batch_size += graph.tuple.graph_y.size
-        targets = graph.tuple.graph_y
+        targets.append(graph.tuple.graph_y)
 
-    # Flatten per-graph node y to a single array.
-    if self.graph_db.node_y_dimensionality and targets:
-      targets = np.vstack(targets)
-
-    return batchs.Data(graph_ids=graph_ids, data=targets)
+    return batchs.Data(
+      graph_ids=graph_ids, data=np.vstack(targets) if targets else None
+    )
 
   def RunBatch(
     self,
@@ -96,7 +94,7 @@ class ZeroR(classifier_base.ClassifierBase):
       bincount = np.bincount(np.argmax(targets, axis=1))
       self.class_counts += bincount
 
-    assert targets.shape[1] == self.y.shape[0]
+      assert targets.shape[1] == self.y.shape[0]
 
     # The 1-hot predicted value.
     predictions = np.tile(self.y, targets.shape[0]).reshape(targets.shape)
