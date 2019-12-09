@@ -6,7 +6,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//labm8/py:app",
-        "//labm8/py:pbutil",
         "//third_party/py/networkx",
     ],
 )

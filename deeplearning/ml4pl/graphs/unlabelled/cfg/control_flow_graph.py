@@ -3,9 +3,7 @@ import typing
 
 import networkx as nx
 
-from deeplearning.ml4pl import ml4pl_pb2
 from labm8.py import app
-from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 
@@ -56,7 +54,7 @@ class NoExitBlock(InvalidSpecialBlock):
   pass
 
 
-class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
+class ControlFlowGraph(nx.DiGraph):
   """A control flow graph.
 
   For a control flow graph to be considered "valid", the following properties
@@ -69,8 +67,6 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
   Use the IsValidControlFlowGraph() method to check if a graph instance has
   these properties.
   """
-
-  proto_t = ml4pl_pb2.ControlFlowGraph
 
   def __init__(self, name: str = "cfg"):
     super(ControlFlowGraph, self).__init__(name=name)
@@ -248,58 +244,6 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     outdegree of 0.
     """
     return nx.diameter(self.to_undirected())
-
-  def SetProto(self, proto: pbutil.ProtocolBuffer) -> None:
-    # Ensure that graph is valid. This will raise exception if graph is not
-    # valid.
-    self.ValidateControlFlowGraph(strict=False)
-
-    # Set the graph-level properties.
-    proto.name = self.graph["name"]
-    proto.entry_block_index = self.entry_block
-    proto.exit_block_index[:] = self.exit_blocks
-
-    # We translate node IDs to indexes into the node list.
-    node_to_index: typing.Dict[int, int] = {}
-
-    # Create the block protos.
-    for i, (node, data) in enumerate(self.nodes(data=True)):
-      node_to_index[node] = i
-      block = proto.block.add()
-      block.name = data["name"]
-      text = data.get("text")
-      if text:
-        block.text = data.get("text")
-    # Create the edge protos.
-    for src, dst in self.edges:
-      edge = proto.edge.add()
-      edge.src_index = node_to_index[src]
-      edge.dst_index = node_to_index[dst]
-
-  @classmethod
-  def FromProto(cls, proto: pbutil.ProtocolBuffer) -> "ProtoBackedMixin":
-    instance = cls(name=proto.name)
-    # Create the nodes from the block protos.
-    for i, block in enumerate(proto.block):
-      data = {"name": block.name}
-      if block.text:
-        data["text"] = block.text
-      instance.add_node(i, **data)
-    # Set the special block attributes.
-    instance.nodes[proto.entry_block_index]["entry"] = True
-    try:
-      for index in proto.exit_block_index:
-        instance.nodes[index]["exit"] = True
-    except TypeError:
-      # I changed the exit_block_index field from singular to repeated, so
-      # attempting to iterate over it for old singular filed protos will yield
-      # a type error.
-      instance.nodes[proto.exit_block]["exit"] = True
-    # Create the edges from protos.
-    for edge in proto.edge:
-      instance.add_edge(edge.src_index, edge.dst_index)
-    # Validate the proto.
-    return instance.ValidateControlFlowGraph(strict=False)
 
   def __eq__(self, other) -> bool:
     """Compare control flow graphs.
