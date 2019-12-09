@@ -105,7 +105,7 @@ app.DEFINE_integer(
 )
 
 
-class LstmGraphBatch(NamedTuple):
+class GraphLstmBatch(NamedTuple):
   """The data for an LSTM batch."""
 
   # Shape (batch_size, padded_sequence_length, 1), dtype np.int32
@@ -243,7 +243,7 @@ class LstmBase(classifier_base.ClassifierBase):
     self.graph.finalize()
 
 
-class LstmGraphClassifier(LstmBase):
+class GraphLstm(LstmBase):
   """LSTM Model.
 
   This is an implementation of the DeepTune model described in:
@@ -253,7 +253,7 @@ class LstmGraphClassifier(LstmBase):
   """
 
   def __init__(self, *args, **kwargs):
-    super(LstmGraphClassifier, self).__init__(*args, **kwargs)
+    super(GraphLstm, self).__init__(*args, **kwargs)
 
     with self.graph.as_default():
       self.CreateTensorFlowModel()
@@ -346,7 +346,7 @@ class LstmGraphClassifier(LstmBase):
 
     return batches.Data(
       graph_ids=[graph.id for graph in graphs],
-      data=LstmGraphBatch(
+      data=GraphLstmBatch(
         encoded_sequences=np.vstack(encoded_sequences),
         graph_x=np.vstack(graph_x),
         graph_y=np.vstack(graph_y),
@@ -369,7 +369,7 @@ class LstmGraphClassifier(LstmBase):
     Returns:
       Batch results.
     """
-    batch_data: LstmGraphBatch = batch.data
+    batch_data: GraphLstmBatch = batch.data
 
     x = [batch_data.encoded_sequences, batch_data.graph_x]
     y = [batch_data.graph_y, batch_data.graph_y]
@@ -388,7 +388,7 @@ class LstmGraphClassifier(LstmBase):
     )
 
 
-class LstmNodeBatch(NamedTuple):
+class NodeLstmBatch(NamedTuple):
   """The data for an LSTM batch."""
 
   # Shape (batch_size, padded_sequence_length, 1), dtype np.int32
@@ -402,11 +402,11 @@ class LstmNodeBatch(NamedTuple):
   node_y: np.array
 
 
-class LstmNodeClassifier(LstmBase):
+class NodeLstm(LstmBase):
   """An extension of the LSTM model to support node-level classification."""
 
   def __init__(self, *args, max_nodes_in_graph: Optional[int] = None, **kwargs):
-    super(LstmNodeClassifier, self).__init__(*args, **kwargs)
+    super(NodeLstm, self).__init__(*args, **kwargs)
 
     if isinstance(self.ir2seq_encoder, ir2seq.OpenClEncoder):
       raise TypeError(
@@ -557,7 +557,7 @@ class LstmNodeClassifier(LstmBase):
 
     return batches.Data(
       graph_ids=[graph.id for graph in graphs],
-      data=LstmNodeBatch(
+      data=NodeLstmBatch(
         encoded_sequences=np.vstack(encoded_sequences),
         segment_ids=np.vstack(segment_ids),
         selector_vectors=np.vstack(selector_vectors),
@@ -581,7 +581,7 @@ class LstmNodeClassifier(LstmBase):
     Returns:
       Batch results.
     """
-    batch_data: LstmNodeBatch = batch.data
+    batch_data: NodeLstmBatch = batch.data
 
     x = [
       batch_data.encoded_sequences,
@@ -609,9 +609,9 @@ class LstmNodeClassifier(LstmBase):
 def main():
   """Main entry point."""
   if FLAGS.nodes:
-    run.Run(LstmNodeClassifier)
+    run.Run(NodeLstm)
   else:
-    run.Run(LstmGraphClassifier)
+    run.Run(GraphLstm)
 
 
 if __name__ == "__main__":
