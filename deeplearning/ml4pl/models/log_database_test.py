@@ -353,5 +353,23 @@ def test_GetWeightedEpochStats_filter_all_results(
   )
 
 
+def test_Prune(populated_log_db: log_database.Database,):
+  """Test that pruning a database deletes all runs."""
+  populated_log_db.Prune()
+  # Currently log databases have no checkpoints, so pruning them will delete
+  # everything.
+  with populated_log_db.Session() as session:
+    assert session.query(sql.func.count(log_database.RunId)).scalar() == 0
+    assert session.query(sql.func.count(log_database.Batch)).scalar() == 0
+    assert (
+      session.query(sql.func.count(log_database.BatchDetails)).scalar() == 0
+    )
+    assert session.query(sql.func.count(log_database.Checkpoint)).scalar() == 0
+    assert (
+      session.query(sql.func.count(log_database.CheckpointModelData)).scalar()
+      == 0
+    )
+
+
 if __name__ == "__main__":
   test.Main()

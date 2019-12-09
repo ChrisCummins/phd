@@ -32,6 +32,12 @@ from labm8.py import sqlutil
 FLAGS = app.FLAGS
 # Note that log_db flag is declared at the bottom of this file, after Database
 # class is defined.
+app.DEFINE_boolean(
+  "prune_logs",
+  False,
+  "When //deeplearning/ml4pl/models:log_database is executed as a script, "
+  "using this flag will prune any runs that do not have a checkpoint.",
+)
 
 Base = declarative.declarative_base()
 
@@ -1084,6 +1090,32 @@ class Database(sqlutil.Database):
 
       yield "runs", per_run_df
 
+  def Prune(self, session: Optional[sqlutil.Database.SessionType] = None):
+    """Remove any runs that do not have a model checkpoint.
+
+    This is useful for "spring cleaning" a database which has a bunch of
+    test/failed runs, although note that any job that is currently running but
+    hasn't yet reached the end of epoch 1 will be tidied up!
+    """
+    with self.Session(session=session, commit=True) as session:
+      runs_with_checkpoints = {
+        row.run_id
+        for row in session.query(
+          sql.func.distinct(Checkpoint.run_id).label("run_id")
+        )
+      }
+
+      runs_with_no_checkpoints = set(self.run_ids) - runs_with_checkpoints
+      app.Log(
+        1,
+        "Pruning %s runs: %s",
+        len(runs_with_no_checkpoints),
+        runs_with_no_checkpoints,
+      )
+      session.query(RunId).filter(
+        RunId.run_id.in_(runs_with_no_checkpoints)
+      ).delete()
+
 
 app.DEFINE_database(
   "log_db", Database, None, "The database to write model logs to."
@@ -1098,6 +1130,9 @@ def DatetimeHandler(object):
 def Main():
   """Main entry point."""
   log_db = FLAGS.log_db()
+  if FLAGS.prune_logst:
+    log_db.Prune()
+
   print(jsonutil.format_json(log_db.stats_json, default=DatetimeHandler))
 
 
