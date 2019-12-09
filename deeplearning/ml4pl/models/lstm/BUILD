@@ -4,6 +4,7 @@ py_binary(
     name = "lstm",
     srcs = ["lstm.py"],
     deps = [
+        "//deeplearning/ml4pl/graphs/labelled:graph_database_reader",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//deeplearning/ml4pl/ir:ir_database",
         "//deeplearning/ml4pl/models:batch",

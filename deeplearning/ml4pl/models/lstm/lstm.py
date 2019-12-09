@@ -13,6 +13,7 @@ import keras
 import numpy as np
 import tensorflow as tf
 
+from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.ir import ir_database
 from deeplearning.ml4pl.models import batch as batches
@@ -223,6 +224,7 @@ class LstmBase(classifier_base.ClassifierBase):
     with tempfile.TemporaryDirectory(prefix="lstm_pickle_") as d:
       path = pathlib.Path(d) / "weights.h5"
       with self.graph.as_default():
+        tf.compat.v1.keras.backend.set_session(self.session)
         self.model.save(path)
 
       with open(path, "rb") as f:
@@ -238,12 +240,8 @@ class LstmBase(classifier_base.ClassifierBase):
         f.write(data_to_load)
 
     with self.graph.as_default():
+      tf.compat.v1.keras.backend.set_session(self.session)
       self.model = tf.keras.models.load_model(path)
-
-      # Enable multi-threaded access to model. See:
-      # https://stackoverflow.com/a/46801607
-      self.model._make_predict_function()
-    self.graph.finalize()
 
 
 class GraphLstm(LstmBase):
@@ -258,8 +256,35 @@ class GraphLstm(LstmBase):
   def __init__(self, *args, **kwargs):
     super(GraphLstm, self).__init__(*args, **kwargs)
 
+    # To enable thread-safe use of a Keras model we must make sure to fix the
+    # graph and session whenever we are going to use self.model.
     with self.graph.as_default():
+      tf.compat.v1.keras.backend.set_session(self.session)
       self.CreateTensorFlowModel()
+
+      # To enable thread-safe use of the Keras model we must ensure that
+      # the computation graph is fully instantiated before the first call
+      # to RunBatch(). Keras lazily instantiates parts of the graph (such as
+      # training ops), so make sure those are created by running the training
+      # loop now on a single graph.
+      reader = graph_database_reader.BufferedGraphReader(self.graph_db, limit=1)
+      batch = self.MakeBatch(reader)
+      assert batch.graph_count == 1
+      self.RunBatch(epoch.Type.TRAIN, batch)
+
+      # Run private model methods that instantiate graph components.
+      # See: https://stackoverflow.com/a/46801607
+      self.model._make_predict_function()
+      self.model._make_test_function()
+      self.model._make_train_function()
+
+      # Saving the graph also creates new ops, so run it now.
+      with tempfile.TemporaryDirectory(prefix="ml4pl_lstm_") as d:
+        self.model.save(pathlib.Path(d) / "delete_md.h5")
+
+    # Finall we have instantiated the graph, so freeze it to mane any
+    # implicit modification raise an error.
+    self.graph.finalize()
 
   def CreateTensorFlowModel(self):
     """Construct the tensorflow computation graph."""
@@ -285,6 +310,9 @@ class GraphLstm(LstmBase):
     lang_model = utils.LstmLayer(FLAGS.lang_model_hidden_size, name="lstm_2")(
       lang_model
     )
+
+    # An auxiliary output used for tuning the language model independently of
+    # the graph features.
     lang_model_out = keras.layers.Dense(
       self.y_dimensionality, activation="sigmoid", name="langmodel_out",
     )(lang_model)
@@ -376,6 +404,8 @@ class GraphLstm(LstmBase):
     loss = None
 
     with self.graph.as_default():
+      tf.compat.v1.keras.backend.set_session(self.session)
+
       if epoch_type == epoch.Type.TRAIN:
         loss, *_ = self.model.train_on_batch(x, y)
 
