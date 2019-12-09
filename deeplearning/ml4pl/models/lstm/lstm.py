@@ -147,7 +147,10 @@ class LstmBase(classifier_base.ClassifierBase):
     # Create the graph encoder.
     if graph2seq_encoder:
       self.encoder = graph2seq_encoder
-    elif self.graph_db.graph_y_dimensionality:
+    elif (
+      self.graph_db.graph_y_dimensionality
+      and self.graph_db.node_x_dimensionality == 2
+    ):
       # Graph-level classification.
       self.encoder = graph2seq.GraphEncoder(
         graph_db=self.graph_db, ir2seq_encoder=self.ir2seq_encoder
