@@ -33,19 +33,6 @@ from labm8.py import progress
 from labm8.py import sqlutil
 
 app.DEFINE_string("analysis", None, "The name of the analysis to run.")
-app.DEFINE_database(
-  "input_db",
-  unlabelled_graph_database.Database,
-  None,
-  "Database to read unlabelled graph protos from.",
-  must_exist=True,
-)
-app.DEFINE_database(
-  "output_db",
-  graph_tuple_database.Database,
-  None,
-  "Database to write annotated graph tuples to.",
-)
 # TODO(github.com/ChrisCummins/ProGraML/issues/22): Port all graph annotators
 # to new graph tuple representation.
 # app.DEFINE_database(
@@ -363,8 +350,8 @@ class DatasetGenerator(progress.Progress):
 
 def main():
   """Main entry point."""
-  input_db = FLAGS.input_db()
-  output_db = FLAGS.output_db()
+  input_db = FLAGS.proto_db()
+  output_db = FLAGS.graph_db()
 
   progress.Run(DatasetGenerator(input_db, FLAGS.analysis, output_db))
 
