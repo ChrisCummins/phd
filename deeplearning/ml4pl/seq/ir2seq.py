@@ -22,7 +22,7 @@ FLAGS = app.FLAGS
 
 # The vocabulary to use for LLVM encoders. Use
 # //deeplearning/ml4pl/seq:derive_vocab to generate a vocabulary.
-LLVM_VOCAB = (bazelutil.DataPath("phd/deeplearning/ml4pl/seq/llvm_vocab.json"),)
+LLVM_VOCAB = bazelutil.DataPath("phd/deeplearning/ml4pl/seq/llvm_vocab.json")
 
 
 class EncoderBase(object):
