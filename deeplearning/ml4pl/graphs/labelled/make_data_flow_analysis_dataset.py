@@ -1,10 +1,8 @@
 """This module prepares datasets for data flow analyses."""
 import multiprocessing
-import os
 import pathlib
 import signal
 import sys
-import threading
 import time
 import traceback
 from typing import Iterable
@@ -13,7 +11,6 @@ from typing import Tuple
 
 import networkx as nx
 import sqlalchemy as sql
-import tqdm
 
 from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs.labelled import data_flow_graphs
@@ -74,7 +71,7 @@ app.DEFINE_integer(
   "chunk_size", 32, "Tuning parameter. The number of processes to spawn."
 )
 app.DEFINE_integer(
-  "instance_count", 0, "If set, limit the number of processed instances."
+  "max_instances", 0, "If set, limit the number of processed instances."
 )
 
 app.DEFINE_boolean("error", False, "If true, crash on export error.")
