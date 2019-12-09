@@ -45,6 +45,7 @@ class ClassifierBase(object):
     CreateModelData()  # initialize an untrained model.
     GetModelData()     # get model data to save.
     LoadModelData()    # load model data.
+    Summary()          # return a string model summary.
   """
 
   def __init__(
