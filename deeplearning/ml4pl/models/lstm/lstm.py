@@ -185,7 +185,7 @@ class LstmBase(classifier_base.ClassifierBase):
     print(
       "Using padded sequence length "
       f"{humanize.DecimalPrefix(self.padded_sequence_length, '')} from maximum "
-      f"humanize.DecimalPrefix(self.encoder.max_encoded_length, '') "
+      f"{humanize.DecimalPrefix(self.encoder.max_encoded_length, '')} "
       f"(max {(1 - (self.padded_sequence_length / self.encoder.max_encoded_length)):.3%} "
       "sequence truncation)",
       file=buf,
