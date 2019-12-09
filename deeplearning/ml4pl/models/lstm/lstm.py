@@ -320,15 +320,12 @@ class GraphLstm(LstmBase):
     ctx: progress.ProgressContext = progress.NullContext,
   ) -> batches.Data:
     """Create a mini-batch of LSTM data."""
-    # Set the logging context for the encoder.
-    self.encoder.ir2seq_encoder.ctx = ctx
-
     graphs = self.GetBatchOfGraphs(graph_iterator)
     if not graphs:
       return batches.Data(graph_ids=[], data=None)
 
     # Encode the graphs in the batch.
-    encoded_sequences: List[np.array] = self.encoder.Encode(graphs)
+    encoded_sequences: List[np.array] = self.encoder.Encode(graphs, ctx=ctx)
     graph_x: List[np.array] = []
     graph_y: List[np.array] = []
     for graph in graphs:
@@ -513,7 +510,7 @@ class NodeLstm(LstmBase):
     # A list of arrays of shape (node_mask_count, node_y_dimensionality)
     node_y: List[np.array] = []
 
-    for graph, encoded in zip(graphs, self.encoder.Encoder(graphs)):
+    for graph, encoded in zip(graphs, self.encoder.Encode(graphs, ctx=ctx)):
       encoded_sequences.append(encoded.encoded_sequence)
       segment_ids.append(encoded.segment_ids)
       # Use only the 'binary selector' feature and convert to an array of
