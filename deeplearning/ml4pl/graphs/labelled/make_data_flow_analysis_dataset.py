@@ -323,7 +323,7 @@ class DatasetGenerator(progress.Progress):
     # Sanity check.
     if not FLAGS.max_instances:
       if len(ids_and_sizes_to_do) + already_done_count != total_graph_count:
-        app.FatalWithoutStackTrace(
+        raise OSError(
           "ids_to_do(%s) + already_done(%s) != total_rows(%s)",
           len(ids_and_sizes_to_do),
           already_done_count,
@@ -357,12 +357,9 @@ class DatasetGenerator(progress.Progress):
       max_queue_size=FLAGS.max_reader_queue_size,
     )
 
-  def Run(self):
-    """Run the dataset generation."""
-    pool = multiprocessing.Pool(
-      processes=FLAGS.nproc, maxtasksperchild=FLAGS.max_tasks_per_worker
-    )
-
+  def RunWithPool(
+    self, pool: multiprocessing.Pool, writer: sqlutil.BufferedDatabaseWriter
+  ):
     def ProcessProgramGraphsArgsGenerator(graph_reader):
       """Generate packed arguments for a multiprocessing worker."""
       for i, graph_batch in enumerate(graph_reader):
@@ -370,33 +367,26 @@ class DatasetGenerator(progress.Progress):
 
     # Have a thread generating inputs, a multiprocessing pool processing them,
     # and another thread writing their results to the database.
-    with sqlutil.BufferedDatabaseWriter(
-      self.output_db,
-      max_buffer_size=FLAGS.write_buffer_mb * 1024 * 1024,
-      max_buffer_length=FLAGS.write_buffer_length,
-      log_level=1,
-      ctx=self.ctx.ToProgressContext(),
-    ) as writer:
-      worker_args = ProcessProgramGraphsArgsGenerator(self.graph_reader)
-      # Process the inputs using an iterator, and enforce that the results
-      # arrive *in order*, as we process the input database in-order.
-      workers = pool.imap(
-        ProcessProgramGraphs, worker_args, chunksize=FLAGS.chunk_size
-      )
+    worker_args = ProcessProgramGraphsArgsGenerator(self.graph_reader)
+    # Process the inputs using an iterator, and enforce that the results
+    # arrive *in order*, as we process the input database in-order.
+    workers = pool.imap(
+      ProcessProgramGraphs, worker_args, chunksize=FLAGS.chunk_size
+    )
 
-      for elapsed_time, proto_count, graph_tuples in workers:
-        self.ctx.i += proto_count
-        # Record the generated annotated graphs.
-        tuple_sizes = [t.pickled_graph_tuple_size for t in graph_tuples]
-        writer.AddMany(graph_tuples, sizes=tuple_sizes)
-      if writer.error_count:
-        app.FatalWithoutStackTrace("Database writer had errors")
+    for elapsed_time, proto_count, graph_tuples in workers:
+      self.ctx.i += proto_count
+      # Record the generated annotated graphs.
+      tuple_sizes = [t.pickled_graph_tuple_size for t in graph_tuples]
+      writer.AddMany(graph_tuples, sizes=tuple_sizes)
+    if writer.error_count:
+      raise OSError("Database writer had errors")
 
     # Sanity check the number of generated program graphs.
     # If --max_instances is set, this means the script will fail unless the
     # entire dataset has been processed.
     if self.ctx.i != self.ctx.n:
-      app.FatalWithoutStackTrace(
+      raise OSError(
         "unlabelled_graph_count(%s) != exported_count(%s)",
         self.ctx.n,
         self.ctx.i,
@@ -406,11 +396,30 @@ class DatasetGenerator(progress.Progress):
         sql.func.count(sql.func.distinct(graph_tuple_database.GraphTuple.ir_id))
       ).scalar()
     if annotated_graph_count != self.ctx.n:
-      app.FatalWithoutStackTrace(
+      raise OSError(
         "unlabelled_graph_count(%s) != annotated_graph_count(%s)",
         self.ctx.n,
         annotated_graph_count,
       )
+
+  def Run(self):
+    """Run the dataset generation."""
+    pool = ppar.UnsafeNonDaemonPool(
+      processes=FLAGS.nproc, maxtasksperchild=FLAGS.max_tasks_per_worker
+    )
+    try:
+      with sqlutil.BufferedDatabaseWriter(
+        self.output_db,
+        max_buffer_size=FLAGS.write_buffer_mb * 1024 * 1024,
+        max_buffer_length=FLAGS.write_buffer_length,
+        log_level=1,
+        ctx=self.ctx.ToProgressContext(),
+      ) as writer:
+        self.DoExport(pool, writer)
+    finally:
+      # Make sure to tidy up after ourselves.
+      pool.close()
+      pool.join()
 
 
 def main():
