@@ -226,6 +226,11 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The number of graphs in the batch.
   graph_count: int = sql.Column(sql.Integer, nullable=False)
 
+  # The number of prediction targets in the batch. For graph-level inference,
+  # this is equal to graph_count. For node-level inference, this is the sum
+  # node_count for all graphs in the batch.
+  target_count: int = sql.Column(sql.Integer, nullable=False)
+
   # Batch-level average performance metrics.
   iteration_count: int = sql.Column(sql.Integer, nullable=False)
   model_converged: bool = sql.Column(sql.Boolean, nullable=False)
@@ -287,6 +292,7 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
       epoch_num=epoch_num,
       batch_num=batch_num,
       elapsed_time_ms=timer.elapsed_ms,
+      target_count=results.targets.shape[0],
       graph_count=data.graph_count,
       iteration_count=results.iteration_count,
       model_converged=results.model_converged,
@@ -563,7 +569,7 @@ class Database(sqlutil.Database):
       of the epoch types.
     """
     with self.Session(session=session) as session:
-      # Check that the epoch exists:
+      # Check that the run exists:
       if not session.query(RunId).filter(RunId.run_id == str(run_id)).scalar():
         raise ValueError(f"Run not found: {run_id}")
 
@@ -598,6 +604,7 @@ class Database(sqlutil.Database):
     run_id: run_id_lib.RunId,
     epoch_num: int,
     epoch_type: epoch.Type,
+    weight: sql.Column = Batch.target_count,
     session: Optional[sqlutil.Database.SessionType] = None,
   ) -> epoch.Results:
     """Get the aggregate results for a single epoch.
@@ -606,6 +613,7 @@ class Database(sqlutil.Database):
       run_id: The run ID.
       epoch_num: The epoch num.
       epoch_type: The epoch type.
+      weight: The batch column to use for weighting batch metrics.
       session: A session instance.
 
     Returns:
@@ -615,38 +623,28 @@ class Database(sqlutil.Database):
       # Check that the epoch exists:
       if not session.query(RunId).filter(RunId.run_id == str(run_id)).scalar():
         raise ValueError(f"Run not found: {run_id}")
-      if (
-        not session.query(Batch.id)
-        .filter(
-          Batch.run_id == str(run_id),
-          Batch.epoch_num == epoch_num,
-          Batch.epoch_type_num == epoch_type.value,
-        )
-        .first()
-      ):
+
+      df = self.GetWeightedEpochStats(
+        batch_filters=[
+          lambda: Batch.run_id == str(run_id),
+          lambda: Batch.epoch_num == epoch_num,
+          lambda: Batch.epoch_type_num == epoch_type.value,
+        ],
+        weight=weight,
+        session=session,
+      )
+      # Check that a single match was made.
+      if not len(df):
         raise ValueError(
-          f"Epoch not found: {run_id}@{epoch_num} {epoch_type.name.lower()}"
+          f"Epoch not found: {epoch_type.name.lower()} {run_id}@{epoch_num}"
+        )
+      elif len(df) > 1:
+        raise ValueError(
+          "Multiple rows found for: "
+          f"{epoch_type.name.lower()} {run_id}@{epoch_num}"
         )
 
-      epoch_results = (
-        session.query(
-          sql.func.count(Batch.batch_num).label("batch_count"),
-          sql.func.avg(Batch.iteration_count).label("iteration_count"),
-          sql.func.avg(Batch.model_converged).label("model_converged"),
-          sql.func.avg(Batch.learning_rate).label("learning_rate"),
-          sql.func.avg(Batch.loss).label("loss"),
-          sql.func.avg(Batch.accuracy).label("accuracy"),
-          sql.func.avg(Batch.precision).label("precision"),
-          sql.func.avg(Batch.recall).label("recall"),
-          sql.func.avg(Batch.f1).label("f1"),
-        )
-        .filter(
-          Batch.run_id == str(run_id),
-          Batch.epoch_num == epoch_num,
-          Batch.epoch_type_num == epoch_type.value,
-        )
-        .one()
-      )
+    epoch_results = df.loc[0]
 
     return epoch.Results(
       batch_count=epoch_results.batch_count,
@@ -660,40 +658,119 @@ class Database(sqlutil.Database):
       f1=epoch_results.f1,
     )
 
-  def GetModelConstructorArgs(
+  def GetWeightedEpochStats(
     self,
-    run_id: run_id_lib.RunId,
+    batch_filters: List[Callable[[], bool]] = None,
+    weight: sql.Column = Batch.target_count,
     session: Optional[sqlutil.Database.SessionType] = None,
-  ):
-    """Get the keyword arguments used to construct the model.
+  ) -> pd.DataFrame:
+    """Compute a table of per-epoch results.
+
+    The weighting method used here is the same as used in
+    deeplearning.ml4pl.models.batch.RollingResults.
+
+    Use this method to aggregate over the batches table with a consistent
+    weighting strategy, don't roll your own implementation.
+
+    Args:
+      batch_filters: An optional list of callbacks which return filters on the
+        Batch table.
+      weight: The weighting strategy. By default, weight by target count.
+      session: An optional database session to re-use.
 
     Returns:
-      A <name, value> dictionary of model constructor arguments.
+      A data frame consisting of per-epoch metrics.
     """
-    arg_names = [
-      "node_x_dimensionality",
-      "node_y_dimensionality",
-      "graph_x_dimensionality",
-      "graph_y_dimensionality",
-      "edge_position_max",
-    ]
-
+    batch_filters = batch_filters or []
     with self.Session(session=session) as session:
-      args = {
-        name: pickle.loads(value)
-        for name, value in session.query(
-          Parameter.name, Parameter.binary_value
-        ).filter(
-          Parameter.run_id == str(run_id),
-          Parameter.type_num == ParameterType.INPUT_GRAPHS_INFO.value,
-          Parameter.name.in_(arg_names),
-        )
-      }
-      if len(args) != len(arg_names):
-        raise ValueError(
-          f"Incomplete model constructor args for {run_id}: {args}"
-        )
-    return args
+      # Compute per-epoch weighted metrics.
+      left = session.query(
+        Batch.run_id,
+        Batch.epoch_num,
+        Batch.epoch_type_num.label("epoch_type"),
+        sql.func.min(Batch.timestamp).label("timestamp"),
+        sql.func.count(Batch.run_id).label("batch_count"),
+        sql.func.sum(Batch.graph_count).label("graph_count"),
+        sql.func.sum(Batch.target_count).label("target_count"),
+        sql.func.avg(Batch.iteration_count * weight).label(
+          "weighted_iteration_count"
+        ),
+        sql.func.avg(Batch.model_converged * weight).label(
+          "weighted_model_converged"
+        ),
+        sql.func.avg(Batch.learning_rate * weight).label(
+          "weighted_learning_rate"
+        ),
+        sql.func.avg(Batch.loss * weight).label("weighted_loss"),
+        sql.func.sum(Batch.accuracy * weight).label("weighted_accuracy"),
+        sql.func.sum(Batch.precision * weight).label("weighted_precision"),
+        sql.func.sum(Batch.recall * weight).label("weighted_recall"),
+        sql.func.sum(Batch.f1 * weight).label("weighted_f1"),
+        sql.func.sum(Batch.elapsed_time_ms).label("runtime"),
+        sql.func.sum(Batch.elapsed_time_ms * weight).label("weighted_runtime"),
+      ).group_by(Batch.run_id, Batch.epoch_num, Batch.epoch_type_num)
+      for filter in batch_filters:
+        left = left.filter(filter())
+      left = left.subquery()
+
+      # Compute per-epoch weight sums.
+      right = session.query(
+        Batch.run_id,
+        Batch.epoch_num,
+        Batch.epoch_type_num.label("epoch_type"),
+        sql.func.sum(weight).label("weight"),
+      ).group_by(Batch.run_id, Batch.epoch_num, Batch.epoch_type_num)
+      for filter in batch_filters:
+        right = right.filter(filter())
+      right = right.subquery()
+
+      # Normalize the metrics by their weight.
+      query = session.query(
+        left.c.run_id,
+        left.c.epoch_num,
+        left.c.epoch_type,
+        left.c.timestamp,
+        left.c.batch_count,
+        left.c.graph_count,
+        left.c.target_count,
+        (left.c.weighted_iteration_count / right.c.weight).label(
+          "iteration_count"
+        ),
+        (left.c.weighted_model_converged / right.c.weight).label(
+          "model_converged"
+        ),
+        (left.c.weighted_learning_rate / right.c.weight).label("learning_rate"),
+        (left.c.weighted_loss / right.c.weight).label("loss"),
+        (left.c.weighted_accuracy / right.c.weight).label("accuracy"),
+        (left.c.weighted_precision / right.c.weight).label("precision"),
+        (left.c.weighted_recall / right.c.weight).label("recall"),
+        (left.c.weighted_f1 / right.c.weight).label("f1"),
+        left.c.runtime,
+        left.c.weighted_runtime,
+      ).join(
+        right,
+        sql.and_(
+          left.c.run_id == right.c.run_id,
+          left.c.epoch_num == right.c.epoch_num,
+          left.c.epoch_type == right.c.epoch_type,
+        ),
+      )
+
+      df = pdutil.QueryToDataFrame(session, query)
+
+    # Rewrite the epoch_type column to use the native enum type.
+    pdutil.RewriteColumn(df, "epoch_type", lambda x: epoch.Type(x))
+
+    # Convert ints to floats. We can't do this in the query because MySQL
+    # does not support casting to FLOAT.
+    df["runtime"] = df["runtime"].values.astype(np.float32) / 1000
+    df["weighted_runtime"] = (
+      df["weighted_runtime"].values.astype(np.float32) / 1000
+    )
+    # Compute a per-graph throughput column.
+    df["throughput"] = df["graph_count"] / df["runtime"]
+
+    return df
 
   ############################################################################
   # Properties.
@@ -915,40 +992,13 @@ class Database(sqlutil.Database):
       # Per-epoch stats.
       #########################################################################
 
-      per_epoch_stats = session.query(
-        Batch.run_id,
-        sql.func.min(Batch.timestamp).label("timestamp"),
-        Batch.epoch_num,
-        Batch.epoch_type_num.label("epoch_type"),
-        sql.func.count(Batch.run_id).label("batch_count"),
-        sql.func.sum(Batch.graph_count).label("graph_count"),
-        sql.func.avg(Batch.iteration_count).label("iteration_count"),
-        sql.func.avg(Batch.model_converged).label("model_converged"),
-        sql.func.avg(Batch.learning_rate).label("learning_rate"),
-        sql.func.avg(Batch.loss).label("loss"),
-        sql.func.avg(Batch.accuracy).label("accuracy"),
-        sql.func.avg(Batch.precision).label("precision"),
-        sql.func.avg(Batch.recall).label("recall"),
-        sql.func.avg(Batch.f1).label("f1"),
-        sql.func.sum(Batch.elapsed_time_ms).label("runtime"),
-      ).group_by(Batch.run_id, Batch.epoch_num, Batch.epoch_type_num)
       if run_ids:
-        per_epoch_stats = per_epoch_stats.filter(
-          Batch.run_id.in_([str(run_id) for run_id in run_ids])
-        )
-      per_epoch_df = pdutil.QueryToDataFrame(session, per_epoch_stats)
-      pdutil.RewriteColumn(
-        per_epoch_df, "epoch_type", lambda x: epoch.Type(x).name.lower()
-      )
-      # Convert ints to floats. We can't do this in the query because MySQL
-      # does not support casting to FLOAT.
-      per_epoch_df["runtime"] = (
-        per_epoch_df["runtime"].values.astype(np.float32) / 1000
-      )
-      # Add the computed throughput column.
-      per_epoch_df["throughput"] = (
-        per_epoch_df["graph_count"] / per_epoch_df["runtime"]
-      )
+        batch_filters = [
+          lambda: Batch.run_id.in_([str(run_id) for run_id in run_ids])
+        ]
+      else:
+        batch_filters = None
+      per_epoch_df = self.GetWeightedEpochStats(batch_filters=batch_filters)
 
       # Flatten the {train,val,test} rows into an array of columns.
       rows = []
@@ -974,14 +1024,14 @@ class Database(sqlutil.Database):
           for flag in extra_flag_names:
             row[flag] = extra_flags[flag].get(run_id)
 
-          for i, epoch_type in enumerate(["train", "val", "test"]):
+          for i, epoch_type in enumerate(list(epoch.Type)):
             epoch_df = run_df[
               (run_df["epoch_num"] == epoch_num)
               & (run_df["epoch_type"] == epoch_type)
             ]
 
             if not i:
-              row["timestamp"] = epoch_df["timestamp"].values[0]
+              row["timestamp"] = min(epoch_df["timestamp"].values)
 
             if len(epoch_df) == 1:
               for column in epoch_type_columns:
@@ -1009,14 +1059,17 @@ class Database(sqlutil.Database):
 
       #########################################################################
       # Per-run stats.
+      # This table contains a single row for each run where there is a best
+      # validation accuracy.
       #########################################################################
 
       rows = []
-      epoch_counts = []
+      epoch_counts: List[int] = []
       for run_id in set(per_epoch_df.run_id.values):
         run_df = per_epoch_df[per_epoch_df["run_id"] == run_id]
-        epoch_counts.append(len(run_df))
-        rows.append(run_df.loc[run_df["val_accuracy"].idxmax()])
+        if len(run_df):
+          epoch_counts.append(len(run_df))
+          rows.append(run_df.loc[run_df["val_accuracy"].idxmax()])
 
       per_run_df = pd.DataFrame(rows)
       per_run_df["epoch_count"] = epoch_counts

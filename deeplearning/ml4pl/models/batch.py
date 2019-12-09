@@ -185,7 +185,9 @@ class RollingResults:
   def __init__(self):
     self.weight_sum = 0
     self.batch_count = 0
-    self.iteration_count_sum = 0
+    self.graph_count = 0
+    self.target_count = 0
+    self.weighted_iteration_count_sum = 0
     self.model_converged_sum = 0
     self.has_learning_rate = False
     self.weighted_learning_rate_sum = 0
@@ -196,19 +198,28 @@ class RollingResults:
     self.weighted_recall_sum = 0
     self.weighted_f1_sum = 0
 
-  def Update(self, results: Results, weight: float = 1) -> None:
+  def Update(self, results: Results, weight: Optional[float] = None) -> None:
     """Update the rolling results with a new batch.
 
     Args:
       results: The batch results to update the current state with.
       weight: A weight to assign to weighted sums. E.g. to weight results
         across all targets, use weight=results.target_count. To weight across
-        graphs, use weight=batch.graph_count.
+        targets, use weight=batch.target_count. To weight across
+        graphs, use weight=batch.graph_count. By default, weight by target
+        count.
     """
+    if weight is None:
+      weight = results.target_count
+
     self.weight_sum += weight
     self.batch_count += 1
-    self.iteration_count_sum += results.iteration_count
-    self.model_converged_sum += 1 if results.model_converged else 0
+    self.graph_count += results.graph_count
+    self.target_count += results.target_count
+    self.weighted_iteration_count_sum += results.iteration_count
+    self.weighted_model_converged_sum += (
+      weight if results.model_converged else 0
+    )
     if results.has_learning_rate:
       self.has_learning_rate = True
       self.weighted_learning_rate_sum += results.learning_rate * weight
@@ -222,16 +233,16 @@ class RollingResults:
 
   @property
   def iteration_count(self) -> float:
-    return self.iteration_count_sum / max(self.batch_count, 1)
+    return self.weighted_iteration_count_sum / max(self.weight_sum, 1)
 
   @property
   def model_converged(self) -> float:
-    return self.model_converged_sum / max(self.batch_count, 1)
+    return self.weighted_model_converged_sum / max(self.weight_sum, 1)
 
   @property
   def learning_rate(self) -> Optional[float]:
     if self.has_learning_rate:
-      return self.weighted_learning_rate_sum / max(self.batch_count, 1)
+      return self.weighted_learning_rate_sum / max(self.weight_sum, 1)
 
   @property
   def loss(self) -> Optional[float]:

@@ -25,6 +25,10 @@ class Results(NamedTuple):
 
   # The number of batches in the epoch.
   batch_count: int = 0
+  # The number of graphs in the epoch.
+  graph_count: int = 0
+  # The number of targets in the epoch.
+  target_count: int = 0
   # The average iteration count of the model.
   iteration_count: float = 0
   # The ratio of batches that resulted in the model converging.
@@ -88,6 +92,8 @@ class Results(NamedTuple):
   ) -> "Results":
     return cls(
       batch_count=rolling_results.batch_count,
+      graph_count=rolling_results.graph_count,
+      target_count=rolling_results.target_count,
       iteration_count=rolling_results.iteration_count,
       model_converged=rolling_results.model_converged,
       learning_rate=rolling_results.learning_rate,

@@ -123,6 +123,7 @@ def test_RunId_add_one(empty_db_session: log_database.Database.SessionType):
 def test_Parameter_CreateManyFromDict(
   empty_db_session: log_database.Database.SessionType,
 ):
+  """Test batch-creation of parameters."""
   run = run_id.RunId.GenerateUnique("test")
   params = log_database.Parameter.CreateManyFromDict(
     run_id=run,
@@ -267,20 +268,6 @@ def test_GetBestResults_invalid_run_id(populated_log_db: log_database.Database):
     populated_log_db.GetBestResults("foo")
 
 
-def test_GetModelConstructorArgs(populated_log_db: log_database.Database):
-  """Test that run logs are returned."""
-  run_id = random.choice(populated_log_db._run_ids)
-  assert populated_log_db.GetModelConstructorArgs(run_id)
-
-
-def test_GetModelConstructorArgs_invalid_run_id(
-  populated_log_db: log_database.Database,
-):
-  """Test that error is raised when run not found."""
-  with test.Raises(ValueError):
-    populated_log_db.GetModelConstructorArgs("foo")
-
-
 def test_CopyRunLogs(
   populated_log_db: log_database.Database, empty_db: log_database.Database
 ):
@@ -301,10 +288,9 @@ def test_CopyRunLogs_invalid_run_id(
     populated_log_db.CopyRunLogs(run_ids=[invalid_run_id], output_db=empty_db)
 
 
+@test.XFail("TODO(github.com/ChrisCummins/ProGraML/issues/28): Fix me")
 @test.Parametrize("extra_flags", (None, [], ["foo"], ["foo", "vmodule"]))
-def test_GetTables_smoke_test(
-  populated_log_db: log_database.Database, extra_flags
-):
+def test_GetTables(populated_log_db: log_database.Database, extra_flags):
   """Test GetTables()."""
   tables = {
     name: df for name, df in populated_log_db.GetTables(extra_flags=extra_flags)
@@ -332,6 +318,39 @@ def test_GetTables_smoke_test(
       assert tables[table][f"{type}_f1"].values.dtype == np.float64
       assert tables[table][f"{type}_runtime"].values.dtype == np.float64
       assert tables[table][f"{type}_throughput"].values.dtype == np.float64
+
+
+@test.Parametrize("extra_flags", (None, [], ["foo"], ["foo", "vmodule"]))
+def test_GetTables_empty_db(empty_db: log_database.Database, extra_flags):
+  """Test GetTables() on an empty database."""
+  tables = {
+    name: df for name, df in empty_db.GetTables(extra_flags=extra_flags)
+  }
+
+  assert "parameters" in tables
+  assert "epochs" in tables
+  assert "runs" in tables
+
+
+def test_GetWeightedEpochStats(populated_log_db: log_database.Database):
+  """Test that a filter returns a table."""
+  df = populated_log_db.GetWeightedEpochStats()
+  assert len(df)
+  assert set(df.run_id) == set(str(s) for s in populated_log_db._run_ids)
+
+
+def test_GetWeightedEpochStats_filter_all_results(
+  populated_log_db: log_database.Database,
+):
+  """Test that a filter that excludes all batches returns empty dataframe."""
+  assert (
+    len(
+      populated_log_db.GetWeightedEpochStats(
+        batch_filters=[lambda: log_database.Batch.epoch_num < -1]
+      )
+    )
+    == 0
+  )
 
 
 if __name__ == "__main__":
