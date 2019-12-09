@@ -133,7 +133,7 @@ class LstmBase(classifier_base.ClassifierBase):
 
     # The Tensorflow session and graph for the model.
     self.session = utils.SetAllowedGrowthOnKerasSession()
-    self.graph = tf.Graph()
+    self.graph = tf.compat.v1.get_default_graph()
 
     self.batch_size = batch_size or FLAGS.batch_size
 
