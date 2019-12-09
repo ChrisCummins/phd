@@ -774,19 +774,12 @@ class Database(sqlutil.Database):
       A <run_id, value> dictionary of all values for this parameter.
     """
     with self.Session(session=session):
-      count = (
-        session.query(sql.func.count(Parameter.run_id))
-        .filter(
-          Parameter.type_num == ParameterType.FLAG.value, Parameter.name == name
-        )
-        .scalar()
-      )
       return {
         row.run_id: pickle.loads(row.binary_value)
         for row in session.query(
           Parameter.run_id, Parameter.binary_value
         ).filter(
-          Parameter.type_num == ParameterType.FLAG.value, Parameter.name == name
+          Parameter.type_num == type.value, Parameter.name == name
         )
       }
 
