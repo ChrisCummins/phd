@@ -377,10 +377,14 @@ def RunOne(
     return PrintExperimentFooter(model, logger)
 
 
-def RunKFold(model_class):
+def RunKFold(model_class) -> Optional[pd.DataFrame]:
+  """Run k-fold cross-validation of the given model."""
   graph_db: graph_tuple_database.Database = FLAGS.graph_db()
 
   splits: List[int] = graph_db.splits
+  if not splits:
+    raise ValueError("Database contains no splits")
+
   results: List[pd.Series] = []
   for i in range(len(splits)):
     test_split = splits[i]
@@ -388,6 +392,10 @@ def RunKFold(model_class):
     results.append(
       RunOne(model_class, val_splits=[val_split], test_splits=[test_split])
     )
+
+  # If we got no results then there was an error during model runs.
+  if not results:
+    return None
 
   # Concatenate each of the run results into a dataframe.
   df = pd.concat(results, axis=1).transpose()
@@ -415,7 +423,7 @@ def RunKFold(model_class):
   return df
 
 
-def Run(model_class) -> Union[pd.Series, pd.DataFrame]:
+def Run(model_class) -> Optional[Union[pd.Series, pd.DataFrame]]:
   """Run the model."""
   if FLAGS.k_fold:
     return RunKFold(model_class)
