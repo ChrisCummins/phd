@@ -74,7 +74,9 @@ app.DEFINE_enum(
 app.DEFINE_enum(
   "nodes",
   NodeEncoder,
-  NodeEncoder.STATEMENT,
+  # No default value because the presence of this flag is used to select
+  # between graph or node-level models.
+  None,
   "The types of nodes segmentation to perform.",
 )
 app.DEFINE_integer(
