@@ -17,14 +17,12 @@ from labm8.py import bazelutil
 from labm8.py import humanize
 from labm8.py import progress
 
-app.DEFINE_input_path(
-  "llvm_vocab",
-  bazelutil.DataPath("phd/deeplearning/ml4pl/seq/llvm_vocab.json"),
-  "The vocabulary to use for LLVM encoders. Use "
-  "//deeplearning/ml4pl/seq:derive_vocab to generate a vocabulary.",
-)
 
 FLAGS = app.FLAGS
+
+# The vocabulary to use for LLVM encoders. Use
+# //deeplearning/ml4pl/seq:derive_vocab to generate a vocabulary.
+LLVM_VOCAB = (bazelutil.DataPath("phd/deeplearning/ml4pl/seq/llvm_vocab.json"),)
 
 
 class EncoderBase(object):
@@ -59,7 +57,7 @@ class LlvmEncoder(EncoderBase):
     super(LlvmEncoder, self).__init__(*args, **kwargs)
 
     # Load the vocabulary used for encoding LLVM bytecode.
-    with open(FLAGS.llvm_vocab) as f:
+    with open(LLVM_VOCAB) as f:
       data_to_load = json.load(f)
     vocab = data_to_load["vocab"]
     self._max_encoded_length = data_to_load["max_encoded_length"]
