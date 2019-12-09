@@ -3,6 +3,7 @@ from typing import Any
 from typing import Dict
 from typing import Iterable
 from typing import Optional
+from typing import Set
 
 import pandas as pd
 
@@ -19,6 +20,15 @@ from labm8.py import progress
 
 
 FLAGS = app.FLAGS
+
+
+app.DEFINE_boolean(
+  "strict_graph_segmentation",
+  False,
+  "If set, strictly enforce that graphs do not cross the "
+  "{train,val,test} epoch boundaries. This is disabled by default as the "
+  "performance and memory overhead may be large for big datasets.",
+)
 
 
 class ClassifierBase(object):
@@ -91,6 +101,14 @@ class ClassifierBase(object):
       epoch.Type.TRAIN: epoch.BestResults(),
       epoch.Type.VAL: epoch.BestResults(),
       epoch.Type.TEST: epoch.BestResults(),
+    }
+
+    # If --strict_graph_segmentation is set, check for graphs that we have
+    # already seen before by keep a log of all unique graph IDs of each type.
+    self.graph_ids: Dict[epoch.Type, Set[int]] = {
+      epoch.Type.TRAIN: set(),
+      epoch.Type.VAL: set(),
+      epoch.Type.TEST: set(),
     }
 
     # Register this model with the logger.
@@ -211,6 +229,23 @@ class ClassifierBase(object):
     if not thread.batch_count:
       raise ValueError("No batches")
 
+    # If --strict_graph_segmentation is set, check for graphs that we have
+    # already seen before.
+    if FLAGS.strict_graph_segmentation:
+      with logger.ctx.Profile(4, "Checked strict graph segmentation"):
+        for other_epoch_type in set(list(epoch.Type)) - {epoch_type}:
+          duplicate_graph_ids = self.graph_ids[other_epoch_type].intersection(
+            thread.graph_ids
+          )
+          if duplicate_graph_ids:
+            raise ValueError(
+              f"{epoch_type} batch contains {len(duplicate_graph_ids)} graphs "
+              f"from {other_epoch_type}: {list(duplicate_graph_ids)[:100]}"
+            )
+        self.graph_ids[epoch_type] = self.graph_ids[epoch_type].union(
+          thread.graph_ids
+        )
+
     results = thread.results
     if not results:
       raise OSError("Epoch produced no results. Did the model crash?")
@@ -328,6 +363,7 @@ class EpochThread(progress.Progress):
 
     # Set at the end of Run().
     self.results: epoch.Results = None
+    self.graph_ids = set()
 
     super(EpochThread, self).__init__(
       f"{epoch_type.name.capitalize()} epoch {model.epoch_num}",
@@ -345,6 +381,10 @@ class EpochThread(progress.Progress):
     for i, batch in enumerate(self.batch_iterator.batches):
       self.batch_count += 1
       self.ctx.i += batch.graph_count
+
+      # Record the graph IDs.
+      for graph_id in batch.graph_ids:
+        self.graph_ids.add(graph_id)
 
       # Check that at least one batch is produced.
       if not i and not batch.graph_count:
@@ -382,6 +422,9 @@ class EpochThread(progress.Progress):
         prec=rolling_results.precision,
         rec=rolling_results.recall,
       )
+
+    if self.epoch_type == epoch.Type.VAL:
+      rolling_results.weighted_accuracy_sum = 0
 
     self.results = epoch.Results.FromRollingResults(rolling_results)
     self.logger.OnEpochEnd(
