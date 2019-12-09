@@ -1,30 +1,6 @@
 # Scripts for migrating log databases.
 
 py_binary(
-    name = "copy_logs",
-    srcs = ["copy_logs.py"],
-    deps = [
-        "//deeplearning/ml4pl/models:log_database",
-        "//labm8/py:app",
-        "//labm8/py:humanize",
-        "//labm8/py:sqlutil",
-        "//third_party/py/sqlalchemy",
-    ],
-)
-
-py_test(
-    name = "copy_logs_test",
-    srcs = ["copy_logs_test.py"],
-    deps = [
-        ":copy_logs",
-        "//deeplearning/ml4pl/models:log_database",
-        "//labm8/py:app",
-        "//labm8/py:test",
-        "//third_party/py/pytest",
-    ],
-)
-
-py_binary(
     name = "prune_logs",
     srcs = ["prune_logs.py"],
     deps = [

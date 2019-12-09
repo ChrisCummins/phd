@@ -24,7 +24,7 @@ FLAGS = app.FLAGS
 
 
 @test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
-def db(request) -> log_database.Database:
+def empty_db(request) -> log_database.Database:
   """A test fixture which yields an empty log database."""
   yield from testing_databases.YieldDatabase(
     log_database.Database, request.param
@@ -32,8 +32,11 @@ def db(request) -> log_database.Database:
 
 
 @test.Fixture(scope="function")
-def db_session(db: log_database.Database) -> log_database.Database.SessionType:
-  with db.Session() as session:
+def empty_db_session(
+  empty_db: log_database.Database,
+) -> log_database.Database.SessionType:
+  """A test fixture which yields a session on an empty database."""
+  with empty_db.Session() as session:
     yield session
 
 
@@ -93,14 +96,14 @@ class DatabaseSessionWithRunLogs(NamedTuple):
 
 @test.Fixture(scope="function")
 def two_run_id_session(
-  db: log_database.Database,
+  empty_db: log_database.Database,
   generator: random_log_database_generator.RandomLogDatabaseGenerator,
 ) -> log_database.Database.SessionType:
   """A test fixture which yields a database with two runs."""
   a = generator.CreateRandomRunLogs(run_id=run_id.RunId.GenerateUnique("a"))
   b = generator.CreateRandomRunLogs(run_id=run_id.RunId.GenerateUnique("b"))
 
-  with db.Session() as session:
+  with empty_db.Session() as session:
     session.add_all(a.all + b.all)
     yield DatabaseSessionWithRunLogs(session=session, a=a, b=b)
 
@@ -110,15 +113,15 @@ def two_run_id_session(
 ###############################################################################
 
 
-def test_RunId_add_one(db_session: log_database.Database.SessionType):
+def test_RunId_add_one(empty_db_session: log_database.Database.SessionType):
   """Test adding a run ID to the database."""
   run = run_id.RunId.GenerateUnique("test")
-  db_session.add(log_database.RunId(run_id=str(run)))
-  db_session.commit()
+  empty_db_session.add(log_database.RunId(run_id=str(run)))
+  empty_db_session.commit()
 
 
 def test_Parameter_CreateManyFromDict(
-  db_session: log_database.Database.SessionType,
+  empty_db_session: log_database.Database.SessionType,
 ):
   run = run_id.RunId.GenerateUnique("test")
   params = log_database.Parameter.CreateManyFromDict(
@@ -133,8 +136,8 @@ def test_Parameter_CreateManyFromDict(
     assert param.type == log_database.ParameterType.BUILD_INFO
     assert param.name in {"a", "b"}
     assert param.value in {1, "foo"}
-  db_session.add_all([log_database.RunId(run_id=str(run))] + params)
-  db_session.commit()
+  empty_db_session.add_all([log_database.RunId(run_id=str(run))] + params)
+  empty_db_session.commit()
 
 
 def test_Batch_cascaded_delete(two_run_id_session: DatabaseSessionWithRunLogs):
@@ -276,6 +279,26 @@ def test_GetModelConstructorArgs_invalid_run_id(
   """Test that error is raised when run not found."""
   with test.Raises(ValueError):
     populated_log_db.GetModelConstructorArgs("foo")
+
+
+def test_CopyRunLogs(
+  populated_log_db: log_database.Database, empty_db: log_database.Database
+):
+  """That copying logs."""
+  run_id = random.choice(populated_log_db._run_ids)
+  assert populated_log_db.CopyRunLogs(run_ids=[run_id], output_db=empty_db)
+  # Copying again will raise an error because the run already exists.
+  with test.Raises(ValueError):
+    populated_log_db.CopyRunLogs(run_ids=[run_id], output_db=empty_db)
+
+
+def test_CopyRunLogs_invalid_run_id(
+  populated_log_db: log_database.Database, empty_db: log_database.Database
+):
+  """Test that an error is raised if the run is not found."""
+  invalid_run_id = run_id.RunId.GenerateUnique("foo")
+  with test.Raises(ValueError):
+    populated_log_db.CopyRunLogs(run_ids=[invalid_run_id], output_db=empty_db)
 
 
 @test.Parametrize("extra_flags", (None, [], ["foo"], ["foo", "vmodule"]))

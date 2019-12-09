@@ -757,6 +757,85 @@ class Database(sqlutil.Database):
   # Export.
   ############################################################################
 
+  def CopyRunLogs(
+    self,
+    output_db: "Database",
+    run_ids: List[run_id_lib.RunId],
+    session: Optional[sqlutil.Database.SessionType] = None,
+  ) -> int:
+    """Copy the logs for a given runs. This handles copying all of the tables.
+
+    Args:
+      output_db: The destination database to copy to.
+      run_ids: A list of run IDs to copy.
+
+    Returns:
+      The total number of rows that were copied.
+
+    Raises:
+      ValueError: If any of the runs are not found, or if they already exists
+        in the destination database.
+    """
+
+    def Copy(
+      query, session: sqlutil.Database.SessionType, batch_size: int = 512
+    ):
+      """Copy the results of the query to the destination session."""
+      row_count = 0
+      for chunk in sqlutil.OffsetLimitBatchedQuery(
+        query, batch_size=batch_size
+      ):
+        for row in chunk.rows:
+          row_count += 1
+          session.merge(row)
+      return row_count
+
+    run_id_strings = set(str(run_id) for run_id in run_ids)
+
+    with self.Session(session=session) as src, output_db.Session(
+      commit=True
+    ) as dst:
+      # The queries of rows to copy.
+      src_run_ids = src.query(RunId).filter(RunId.run_id.in_(run_id_strings))
+      src_params = src.query(Parameter).filter(
+        Parameter.run_id.in_(run_id_strings)
+      )
+      src_batches = (
+        src.query(Batch)
+        .filter(Batch.run_id.in_(run_id_strings))
+        .options(sql.orm.joinedload(Batch.details))
+      )
+      src_checkpoints = (
+        src.query(Checkpoint)
+        .filter(Checkpoint.run_id.in_(run_id_strings))
+        .options(sql.orm.joinedload(Checkpoint.data))
+      )
+
+      # Check for any runs that do not exist.
+      missing_runs = run_id_strings - set(row.run_id for row in src_run_ids)
+      if missing_runs:
+        raise ValueError(f"Runs not found: {missing_runs}")
+
+      # Check that the runs don't exist in the destination.
+      already_exists = [
+        row.run_id
+        for row in dst.query(RunId).filter(RunId.run_id.in_(run_id_strings))
+      ]
+      if already_exists:
+        raise ValueError(
+          f"Destination database {output_db.url} already has "
+          f"runs: {already_exists}"
+        )
+
+      # Copy the tables.
+      row_count = 0
+      row_count += Copy(src_run_ids, dst)
+      row_count += Copy(src_params, dst)
+      row_count += Copy(src_batches, dst)
+      row_count += Copy(src_checkpoints, dst)
+
+    return row_count
+
   def GetParametersJson(
     self,
     type: ParameterType,
