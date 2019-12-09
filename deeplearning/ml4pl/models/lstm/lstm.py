@@ -292,9 +292,7 @@ class GraphLstm(LstmBase):
     # Construct the "heuristic model". Takes as inputs a concatenation of the
     # language model and auxiliary inputs, and outputs
     # a vector shape (y_dimensinoality).
-    heuristic_model = keras.layers.Concatenate()(
-      [lang_model_out, graph_x_input]
-    )
+    heuristic_model = keras.layers.Concatenate()([lang_model, graph_x_input])
     heuristic_model = keras.layers.BatchNormalization()(heuristic_model)
     heuristic_model = keras.layers.Dense(
       FLAGS.heuristic_model_hidden_size, activation="relu", name="dense_1"
