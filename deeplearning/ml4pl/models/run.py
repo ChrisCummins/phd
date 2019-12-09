@@ -300,9 +300,6 @@ def Run(model_class):
     params = model.parameters[["type", "name", "value"]]
     params.rename(columns=({"type": "parameter"}), inplace=True)
     print(pdutil.FormatDataFrameAsAsciiTable(params))
-    print(
-      pdutil.FormatDataFrameAsAsciiTable(pd.DataFrame([1, 2], columns=["foo"]))
-    )
     print()
     print(model.Summary())
     print("==================================================================")
