@@ -350,6 +350,11 @@ class DatasetGenerator(progress.Progress):
 
 def main():
   """Main entry point."""
+  if not FLAGS.proto_db:
+    raise app.UsageError("--proto_db required")
+  if not FLAGS.graph_db:
+    raise app.UsageError("--graph_db required")
+
   input_db = FLAGS.proto_db()
   output_db = FLAGS.graph_db()
 
