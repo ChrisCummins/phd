@@ -86,6 +86,9 @@ app.DEFINE_integer(
 app.DEFINE_integer(
   "chunk_size", 32, "Tuning parameter. The number of processes to spawn."
 )
+app.DEFINE_integer(
+  "instance_count", 0, "If set, limit the number of processed instances."
+)
 
 app.DEFINE_boolean("error", False, "If true, crash on export error.")
 
@@ -261,14 +264,19 @@ class DatasetGenerator(progress.Progress):
       total_graph_count = in_session.query(
         sql.func.count(unlabelled_graph_database.ProgramGraph.ir_id)
       ).scalar()
-      ids_and_sizes_to_do = [
-        (row.ir_id, row.serialized_proto_size)
-        for row in in_session.query(
+      ids_and_sizes_to_do = (
+        in_session.query(
           unlabelled_graph_database.ProgramGraph.ir_id,
           unlabelled_graph_database.ProgramGraph.serialized_proto_size,
         )
         .filter(unlabelled_graph_database.ProgramGraph.ir_id > already_done_max)
         .order_by(unlabelled_graph_database.ProgramGraph.ir_id)
+      )
+      # Optionally limit the number of IDs to process.
+      if FLAGS.max_instances:
+        ids_and_sizes_to_do = ids_and_sizes_to_do.limit(FLAGS.max_instances)
+      ids_and_sizes_to_do = [
+        (row.ir_id, row.serialized_proto_size) for row in ids_and_sizes_to_do
       ]
 
     # Sanity check.
