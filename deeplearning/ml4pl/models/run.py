@@ -4,8 +4,11 @@ TODO: Detailed explanation of the file.
 """
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Tuple
+from typing import Union
 
+import pandas as pd
 import pyfiglet
 
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
@@ -90,6 +93,12 @@ app.DEFINE_integer(
   "Tuning parameter. The maximum number of batches to generate before "
   "waiting for the model to complete. Must be >= 1.",
 )
+app.DEFINE_boolean(
+  "k_fold",
+  False,
+  "If set, iterate over all K splits in the database, training and evaluating "
+  "a model for each.",
+)
 
 
 def SplitStringsToInts(split_strings: List[str]):
@@ -110,12 +119,14 @@ def MakeBatchIterator(
   epoch_type: epoch.Type,
   model: classifier_base.ClassifierBase,
   graph_db: graph_tuple_database.Database,
+  val_splits: Optional[List[int]] = None,
+  test_splits: Optional[List[int]] = None,
   ctx: progress.ProgressContext = progress.NullContext,
 ) -> batchs.BatchIterator:
   """Create an iterator over batches."""
   # Filter the graph database to load graphs from the requested splits.
-  val_splits = SplitStringsToInts(FLAGS.val_split)
-  test_splits = SplitStringsToInts(FLAGS.test_split)
+  val_splits = val_splits or SplitStringsToInts(FLAGS.val_split)
+  test_splits = test_splits or SplitStringsToInts(FLAGS.test_split)
 
   if epoch_type == epoch.Type.TRAIN:
     splits = list(set(graph_db.splits) - set(val_splits) - set(test_splits))
@@ -224,7 +235,7 @@ class Train(progress.Progress):
       # start reading from the graph database.
       batch_iterators = {
         epoch_type: MakeBatchIterator(
-          epoch_type, self.model, self.graph_db, self.ctx
+          epoch_type, self.model, self.graph_db, ctx=self.ctx
         )
         for epoch_type in [epoch.Type.TRAIN, epoch.Type.VAL, epoch.Type.TEST]
       }
@@ -267,44 +278,88 @@ class Train(progress.Progress):
     )
 
 
-def Run(model_class):
+def PrintExperimentHeader(model: classifier_base.ClassifierBase) -> None:
+  print("==================================================================")
+  print(pyfiglet.figlet_format(model.run_id.script_name))
+  print("Run ID:", model.run_id)
+  params = model.parameters[["type", "name", "value"]]
+  params = params.rename(columns=({"type": "parameter"}))
+  print(pdutil.FormatDataFrameAsAsciiTable(params))
+  print()
+  print(model.Summary())
+  print("==================================================================")
+
+
+def GetModelEpochsTable(
+  model: classifier_base.ClassifierBase, logger: logger_lib.Logger
+) -> pd.DataFrame:
+  """Compute a table of per-epoch stats for the model."""
+  with logger.Session() as session:
+    for name, df in logger.db.GetTables(
+      run_ids=[model.run_id], session=session
+    ):
+      if name == "epochs":
+        return df.set_index("epoch_num")
+
+
+def PrintExperimentFooter(
+  model: classifier_base.ClassifierBase, logger: logger_lib.Logger
+) -> pd.Series:
+  epochs = GetModelEpochsTable(model, logger)
+  best_epoch_num = epochs["val_accuracy"].idxmax()
+  best_epoch = epochs.loc[best_epoch_num]
+
+  print(f"\rResults at best val epoch {best_epoch_num} / {model.epoch_num}:")
+  print("==================================================================")
+  print(best_epoch.to_string())
+  print("==================================================================")
+  return best_epoch
+
+
+def CreateModel(
+  model_class, graph_db, logger
+) -> classifier_base.ClassifierBase:
+  model: classifier_base.ClassifierBase = model_class(
+    logger=logger, graph_db=graph_db
+  )
+
+  if FLAGS.restore_model:
+    with prof.Profile(
+      lambda t: f"Restored {model.run_id} from {checkpoint_ref}",
+      print_to=lambda msg: app.Log(2, msg),
+    ):
+      checkpoint_ref = checkpoints.CheckpointReference.FromString(
+        FLAGS.restore_model
+      )
+      model.RestoreFrom(checkpoint_ref)
+  else:
+    with prof.Profile(
+      lambda t: f"Initialized {model.run_id}",
+      print_to=lambda msg: app.Log(2, msg),
+    ):
+      model.Initialize()
+
+  return model
+
+
+def RunOne(
+  model_class,
+  val_splits: Optional[List[int]] = None,
+  test_splits: Optional[List[int]] = None,
+) -> pd.Series:
   graph_db: graph_tuple_database.Database = FLAGS.graph_db()
   with logger_lib.Logger.FromFlags() as logger:
-    model: classifier_base.ClassifierBase = model_class(
-      logger=logger, graph_db=graph_db
-    )
+    model = CreateModel(model_class, graph_db, logger)
 
-    # Create the model.
-    if FLAGS.restore_model:
-      with prof.Profile(
-        lambda t: f"Restored {model.run_id} from {checkpoint_ref}",
-        print_to=lambda msg: app.Log(2, msg),
-      ):
-        checkpoint_ref = checkpoints.CheckpointReference.FromString(
-          FLAGS.restore_model
-        )
-        model.RestoreFrom(checkpoint_ref)
-    else:
-      with prof.Profile(
-        lambda t: f"Initialized {model.run_id}",
-        print_to=lambda msg: app.Log(2, msg),
-      ):
-        model.Initialize()
-
-    # Pretty print the experimental setup.
-    print("==================================================================")
-    print(pyfiglet.figlet_format(model.run_id.script_name))
-    print("Run ID:", model.run_id)
-    params = model.parameters[["type", "name", "value"]]
-    params = params.rename(columns=({"type": "parameter"}))
-    print(pdutil.FormatDataFrameAsAsciiTable(params))
-    print()
-    print(model.Summary())
-    print("==================================================================")
+    PrintExperimentHeader(model)
 
     if FLAGS.test_only:
       batch_iterator = MakeBatchIterator(
-        epoch_type=epoch.Type.TEST, model=model, graph_db=graph_db
+        epoch_type=epoch.Type.TEST,
+        model=model,
+        graph_db=graph_db,
+        val_splits=val_splits,
+        test_splits=test_splits,
       )
       RunEpoch(
         epoch_name="test",
@@ -319,36 +374,53 @@ def Run(model_class):
       if train.ctx.i != train.ctx.n:
         app.FatalWithoutStackTrace("Model failed")
 
-    with logger.Session() as session:
-      tables = {
-        name: df
-        for name, df in logger.db.GetTables(
-          run_ids=[model.run_id], session=session
-        )
-      }
-      epochs = tables["epochs"].set_index("epoch_num")
-
-      best_epoch_num = epochs["val_accuracy"].idxmax()
-
-    print(f"\rResults at best val epoch {best_epoch_num} / {model.epoch_num}:")
-    print("==================================================================")
-    print(epochs.loc[best_epoch_num].to_string())
-    print("==================================================================")
+    return PrintExperimentFooter(model, logger)
 
 
-# TODO(github.com/ChrisCummins/ProGraML/issues/24): Update to automatically run
-# k-fold validation over all splits in a database.
-# def RunKFoldOrDie():
-#   for test_split in FLAGS.groups:
-#     app.Log(1, "Testing group %s on database %s", test_split, FLAGS.graph_db)
-#
-#     test_split_as_num = int(test_split)
-#     assert 10 > test_split_as_num >= 0
-#     val_split = str((test_split_as_num + 1) % 10)
-#
-#     FLAGS.test_split = test_split
-#     FLAGS.val_split = val_split
-#     classifier_base.Run(Ggnn)
+def RunKFold(model_class):
+  graph_db: graph_tuple_database.Database = FLAGS.graph_db()
+
+  splits: List[int] = graph_db.splits
+  results: List[pd.Series] = []
+  for i in range(len(splits)):
+    test_split = splits[i]
+    val_split = splits[(i + 1) % len(splits)]
+    results.append(
+      RunOne(model_class, val_splits=[val_split], test_splits=[test_split])
+    )
+
+  # Concatenate each of the run results into a dataframe.
+  df = pd.concat(results, axis=1).transpose()
+  # Get the list of run names and remove them from the columns. We'll set them
+  # again later.
+  df.set_index("run_id", inplace=True)
+  run_ids = list(df.index.values)
+  # Select only the subset of columns that we're interested in: test metrics.
+  df = df[
+    ["test_loss", "test_accuracy", "test_precision", "test_recall", "test_f1"]
+  ]
+  # Add an averages row.
+  df = df.append(df.mean(axis=0), ignore_index=True)
+  # Strip the "test_" prefix from column names.
+  df.rename(
+    columns={c: c[len("test_") :] for c in df.columns.values}, inplace=True
+  )
+  # Set the run IDs again.
+  df["run_id"] = run_ids + ["Average"]
+  df.set_index("run_id", inplace=True)
+  print()
+  print(f"Tests results of {len(results)}-fold cross-validation:")
+  print(pdutil.FormatDataFrameAsAsciiTable(df))
+
+  return df
+
+
+def Run(model_class) -> Union[pd.Series, pd.DataFrame]:
+  """Run the model."""
+  if FLAGS.k_fold:
+    return RunKFold(model_class)
+  else:
+    return RunOne(model_class)
 
 
 def Main():
