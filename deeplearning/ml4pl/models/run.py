@@ -6,7 +6,6 @@ from typing import Dict
 from typing import List
 from typing import Tuple
 
-import pandas as pd
 import pyfiglet
 
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
@@ -214,13 +213,10 @@ class Train(progress.Progress):
     )
     self.logger.ctx = self.ctx
 
-  def Run(self) -> epoch.Results:
+  def Run(self):
     """Run the train/val/test loop."""
     test_on = FLAGS.test_on()
     save_on = FLAGS.save_on()
-
-    # Set later.
-    test_results = epoch.Results()
 
     # Epoch loop.
     for self.ctx.i in range(self.ctx.i + 1, self.ctx.n + 1):
@@ -238,7 +234,7 @@ class Train(progress.Progress):
       val_results, val_improved = self.RunEpoch(epoch.Type.VAL, batch_iterators)
 
       if test_on == schedules.TestOn.IMPROVEMENT and val_improved:
-        test_results, _ = self.RunEpoch(epoch.Type.TEST, batch_iterators)
+        self.RunEpoch(epoch.Type.TEST, batch_iterators)
 
       # Determine whether to make a checkpoint.
       if save_on == schedules.SaveOn.EVERY_EPOCH or (
@@ -247,9 +243,7 @@ class Train(progress.Progress):
         self.model.SaveCheckpoint()
 
       if test_on == schedules.TestOn.EVERY:
-        test_results, _ = self.RunEpoch(epoch.Type.TEST, batch_iterators)
-
-    return test_results
+        self.RunEpoch(epoch.Type.TEST, batch_iterators)
 
   def RunEpoch(
     self,
@@ -298,7 +292,7 @@ def Run(model_class):
     print(pyfiglet.figlet_format(model.run_id.script_name))
     print("Run ID:", model.run_id)
     params = model.parameters[["type", "name", "value"]]
-    params.rename(columns=({"type": "parameter"}), inplace=True)
+    params = params.rename(columns=({"type": "parameter"}))
     print(pdutil.FormatDataFrameAsAsciiTable(params))
     print()
     print(model.Summary())
@@ -318,7 +312,21 @@ def Run(model_class):
     else:
       progress.Run(Train(model, graph_db, logger))
 
-    print("\rdone")
+    with logger.Session() as session:
+      tables = {
+        name: df
+        for name, df in logger.db.GetTables(
+          run_ids=[model.run_id], session=session
+        )
+      }
+      epochs = tables["epochs"].set_index("epoch_num")
+
+      best_epoch_num = epochs["val_accuracy"].idxmax()
+
+    print(f"\rResults at best val epoch {best_epoch_num} / {model.epoch_num}:")
+    print("==================================================================")
+    print(epochs.loc[best_epoch_num].to_string())
+    print("==================================================================")
 
 
 # TODO(github.com/ChrisCummins/ProGraML/issues/24): Update to automatically run

@@ -292,6 +292,14 @@ class Logger(object):
     self._writer.Flush()
     return self.db.GetRunParameters(run_id)
 
+  def Session(self) -> log_database.Database.SessionType:
+    """Return a database session.
+
+    This flushes the current write buffer before creating the session.
+    """
+    self._writer.Flush()
+    return self._writer.db.Session()
+
   @classmethod
   def FromFlags(cls, ctx: progress.ProgressContext = progress.NullContext):
     if not FLAGS.log_db:
