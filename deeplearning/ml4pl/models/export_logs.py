@@ -4,20 +4,27 @@ Example usage:
 
   Print all of the parameters for a specific run:
 
-    bazel run //deeplearning/ml4pl/models:export_logs -- \
-      --log_db='sqlite:////tmp/logs.db' \
-      --ascii_table=parameters \
-      --run_id='ZeroR:191206111012:example'
+    $ bazel run //deeplearning/ml4pl/models:export_logs -- \
+        --log_db='sqlite:////tmp/logs.db' \
+        --print=parameters \
+        --run_id='ZeroR:191206111012:example'
 
   Export tables for all runs to a google sheets spreadsheet, with extra
   columns for the --initial_learning_rate and --learning_rate_decay flags:
 
-    bazel run //deeplearning/ml4pl/models:export_logs -- \
-      --log_db='sqlite:////tmp/logs.db' \
-      --google_sheet='My Spreadsheet' \
-      --google_sheets_credentials=/tmp/credentials.json \
-      --google_sheets_default_share_with=joe@example.com \
-      --extra_flags=initial_learning_rate,learning_rate_decay
+    $ bazel run //deeplearning/ml4pl/models:export_logs -- \
+        --log_db='sqlite:////tmp/logs.db' \
+        --google_sheet='My Spreadsheet' \
+        --google_sheets_credentials=/tmp/credentials.json \
+        --google_sheets_default_share_with=joe@example.com \
+        --extra_flags=initial_learning_rate,learning_rate_decay
+
+  Copy logs for two runs to another database:
+
+    $ bazel run //deeplearning/ml4pl/models:export_logs -- \
+        --log_db='sqlite:////tmp/logs.db' \
+        --dst_db='sqlite:////tmp/new_logs_db.db' \
+        --run_id='ZeroR:191206111012:example','Ggnn:191206111012:example'
 """
 import pathlib
 from typing import List
@@ -60,7 +67,7 @@ app.DEFINE_output_path(
   "csv_dir", None, "A directory to write CSV table files to."
 )
 app.DEFINE_list(
-  "ascii_table",
+  "print",
   [],
   "A list of tables to print to stdout as ASCII-formatted tables. Valid table "
   "names: {parameters,epochs,runs}.",
@@ -72,6 +79,12 @@ app.DEFINE_string(
   "not exist, the spreadsheet is created and shared with "
   "--google_sheets_default_share_with. See --google_sheets_credentials for "
   "setting the credentials required to use the Google Sheets API.",
+)
+app.DEFINE_database(
+  "dst_db",
+  log_database.Database,
+  None,
+  "The name of a log database to copy the log data to.",
 )
 
 
@@ -131,14 +144,18 @@ def Main():
     exporters.append(CsvExport(FLAGS.csv_dir))
   if FLAGS.google_sheet:
     exporters.append(GoogleSheetsExport(FLAGS.google_sheet))
-  if FLAGS.ascii_table:
-    exporters.append(AsciiTableExport(FLAGS.ascii_table))
+  if FLAGS.print:
+    exporters.append(AsciiTableExport(FLAGS.print))
   if not exporters:
     raise app.UsageError("No exporters")
 
   for name, df in log_db.GetTables(FLAGS.run_id, extra_flags=FLAGS.extra_flags):
     for exporter in exporters:
       exporter.OnTable(name, df)
+
+  # Export to another database.
+  if FLAGS.dst_db:
+    log_db.CopyRunLogs(FLAGS.dst_db(), run_ids=FLAGS.run_id)
 
 
 if __name__ == "__main__":
