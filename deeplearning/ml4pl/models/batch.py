@@ -205,7 +205,7 @@ class RollingResults:
         across all targets, use weight=results.target_count. To weight across
         graphs, use weight=batch.graph_count.
     """
-    self.weight_sum += results.t
+    self.weight_sum += weight
     self.batch_count += 1
     self.iteration_count_sum += results.iteration_count
     self.model_converged_sum += 1 if results.model_converged else 0
