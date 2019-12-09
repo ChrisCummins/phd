@@ -46,13 +46,11 @@ class Results(NamedTuple):
     )
 
   def ToFormattedString(self, previous: Optional["Results"]) -> str:
-    previous = previous or self()
+    previous: Results = previous or self()
 
     def Colorize(new, old, string):
-      if new > old:
+      if new >= old:
         return f"{shell.ShellEscapeCodes.BOLD}{shell.ShellEscapeCodes.GREEN}{string}{shell.ShellEscapeCodes.END}"
-      elif new == old:
-        return f"{shell.ShellEscapeCodes.BOLD}{shell.ShellEscapeCodes.YELLOW}{string}{shell.ShellEscapeCodes.END}"
       else:
         return f"{shell.ShellEscapeCodes.BOLD}{shell.ShellEscapeCodes.RED}{string}{shell.ShellEscapeCodes.END}"
 
