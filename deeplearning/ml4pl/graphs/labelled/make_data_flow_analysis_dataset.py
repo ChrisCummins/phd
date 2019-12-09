@@ -315,7 +315,7 @@ class DatasetGenerator(progress.Progress):
     workers = pool.imap_unordered(MakeAnnotatedGraphs, worker_args)
 
     with sqlutil.BufferedDatabaseWriter(
-      self.ir_db,
+      self.output_db,
       max_buffer_size=128 * 1024 * 1024,
       max_buffer_length=4096,
       log_level=1,
