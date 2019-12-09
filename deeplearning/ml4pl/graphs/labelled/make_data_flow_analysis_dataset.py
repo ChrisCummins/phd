@@ -264,13 +264,14 @@ class DatasetGenerator(progress.Progress):
       ]
 
     # Sanity check.
-    if len(ids_and_sizes_to_do) + already_done_count != total_graph_count:
-      app.FatalWithoutStackTrace(
-        "ids_to_do(%s) + already_done(%s) != total_rows(%s)",
-        len(ids_and_sizes_to_do),
-        already_done_count,
-        total_graph_count,
-      )
+    if not FLAGS.max_instances:
+      if len(ids_and_sizes_to_do) + already_done_count != total_graph_count:
+        app.FatalWithoutStackTrace(
+          "ids_to_do(%s) + already_done(%s) != total_rows(%s)",
+          len(ids_and_sizes_to_do),
+          already_done_count,
+          total_graph_count,
+        )
 
     with output_db.Session(commit=True) as out_session:
       out_session.add(
