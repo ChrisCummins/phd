@@ -50,7 +50,7 @@ py_test(
     srcs = ["split_test.py"],
     deps = [
         ":ir_database",
-        ":splitters",
+        ":split",
         "//labm8/py:app",
         "//labm8/py:test",
     ],
