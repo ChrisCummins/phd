@@ -330,22 +330,25 @@ class DatasetGenerator(progress.Progress):
         app.FatalWithoutStackTrace("Database writer had errors")
 
     # Sanity check the number of generated program graphs.
-    if self.ctx.i != self.ctx.n:
-      app.FatalWithoutStackTrace(
-        "unlabelled_graph_count(%s) != exported_count(%s)",
-        self.ctx.n,
-        self.ctx.i,
-      )
-    with self.output_db.Session() as out_session:
-      annotated_graph_count = out_session.query(
-        sql.func.count(sql.func.distinct(graph_tuple_database.GraphTuple.ir_id))
-      ).scalar()
-    if annotated_graph_count != self.ctx.n:
-      app.FatalWithoutStackTrace(
-        "unlabelled_graph_count(%s) != annotated_graph_count(%s)",
-        self.ctx.n,
-        annotated_graph_count,
-      )
+    if not FLAGS.max_instances:
+      if self.ctx.i != self.ctx.n:
+        app.FatalWithoutStackTrace(
+          "unlabelled_graph_count(%s) != exported_count(%s)",
+          self.ctx.n,
+          self.ctx.i,
+        )
+      with self.output_db.Session() as out_session:
+        annotated_graph_count = out_session.query(
+          sql.func.count(
+            sql.func.distinct(graph_tuple_database.GraphTuple.ir_id)
+          )
+        ).scalar()
+      if annotated_graph_count != self.ctx.n:
+        app.FatalWithoutStackTrace(
+          "unlabelled_graph_count(%s) != annotated_graph_count(%s)",
+          self.ctx.n,
+          annotated_graph_count,
+        )
 
 
 def main():
