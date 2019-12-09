@@ -129,7 +129,7 @@ class GraphEncoder(EncoderBase):
       # Encode the unknown IRs.
       sorted_ir_ids_to_encode = sorted(unknown_ir_ids)
       sorted_encoded_sequences = self.ir2seq_encoder.Encode(
-        sorted_ir_ids_to_encode
+        sorted_ir_ids_to_encode, ctx=ctx
       )
 
       # Cache the encoded unknown IRs.
@@ -227,12 +227,14 @@ class StatementEncoderBase(EncoderBase):
     return [self.ir_id_to_encoded[graph.ir_id] for graph in graphs]
 
   def EncodeWithSegmentIds(
-    self, strings: List[str]
+    self,
+    strings: List[str],
+    ctx: progress.ProgressContext = progress.NullContext,
   ) -> Tuple[np.array, np.array]:
     """Encode the given strings and return a flattened list of the encoded
     values and the segment IDs.
     """
-    encoded_sequences = self.ir2seq_encoder.Encode(strings)
+    encoded_sequences = self.ir2seq_encoder.Encode(strings, ctx=ctx)
     statement_indices = []
     for i, enc in enumerate(encoded_sequences):
       statement_indices.append([i] * len(enc))
@@ -269,7 +271,9 @@ class StatementEncoder(StatementEncoderBase):
       graph.nodes[node]["text"] for node in serialized_node_list
     ]
 
-    encoded_sequence, segment_ids = self.EncodeWithSegmentIds(strings_to_encode)
+    encoded_sequence, segment_ids = self.EncodeWithSegmentIds(
+      strings_to_encode, ctx=ctx
+    )
 
     if segment_ids[-1] > graph.number_of_nodes():
       raise ValueError(
@@ -310,7 +314,9 @@ class IdentifierEncoder(StatementEncoderBase):
         graph.nodes[n]["text"] for n in GetStatementsForNode(graph, identifier)
       ]
 
-    encoded_sequence, segment_ids = self.EncodeWithSegmentIds(strings_to_encode)
+    encoded_sequence, segment_ids = self.EncodeWithSegmentIds(
+      strings_to_encode, ctx=ctx
+    )
 
     if segment_ids[-1] > graph.number_of_nodes():
       raise ValueError(

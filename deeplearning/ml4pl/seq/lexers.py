@@ -254,7 +254,6 @@ class Lexer(object):
     type: LexerType,
     initial_vocab: Dict[str, int],
     max_chunk_size: Optional[int] = None,
-    ctx: progress.ProgressContext = progress.NullContext,
   ):
     self.candidate_tokens = {
       LexerType.LLVM: LLVM_TOKENS,
@@ -265,7 +264,6 @@ class Lexer(object):
     self.max_chunk_size = max_chunk_size or (
       FLAGS.lexer_chunk_size_mb * 1024 * 1024
     )
-    self.ctx = ctx
 
   @property
   def vocabulary_size(self) -> int:
@@ -301,7 +299,11 @@ class Lexer(object):
     vocabulary_out = dict(message.vocabulary)
     return encoded, vocabulary_out
 
-  def LexAndUpdateVocab(self, texts: List[str],) -> List[np.array]:
+  def LexAndUpdateVocab(
+    self,
+    texts: List[str],
+    ctx: progress.ProgressContext = progress.NullContext,
+  ) -> List[np.array]:
     """Encode the given texts using the vocabulary.
 
     The vocabulary is lazily constructed. If a token is found that is not in the
@@ -314,7 +316,7 @@ class Lexer(object):
       A list of encoded texts.
     """
     token_count = 0
-    with self.ctx.Profile(
+    with ctx.Profile(
       3,
       lambda t: f"Lexed {len(texts)} strings ({humanize.DecimalPrefix(token_count / t, ' tokens/sec')})",
     ):
@@ -349,7 +351,11 @@ class Lexer(object):
     encoded[np.where(encoded > max_vocab_element)] = max_vocab_element + 1
     return encoded
 
-  def Lex(self, texts: List[str],) -> List[np.array]:
+  def Lex(
+    self,
+    texts: List[str],
+    ctx: progress.ProgressContext = progress.NullContext,
+  ) -> List[np.array]:
     """Lex a list of strings.
 
     If any out-of-vocab elements appear, they are set with max(vocab) + 1
@@ -366,7 +372,7 @@ class Lexer(object):
       in the range [0, max(vocab) + 1].
     """
     token_count = 0
-    with self.ctx.Profile(
+    with ctx.Profile(
       3,
       lambda t: f"Lexed {len(texts)} strings ({humanize.DecimalPrefix(token_count / t, ' tokens/sec')})",
     ):

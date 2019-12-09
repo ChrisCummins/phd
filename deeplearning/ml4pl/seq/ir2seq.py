@@ -31,14 +31,13 @@ class EncoderBase(object):
   """Base class for implementing bytecode encoders."""
 
   def __init__(
-    self,
-    ir_db: ir_database.Database,
-    ctx: progress.ProgressContext = progress.NullContext,
+    self, ir_db: ir_database.Database,
   ):
     self.ir_db = ir_db
-    self.ctx = ctx
 
-  def Encode(self, ids: List[int]) -> List[np.array]:
+  def Encode(
+    self, ids: List[int], ctx: progress.ProgressContext = progress.NullContext,
+  ) -> List[np.array]:
     """Convert a list of IR IDs to a list of encoded sequences."""
     raise NotImplementedError("abstract class")
 
@@ -65,11 +64,11 @@ class LlvmEncoder(EncoderBase):
     vocab = data_to_load["vocab"]
     self._max_encoded_length = data_to_load["max_encoded_length"]
 
-    self.lexer = lexers.Lexer(
-      type=lexers.LexerType.LLVM, initial_vocab=vocab, ctx=self.ctx
-    )
+    self.lexer = lexers.Lexer(type=lexers.LexerType.LLVM, initial_vocab=vocab)
 
-  def Encode(self, ids: List[int]) -> List[np.array]:
+  def Encode(
+    self, ids: List[int], ctx: progress.ProgressContext = progress.NullContext,
+  ) -> List[np.array]:
     """Encode a list of IR IDs.
 
     Args:
@@ -98,7 +97,9 @@ class LlvmEncoder(EncoderBase):
           f"{len(sorted_unique_ir)}"
         )
 
-      sorted_unique_encodeds: List[np.array] = self.lexer.Lex(sorted_unique_ir)
+      sorted_unique_encodeds: List[np.array] = self.lexer.Lex(
+        sorted_unique_ir, ctx=ctx
+      )
 
       id_to_encoded = {
         id: encoded
@@ -129,9 +130,7 @@ class OpenClEncoder(EncoderBase):
     super(OpenClEncoder, self).__init__(*args, **kwargs)
 
     # We start with an empty vocabulary and build it from inputs.
-    self.lexer = lexers.Lexer(
-      type=lexers.LexerType.OPENCL, initial_vocab={}, ctx=self.ctx
-    )
+    self.lexer = lexers.Lexer(type=lexers.LexerType.OPENCL, initial_vocab={})
 
     # Map relpath -> src.
     df = make_devmap_dataset.MakeGpuDataFrame(
@@ -185,7 +184,9 @@ class OpenClEncoder(EncoderBase):
       for (id, _), encoded in zip(sorted_id_src_pairs, sorted_encodeds)
     }
 
-  def Encode(self, ids: List[int]) -> List[np.array]:
+  def Encode(
+    self, ids: List[int], ctx: progress.ProgressContext = progress.NullContext
+  ) -> List[np.array]:
     """Encode a list of IR IDs.
 
     Args:
@@ -229,7 +230,9 @@ class Inst2VecEncoder(EncoderBase):
     # Tidy up the unpacked vocabulary zipfile.
     self.vocab.__exit__()
 
-  def Encode(self, ids: List[int]):
+  def Encode(
+    self, ids: List[int], ctx: progress.ProgressContext = progress.NullContext,
+  ):
     """Encode a list of IR IDs.
 
     Args:
@@ -259,7 +262,7 @@ class Inst2VecEncoder(EncoderBase):
         )
 
       token_count = 0
-      with self.ctx.Profile(
+      with ctx.Profile(
         3,
         lambda t: (
           f"Encoded {len(sorted_unique_ir)} strings "
