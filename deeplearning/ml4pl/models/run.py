@@ -314,7 +314,10 @@ def Run(model_class):
         logger=logger,
       )
     else:
-      progress.Run(Train(model, graph_db, logger))
+      train = Train(model, graph_db, logger)
+      progress.Run(train)
+      if train.ctx.i != train.ctx.n:
+        app.FatalWithoutStackTrace("Model failed")
 
     with logger.Session() as session:
       tables = {
