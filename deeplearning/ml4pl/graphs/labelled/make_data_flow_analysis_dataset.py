@@ -54,6 +54,10 @@ app.DEFINE_integer(
   "graph.",
 )
 app.DEFINE_integer(
+  "max_instances", 0, "If set, limit the number of processed instances."
+)
+
+app.DEFINE_integer(
   "nproc",
   multiprocessing.cpu_count(),
   "Tuning parameter. The number of processes to spawn.",
@@ -65,13 +69,31 @@ app.DEFINE_integer(
   "a batch.",
 )
 app.DEFINE_integer(
-  "max_reader_queue_size", 3, "Tuning parameter. The maximum number of proto."
+  "max_reader_queue_size",
+  3,
+  "Tuning parameter. The maximum number of proto chunks to read ahead of the "
+  "workers.",
 )
 app.DEFINE_integer(
-  "chunk_size", 32, "Tuning parameter. The number of processes to spawn."
+  "max_tasks_per_worker",
+  64,
+  "Tuning parameter. The maximum number of tasks for a worker to process "
+  "before restarting.",
 )
 app.DEFINE_integer(
-  "max_instances", 0, "If set, limit the number of processed instances."
+  "chunk_size",
+  32,
+  "Tuning parameter. The number of protos to assign to each worker.",
+)
+app.DEFINE_integer(
+  "write_buffer_mb",
+  32,
+  "Tuning parameter. The size of the write buffer, in megabytes.",
+)
+app.DEFINE_integer(
+  "write_buffer_length",
+  4096,
+  "Tuning parameter. The maximum length of the write buffer.",
 )
 
 app.DEFINE_boolean("error", False, "If true, crash on export error.")
@@ -302,7 +324,9 @@ class DatasetGenerator(progress.Progress):
 
   def Run(self):
     """Run the dataset generation."""
-    pool = multiprocessing.Pool(processes=FLAGS.nproc, maxtasksperchild=32)
+    pool = multiprocessing.Pool(
+      processes=FLAGS.nproc, maxtasksperchild=FLAGS.max_tasks_per_worker
+    )
 
     def MakeAnnotatedGraphsArgsGenerator(graph_reader):
       """Generate packed arguments for a multiprocessing worker."""
@@ -316,8 +340,8 @@ class DatasetGenerator(progress.Progress):
 
     with sqlutil.BufferedDatabaseWriter(
       self.output_db,
-      max_buffer_size=128 * 1024 * 1024,
-      max_buffer_length=4096,
+      max_buffer_size=FLAGS.write_buffer_mb * 1024 * 1024,
+      max_buffer_length=FLAGS.write_buffer_length,
       log_level=1,
       ctx=self.ctx.ToProgressContext(),
     ) as writer:
