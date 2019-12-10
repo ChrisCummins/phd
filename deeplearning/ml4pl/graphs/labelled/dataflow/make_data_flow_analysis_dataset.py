@@ -19,7 +19,7 @@ from labm8.py import sqlutil
 
 app.DEFINE_integer(
   "annotator_timeout",
-  120,
+  180,
   "The maximum number of seconds to allow an annotator to process a single "
   "graph.",
 )
