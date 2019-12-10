@@ -109,7 +109,7 @@ class AnalysisFailed(ValueError):
     self.stderr = stderr
 
   def __repr__(self) -> str:
-    return f"Analysis failed: {self.stderr}"
+    return f"{self.stderr}"
 
   def __str__(self) -> str:
     return repr(self)
@@ -244,7 +244,7 @@ def Main():
   try:
     input_graph = programl.ReadStdin()
   except Exception as e:
-    print(f"Error parsing stdin: {e}")
+    print(f"Error parsing stdin: {e}", file=sys.stderr)
     sys.exit(E_INVALID_INPUT)
 
   annotated_graphs: List[programl_pb2.ProgramGraph] = []
@@ -252,13 +252,13 @@ def Main():
     for annotated_graph in annotator.MakeAnnotated(input_graph, n):
       annotated_graphs.append(annotated_graph)
   except Exception as e:
-    print(f"Error during analysis: {e}")
+    print(f"Error during analysis: {e}", file=sys.stderr)
     sys.exit(E_ANALYSIS_FAILED)
 
   try:
     programl.WriteStdout(programl_pb2.ProgramGraphs(graph=annotated_graphs))
   except Exception as e:
-    print(f"Error writing stdout: {e}")
+    print(f"Error writing stdout: {e}", file=sys.stderr)
     sys.exit(E_INVALID_STDOUT)
 
 
