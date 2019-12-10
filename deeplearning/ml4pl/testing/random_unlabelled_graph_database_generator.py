@@ -100,6 +100,20 @@ def PopulateDatabaseWithRandomProgramGraphs(
   return DatabaseAndRows(db, rows)
 
 
+def PopulateDatabaseWithRealProtos(db: unlabelled_graph_database.Database):
+  """Populate a database with 100 "real" programs."""
+  with db.Session(commit=True) as session:
+    session.add_all(
+      [
+        unlabelled_graph_database.ProgramGraph.Create(proto, ir_id=i + 1)
+        for i, proto in enumerate(
+          random_programl_generator.EnumerateProtoTestSet()
+        )
+      ]
+    )
+  return db
+
+
 def Main():
   """Main entry point"""
   PopulateDatabaseWithRandomProgramGraphs(

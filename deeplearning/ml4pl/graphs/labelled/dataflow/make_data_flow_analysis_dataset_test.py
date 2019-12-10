@@ -30,26 +30,19 @@ def graph_db(request) -> graph_tuple_database.Database:
   )
 
 
-@test.Fixture(scope="session", params=(25, 100))
-def proto_count(request) -> int:
-  return request.param
-
-
 @test.Fixture(scope="session", params=(1, 3))
 def n(request) -> int:
   return request.param
 
 
 @test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
-def proto_db(
-  request, proto_count: int
-) -> unlabelled_graph_database.Database.SessionType:
+def proto_db(request,) -> unlabelled_graph_database.Database.SessionType:
   """A test fixture which yields a proto database."""
   with testing_databases.DatabaseContext(
     unlabelled_graph_database.Database, request.param
   ) as db:
-    random_unlabelled_graph_database_generator.PopulateDatabaseWithRandomProgramGraphs(
-      db, proto_count
+    random_unlabelled_graph_database_generator.PopulateDatabaseWithRealProtos(
+      db
     )
     yield db
 
@@ -62,7 +55,6 @@ def proto_db(
 def test_pass_thru_analysis(
   proto_db: unlabelled_graph_database.Database,
   graph_db: graph_tuple_database.Database,
-  proto_count: int,
   n: int,
 ):
   """Test that pass-thru annotator produces n * protos graphs."""
@@ -73,10 +65,13 @@ def test_pass_thru_analysis(
     )
   )
   with graph_db.Session() as session, proto_db.Session() as proto_session:
-    # Check that n * proto_count graphs were generated.
+    # Check that n * proto_countto graphs were generated.
     assert (
       session.query(sql.func.count(graph_tuple_database.GraphTuple.id)).scalar()
-      == n * proto_count
+      == n
+      * proto_session.query(
+        sql.func.count(unlabelled_graph_database.ProgramGraph.ir_id)
+      ).scalar()
     )
 
     # Check that every unique proto appears in the graph database.
@@ -105,7 +100,6 @@ def test_pass_thru_analysis(
 def test_error_analysis(
   proto_db: unlabelled_graph_database.Database,
   graph_db: graph_tuple_database.Database,
-  proto_count: int,
   n: int,
 ):
   """Test that error annotator produces one 'empty' graph for each input."""
@@ -115,10 +109,12 @@ def test_error_analysis(
       proto_db, "test_error", graph_db
     )
   )
-  with graph_db.Session() as session:
+  with graph_db.Session() as session, proto_db.Session() as proto_session:
     assert (
       session.query(sql.func.count(graph_tuple_database.GraphTuple.id)).scalar()
-      == proto_count
+      == proto_session.query(
+        sql.func.count(unlabelled_graph_database.ProgramGraph.ir_id)
+      ).scalar()
     )
 
     # All graphs are empty.
@@ -134,7 +130,6 @@ def test_error_analysis(
 def test_flaky_analysis(
   proto_db: unlabelled_graph_database.Database,
   graph_db: graph_tuple_database.Database,
-  proto_count: int,
   n: int,
 ):
   """Test that flaky annotator produces "some" graphs."""
@@ -144,10 +139,12 @@ def test_flaky_analysis(
       proto_db, "test_flaky", graph_db
     )
   )
-  with graph_db.Session() as session:
+  with graph_db.Session() as session, proto_db.Session() as proto_session:
     assert (
       session.query(sql.func.count(graph_tuple_database.GraphTuple.id)).scalar()
-      >= proto_count
+      >= proto_session.query(
+        sql.func.count(unlabelled_graph_database.ProgramGraph.ir_id)
+      ).scalar()
     )
 
     # Not all graphs are empty.
@@ -159,7 +156,6 @@ def test_flaky_analysis(
 def test_timeout_analysis(
   proto_db: unlabelled_graph_database.Database,
   graph_db: graph_tuple_database.Database,
-  proto_count: int,
   n: int,
 ):
   """Test that timeout annotator produces one 'empty' graph for each input."""
@@ -170,10 +166,12 @@ def test_timeout_analysis(
       proto_db, "test_timeout", graph_db
     )
   )
-  with graph_db.Session() as session:
+  with graph_db.Session() as session, proto_db.Session() as proto_session:
     assert (
       session.query(sql.func.count(graph_tuple_database.GraphTuple.id)).scalar()
-      == proto_count
+      == proto_session.query(
+        sql.func.count(unlabelled_graph_database.ProgramGraph.ir_id)
+      ).scalar()
     )
 
     # All graphs are empty.
@@ -183,10 +181,6 @@ def test_timeout_analysis(
       ).scalar()
       == 0
     )
-
-
-# TODO: Test timeout.
-# TODO: Test error.
 
 
 if __name__ == "__main__":
