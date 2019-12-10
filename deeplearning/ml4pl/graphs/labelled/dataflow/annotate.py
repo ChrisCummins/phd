@@ -24,6 +24,7 @@ and text format protocol buffers:
         < /tmp/program_graph.pbtxt
 """
 import subprocess
+import sys
 import time
 from typing import Callable
 from typing import Dict
@@ -85,6 +86,29 @@ app.DEFINE_integer(
   "graphs.",
 )
 
+FLAGS = app.FLAGS
+
+
+class AnalysisFailed(ValueError):
+  """An error raised if the analysis failed."""
+
+  def __init__(self, returncode: int, stderr: str):
+    self.returncode = returncode
+    self.stderr = stderr
+
+  def __repr__(self):
+    return self.stderr
+
+
+class AnalysisTimeout(AnalysisFailed):
+  def __init__(self, returncode: int, stderr: str, timeout: int):
+    super(AnalysisTimeout, self).__init__(returncode, stderr)
+    self.timeout = timeout
+
+  def __repr__(self):
+    return f"Analysis failed to complete within {self.timeout} seconds"
+
+
 # Return codes for error conditions.
 #
 # Error initializing the requested analysis.
@@ -95,33 +119,6 @@ E_INVALID_INPUT = 11
 E_ANALYSIS_FAILED = 12
 # Error writing stdout.
 E_INVALID_STDOUT = 13
-
-FLAGS = app.FLAGS
-
-
-class AnalysisFailed(OSError):
-  """An error raised if the analysis failed."""
-
-  def __init__(self, returncode: int, stderr: str):
-    self.returncode = returncode
-    self.stderr = stderr
-
-  def __repr__(self):
-    return {
-      E_ANALYSIS_INIT: "Analysis failed to initialize",
-      E_INVALID_INPUT: "Analysis failed to read stdin",
-      E_ANALYSIS_FAILED: "Analysis failed",
-      E_INVALID_STDOUT: "Analysis failed to write stdout",
-    }.get(self.returncode, "Unknown error")
-
-
-class AnalysisTimeout(AnalysisFailed):
-  def __init__(self, returncode: int, stderr: str, timeout: int):
-    super(AnalysisTimeout, self).__init__(returncode, stderr)
-    self.timeout = timeout
-
-  def __repr__(self):
-    return f"Analysis failed to complete within {self.timeout} seconds"
 
 
 def Annotate(
@@ -146,7 +143,11 @@ def Annotate(
     A ProgramGraphs protocol buffer.
 
   Raises:
-    AnalysisFailed: If the analysis script raised an error.
+    IOError: If serializing the input or output protos fails.
+    ValueError: If an invalid analysis is requested.
+    AnalysisFailed: If the analysis raised an error.
+    AnalysisTimeout: If the analysis did not complete within the requested
+      timeout.
   """
   process = subprocess.Popen(
     [
@@ -175,8 +176,14 @@ def Annotate(
     # Process was killed. We assume this is because of timeout, though it could
     # be the user.
     raise AnalysisTimeout(process.returncode, stderr, timeout)
+  elif process.returncode == E_INVALID_INPUT:
+    raise IOError("Failed to serialize input graph")
+  elif process.returncode == E_INVALID_STDOUT:
+    raise IOError("Analysis failed to write stdout")
+  elif process.returncode == E_ANALYSIS_INIT:
+    raise ValueError(stderr.decode("utf-8"))
   elif process.returncode:
-    raise AnalysisFailed(process.returncode, stderr)
+    raise AnalysisFailed(process.returncode, stderr.decode("utf-8"))
 
   # Construct the protocol buffer from stdout.
   return programl.FromBytes(
@@ -193,41 +200,41 @@ def Main():
     print(f"Available analyses: {sorted(ANALYSES.keys())}")
     return
 
+  n = FLAGS.n
+
   try:
     annotator = ANALYSES.get(FLAGS.analysis, lambda: None)()
-    if not annotator:
-      raise app.UsageError(
-        f"Unknown analysis: {FLAGS.analysis}. "
-        f"Available analyses: {sorted(ANALYSES.keys())}"
-      )
   except Exception as e:
-    app.FatalWithoutStackTrace(
-      "Error initializing analysis: %s", e, returncode=E_ANALYSIS_INIT
+    print(f"Error initializing analysis: {e}", file=sys.stderr)
+    sys.exit(E_ANALYSIS_INIT)
+
+  if not annotator:
+    print(
+      f"Unknown analysis: {FLAGS.analysis}. "
+      f"Available analyses: {sorted(ANALYSES.keys())}",
+      file=sys.stderr,
     )
-  n = FLAGS.n
+    sys.exit(E_ANALYSIS_INIT)
 
   try:
     input_graph = programl.ReadStdin()
   except Exception as e:
-    app.FatalWithoutStackTrace(
-      "Error parsing stdin: %s", e, returncode=E_INVALID_INPUT
-    )
+    print(f"Error parsing stdin: {e}")
+    sys.exit(E_INVALID_INPUT)
 
   annotated_graphs: List[programl_pb2.ProgramGraph] = []
   try:
     for annotated_graph in annotator.MakeAnnotated(input_graph, n):
       annotated_graphs.append(annotated_graph)
   except Exception as e:
-    app.FatalWithoutStackTrace(
-      "Error during analysis: %s", e, returncode=E_ANALYSIS_FAILED
-    )
+    print(f"Error during analysis: {e}")
+    sys.exit(E_ANALYSIS_FAILED)
 
   try:
     programl.WriteStdout(programl_pb2.ProgramGraphs(graph=annotated_graphs))
   except Exception as e:
-    app.FatalWithoutStackTrace(
-      "Error writing stdout: %s", e, returncode=E_INVALID_STDOUT
-    )
+    print(f"Error writing stdout: {e}")
+    sys.exit(E_INVALID_STDOUT)
 
 
 if __name__ == "__main__":

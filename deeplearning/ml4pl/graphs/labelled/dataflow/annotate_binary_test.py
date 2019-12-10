@@ -61,36 +61,41 @@ def n(request) -> int:
 
 def test_invalid_analysis(one_proto: programl_pb2.ProgramGraph, n: int):
   """Test that error is raised if the input is invalid."""
-  with test.Raises(annotate.AnalysisFailed) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     annotate.Annotate("invalid_analysis", one_proto, n)
-  assert e_ctx.value.returncode == annotate.E_ANALYSIS_INIT
+  assert str(e_ctx.value).startswith("Unknown analysis: invalid_analysis. ")
 
 
 def test_invalid_input(analysis: str, n: int):
   """Test that error is raised if the input is invalid."""
   invalid_input = programl_pb2.ProgramGraph()
-  with test.Raises(annotate.AnalysisFailed) as e_ctx:
+  with test.Raises(IOError) as e_ctx:
     annotate.Annotate(analysis, invalid_input, n)
-  assert e_ctx.value.returncode == annotate.E_INVALID_INPUT
+  assert str(e_ctx.value) == "Failed to serialize input graph"
 
 
 def test_timeout(one_proto: programl_pb2.ProgramGraph):
   """Test that error is raised if the analysis times out."""
-  with test.Raises(annotate.AnalysisTimeout) as e_ctx:
+  with test.Raises(annotate.AnalysisTimeout):
     annotate.Annotate("test_timeout", one_proto, timeout=1)
 
 
 def test_annotate(analysis: str, real_proto: programl_pb2.ProgramGraph, n: int):
-  """Test the annotator binary."""
-  annotated = annotate.Annotate(analysis, real_proto, n)
+  """Test annotating real program graphs."""
+  try:
+    # Use a lower timeout for testing.
+    annotated = annotate.Annotate(analysis, real_proto, n, timeout=30)
 
-  # Check that up to 'n' annotated graphs were generated.
-  assert 0 <= len(annotated.graph) <= n
+    # Check that up to 'n' annotated graphs were generated.
+    assert 0 <= len(annotated.graph) <= n
 
-  # Check that output graphs have the same shape as the input graphs.
-  for graph in annotated.graph:
-    assert len(graph.node) == len(real_proto.node)
-    assert len(graph.edge) == len(real_proto.edge)
+    # Check that output graphs have the same shape as the input graphs.
+    for graph in annotated.graph:
+      assert len(graph.node) == len(real_proto.node)
+      assert len(graph.edge) == len(real_proto.edge)
+  except annotate.AnalysisTimeout:
+    # A timeout error is acceptable.
+    pass
 
 
 if __name__ == "__main__":
