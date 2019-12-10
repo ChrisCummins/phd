@@ -129,6 +129,31 @@ py_test(
     ],
 )
 
+py_binary(
+    name = "random_unlabelled_graph_database_generator",
+    testonly = 1,
+    srcs = ["random_unlabelled_graph_database_generator.py"],
+    visibility = ["//deeplearning/ml4pl:__subpackages__"],
+    deps = [
+        ":random_programl_generator",
+        "//deeplearning/ml4pl/graphs/unlabelled:unlabelled_graph_database",
+        "//labm8/py:app",
+    ],
+)
+
+py_test(
+    name = "random_unlabelled_graph_database_generator_test",
+    size = "enormous",
+    srcs = ["random_unlabelled_graph_database_generator_test.py"],
+    deps = [
+        ":random_unlabelled_graph_database_generator",
+        ":testing_databases",
+        "//deeplearning/ml4pl/graphs/unlabelled:unlabelled_graph_database",
+        "//labm8/py:decorators",
+        "//labm8/py:test",
+    ],
+)
+
 py_library(
     name = "test_annotators",
     srcs = ["test_annotators.py"],

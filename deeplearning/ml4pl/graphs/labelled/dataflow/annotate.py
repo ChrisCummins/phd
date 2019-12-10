@@ -31,6 +31,7 @@ from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import Optional
+from typing import Union
 
 from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
@@ -63,9 +64,20 @@ class TimeoutAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
 # a new entry in this table.
 ANALYSES: Dict[str, Callable[[], data_flow_graphs.DataFlowGraphAnnotator]] = {
   "reachability": lambda: reachability.ReachabilityAnnotator(),
-  # Annotators which are used for testing this script:
+  # Annotators which are used for testing this script. These should, for obvious
+  # reasons, not be used in prod. However, they must remain here so that we can
+  # test the behaviour of the annotator under various conditions.
+  "test_pass_thru": lambda: test_annotators.PassThruAnnotator(),
+  "test_flaky": lambda: test_annotators.FlakyAnnotator(),
   "test_timeout": lambda: test_annotators.TimeoutAnnotator(),
+  "test_error": lambda: test_annotators.ErrorAnnotator(),
 }
+
+# A list of the available analyses. We filter out the test_xxx named annotators
+# for clarity.
+AVAILABLE_ANALYSES = sorted(
+  analysis for analysis in ANALYSES if not analysis.startswith("test_")
+)
 
 # The path of this script. Because a target cannot depend on itself, all calling
 # code must add this script to its `data` dependencies.
@@ -96,8 +108,11 @@ class AnalysisFailed(ValueError):
     self.returncode = returncode
     self.stderr = stderr
 
-  def __repr__(self):
-    return self.stderr
+  def __repr__(self) -> str:
+    return f"Analysis failed: {self.stderr}"
+
+  def __str__(self) -> str:
+    return repr(self)
 
 
 class AnalysisTimeout(AnalysisFailed):
@@ -105,8 +120,11 @@ class AnalysisTimeout(AnalysisFailed):
     super(AnalysisTimeout, self).__init__(returncode, stderr)
     self.timeout = timeout
 
-  def __repr__(self):
+  def __repr__(self) -> str:
     return f"Analysis failed to complete within {self.timeout} seconds"
+
+  def __str__(self) -> str:
+    return repr(self)
 
 
 # Return codes for error conditions.
@@ -123,9 +141,10 @@ E_INVALID_STDOUT = 13
 
 def Annotate(
   analysis: str,
-  graph: programl_pb2.ProgramGraph,
+  graph: Union[programl_pb2.ProgramGraph, bytes],
   n: int = 0,
   timeout: int = 120,
+  binary_graph: bool = False,
 ) -> programl_pb2.ProgramGraphs:
   """Programatically run this script and return the output.
 
@@ -135,9 +154,11 @@ def Annotate(
 
   Args:
     analysis: The name of the analysis to run.
-    graph: The unlabelled graph to annotate.
+    graph: The unlabelled ProgramGraph protocol buffer to to annotate, either
+      as a proto instance or as binary-encoded byte array.
     n: The maximum number of labelled graphs to produce.
     timeout: The maximum number of seconds to run the analysis for.
+    binary_graph: If true, treat the graph argument as a binary byte array.
 
   Returns:
     A ProgramGraphs protocol buffer.
@@ -169,9 +190,13 @@ def Annotate(
     stderr=subprocess.PIPE,
   )
 
-  stdout, stderr = process.communicate(
-    programl.ToBytes(graph, fmt=programl.InputOutputFormat.PB)
-  )
+  # Encode the input if required.
+  if binary_graph:
+    stdin = graph
+  else:
+    stdin = programl.ToBytes(graph, fmt=programl.InputOutputFormat.PB)
+
+  stdout, stderr = process.communicate(stdin)
   if process.returncode == 9 or process.returncode == -9:
     # Process was killed. We assume this is because of timeout, though it could
     # be the user.
@@ -197,7 +222,7 @@ def Annotate(
 def Main():
   """Main entry point."""
   if FLAGS.list:
-    print(f"Available analyses: {sorted(ANALYSES.keys())}")
+    print(f"Available analyses: {AVAILABLE_ANALYSES}")
     return
 
   n = FLAGS.n
@@ -211,7 +236,7 @@ def Main():
   if not annotator:
     print(
       f"Unknown analysis: {FLAGS.analysis}. "
-      f"Available analyses: {sorted(ANALYSES.keys())}",
+      f"Available analyses: {AVAILABLE_ANALYSES}",
       file=sys.stderr,
     )
     sys.exit(E_ANALYSIS_INIT)

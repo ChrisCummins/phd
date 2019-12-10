@@ -1,4 +1,5 @@
 """Data flow analyses for testing."""
+import random
 import time
 from typing import Iterable
 from typing import Optional
@@ -9,6 +10,29 @@ from labm8.py import app
 
 
 FLAGS = app.FLAGS
+
+
+class PassThruAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
+  """An analysis that returns its input."""
+
+  def MakeAnnotated(
+    self, unlabelled_graph: programl_pb2.ProgramGraph, n: Optional[int] = None
+  ) -> Iterable[programl_pb2.ProgramGraph]:
+    for _ in range(n or 1):
+      yield unlabelled_graph
+
+
+class FlakyAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
+  """An analysis that sometimes fails, and sometimes returns `n` graphs."""
+
+  def MakeAnnotated(
+    self, unlabelled_graph: programl_pb2.ProgramGraph, n: Optional[int] = None
+  ) -> Iterable[programl_pb2.ProgramGraph]:
+    time.sleep(random.random())
+    if random.random() < 0.2:
+      raise OSError("something went wrong!")
+    for _ in range(n or 1):
+      yield unlabelled_graph
 
 
 class TimeoutAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
@@ -22,3 +46,12 @@ class TimeoutAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
   ) -> Iterable[programl_pb2.ProgramGraph]:
     time.sleep(self.seconds)
     yield programl_pb2.ProgramGraph()
+
+
+class ErrorAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
+  """An analysis that raises an error."""
+
+  def MakeAnnotated(
+    self, unlabelled_graph: programl_pb2.ProgramGraph, n: Optional[int] = None
+  ) -> Iterable[programl_pb2.ProgramGraph]:
+    raise OSError("something went wrong!")

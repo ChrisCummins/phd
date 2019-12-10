@@ -38,6 +38,9 @@ app.DEFINE_integer(
 app.DEFINE_integer(
   "graph_y_dimensionality", 0, "The dimensionality of graph y vectors."
 )
+app.DEFINE_boolean(
+  "with_data_flow", False, "Whether to generate data flow columns."
+)
 
 # A test set of unlabelled program graphs using the legacy networkx schema.
 # These must be migrated to the new program graph representation before use.
@@ -58,6 +61,7 @@ def CreateRandomProto(
   node_y_dimensionality: int = 0,
   graph_x_dimensionality: int = 0,
   graph_y_dimensionality: int = 0,
+  with_data_flow: bool = False,
   node_count: int = None,
 ) -> programl_pb2.ProgramGraph:
   """Generate a random program graph.
@@ -174,6 +178,11 @@ def CreateRandomProto(
 
   if graph_y_dimensionality:
     proto.y[:] = _CreateRandomList(graph_y_dimensionality)
+
+  if with_data_flow:
+    proto.data_flow_steps = random.randint(1, 50)
+    proto.data_flow_root_node = random.randint(0, node_count - 1)
+    proto.data_flow_positive_node_count = random.randint(1, node_count - 1)
 
   return proto
 
