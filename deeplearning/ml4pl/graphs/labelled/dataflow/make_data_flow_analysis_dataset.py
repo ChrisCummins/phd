@@ -62,7 +62,7 @@ app.DEFINE_integer(
 )
 app.DEFINE_integer(
   "write_buffer_length",
-  4096,
+  10000,
   "Tuning parameter. The maximum length of the write buffer.",
 )
 
@@ -159,7 +159,7 @@ def ProcessWorker(packed_args) -> AnnotationResult:
     2,
     lambda t: (
       f"[worker {worker_id} processed {len(program_graphs)} protos "
-      f"({len(graph_tuples)} graphs)"
+      f"({len(graph_tuples)} graphs, {t / len(program_graphs):.3} sec/proto)"
     ),
   ):
     for i, program_graph in enumerate(program_graphs):
@@ -301,6 +301,8 @@ class DatasetGenerator(progress.Progress):
       self.output_db,
       max_buffer_size=FLAGS.write_buffer_mb * 1024 * 1024,
       max_buffer_length=FLAGS.write_buffer_length,
+      # Commit every now and then.
+      max_seconds_since_flush=15,
       log_level=1,
       ctx=self.ctx.ToProgressContext(),
     ) as writer:
