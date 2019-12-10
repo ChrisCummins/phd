@@ -23,14 +23,12 @@ and text format protocol buffers:
         --n=5 \
         < /tmp/program_graph.pbtxt
 """
+import signal
 import subprocess
 import sys
-import time
 from typing import Callable
 from typing import Dict
-from typing import Iterable
 from typing import List
-from typing import Optional
 from typing import Union
 
 from deeplearning.ml4pl.graphs import programl
@@ -108,8 +106,8 @@ class AnalysisFailed(ValueError):
 
 
 class AnalysisTimeout(AnalysisFailed):
-  def __init__(self, returncode: int, stderr: str, timeout: int):
-    super(AnalysisTimeout, self).__init__(returncode, stderr)
+  def __init__(self, timeout: int):
+    # super(AnalysisTimeout, self).__init__(returncode, stderr)
     self.timeout = timeout
 
   def __repr__(self) -> str:
@@ -121,8 +119,6 @@ class AnalysisTimeout(AnalysisFailed):
 
 # Return codes for error conditions.
 #
-# Error initializing the requested analysis.
-E_ANALYSIS_INIT = 10
 # Error reading stdin.
 E_INVALID_INPUT = 11
 # The analysis failed.
@@ -131,14 +127,17 @@ E_ANALYSIS_FAILED = 12
 E_INVALID_STDOUT = 13
 
 
-def Annotate(
+def _AnnotateInSubprocess(
   analysis: str,
   graph: Union[programl_pb2.ProgramGraph, bytes],
   n: int = 0,
   timeout: int = 120,
   binary_graph: bool = False,
 ) -> programl_pb2.ProgramGraphs:
-  """Programatically run this script and return the output.
+  """Run this script in a subprocess.
+
+  This is the most robust method for enforcing the timeout, but has a huge
+  overhead in starting up a new python interpreter for every invocation.
 
   DISCLAIMER: Because a target cannot depend on itself, all calling code must
   add //deeplearning/ml4pl/graphs/labelled/dataflow:annotate to its list of
@@ -188,27 +187,121 @@ def Annotate(
   else:
     stdin = programl.ToBytes(graph, fmt=programl.InputOutputFormat.PB)
 
+  # Run this analysis script.
   stdout, stderr = process.communicate(stdin)
+
   if process.returncode == 9 or process.returncode == -9:
     # Process was killed. We assume this is because of timeout, though it could
     # be the user.
-    raise AnalysisTimeout(process.returncode, stderr, timeout)
+    raise AnalysisTimeout(timeout)
   elif process.returncode == E_INVALID_INPUT:
     raise IOError("Failed to serialize input graph")
   elif process.returncode == E_INVALID_STDOUT:
     raise IOError("Analysis failed to write stdout")
-  elif process.returncode == E_ANALYSIS_INIT:
-    raise ValueError(stderr.decode("utf-8"))
   elif process.returncode:
     raise AnalysisFailed(process.returncode, stderr.decode("utf-8"))
 
   # Construct the protocol buffer from stdout.
-  return programl.FromBytes(
+  output = programl.FromBytes(
     stdout,
     programl.InputOutputFormat.PB,
     proto=programl_pb2.ProgramGraphs(),
     empty_okay=True,
   )
+
+  return output
+
+
+def _AnnotateWithTimeout(
+  analysis: str,
+  graph: Union[programl_pb2.ProgramGraph, bytes],
+  n: int = 0,
+  timeout: int = 120,
+  binary_graph: bool = False,
+) -> programl_pb2.ProgramGraphs:
+  """Run the analysis using a SIGALARM timeout strategy.
+
+  Args:
+    analysis: The name of the analysis to run.
+    graph: The unlabelled ProgramGraph protocol buffer to to annotate, either
+      as a proto instance or as binary-encoded byte array.
+    n: The maximum number of labelled graphs to produce.
+    timeout: The maximum number of seconds to run the analysis for.
+    binary_graph: If true, treat the graph argument as a binary byte array.
+
+  Returns:
+    A ProgramGraphs protocol buffer.
+
+  Raises:
+    ValueError: If an invalid analysis is requested.
+    AnalysisTimeout: If the analysis did not complete within the requested
+      timeout.
+  """
+
+  def TimeoutHandler(signum, frame):
+    """Callback to raise a timeout error."""
+    del signum
+    del frame
+    raise AnalysisTimeout(timeout)
+
+  signal.signal(signal.SIGALRM, TimeoutHandler)
+  signal.alarm(timeout)
+  try:
+    annotator = ANALYSES[analysis]()
+
+    if binary_graph:
+      graph = programl.FromBytes(graph, fmt=programl.InputOutputFormat.PB)
+
+    annotated_graphs: List[programl_pb2.ProgramGraph] = []
+    for annotated_graph in annotator.MakeAnnotated(graph, n):
+      annotated_graphs.append(annotated_graph)
+  finally:
+    signal.alarm(0)
+
+  return programl_pb2.ProgramGraphs(graph=annotated_graphs)
+
+
+def Annotate(
+  analysis: str,
+  graph: Union[programl_pb2.ProgramGraph, bytes],
+  n: int = 0,
+  timeout: int = 120,
+  binary_graph: bool = False,
+  use_subprocess: bool = False,
+) -> programl_pb2.ProgramGraphs:
+  """Run an analysis
+
+  Args:
+    analysis: The name of the analysis to run.
+    graph: The unlabelled ProgramGraph protocol buffer to to annotate, either
+      as a proto instance or as binary-encoded byte array.
+    n: The maximum number of labelled graphs to produce.
+    timeout: The maximum number of seconds to run the analysis for.
+    binary_graph: If true, treat the graph argument as a binary byte array.
+    use_subprocess: Use a suprocess to compute annotations. This has a huge
+      (hundreds of milliseconds) overhead, but is the most robust means of
+      enforcing the timeout.
+
+  Returns:
+    A ProgramGraphs protocol buffer.
+
+  Raises:
+    ValueError: If an invalid analysis is requested.
+    IOError: If serializing the input or output protos fails.
+    AnalysisFailed: If the analysis raised an error.
+    AnalysisTimeout: If the analysis did not complete within the requested
+      timeout.
+  """
+  if analysis not in ANALYSES:
+    raise ValueError(
+      f"Unknown analysis: {FLAGS.analysis}. "
+      f"Available analyses: {AVAILABLE_ANALYSES}",
+    )
+
+  if use_subprocess:
+    return _AnnotateInSubprocess(analysis, graph, n, timeout, binary_graph)
+  else:
+    return _AnnotateWithTimeout(analysis, graph, n, timeout, binary_graph)
 
 
 def Main():
@@ -219,19 +312,7 @@ def Main():
 
   n = FLAGS.n
 
-  try:
-    annotator = ANALYSES.get(FLAGS.analysis, lambda: None)()
-  except Exception as e:
-    print(f"Error initializing analysis: {e}", file=sys.stderr)
-    sys.exit(E_ANALYSIS_INIT)
-
-  if not annotator:
-    print(
-      f"Unknown analysis: {FLAGS.analysis}. "
-      f"Available analyses: {AVAILABLE_ANALYSES}",
-      file=sys.stderr,
-    )
-    sys.exit(E_ANALYSIS_INIT)
+  annotator = ANALYSES[FLAGS.analysis]()
 
   try:
     input_graph = programl.ReadStdin()

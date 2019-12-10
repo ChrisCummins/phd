@@ -28,7 +28,6 @@ class FlakyAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
   def MakeAnnotated(
     self, unlabelled_graph: programl_pb2.ProgramGraph, n: Optional[int] = None
   ) -> Iterable[programl_pb2.ProgramGraph]:
-    time.sleep(random.random())
     if random.random() < 0.2:
       raise OSError("something went wrong!")
     for _ in range(n or 1):
