@@ -148,6 +148,13 @@ def ProcessWorker(packed_args) -> AnnotationResult:
 
   graph_tuples = []
 
+  ctx.Log(
+    2,
+    "[worker %s] received %s unlabelled graphs to process",
+    worker_id,
+    len(program_graphs),
+  )
+
   with ctx.Profile(
     2,
     lambda t: (
