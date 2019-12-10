@@ -5,6 +5,7 @@ from typing import Set
 
 import networkx as nx
 
+from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled.dataflow import data_flow_graphs
 from labm8.py import app
@@ -17,7 +18,7 @@ NOT_DOMINATED = [1, 0]
 DOMINATED = [0, 1]
 
 
-class DominatorTreeAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
+class DominatorTreeAnnotator(data_flow_graphs.NetworkXDataFlowGraphAnnotator):
   """Annotate graphs with dominator analysis.
 
   Statement node A dominates statement node B iff all control paths to B pass
@@ -30,7 +31,7 @@ class DominatorTreeAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
 
   def Annotate(
     self, g: nx.MultiDiGraph, root_node: int
-  ) -> data_flow_graphs.DataFlowAnnotatedGraph:
+  ) -> programl_pb2.ProgramGraph:
     """Annotate nodes in the graph with dominator trees.
 
     The 'root node' annotation is a [0,1] value appended to node x vectors.
@@ -97,8 +98,8 @@ class DominatorTreeAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
 
     g.nodes[root_node]["x"][-1] = data_flow_graphs.ROOT_NODE_YES
 
-    return data_flow_graphs.DataFlowAnnotatedGraph(
-      g=g,
+    return programl.NetworkXToProgramGraph(
+      g,
       root_node=root_node,
       data_flow_steps=data_flow_steps,
       positive_node_count=dominated_node_count,

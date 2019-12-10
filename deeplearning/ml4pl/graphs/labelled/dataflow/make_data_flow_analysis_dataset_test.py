@@ -17,35 +17,42 @@ from labm8.py import test
 
 FLAGS = app.FLAGS
 
-
-class EternalAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
-  """An annotator that takes ages."""
-
-  def RootNodeType(self) -> programl_pb2.Node.Type:
-    """Return the Node.Type enum for root nodes."""
-    return programl_pb2.Node.STATEMENT
-
-  def Annotate(
-    self, g: nx.MultiDiGraph, root_node: int
-  ) -> data_flow_graphs.DataFlowAnnotatedGraph:
-    """Annotate a networkx graph in-place."""
-    time.sleep(1000)
+# TODO(github.com/ChrisCummins/ProGraML/issues/2): Overhaul.
+MODULE_UNDER_TEST = None
 
 
-class FailingAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
-  """An annotator that fails."""
-
-  def RootNodeType(self) -> programl_pb2.Node.Type:
-    """Return the Node.Type enum for root nodes."""
-    return programl_pb2.Node.STATEMENT
-
-  def Annotate(
-    self, g: nx.MultiDiGraph, root_node: int
-  ) -> data_flow_graphs.DataFlowAnnotatedGraph:
-    """Annotate a networkx graph in-place."""
-    raise ValueError("oh noes!")
+def test_TODO():
+  pass
 
 
+#
+# class EternalAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
+#   """An annotator that takes ages."""
+#
+#   def RootNodeType(self) -> programl_pb2.Node.Type:
+#     """Return the Node.Type enum for root nodes."""
+#     return programl_pb2.Node.STATEMENT
+#
+#   def Annotate(
+#     self, g: nx.MultiDiGraph, root_node: int
+#   ) -> data_flow_graphs.DataFlowAnnotatedGraph:
+#     """Annotate a networkx graph in-place."""
+#     time.sleep(1000)
+#
+#
+# class FailingAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
+#   """An annotator that fails."""
+#
+#   def RootNodeType(self) -> programl_pb2.Node.Type:
+#     """Return the Node.Type enum for root nodes."""
+#     return programl_pb2.Node.STATEMENT
+#
+#   def Annotate(
+#     self, g: nx.MultiDiGraph, root_node: int
+#   ) -> data_flow_graphs.DataFlowAnnotatedGraph:
+#     """Annotate a networkx graph in-place."""
+#     raise ValueError("oh noes!")
+#
 # @test.Fixture(scope="function")
 # def db(tempdir: pathlib.Path):
 #   yield graph_database.Database(f"sqlite:///{tempdir}/db1")
