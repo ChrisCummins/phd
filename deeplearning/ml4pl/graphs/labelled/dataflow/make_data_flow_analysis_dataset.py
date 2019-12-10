@@ -159,7 +159,7 @@ def ProcessWorker(packed_args) -> AnnotationResult:
     2,
     lambda t: (
       f"[worker {worker_id} processed {len(program_graphs)} protos "
-      f"({len(graph_tuples)} graphs, {t / len(program_graphs):.3} sec/proto)"
+      f"({len(graph_tuples)} graphs, {t / len(program_graphs):.3f} sec/proto)"
     ),
   ):
     for i, program_graph in enumerate(program_graphs):
