@@ -1,4 +1,4 @@
-"""Unit tests for //deeplearning/ml4pl/graphs/labelled/alias_set."""
+"""Unit tests for //deeplearning/ml4pl/graphs/labelled/dataflow/alias_set."""
 import typing
 
 import networkx as nx
@@ -7,7 +7,7 @@ import pytest
 
 from compilers.llvm import clang
 from compilers.llvm import opt
-from deeplearning.ml4pl.graphs.labelled.alias_set import alias_set
+from deeplearning.ml4pl.graphs.labelled.dataflow.alias_set import alias_set
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import (
   control_and_data_flow_graph as cdfg,
 )

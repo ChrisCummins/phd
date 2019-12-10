@@ -1,9 +1,9 @@
-# Labelled graphs for live-out variables.
+# Labelled graphs for data dependence.
 
 py_library(
-    name = "liveness",
-    srcs = ["liveness.py"],
-    visibility = ["//deeplearning/ml4pl/graphs/labelled:__subpackages__"],
+    name = "data_dependence",
+    srcs = ["data_dependence.py"],
+    visibility = ["//deeplearning/ml4pl/graphs/labelled/dataflow:__subpackages__"],
     deps = [
         "//deeplearning/ml4pl/graphs:graph_iterators",
         "//deeplearning/ml4pl/graphs:graph_query",
@@ -14,10 +14,10 @@ py_library(
 )
 
 py_test(
-    name = "liveness_test",
-    srcs = ["liveness_test.py"],
+    name = "data_dependence_test",
+    srcs = ["data_dependence_test.py"],
     deps = [
-        ":liveness",
+        ":data_dependence",
         "//labm8/py:app",
         "//labm8/py:test",
         "//third_party/py/networkx",

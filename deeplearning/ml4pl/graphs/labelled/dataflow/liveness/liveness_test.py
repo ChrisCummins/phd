@@ -1,8 +1,8 @@
-"""Unit tests for //deeplearning/ml4pl/graphs/labelled/liveness."""
+"""Unit tests for //deeplearning/ml4pl/graphs/labelled/dataflow/liveness."""
 import networkx as nx
 import pytest
 
-from deeplearning.ml4pl.graphs.labelled.liveness import liveness
+from deeplearning.ml4pl.graphs.labelled.dataflow.liveness import liveness
 from labm8.py import app
 from labm8.py import test
 

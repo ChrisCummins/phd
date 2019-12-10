@@ -1,8 +1,10 @@
-"""Unit tests for //deeplearning/ml4pl/graphs/labelled/subexpressions."""
+"""Unit tests for //deeplearning/ml4pl/graphs/labelled/dataflow/subexpressions."""
 import networkx as nx
 import pytest
 
-from deeplearning.ml4pl.graphs.labelled.subexpressions import subexpressions
+from deeplearning.ml4pl.graphs.labelled.dataflow.subexpressions import (
+  subexpressions,
+)
 from labm8.py import app
 from labm8.py import test
 

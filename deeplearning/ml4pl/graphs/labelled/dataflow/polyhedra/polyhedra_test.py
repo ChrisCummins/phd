@@ -1,4 +1,4 @@
-"""Unit tests for //deeplearning/ml4pl/graphs/labelled/polyhedra."""
+"""Unit tests for //deeplearning/ml4pl/graphs/labelled/dataflow/polyhedra."""
 import typing
 
 import networkx as nx
@@ -7,7 +7,7 @@ import pytest
 
 from compilers.llvm import clang
 from compilers.llvm import opt
-from deeplearning.ml4pl.graphs.labelled.polyhedra import polyhedra
+from deeplearning.ml4pl.graphs.labelled.dataflow.polyhedra import polyhedra
 from labm8.py import app
 from labm8.py import test
 

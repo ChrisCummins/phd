@@ -1,9 +1,9 @@
-# Labelled graphs for global common subexpressions.
+# Labelled graphs for live-out variables.
 
 py_library(
-    name = "subexpressions",
-    srcs = ["subexpressions.py"],
-    visibility = ["//deeplearning/ml4pl/graphs/labelled:__subpackages__"],
+    name = "liveness",
+    srcs = ["liveness.py"],
+    visibility = ["//deeplearning/ml4pl/graphs/labelled/dataflow:__subpackages__"],
     deps = [
         "//deeplearning/ml4pl/graphs:graph_iterators",
         "//deeplearning/ml4pl/graphs:graph_query",
@@ -14,10 +14,10 @@ py_library(
 )
 
 py_test(
-    name = "subexpressions_test",
-    srcs = ["subexpressions_test.py"],
+    name = "liveness_test",
+    srcs = ["liveness_test.py"],
     deps = [
-        ":subexpressions",
+        ":liveness",
         "//labm8/py:app",
         "//labm8/py:test",
         "//third_party/py/networkx",

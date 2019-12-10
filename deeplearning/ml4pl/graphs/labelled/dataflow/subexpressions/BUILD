@@ -1,9 +1,9 @@
-# Labelled graphs for data dependence.
+# Labelled graphs for global common subexpressions.
 
 py_library(
-    name = "data_dependence",
-    srcs = ["data_dependence.py"],
-    visibility = ["//deeplearning/ml4pl/graphs/labelled:__subpackages__"],
+    name = "subexpressions",
+    srcs = ["subexpressions.py"],
+    visibility = ["//deeplearning/ml4pl/graphs/labelled/dataflow:__subpackages__"],
     deps = [
         "//deeplearning/ml4pl/graphs:graph_iterators",
         "//deeplearning/ml4pl/graphs:graph_query",
@@ -14,10 +14,10 @@ py_library(
 )
 
 py_test(
-    name = "data_dependence_test",
-    srcs = ["data_dependence_test.py"],
+    name = "subexpressions_test",
+    srcs = ["subexpressions_test.py"],
     deps = [
-        ":data_dependence",
+        ":subexpressions",
         "//labm8/py:app",
         "//labm8/py:test",
         "//third_party/py/networkx",

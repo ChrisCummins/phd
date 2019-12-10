@@ -3,10 +3,10 @@
 py_library(
     name = "reachability",
     srcs = ["reachability.py"],
-    visibility = ["//deeplearning/ml4pl/graphs/labelled:__subpackages__"],
+    visibility = ["//deeplearning/ml4pl/graphs/labelled/dataflow:__subpackages__"],
     deps = [
         "//deeplearning/ml4pl/graphs:programl_pb_py",
-        "//deeplearning/ml4pl/graphs/labelled:data_flow_graphs",
+        "//deeplearning/ml4pl/graphs/labelled/dataflow:data_flow_graphs",
         "//labm8/py:app",
         "//third_party/py/networkx",
     ],

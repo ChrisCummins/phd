@@ -15,15 +15,19 @@ import sqlalchemy as sql
 
 from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
-from deeplearning.ml4pl.graphs.labelled import data_flow_graphs
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
-from deeplearning.ml4pl.graphs.labelled.alias_set import alias_set
-from deeplearning.ml4pl.graphs.labelled.datadep import data_dependence
-from deeplearning.ml4pl.graphs.labelled.domtree import dominator_tree
-from deeplearning.ml4pl.graphs.labelled.liveness import liveness
-from deeplearning.ml4pl.graphs.labelled.polyhedra import polyhedra
-from deeplearning.ml4pl.graphs.labelled.reachability import reachability
-from deeplearning.ml4pl.graphs.labelled.subexpressions import subexpressions
+from deeplearning.ml4pl.graphs.labelled.dataflow import data_flow_graphs
+from deeplearning.ml4pl.graphs.labelled.dataflow.alias_set import alias_set
+from deeplearning.ml4pl.graphs.labelled.dataflow.datadep import data_dependence
+from deeplearning.ml4pl.graphs.labelled.dataflow.domtree import dominator_tree
+from deeplearning.ml4pl.graphs.labelled.dataflow.liveness import liveness
+from deeplearning.ml4pl.graphs.labelled.dataflow.polyhedra import polyhedra
+from deeplearning.ml4pl.graphs.labelled.dataflow.reachability import (
+  reachability,
+)
+from deeplearning.ml4pl.graphs.labelled.dataflow.subexpressions import (
+  subexpressions,
+)
 from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
 from labm8.py import app
 from labm8.py import humanize

@@ -1,4 +1,4 @@
-"""Unit tests for //deeplearning/ml4pl/graphs/labelled/reachability."""
+"""Unit tests for //deeplearning/ml4pl/graphs/labelled/dataflow/reachability."""
 import pickle
 from typing import Iterable
 
@@ -6,7 +6,9 @@ import networkx as nx
 
 from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
-from deeplearning.ml4pl.graphs.labelled.reachability import reachability
+from deeplearning.ml4pl.graphs.labelled.dataflow.reachability import (
+  reachability,
+)
 from deeplearning.ml4pl.graphs.migrate import networkx_to_protos
 from labm8.py import bazelutil
 from labm8.py import test

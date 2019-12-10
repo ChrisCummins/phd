@@ -1,11 +1,11 @@
-"""Unit tests for //deeplearning/ml4pl/graphs/labelled/reachability."""
+"""Unit tests for //deeplearning/ml4pl/graphs/labelled/dataflow/reachability."""
 from typing import List
 from typing import Optional
 
 import networkx as nx
 
 from deeplearning.ml4pl.graphs import programl_pb2
-from deeplearning.ml4pl.graphs.labelled import data_flow_graphs
+from deeplearning.ml4pl.graphs.labelled.dataflow import data_flow_graphs
 from labm8.py import test
 
 FLAGS = test.FLAGS
