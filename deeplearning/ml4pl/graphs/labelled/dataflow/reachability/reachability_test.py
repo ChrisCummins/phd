@@ -106,7 +106,8 @@ def test_MakeAnnotated_real_graphs(
   annotator: reachability.ReachabilityAnnotator,
 ):
   """Opaque black-box test of reachability annotator."""
-  list(annotator.MakeAnnotated(real_graph, n=100))
+  annotated = list(annotator.MakeAnnotated(real_graph, n=100))
+  assert len(annotated) <= 100
 
 
 @decorators.loop_for(seconds=10)
@@ -114,7 +115,8 @@ def test_fuzz_MakeAnnotated(annotator: reachability.ReachabilityAnnotator,):
   """Opaque black-box test of reachability annotator."""
   n = random.randint(1, 100)
   proto = random_programl_generator.CreateRandomProto()
-  list(annotator.MakeAnnotated(proto, n=n))
+  annotated = list(annotator.MakeAnnotated(proto, n=n))
+  assert len(annotated) <= n
 
 
 if __name__ == "__main__":
