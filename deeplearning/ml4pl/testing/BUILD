@@ -130,6 +130,17 @@ py_test(
 )
 
 py_library(
+    name = "test_annotators",
+    srcs = ["test_annotators.py"],
+    visibility = ["//deeplearning/ml4pl/graphs/labelled/dataflow:__subpackages__"],
+    deps = [
+        "//deeplearning/ml4pl/graphs:programl_pb_py",
+        "//deeplearning/ml4pl/graphs/labelled/dataflow:data_flow_graphs",
+        "//labm8/py:app",
+    ],
+)
+
+py_library(
     name = "testing_databases",
     testonly = 1,
     srcs = ["testing_databases.py"],
