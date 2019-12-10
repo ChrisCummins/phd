@@ -252,7 +252,7 @@ def Main():
     for annotated_graph in annotator.MakeAnnotated(input_graph, n):
       annotated_graphs.append(annotated_graph)
   except Exception as e:
-    print(f"Error during analysis: {e}", file=sys.stderr)
+    print(f"{e}", file=sys.stderr)
     sys.exit(E_ANALYSIS_FAILED)
 
   try:
