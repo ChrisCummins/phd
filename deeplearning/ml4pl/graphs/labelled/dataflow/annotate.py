@@ -51,13 +51,20 @@ from deeplearning.ml4pl.testing import test_annotators
 from labm8.py import app
 from labm8.py import bazelutil
 
+app.DEFINE_boolean(
+  "list", False, "If true, list the available analyses and exit."
+)
+app.DEFINE_string("analysis", "", "The name of the analysis to run.")
+app.DEFINE_integer(
+  "n",
+  10,
+  "The maximum number of labelled program graphs to produce. "
+  "For a graph with `n` root statements, `n` instances can be produced by "
+  "changing the root statement. If --n=0, enumerate all possible labelled "
+  "graphs.",
+)
 
-class TimeoutAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
-  def MakeAnnotated(
-    self, unlabelled_graph: programl_pb2.ProgramGraph, n: Optional[int] = None
-  ) -> Iterable[programl_pb2.ProgramGraph]:
-    time.sleep(int(1e6))
-
+FLAGS = app.FLAGS
 
 # A map from analysis name to a callback which instantiates a
 # DataFlowGraphAnnotator object for this anlysis. To add a new analysis, create
@@ -84,21 +91,6 @@ AVAILABLE_ANALYSES = sorted(
 SELF = bazelutil.DataPath(
   "phd/deeplearning/ml4pl/graphs/labelled/dataflow/annotate"
 )
-
-app.DEFINE_boolean(
-  "list", False, "If true, list the available analyses and exit."
-)
-app.DEFINE_string("analysis", "", "The name of the analysis to run.")
-app.DEFINE_integer(
-  "n",
-  0,
-  "The maximum number of labelled program graphs to produce. "
-  "For a graph with `n` root statements, `n` instances can be produced by "
-  "changing the root statement. If --n=0, enumerate all possible labelled "
-  "graphs.",
-)
-
-FLAGS = app.FLAGS
 
 
 class AnalysisFailed(ValueError):
