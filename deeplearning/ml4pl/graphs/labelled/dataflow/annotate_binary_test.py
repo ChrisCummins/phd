@@ -3,7 +3,6 @@ from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled.dataflow import annotate
 from deeplearning.ml4pl.testing import random_programl_generator
-from labm8.py import bazelutil
 from labm8.py import test
 
 FLAGS = test.FLAGS
