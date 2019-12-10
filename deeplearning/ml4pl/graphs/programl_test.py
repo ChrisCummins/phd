@@ -56,6 +56,12 @@ def node_count(request) -> int:
   return request.param
 
 
+@test.Fixture(scope="session", params=list(programl.InputOutputFormat))
+def fmt(request) -> programl.InputOutputFormat:
+  """A test fixture which enumerates protocol buffer formats."""
+  return request.param
+
+
 ###############################################################################
 # Tests.
 ###############################################################################
@@ -114,6 +120,14 @@ def test_fuzz_GraphBuilder():
     builder.AddEdge(random.choice(nodes), random.choice(nodes))
   assert builder.g
   assert builder.proto
+
+
+@decorators.loop_for(seconds=5)
+def test_fuzz_proto_bytes_equivalence(fmt: programl.InputOutputFormat):
+  """Test that conversion to and from bytes does not change the proto."""
+  input = random_programl_generator.CreateRandomProto()
+  output = programl.FromBytes(programl.ToBytes(input, fmt), fmt)
+  assert input == output
 
 
 @decorators.loop_for(seconds=5)
