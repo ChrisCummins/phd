@@ -9,7 +9,6 @@ and prints it to stdout. Example usage:
           --graph_x_dimensionality=2
           --graph_y_dimensionality=0
 """
-import functools
 import pickle
 import random
 from typing import Iterable
@@ -179,7 +178,6 @@ def CreateRandomProto(
   return proto
 
 
-@functools.lru_cache(maxsize=2)
 def EnumerateProtoTestSet() -> Iterable[programl_pb2.ProgramGraph]:
   """Enumerate a test set of "real" program graphs."""
   with NETWORKX_GRAPHS_ARCHIVE as pickled_dir:

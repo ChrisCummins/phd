@@ -1,5 +1,4 @@
 """This module defines a generator for random graph tuples."""
-import functools
 from typing import Iterable
 
 import networkx as nx
@@ -41,7 +40,6 @@ def CreateRandomGraph(
   return programl.ProgramGraphToNetworkX(proto)
 
 
-@functools.lru_cache(maxsize=2)
 def EnumerateGraphTestSet() -> Iterable[nx.MultiDiGraph]:
   """Enumerate a test set of "real" graphs."""
   for proto in random_programl_generator.EnumerateProtoTestSet():
