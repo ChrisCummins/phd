@@ -1,4 +1,5 @@
 """Unit tests for //deeplearning/ml4pl/graphs:programl."""
+import random
 from typing import List
 
 import networkx as nx
@@ -98,6 +99,21 @@ def test_proto_networkx_equivalence_with_preallocated_proto(
 ###############################################################################
 # Fuzzers.
 ###############################################################################
+
+
+@decorators.loop_for(seconds=30)
+def test_fuzz_GraphBuilder():
+  """Test that graph construction doesn't set on fire."""
+  builder = programl.GraphBuilder()
+  random_node_count = random.randint(3, 100)
+  random_edge_count = random.randint(3, 100)
+  nodes = []
+  for _ in range(random_node_count):
+    nodes.append(builder.AddNode())
+  for _ in range(random_edge_count):
+    builder.AddEdge(random.choice(nodes), random.choice(nodes))
+  assert builder.g
+  assert builder.proto
 
 
 @decorators.loop_for(seconds=5)
