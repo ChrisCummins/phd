@@ -57,14 +57,14 @@ def test_Annotate_reachable_node_count_D(
   graph: nx.MultiDiGraph, annotator: reachability.ReachabilityAnnotator
 ):
   annotated = annotator.Annotate(graph, 3)
-  assert annotated.positive_node_count == 1
+  assert annotated.data_flow_positive_node_count == 1
 
 
 def test_Annotate_reachable_node_count_A(
   graph: nx.MultiDiGraph, annotator: reachability.ReachabilityAnnotator
 ):
   annotated = annotator.Annotate(graph, 0)
-  assert annotated.positive_node_count == 4
+  assert annotated.data_flow_positive_node_count == 4
 
 
 def test_Annotate_data_flow_steps_D(

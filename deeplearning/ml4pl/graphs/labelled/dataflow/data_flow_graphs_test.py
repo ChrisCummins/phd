@@ -42,7 +42,7 @@ class MockNetworkXDataFlowGraphAnnotator(
       for _, data in g.nodes(data=True):
         data["y"] = self.node_y
 
-    return programl.NetworkXToProgramGraph(g, root_node=root_node)
+    return programl.NetworkXToProgramGraph(g, data_flow_root_node=root_node)
 
 
 def test_MakeAnnotated_no_root_nodes():
