@@ -344,11 +344,12 @@ def main():
   input_db = FLAGS.proto_db()
   output_db = FLAGS.graph_db()
 
-  progress.Run(
-    DatasetGenerator(
-      input_db, FLAGS.analysis, output_db, max_instances=FLAGS.max_instances
-    )
+  generator = DatasetGenerator(
+    input_db, FLAGS.analysis, output_db, max_instances=FLAGS.max_instances
   )
+  progress.Run(generator)
+  if generator.ctx.i != generator.ctx.n:
+    app.FatalWithoutStackTrace(f"{generator.ctx.i} != {generator.ctx.n}")
 
 
 if __name__ == "__main__":
