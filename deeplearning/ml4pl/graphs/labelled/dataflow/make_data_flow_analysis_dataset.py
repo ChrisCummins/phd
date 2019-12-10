@@ -151,7 +151,7 @@ def ProcessWorker(packed_args) -> AnnotationResult:
   with ctx.Profile(
     2,
     lambda t: (
-      f"[worker {worker_id} processed {len(graph_tuples)} protos "
+      f"[worker {worker_id} processed {len(program_graphs)} protos "
       f"({len(graph_tuples)} graphs)"
     ),
   ):
@@ -288,9 +288,7 @@ class DatasetGenerator(progress.Progress):
     # Have a thread generating inputs, a pool of processes processing them,
     # and another thread writing their results to the database.
     worker_args = ProcessWorkerArgsGenerator(self.graph_reader)
-    # Process the inputs using an iterator, and enforce that the results
-    # arrive *in order*, as we process the input database in-order.
-    workers = pool.imap(ProcessWorker, worker_args, chunksize=FLAGS.chunk_size)
+    workers = pool.imap_unordered(ProcessWorker, worker_args)
     # Buffer the generated results to minimize blocking on database writes.
     with sqlutil.BufferedDatabaseWriter(
       self.output_db,
