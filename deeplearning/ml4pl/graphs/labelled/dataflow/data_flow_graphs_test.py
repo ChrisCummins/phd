@@ -77,20 +77,16 @@ def test_MakeAnnotated_node_x():
   """Test that node X values get appended."""
   annotator = MockNetworkXDataFlowGraphAnnotator()
   builder = programl.GraphBuilder()
-  builder.AddNode()
-  builder.AddNode()
-  builder.AddNode()
-  annotated = list(annotator.MakeAnnotated(builder.proto, n=2))
-  assert len(annotated) == 2
-  # Check the first graph.
-  assert annotated[0].node[0].x == [0]
-  assert annotated[0].node[1].x == [1]
-  assert annotated[0].node[2].x == [2]
-  # Check the second graph. This is to ensure that each graph gets a fresh set
-  # of node x arrays to append to, else these lists will graph in length.
-  assert annotated[1].node[0].x == [0]
-  assert annotated[1].node[1].x == [1]
-  assert annotated[1].node[2].x == [2]
+  for _ in range(10):
+    builder.AddNode()
+  annotated = list(annotator.MakeAnnotated(builder.proto))
+  assert len(annotated) == 10
+  # Check each graph to ensure that each graph gets a fresh set of node x
+  # arrays to append to, else these lists will graph in length.
+  for graph in annotated:
+    assert graph.node[0].x == [0]
+    assert graph.node[1].x == [1]
+    assert graph.node[2].x == [2]
 
 
 def test_MakeAnnotated_no_graph_limit():
@@ -104,15 +100,29 @@ def test_MakeAnnotated_no_graph_limit():
   assert len(annotated) == 3
 
 
-def test_MakeAnnotated_graph_limit():
+@test.Parametrize("n", (1, 10, 100))
+def test_MakeAnnotated_graph_limit(n: int):
   """Test annotator with node labels."""
   annotator = MockNetworkXDataFlowGraphAnnotator(node_y=[1, 2])
   builder = programl.GraphBuilder()
-  builder.AddNode()
-  builder.AddNode()
-  builder.AddNode()
-  annotated = list(annotator.MakeAnnotated(builder.proto, n=1))
-  assert len(annotated) == 1
+  for _ in range(100):
+    builder.AddNode()
+  annotated = list(annotator.MakeAnnotated(builder.proto, n=n))
+  assert len(annotated) == n
+
+
+def test_MakeAnnotated_graph_subset_of_root_nodes():
+  """Test the number of graphs when only a subset of nodes are roots."""
+  annotator = MockNetworkXDataFlowGraphAnnotator(node_y=[1, 2])
+  builder = programl.GraphBuilder()
+  for i in range(50):
+    if i % 2 == 0:
+      builder.AddNode(type=programl_pb2.Node.STATEMENT)
+    else:
+      builder.AddNode(type=programl_pb2.Node.IDENTIFIER)
+  annotated = list(annotator.MakeAnnotated(builder.proto))
+  # Only the 25 statement nodes are used as roots.
+  assert len(annotated) == 25
 
 
 if __name__ == "__main__":
