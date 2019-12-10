@@ -160,18 +160,13 @@ def ProcessWorker(packed_args) -> AnnotationResult:
         # Run a separate process for each graph. This incurs a signficant
         # overhead for processing graphs, but (as far as I can tell) is the only
         # way of enforcing a per-proto timeout for the annotation.
-        with ctx.Profile(
-          3,
-          f"[worker {worker_id}] processed graph {program_graph.ir_id} "
-          f"[{i+1}/{len(program_graphs)}]",
-        ):
-          annotated_graphs = annotate.Annotate(
-            analysis,
-            program_graph.serialized_proto,
-            n=FLAGS.n,
-            binary_graph=True,
-            timeout=FLAGS.annotator_timeout,
-          )
+        annotated_graphs = annotate.Annotate(
+          analysis,
+          program_graph.serialized_proto,
+          n=FLAGS.n,
+          binary_graph=True,
+          timeout=FLAGS.annotator_timeout,
+        )
         for annotated_graph in annotated_graphs.graph:
           graph_tuples.append(
             graph_tuple_database.GraphTuple.CreateFromProgramGraph(
