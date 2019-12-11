@@ -72,44 +72,44 @@ def two_graph_db_session(
 # Fixtures for enumerating populated databases.
 
 
-@test.Fixture(scope="function", params=(1, 1000, 5000))
+@test.Fixture(scope="session", params=(1000,))
 def graph_count(request) -> int:
   return request.param
 
 
-@test.Fixture(scope="function", params=(1, 3))
+@test.Fixture(scope="session", params=(1, 3))
 def node_x_dimensionality(request) -> int:
   return request.param
 
 
-@test.Fixture(scope="function", params=(0, 3))
+@test.Fixture(scope="session", params=(0, 3))
 def node_y_dimensionality(request) -> int:
   return request.param
 
 
-@test.Fixture(scope="function", params=(0, 3))
+@test.Fixture(scope="session", params=(0, 3))
 def graph_x_dimensionality(request) -> int:
   return request.param
 
 
-@test.Fixture(scope="function", params=(0, 3))
+@test.Fixture(scope="session", params=(0, 3))
 def graph_y_dimensionality(request) -> int:
   return request.param
 
 
-@test.Fixture(scope="function", params=(False, True))
+@test.Fixture(scope="session", params=(False, True))
 def with_data_flow(request) -> bool:
   return request.param
 
 
-@test.Fixture(scope="function", params=(0, 2))
+@test.Fixture(scope="session", params=(0, 2))
 def split_count(request) -> int:
   return request.param
 
 
-@test.Fixture(scope="function")
+@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
 def populated_db_and_rows(
-  db: graph_tuple_database.Database,
+  request,
   graph_count: int,
   node_x_dimensionality: int,
   node_y_dimensionality: int,
@@ -119,16 +119,19 @@ def populated_db_and_rows(
   split_count: int,
 ) -> random_graph_tuple_database_generator.DatabaseAndRows:
   """Generate a populated database and a list of rows."""
-  return random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
-    db,
-    graph_count,
-    node_x_dimensionality=node_x_dimensionality,
-    node_y_dimensionality=node_y_dimensionality,
-    graph_x_dimensionality=graph_x_dimensionality,
-    graph_y_dimensionality=graph_y_dimensionality,
-    with_data_flow=with_data_flow,
-    split_count=split_count,
-  )
+  with testing_databases.DatabaseContext(
+    graph_tuple_database.Database, request.param
+  ) as db:
+    yield random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
+      db,
+      graph_count,
+      node_x_dimensionality=node_x_dimensionality,
+      node_y_dimensionality=node_y_dimensionality,
+      graph_x_dimensionality=graph_x_dimensionality,
+      graph_y_dimensionality=graph_y_dimensionality,
+      with_data_flow=with_data_flow,
+      split_count=split_count,
+    )
 
 
 ###############################################################################
@@ -136,77 +139,18 @@ def populated_db_and_rows(
 ###############################################################################
 
 
-# Cascaded delete tests.
-
-
-def test_cascaded_delete_from_session(
-  two_graph_db_session: graph_tuple_database.Database.SessionType,
-):
-  """Test that cascaded delete works when deleting an object from the session."""
-  session = two_graph_db_session
-
-  # Delete the first graph.
-  a = (
-    session.query(graph_tuple_database.GraphTuple)
-    .filter(graph_tuple_database.GraphTuple.ir_id == 1)
-    .one()
-  )
-  session.delete(a)
-  session.commit()
-
-  # Check that only the one program remains.
-  assert (
-    session.query(
-      sql.func.count(graph_tuple_database.GraphTuple.ir_id)
-    ).scalar()
-    == 1
-  )
-  assert (
-    session.query(
-      sql.func.count(graph_tuple_database.GraphTupleData.id)
-    ).scalar()
-    == 1
-  )
-  assert session.query(graph_tuple_database.GraphTuple.ir_id).scalar() == 2
-
-
-def test_cascaded_delete_using_query(
-  two_graph_db_session: graph_tuple_database.Database.SessionType,
-):
-  """Test that cascaded delete works when deleting results of query."""
-  session = two_graph_db_session
-
-  # Delete the first graph. Don't synchronize the session as we don't care
-  # about the mapped objects.
-  session.query(graph_tuple_database.GraphTuple).filter(
-    graph_tuple_database.GraphTuple.ir_id == 1
-  ).delete()
-  session.commit()
-
-  # Check that only the one program remains.
-  assert (
-    session.query(
-      sql.func.count(graph_tuple_database.GraphTuple.ir_id)
-    ).scalar()
-    == 1
-  )
-  assert (
-    session.query(
-      sql.func.count(graph_tuple_database.GraphTupleData.id)
-    ).scalar()
-    == 1
-  )
-  assert session.query(graph_tuple_database.GraphTuple.ir_id).scalar() == 2
-
-
 # CreateFromGraphTuple() tests.
 
 
+@decorators.loop_for(seconds=5)
 def test_CreateFromGraphTuple_attributes():
   """Test that attributes are copied over."""
+  ir_id = random.randint(0, int(1e4))
   graph_tuple = random_graph_tuple_generator.CreateRandomGraphTuple()
-  a = graph_tuple_database.GraphTuple.CreateFromGraphTuple(graph_tuple, ir_id=1)
-  assert a.ir_id == 1
+  a = graph_tuple_database.GraphTuple.CreateFromGraphTuple(
+    graph_tuple, ir_id=ir_id
+  )
+  assert a.ir_id == ir_id
   assert a.node_count == graph_tuple.node_count
   assert a.edge_count == graph_tuple.edge_count
   assert a.control_edge_count == graph_tuple.control_edge_count
@@ -296,6 +240,69 @@ def test_CreateEmpty(db_session: graph_tuple_database.Database.SessionType):
   db_session.commit()
 
 
+# Cascaded delete tests.
+
+
+def test_cascaded_delete_from_session(
+  two_graph_db_session: graph_tuple_database.Database.SessionType,
+):
+  """Test that cascaded delete works when deleting an object from the session."""
+  session = two_graph_db_session
+
+  # Delete the first graph.
+  a = (
+    session.query(graph_tuple_database.GraphTuple)
+    .filter(graph_tuple_database.GraphTuple.ir_id == 1)
+    .one()
+  )
+  session.delete(a)
+  session.commit()
+
+  # Check that only the one program remains.
+  assert (
+    session.query(
+      sql.func.count(graph_tuple_database.GraphTuple.ir_id)
+    ).scalar()
+    == 1
+  )
+  assert (
+    session.query(
+      sql.func.count(graph_tuple_database.GraphTupleData.id)
+    ).scalar()
+    == 1
+  )
+  assert session.query(graph_tuple_database.GraphTuple.ir_id).scalar() == 2
+
+
+def test_cascaded_delete_using_query(
+  two_graph_db_session: graph_tuple_database.Database.SessionType,
+):
+  """Test that cascaded delete works when deleting results of query."""
+  session = two_graph_db_session
+
+  # Delete the first graph. Don't synchronize the session as we don't care
+  # about the mapped objects.
+  session.query(graph_tuple_database.GraphTuple).filter(
+    graph_tuple_database.GraphTuple.ir_id == 1
+  ).delete()
+  session.commit()
+
+  # Check that only the one program remains.
+  assert (
+    session.query(
+      sql.func.count(graph_tuple_database.GraphTuple.ir_id)
+    ).scalar()
+    == 1
+  )
+  assert (
+    session.query(
+      sql.func.count(graph_tuple_database.GraphTupleData.id)
+    ).scalar()
+    == 1
+  )
+  assert session.query(graph_tuple_database.GraphTuple.ir_id).scalar() == 2
+
+
 # Database stats tests.
 
 
@@ -305,7 +312,7 @@ def test_database_stats_json_on_empty_db(db: graph_tuple_database.Database):
   assert db.stats_json
 
 
-# Repeat test repeatedly to test memoized property accessor.
+# Repeat test to use memoized property accessor.
 @decorators.loop_for(min_iteration_count=3)
 def test_database_stats_on_empty_database(
   populated_db_and_rows: random_graph_tuple_database_generator.DatabaseAndRows,
@@ -315,7 +322,7 @@ def test_database_stats_on_empty_database(
   assert db.stats_json
 
 
-# Repeat test repeatedly to test memoized property accessor.
+# Repeat test to use memoized property accessor.
 @decorators.loop_for(min_iteration_count=3)
 def test_database_stats_on_empty_db(db: graph_tuple_database.Database):
   """Test accessing database stats on an empty database."""
@@ -324,7 +331,7 @@ def test_database_stats_on_empty_db(db: graph_tuple_database.Database):
   assert not db.has_data_flow
 
 
-# Repeat test repeatedly to test memoized property accessor.
+# Repeat test to use memoized property accessor.
 @decorators.loop_for(min_iteration_count=3)
 def test_database_stats(
   populated_db_and_rows: random_graph_tuple_database_generator.DatabaseAndRows,
@@ -368,15 +375,7 @@ def test_database_stats(
     sum(r.pickled_graph_tuple_size for r in rows) / len(rows),
   )
 
-  if rows[0].data_flow_steps is None:
-    assert not db.has_data_flow
-    assert db.data_flow_steps_min is None
-    assert db.data_flow_steps_max is None
-    assert db.data_flow_steps_avg is None
-    assert db.data_flow_positive_node_count_min is None
-    assert db.data_flow_positive_node_count_max is None
-    assert db.data_flow_positive_node_count_avg is None
-  else:
+  if rows[0].has_data_flow:
     assert db.has_data_flow
     assert db.data_flow_steps_min >= 0
     assert db.data_flow_steps_max >= 0
@@ -384,6 +383,14 @@ def test_database_stats(
     assert db.data_flow_positive_node_count_min >= 0
     assert db.data_flow_positive_node_count_max >= 0
     assert db.data_flow_positive_node_count_avg >= 0
+  else:
+    assert not db.has_data_flow
+    assert db.data_flow_steps_min is None
+    assert db.data_flow_steps_max is None
+    assert db.data_flow_steps_avg is None
+    assert db.data_flow_positive_node_count_min is None
+    assert db.data_flow_positive_node_count_max is None
+    assert db.data_flow_positive_node_count_avg is None
 
 
 ###############################################################################
