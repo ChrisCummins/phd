@@ -100,16 +100,16 @@ class Loss(nn.Module):
     """inputs: (predictions) or (predictions, intermediate_predictions)"""
     loss = self.loss(inputs[0], targets)
     if self.config.has_graph_labels:
-      loss += self.config.graph_loss_weight * self.loss(inputs[1], targets)
+      loss += self.config.intermediate_loss_weight * self.loss(inputs[1], targets)
     return loss
 
 
 class Metrics(nn.Module):
   """Common metrics and info for inspection of results.
   Args:
-    logits, labels
+  logits, labels
   Returns:
-    (accuracy, pred_targets, correct_preds, targets)"""
+  (accuracy, pred_targets, correct_preds, targets)"""
 
   def __init__(self):
     super().__init__()
@@ -130,14 +130,14 @@ class Metrics(nn.Module):
 class NodeEmbeddings(nn.Module):
   """Construct node embeddings (content embeddings + selector embeddings)
   Args:
-    pretrained_embeddings (Tensor, optional) – FloatTensor containing weights for the Embedding. First dimension is being passed to Embedding as num_embeddings, second as embedding_dim.
+  pretrained_embeddings (Tensor, optional) – FloatTensor containing weights for the Embedding. First dimension is being passed to Embedding as num_embeddings, second as embedding_dim.
 
   Forward
   Args:
-    vocab_ids: <N, 1>
-    selector_ids: <N, 1>
+  vocab_ids: <N, 1>
+  selector_ids: <N, 1>
   Returns:
-    node_states: <N, config.hidden_size>
+  node_states: <N, config.hidden_size>
   """
 
   # TODO(github.com/ChrisCummins/ProGraML/issues/27):: Maybe LayerNorm and Dropout on node_embeddings?
@@ -158,9 +158,7 @@ class NodeEmbeddings(nn.Module):
     super().__init__()
 
     if config.inst2vec_embeddings == "constant":
-      app.Log(
-        1, "Using pre-trained inst2vec embeddings without further training"
-      )
+      app.Log(1, "Using pre-trained inst2vec embeddings without further training")
       assert pretrained_embeddings is not None
       self.node_embs = nn.Embedding.from_pretrained(
         pretrained_embeddings, freeze=True
@@ -247,10 +245,16 @@ class MessagingLayer(nn.Module):
 
   def __init__(self, config):
     super().__init__()
-    self.edge_type_count = config.edge_type_count
+    self.backward_edges = config.backward_edges
+    self.edge_type_count = (
+      config.edge_type_count * 2
+      if self.backward_edges
+      else config.edge_type_count
+    )
+    self.msg_mean_aggregation = config.msg_mean_aggregation
     self.dim = config.hidden_size
 
-    # TODO(github.com/ChrisCummins/ProGraML/issues/27): why do edges carry no bias? Seems restrictive.
+    # TODO(github.com/ChrisCummins/ProGraML/issues/27): why do edges carry no bias? Seems restrictive. Now they can, maybe default corr. FLAG to true?
     self.transform = LinearNet(
       self.dim,
       self.dim * self.edge_type_count,
@@ -260,12 +264,17 @@ class MessagingLayer(nn.Module):
 
   def forward(self, edge_lists, node_states):
     """edge_lists: [<M_i, 2>, ...]"""
-    # let propagated_states[i] be equal to the case with only edge_type i:
+    # all edge types are handled in one matrix, but we
+    # let propagated_states[i] be equal to the case with only edge_type i
     propagated_states = (
       self.transform(node_states)
       .transpose(0, 1)
       .view(self.edge_type_count, self.dim, -1)
     )
+
+    if self.backward_edges:
+      back_edge_lists = [x.flip([1]) for x in edge_lists]
+      edge_lists = edge_lists.extend(back_edge_lists)
 
     messages_by_targets = torch.zeros_like(node_states)
     for i, edge_list in enumerate(edge_lists):
@@ -278,6 +287,14 @@ class MessagingLayer(nn.Module):
         edge_sources, propagated_states[i].transpose(0, 1)
       )
       messages_by_targets.index_add_(0, edge_targets, states_by_source)
+
+    if self.msg_mean_aggregation:
+      bincount = torch.zeros(node_states.size()[0], dtype=torch.long)
+      for el in edge_lists:
+        bincount += el.bincount(minlength=node_states.size()[0])
+      divisor = bincount.float()
+      divisor[bincount == 0] = 1.0  # avoid div by zero for lonely nodes
+      messages_by_targets /= divisor
     return messages_by_targets
 
 
@@ -335,14 +352,10 @@ class NodewiseReadout(nn.Module):
   def __init__(self, config):
     super().__init__()
     self.regression_gate = LinearNet(
-      2 * config.hidden_size,
-      config.labels_dimensionality,
-      dropout=config.output_dropout,
+      2 * config.hidden_size, config.num_classes, dropout=config.output_dropout,
     )
     self.regression_transform = LinearNet(
-      config.hidden_size,
-      config.labels_dimensionality,
-      dropout=config.output_dropout,
+      config.hidden_size, config.num_classes, dropout=config.output_dropout,
     )
 
   def forward(self, raw_node_in, raw_node_out):
@@ -359,13 +372,13 @@ class LinearNet(nn.Module):
   in_features: size of each input sample
   out_features: size of each output sample
   bias: If set to ``False``, the layer will not learn an additive bias.
-    Default: ``True``
+  Default: ``True``
 
   Shape:
   - Input: :math:`(N, *, H_{in})` where :math:`*` means any number of
-    additional dimensions and :math:`H_{in} = \text{in\_features}`
+  additional dimensions and :math:`H_{in} = \text{in\_features}`
   - Output: :math:`(N, *, H_{out})` where all but the last dimension
-    are the same shape as the input and :math:`H_{out} = \text{out\_features}`.
+  are the same shape as the input and :math:`H_{out} = \text{out\_features}`.
   """
 
   def __init__(self, in_features, out_features, bias=True, dropout=0.0):
@@ -373,9 +386,7 @@ class LinearNet(nn.Module):
     self.dropout = dropout
     self.in_features = in_features
     self.out_features = out_features
-    self.weight = nn.parameter.Parameter(
-      torch.Tensor(out_features, in_features)
-    )
+    self.weight = nn.parameter.Parameter(torch.Tensor(out_features, in_features))
     if bias:
       self.bias = nn.parameter.Parameter(torch.Tensor(out_features))
     else:
@@ -421,21 +432,16 @@ class AuxiliaryReadout(nn.Module):
       self.feed_forward = nn.Sequential(
         nn.BatchNorm1d(config.num_classes + config.aux_in_len),
         nn.Linear(
-          config.num_classes + config.aux_in_len,
-          config.auxiliary_inputs_dense_layer_size,
+          config.num_classes + config.aux_in_len, config.aux_in_layer_size,
         ),
         nn.ReLU(),
         nn.Dropout(1 - config.output_dropout),
-        nn.Linear(config.auxiliary_inputs_dense_layer_size, config.num_classes),
+        nn.Linear(config.aux_in_layer_size, config.num_classes),
       )
 
-  def forward(
-    self, raw_node_out, num_graphs, graph_nodes_list, auxiliary_features
-  ):
+  def forward(self, raw_node_out, num_graphs, graph_nodes_list, auxiliary_features):
     graph_features = torch.zeros(num_graphs, self.config.num_classes)
-    graph_features.index_add_(
-      dim=0, index=graph_nodes_list, source=raw_node_out
-    )
+    graph_features.index_add_(dim=0, index=graph_nodes_list, source=raw_node_out)
 
     aggregate_features = torch.cat((graph_features, auxiliary_features), dim=1)
     return self.feed_forward(aggregate_features), graph_features
