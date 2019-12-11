@@ -42,10 +42,22 @@ class DominatorTreeAnnotator(data_flow_graphs.NetworkXDataFlowGraphAnnotator):
     Returns:
       A data flow annotated graph.
     """
+    function = g.nodes[root_node]["function"]
+
+    if function is None:
+      # Root node is outside of a function, so cannot dominate any other nodes.
+      g.graph["data_flow_root_node"] = root_node
+      g.graph["data_flow_steps"] = 0
+      g.graph["data_flow_positive_node_count"] = 0
+      return g
+
+    # Because domtree is not inter-procedural, we can limit ourselves to only
+    # statements within the same function as the root node.
     statement_nodes: List[int] = [
       node
-      for node, type_ in g.nodes(data="type")
-      if type_ == programl_pb2.Node.STATEMENT
+      for node, data in g.nodes(data=True)
+      if data["type"] == programl_pb2.Node.STATEMENT
+      and data["function"] == function
     ]
     # Create a map from nodes to predecessors.
     predecessors: Dict[int, Set[int]] = {
@@ -60,9 +72,7 @@ class DominatorTreeAnnotator(data_flow_graphs.NetworkXDataFlowGraphAnnotator):
     # Initialize the dominator sets.
     # Mapping a node index to a set of dominator node indices.
     dominators: Dict[int, Set[int]] = {
-      n: set(predecessors.keys()) - set([root_node])
-      for n, type_ in g.nodes(data="type")
-      if type_ == programl_pb2.Node.STATEMENT
+      n: set(predecessors.keys()) - set([root_node]) for n in statement_nodes
     }
     dominators[root_node] = set([root_node])
 
@@ -74,7 +84,8 @@ class DominatorTreeAnnotator(data_flow_graphs.NetworkXDataFlowGraphAnnotator):
       for node in dominators:
         if node == root_node:
           continue
-        dom_pred = [dominators[p] for p in predecessors[node]]
+        pred = predecessors[node]
+        dom_pred = [dominators[p] for p in pred]
         if dom_pred:
           dom_pred = set.intersection(*dom_pred)
         else:

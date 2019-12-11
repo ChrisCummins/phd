@@ -45,11 +45,12 @@ def g1() -> nx.MultiDiGraph:
   #   +------->+ d +<-------+
   #            +---+
   builder = programl.GraphBuilder()
-  a = builder.AddNode(x=[-1])
-  b = builder.AddNode(x=[-1])
-  c = builder.AddNode(x=[-1])
-  d = builder.AddNode(x=[-1])
-  v1 = builder.AddNode(x=[-1], type=programl_pb2.Node.IDENTIFIER)
+  fn = builder.AddFunction()
+  a = builder.AddNode(x=[-1], function=fn)
+  b = builder.AddNode(x=[-1], function=fn)
+  c = builder.AddNode(x=[-1], function=fn)
+  d = builder.AddNode(x=[-1], function=fn)
+  v1 = builder.AddNode(x=[-1], type=programl_pb2.Node.IDENTIFIER, function=fn)
   builder.AddEdge(a, b)
   builder.AddEdge(a, c)
   builder.AddEdge(b, d)
@@ -78,12 +79,13 @@ def g2() -> nx.MultiDiGraph:
   #                       +---+
   #
   builder = programl.GraphBuilder()
-  a = builder.AddNode(x=[-1])
-  b = builder.AddNode(x=[-1])
-  c = builder.AddNode(x=[-1])
-  d = builder.AddNode(x=[-1])
-  e = builder.AddNode(x=[-1])
-  v1 = builder.AddNode(x=[-1], type=programl_pb2.Node.IDENTIFIER)
+  fn = builder.AddFunction()
+  a = builder.AddNode(x=[-1], function=fn)
+  b = builder.AddNode(x=[-1], function=fn)
+  c = builder.AddNode(x=[-1], function=fn)
+  d = builder.AddNode(x=[-1], function=fn)
+  e = builder.AddNode(x=[-1], function=fn)
+  v1 = builder.AddNode(x=[-1], type=programl_pb2.Node.IDENTIFIER, function=fn)
   builder.AddEdge(a, b)
   builder.AddEdge(a, c)
   builder.AddEdge(b, d)
@@ -149,6 +151,18 @@ def test_Annotate_g2(
   assert annotated.nodes[5]["y"] == dominator_tree.NOT_DOMINATED
 
 
+def test_root_node_is_not_in_a_function(
+  annotator: dominator_tree.DominatorTreeAnnotator,
+):
+  """Test that if root node is not in a function, then nothing is dominated."""
+  builder = programl.GraphBuilder()
+  a = builder.AddNode(type=programl_pb2.Node.STATEMENT)
+  g = builder.g
+
+  annotated = annotator.Annotate(g, root_node=a)
+  assert annotated.graph["data_flow_steps"] == 0
+
+
 def test_MakeAnnotated_real_graphs(
   real_graph: programl_pb2.ProgramGraph,
   annotator: dominator_tree.DominatorTreeAnnotator,
@@ -158,19 +172,10 @@ def test_MakeAnnotated_real_graphs(
   assert len(annotated.graphs) <= 10
 
 
-###############################################################################
-# Fuzzers.
-###############################################################################
-
-
-@decorators.loop_for(seconds=30)
-def test_fuzz_MakeAnnotated(annotator: dominator_tree.DominatorTreeAnnotator,):
-  """Opaque black-box test of reachability annotator."""
-  n = random.randint(1, 20)
-  proto = random_programl_generator.CreateRandomProto()
-  annotated = annotator.MakeAnnotated(proto, n=n)
-  assert len(annotated.graphs) <= 20
-  assert len(annotated.protos) <= 20
+# Note we can't fuzz domtree with randomly generated protos because domtree is
+# uses nodes' functions to scope the set of predecessor that need to be
+# computed, and the random proto generator does not enforce that control edges
+# between nodes all belong to the same function.
 
 
 if __name__ == "__main__":
