@@ -109,6 +109,25 @@ def node_y_graph_db(
     yield db
 
 
+@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+def graph_y_graph_db(
+  request, graph_count: int, graph_y_dimensionality: int,
+) -> graph_tuple_database.Database:
+  """A test fixture which yields a graph database with 256 OpenCL IR entries."""
+  with testing_databases.DatabaseContext(
+    graph_tuple_database.Database, request.param
+  ) as db:
+    random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
+      db,
+      graph_count,
+      node_x_dimensionality=2,
+      node_y_dimensionality=0,
+      graph_x_dimensionality=2,
+      graph_y_dimensionality=graph_y_dimensionality,
+    )
+    yield db
+
+
 ###############################################################################
 # Tests.
 ###############################################################################
@@ -150,6 +169,34 @@ def test_node_classifier_call(
 
   # Run the model over some random graphs.
   batch_iterator = MakeBatchIterator(model, node_y_graph_db)
+
+  results = model(
+    epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger,
+  )
+  assert isinstance(results, epoch.Results)
+
+  assert results.batch_count
+
+
+def test_graph_classifier_call(
+  epoch_type: epoch.Type,
+  logger: logging.Logger,
+  graph_y_graph_db: graph_tuple_database.Database,
+  node_text_embedding_type,
+):
+  """Test running a graph classifier."""
+  FLAGS.inst2vec_embeddings = node_text_embedding_type
+
+  run_id = run_id_lib.RunId.GenerateUnique(
+    f"mock{random.randint(0, int(1e6)):06}"
+  )
+
+  # Create and initialize an untrained model.
+  model = ggnn.Ggnn(logger, graph_y_graph_db, run_id=run_id)
+  model.Initialize()
+
+  # Run the model over some random graphs.
+  batch_iterator = MakeBatchIterator(model, graph_y_graph_db)
 
   results = model(
     epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger,

@@ -1,4 +1,5 @@
 """A gated graph neural network classifier."""
+import enum
 import math
 import typing
 from typing import Iterable
@@ -17,12 +18,14 @@ from deeplearning.ml4pl.models import batch as batches
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import run
+from deeplearning.ml4pl.models.ggnn import ggnn_config
 from deeplearning.ml4pl.models.ggnn.ggnn_config import GGNNConfig
 from deeplearning.ml4pl.models.ggnn.ggnn_modules import GGNNModel
 from labm8.py import app
 from labm8.py import progress
 
 FLAGS = app.FLAGS
+
 
 app.DEFINE_list(
   "layer_timesteps",
@@ -36,12 +39,13 @@ app.DEFINE_float("clamp_gradient_norm", 6.0, "Clip gradients to L-2 norm.")
 
 
 app.DEFINE_integer("hidden_size", 200, "The size of hidden layer(s).")
-app.DEFINE_string(
+app.DEFINE_enum(
   "inst2vec_embeddings",
-  "random",
-  "The type of per-node inst2vec embeddings to use. One of: "
-  "{constant,constant_zero,constant_random,finetune,random}.",
+  ggnn_config.NodeTextEmbeddingType,
+  ggnn_config.NodeTextEmbeddingType.ZERO_CONSTANT,
+  "The type of per-node inst2vec embeddings to use.",
 )
+# TODO(github.com/ChrisCummins/ProGraML/issues/27): Use an enum.
 app.DEFINE_string(
   "unroll_strategy",
   "none",
