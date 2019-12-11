@@ -365,18 +365,16 @@ class Ggnn(classifier_base.ClassifierBase):
       loss=loss,
     )
 
-  def ModelDataToSave(self) -> typing.Any:
-    data_to_save = {
+  def GetModelData(self) -> typing.Any:
+    return {
       "model_state_dict": self.model.state_dict(),
       "optimizer_state_dict": self.model.opt.state_dict(),
     }
-    return data_to_save
 
   def LoadModelData(self, data_to_load: typing.Any) -> None:
     self.model.load_state_dict(data_to_load["model_state_dict"])
-    if (
-      not FLAGS.test_only
-    ):  # only restore opt if needed. opt should be None o/w.
+    # only restore opt if needed. opt should be None o/w.
+    if not FLAGS.test_only:
       self.model.opt.load_state_dict(data_to_load["optimizer_state_dict"])
 
 
