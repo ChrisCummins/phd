@@ -11,8 +11,8 @@ FLAGS = test.FLAGS
 class MockJob(progress.Progress):
   """A mock job."""
 
-  def __init__(self, *args, **kwargs):
-    self._sleep_time = 0.1
+  def __init__(self, *args, sleep_time: float = 0.1, **kwargs):
+    self._sleep_time = sleep_time
     super(MockJob, self).__init__(*args, **kwargs)
 
   def Run(self):
@@ -41,6 +41,19 @@ def test_Run_MockJob_smoke_test(
   job = MockJob(name, i, n, unit=unit, vertical_position=vertical_position)
   progress.Run(job, refresh_time=refresh_time)
   assert job.ctx.i == max(i, n or 0)
+
+
+def test_Run_patience():
+  """Test that patience is fine when not exceeded."""
+  job = MockJob("name", 0, 10, sleep_time=1)
+  progress.Run(job, patience=2)
+
+
+def test_Run_patience_exceeded():
+  """Test that error is raised when patentience is set and exceeded."""
+  job = MockJob("name", 0, 10, sleep_time=5)
+  with test.Raises(OSError):
+    progress.Run(job, patience=2)
 
 
 if __name__ == "__main__":
