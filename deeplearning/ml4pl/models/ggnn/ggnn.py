@@ -296,9 +296,11 @@ class Ggnn(classifier_base.ClassifierBase):
     ]
 
     if disjoint_graph.has_graph_y:
-      num_graphs = torch.tensor(disjoint_graph.graph_count, dtype=torch.long)
+      num_graphs = torch.tensor(
+        disjoint_graph.disjoint_graph_count, dtype=torch.long
+      )
       graph_nodes_list = torch.from_numpy(
-        np.array(disjoint_graph.graph_nodes_list, dtype=np.int64)
+        np.array(disjoint_graph.disjoint_nodes_list, dtype=np.int64)
       )
       aux_in = torch.from_numpy(
         np.array(disjoint_graph.graph_x, dtype=np.float32)
