@@ -69,6 +69,7 @@ FLAGS = app.FLAGS
 # a new entry in this table.
 ANALYSES: Dict[str, Callable[[], data_flow_graphs.DataFlowGraphAnnotator]] = {
   "reachability": lambda: reachability.ReachabilityAnnotator(),
+  "domtree": lambda: dominator_tree.DominatorTreeAnnotator(),
   # Annotators which are used for testing this script. These should, for obvious
   # reasons, not be used in prod. However, they must remain here so that we can
   # test the behaviour of the annotator under various conditions.
