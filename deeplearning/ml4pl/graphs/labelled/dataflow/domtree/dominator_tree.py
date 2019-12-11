@@ -29,9 +29,7 @@ class DominatorTreeAnnotator(data_flow_graphs.NetworkXDataFlowGraphAnnotator):
     """Dominator trees are a statement-based analysis."""
     return programl_pb2.Node.STATEMENT
 
-  def Annotate(
-    self, g: nx.MultiDiGraph, root_node: int
-  ) -> programl_pb2.ProgramGraph:
+  def Annotate(self, g: nx.MultiDiGraph, root_node: int) -> nx.MultiDiGraph:
     """Annotate nodes in the graph with dominator trees.
 
     The 'root node' annotation is a [0,1] value appended to node x vectors.
@@ -60,10 +58,11 @@ class DominatorTreeAnnotator(data_flow_graphs.NetworkXDataFlowGraphAnnotator):
     }
 
     # Initialize the dominator sets.
+    # Mapping a node index to a set of dominator node indices.
     dominators: Dict[int, Set[int]] = {
       n: set(predecessors.keys()) - set([root_node])
       for n, type_ in g.nodes(data="type")
-      if type_ == "statement"
+      if type_ == programl_pb2.Node.STATEMENT
     }
     dominators[root_node] = set([root_node])
 
@@ -98,9 +97,8 @@ class DominatorTreeAnnotator(data_flow_graphs.NetworkXDataFlowGraphAnnotator):
 
     g.nodes[root_node]["x"][-1] = data_flow_graphs.ROOT_NODE_YES
 
-    return programl.NetworkXToProgramGraph(
-      g,
-      data_flow_root_node=root_node,
-      data_flow_steps=data_flow_steps,
-      data_flow_positive_node_count=dominated_node_count,
-    )
+    g.graph["data_flow_root_node"] = root_node
+    g.graph["data_flow_steps"] = data_flow_steps
+    g.graph["data_flow_positive_node_count"] = dominated_node_count
+
+    return g
