@@ -1,6 +1,5 @@
 """Module for labelling program graphs with dominator trees information."""
 from typing import Dict
-from typing import Optional
 from typing import Set
 
 import networkx as nx
