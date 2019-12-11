@@ -326,8 +326,6 @@ class DatasetGenerator(progress.Progress):
         # Record the generated annotated graphs.
         tuple_sizes = [t.pickled_graph_tuple_size for t in graph_tuples]
         writer.AddMany(graph_tuples, sizes=tuple_sizes)
-      if writer.error_count:
-        raise OSError("Database writer had errors")
 
     # End of buffered writing, this will block until the last results have been
     # committed.
