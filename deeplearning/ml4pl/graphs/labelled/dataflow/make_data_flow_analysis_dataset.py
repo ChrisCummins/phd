@@ -32,6 +32,11 @@ app.DEFINE_integer(
 )
 
 app.DEFINE_integer(
+  "patience",
+  1200,
+  "The maximum amount of time to wait without any progress before quitting.",
+)
+app.DEFINE_integer(
   "nproc",
   multiprocessing.cpu_count(),
   "Tuning parameter. The number of processes to spawn.",
@@ -360,7 +365,7 @@ def main():
   generator = DatasetGenerator(
     input_db, FLAGS.analysis, output_db, max_instances=FLAGS.max_instances
   )
-  progress.Run(generator)
+  progress.Run(generator, patience=FLAGS.patience)
   if generator.ctx.i != generator.ctx.n:
     app.FatalWithoutStackTrace(f"{generator.ctx.i} != {generator.ctx.n}")
 
