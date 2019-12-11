@@ -188,7 +188,7 @@ class RollingResults:
     self.graph_count = 0
     self.target_count = 0
     self.weighted_iteration_count_sum = 0
-    self.model_converged_sum = 0
+    self.weighted_model_converged_sum = 0
     self.has_learning_rate = False
     self.weighted_learning_rate_sum = 0
     self.has_loss = False
@@ -198,10 +198,13 @@ class RollingResults:
     self.weighted_recall_sum = 0
     self.weighted_f1_sum = 0
 
-  def Update(self, results: Results, weight: Optional[float] = None) -> None:
+  def Update(
+    self, data: Data, results: Results, weight: Optional[float] = None
+  ) -> None:
     """Update the rolling results with a new batch.
 
     Args:
+      data: The batch data used to produce the results.
       results: The batch results to update the current state with.
       weight: A weight to assign to weighted sums. E.g. to weight results
         across all targets, use weight=results.target_count. To weight across
@@ -214,7 +217,7 @@ class RollingResults:
 
     self.weight_sum += weight
     self.batch_count += 1
-    self.graph_count += results.graph_count
+    self.graph_count += data.graph_count
     self.target_count += results.target_count
     self.weighted_iteration_count_sum += results.iteration_count
     self.weighted_model_converged_sum += (
