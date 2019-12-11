@@ -39,7 +39,7 @@ def annotator() -> reachability.ReachabilityAnnotator:
 
 
 @test.Fixture(
-  scope="function",
+  scope="session",
   params=list(random_programl_generator.EnumerateProtoTestSet()),
 )
 def real_graph(request) -> programl_pb2.ProgramGraph:
