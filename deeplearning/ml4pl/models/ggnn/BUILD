@@ -23,6 +23,8 @@ py_binary(
 
 py_test(
     name = "ggnn_test",
+    size = "enormous",
+    timeout = "eternal",
     srcs = ["ggnn_test.py"],
     deps = [
         ":ggnn",
