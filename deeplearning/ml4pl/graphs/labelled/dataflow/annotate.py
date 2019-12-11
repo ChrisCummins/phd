@@ -242,7 +242,7 @@ def Annotate(
   """
   if analysis not in ANALYSES:
     raise ValueError(
-      f"Unknown analysis: {FLAGS.analysis}. "
+      f"Unknown analysis: {analysis}. "
       f"Available analyses: {AVAILABLE_ANALYSES}",
     )
 
