@@ -51,7 +51,9 @@ py_test(
     deps = [
         ":ir_database",
         ":split",
-        "//labm8/py:app",
+        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
+        "//deeplearning/ml4pl/graphs/labelled/devmap:make_devmap_dataset",
+        "//deeplearning/ml4pl/testing:testing_databases",
         "//labm8/py:test",
     ],
 )
