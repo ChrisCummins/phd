@@ -7,6 +7,7 @@ import sqlalchemy as sql
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.testing import random_graph_tuple_database_generator
 from deeplearning.ml4pl.testing import random_graph_tuple_generator
+from deeplearning.ml4pl.testing import random_networkx_generator
 from deeplearning.ml4pl.testing import testing_databases
 from labm8.py import decorators
 from labm8.py import test
@@ -391,7 +392,7 @@ def test_database_stats(
 
 
 @decorators.loop_for(seconds=30)
-def test_fuzz_GraphTuple_Create(
+def test_fuzz_GraphTuple_CreateFromGraphTuple(
   db_session: graph_tuple_database.Database.SessionType,
 ):
   """Fuzz the networkx -> proto conversion using randomly generated graphs."""
@@ -409,6 +410,33 @@ def test_fuzz_GraphTuple_Create(
   assert t.edge_count == graph_tuple.edge_count
   assert t.tuple.node_count == graph_tuple.node_count
   assert t.tuple.edge_count == graph_tuple.edge_count
+  assert len(t.tuple.adjacencies) == 3
+  assert len(t.tuple.edge_positions) == 3
+
+  # Add it to the database to catch SQL integrity errors.
+  db_session.add(t)
+  db_session.commit()
+
+
+@decorators.loop_for(seconds=30)
+def test_fuzz_GraphTuple_CreateFromNetworkX(
+  db_session: graph_tuple_database.Database.SessionType,
+):
+  """Fuzz the networkx -> proto conversion using randomly generated graphs."""
+  g = random_networkx_generator.CreateRandomGraph()
+  t = graph_tuple_database.GraphTuple.CreateFromNetworkX(
+    g=g, ir_id=random.randint(0, int(4e6))
+  )
+
+  # Test the derived properties of the generated graph tuple.
+  assert t.edge_count == (
+    t.control_edge_count + t.data_edge_count + t.call_edge_count
+  )
+  assert len(t.sha1) == 40
+  assert t.node_count == g.number_of_nodes()
+  assert t.edge_count == g.number_of_edges()
+  assert t.tuple.node_count == g.number_of_nodes()
+  assert t.tuple.edge_count == g.number_of_edges()
   assert len(t.tuple.adjacencies) == 3
   assert len(t.tuple.edge_positions) == 3
 

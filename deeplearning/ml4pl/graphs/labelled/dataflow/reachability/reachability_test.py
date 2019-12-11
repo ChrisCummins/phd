@@ -8,7 +8,6 @@ from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled.dataflow.reachability import (
   reachability,
 )
-from deeplearning.ml4pl.testing import random_networkx_generator
 from deeplearning.ml4pl.testing import random_programl_generator
 from labm8.py import decorators
 from labm8.py import test
@@ -57,48 +56,48 @@ def test_Annotate_reachable_node_count_D(
   graph: nx.MultiDiGraph, annotator: reachability.ReachabilityAnnotator
 ):
   annotated = annotator.Annotate(graph, 3)
-  assert annotated.data_flow_positive_node_count == 1
+  assert annotated.graph["data_flow_positive_node_count"] == 1
 
 
 def test_Annotate_reachable_node_count_A(
   graph: nx.MultiDiGraph, annotator: reachability.ReachabilityAnnotator
 ):
   annotated = annotator.Annotate(graph, 0)
-  assert annotated.data_flow_positive_node_count == 4
+  assert annotated.graph["data_flow_positive_node_count"] == 4
 
 
 def test_Annotate_data_flow_steps_D(
   graph: nx.MultiDiGraph, annotator: reachability.ReachabilityAnnotator
 ):
   annotated = annotator.Annotate(graph, 3)
-  assert annotated.data_flow_steps == 1
+  assert annotated.graph["data_flow_steps"] == 1
 
 
 def test_Annotate_data_flow_steps_A(
   graph: nx.MultiDiGraph, annotator: reachability.ReachabilityAnnotator
 ):
   annotated = annotator.Annotate(graph, 0)
-  assert annotated.data_flow_steps == 4
+  assert annotated.graph["data_flow_steps"] == 4
 
 
 def test_Annotate_node_x(
   graph: nx.MultiDiGraph, annotator: reachability.ReachabilityAnnotator
 ):
   annotated = annotator.Annotate(graph, 0)
-  assert annotated.node[0].x == [0, 1]
-  assert annotated.node[1].x == [0, 0]
-  assert annotated.node[2].x == [0, 0]
-  assert annotated.node[3].x == [0, 0]
+  assert annotated.nodes[0]["x"] == [0, 1]
+  assert annotated.nodes[1]["x"] == [0, 0]
+  assert annotated.nodes[2]["x"] == [0, 0]
+  assert annotated.nodes[3]["x"] == [0, 0]
 
 
 def test_Annotate_node_y(
   graph: nx.MultiDiGraph, annotator: reachability.ReachabilityAnnotator
 ):
   annotated = annotator.Annotate(graph, 1)
-  assert annotated.node[0].y == [1, 0]
-  assert annotated.node[1].y == [0, 1]
-  assert annotated.node[2].y == [0, 1]
-  assert annotated.node[3].y == [0, 1]
+  assert annotated.nodes[0]["y"] == [1, 0]
+  assert annotated.nodes[1]["y"] == [0, 1]
+  assert annotated.nodes[2]["y"] == [0, 1]
+  assert annotated.nodes[3]["y"] == [0, 1]
 
 
 def test_MakeAnnotated_real_graphs(
@@ -106,17 +105,18 @@ def test_MakeAnnotated_real_graphs(
   annotator: reachability.ReachabilityAnnotator,
 ):
   """Opaque black-box test of reachability annotator."""
-  annotated = list(annotator.MakeAnnotated(real_graph, n=100))
-  assert len(annotated) <= 100
+  annotated = annotator.MakeAnnotated(real_graph, n=10)
+  assert len(annotated.graphs) <= 10
 
 
-@decorators.loop_for(seconds=10)
-def test_fuzz_MakeAnnotated(annotator: reachability.ReachabilityAnnotator,):
+@decorators.loop_for(seconds=30)
+def test_fuzz_MakeAnnotated(annotator: reachability.ReachabilityAnnotator):
   """Opaque black-box test of reachability annotator."""
-  n = random.randint(1, 100)
+  n = random.randint(1, 20)
   proto = random_programl_generator.CreateRandomProto()
-  annotated = list(annotator.MakeAnnotated(proto, n=n))
-  assert len(annotated) <= n
+  annotated = annotator.MakeAnnotated(proto, n=n)
+  assert len(annotated.graphs) <= 20
+  assert len(annotated.protos) <= 20
 
 
 if __name__ == "__main__":

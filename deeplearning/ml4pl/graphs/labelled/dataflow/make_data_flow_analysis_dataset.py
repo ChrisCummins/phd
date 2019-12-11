@@ -164,9 +164,6 @@ def ProcessWorker(packed_args) -> AnnotationResult:
   ):
     for i, program_graph in enumerate(program_graphs):
       try:
-        # Run a separate process for each graph. This incurs a signficant
-        # overhead for processing graphs, but (as far as I can tell) is the only
-        # way of enforcing a per-proto timeout for the annotation.
         annotated_graphs = annotate.Annotate(
           analysis,
           program_graph.serialized_proto,
@@ -174,9 +171,9 @@ def ProcessWorker(packed_args) -> AnnotationResult:
           binary_graph=True,
           timeout=FLAGS.annotator_timeout,
         )
-        for annotated_graph in annotated_graphs.graph:
+        for annotated_graph in annotated_graphs.graphs:
           graph_tuples.append(
-            graph_tuple_database.GraphTuple.CreateFromProgramGraph(
+            graph_tuple_database.GraphTuple.CreateFromGraphTuple(
               annotated_graph, ir_id=program_graph.ir_id
             )
           )

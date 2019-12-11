@@ -18,9 +18,6 @@ from labm8.py import app
 FLAGS = app.FLAGS
 
 app.DEFINE_integer("graph_count", 1000, "The number of graphs to generate.")
-app.DEFINE_boolean(
-  "with_data_flow", False, "Whether to generate data flow columns."
-)
 app.DEFINE_integer(
   "split_count",
   10,

@@ -212,63 +212,13 @@ def _AnnotateInSubprocess(
   return output
 
 
-def _AnnotateWithTimeout(
-  analysis: str,
-  graph: Union[programl_pb2.ProgramGraph, bytes],
-  n: int = 0,
-  timeout: int = 120,
-  binary_graph: bool = False,
-) -> programl_pb2.ProgramGraphs:
-  """Run the analysis using a SIGALARM timeout strategy.
-
-  Args:
-    analysis: The name of the analysis to run.
-    graph: The unlabelled ProgramGraph protocol buffer to to annotate, either
-      as a proto instance or as binary-encoded byte array.
-    n: The maximum number of labelled graphs to produce.
-    timeout: The maximum number of seconds to run the analysis for.
-    binary_graph: If true, treat the graph argument as a binary byte array.
-
-  Returns:
-    A ProgramGraphs protocol buffer.
-
-  Raises:
-    ValueError: If an invalid analysis is requested.
-    AnalysisTimeout: If the analysis did not complete within the requested
-      timeout.
-  """
-
-  def TimeoutHandler(signum, frame):
-    """Callback to raise a timeout error."""
-    del signum
-    del frame
-    raise AnalysisTimeout(timeout)
-
-  signal.signal(signal.SIGALRM, TimeoutHandler)
-  signal.alarm(timeout)
-  try:
-    annotator = ANALYSES[analysis]()
-
-    if binary_graph:
-      graph = programl.FromBytes(graph, fmt=programl.InputOutputFormat.PB)
-
-    annotated_graphs: List[programl_pb2.ProgramGraph] = []
-    for annotated_graph in annotator.MakeAnnotated(graph, n):
-      annotated_graphs.append(annotated_graph)
-  finally:
-    signal.alarm(0)
-
-  return programl_pb2.ProgramGraphs(graph=annotated_graphs)
-
-
 def Annotate(
   analysis: str,
   graph: Union[programl_pb2.ProgramGraph, bytes],
   n: int = 0,
   timeout: int = 120,
   binary_graph: bool = False,
-  use_subprocess: bool = False,
-) -> programl_pb2.ProgramGraphs:
+) -> data_flow_graphs.DataFlowGraphs:
   """Run an analysis
 
   Args:
@@ -278,9 +228,6 @@ def Annotate(
     n: The maximum number of labelled graphs to produce.
     timeout: The maximum number of seconds to run the analysis for.
     binary_graph: If true, treat the graph argument as a binary byte array.
-    use_subprocess: Use a suprocess to compute annotations. This has a huge
-      (hundreds of milliseconds) overhead, but is the most robust means of
-      enforcing the timeout.
 
   Returns:
     A ProgramGraphs protocol buffer.
@@ -298,10 +245,25 @@ def Annotate(
       f"Available analyses: {AVAILABLE_ANALYSES}",
     )
 
-  if use_subprocess:
-    return _AnnotateInSubprocess(analysis, graph, n, timeout, binary_graph)
-  else:
-    return _AnnotateWithTimeout(analysis, graph, n, timeout, binary_graph)
+  def TimeoutHandler(signum, frame):
+    """Callback to raise a timeout error."""
+    del signum
+    del frame
+    raise AnalysisTimeout(timeout)
+
+  signal.signal(signal.SIGALRM, TimeoutHandler)
+  signal.alarm(timeout)
+  try:
+    annotator = ANALYSES[analysis]()
+
+    if binary_graph:
+      graph = programl.FromBytes(graph, fmt=programl.InputOutputFormat.PB)
+
+    annotated_graphs = annotator.MakeAnnotated(graph, n)
+  finally:
+    signal.alarm(0)
+
+  return annotated_graphs
 
 
 def Main():
