@@ -1,13 +1,11 @@
 """Unit tests for //deeplearning/ml4pl/graphs/labelled/dataflow/domtree:dominator_tree."""
-import random
-
 import networkx as nx
 
 from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled.dataflow.domtree import dominator_tree
+from deeplearning.ml4pl.testing import random_networkx_generator
 from deeplearning.ml4pl.testing import random_programl_generator
-from labm8.py import decorators
 from labm8.py import test
 
 FLAGS = test.FLAGS
@@ -19,6 +17,7 @@ FLAGS = test.FLAGS
 
 @test.Fixture(scope="function")
 def annotator() -> dominator_tree.DominatorTreeAnnotator:
+  """Test fixture that returns a graph annotator."""
   return dominator_tree.DominatorTreeAnnotator()
 
 
@@ -26,9 +25,15 @@ def annotator() -> dominator_tree.DominatorTreeAnnotator:
   scope="session",
   params=list(random_programl_generator.EnumerateProtoTestSet()),
 )
-def real_graph(request) -> programl_pb2.ProgramGraph:
+def real_proto(request) -> programl_pb2.ProgramGraph:
   """A test fixture which yields one of 100 "real" graphs."""
   return request.param
+
+
+@test.Fixture(scope="session")
+def one_real_graph() -> programl_pb2.ProgramGraph:
+  """A test fixture which yields one of 100 "real" graphs."""
+  return next(random_networkx_generator.EnumerateGraphTestSet())
 
 
 @test.Fixture(scope="function")
@@ -102,7 +107,7 @@ def g2() -> nx.MultiDiGraph:
 
 
 def test_Annotate_g1(
-  g1: nx.MultiDiGraph, annotator: dominator_tree.DominatorTreeAnnotator
+  g1: nx.MultiDiGraph, annotator: dominator_tree.DominatorTreeAnnotator,
 ):
   """Test dominator tree for a small """
   annotated = annotator.Annotate(g1, root_node=0)
@@ -163,19 +168,28 @@ def test_root_node_is_not_in_a_function(
   assert annotated.graph["data_flow_steps"] == 0
 
 
-def test_MakeAnnotated_real_graphs(
-  real_graph: programl_pb2.ProgramGraph,
+def test_MakeAnnotated_real_protos(
+  real_proto: programl_pb2.ProgramGraph,
   annotator: dominator_tree.DominatorTreeAnnotator,
 ):
   """Opaque black-box test of reachability annotator."""
-  annotated = annotator.MakeAnnotated(real_graph, n=10)
+  annotated = annotator.MakeAnnotated(real_proto, n=10)
   assert len(annotated.graphs) <= 10
 
 
-# Note we can't fuzz domtree with randomly generated protos because domtree is
+# Note we can't fuzz domtree with randomly generated protos because domtree
 # uses nodes' functions to scope the set of predecessor that need to be
 # computed, and the random proto generator does not enforce that control edges
 # between nodes all belong to the same function.
+
+
+def test_benchmark_annotate(
+  benchmark,
+  one_real_graph: nx.MultiDiGraph,
+  annotator: dominator_tree.DominatorTreeAnnotator,
+):
+  """Benchmark dominator tree analysis."""
+  benchmark(annotator.Annotate, one_real_graph, 1)
 
 
 if __name__ == "__main__":

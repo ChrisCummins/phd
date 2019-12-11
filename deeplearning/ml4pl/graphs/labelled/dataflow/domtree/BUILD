@@ -5,7 +5,6 @@ py_library(
     srcs = ["dominator_tree.py"],
     visibility = ["//deeplearning/ml4pl/graphs/labelled/dataflow:__subpackages__"],
     deps = [
-        "//deeplearning/ml4pl/graphs:programl",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//deeplearning/ml4pl/graphs/labelled/dataflow:data_flow_graphs",
         "//labm8/py:app",
@@ -20,6 +19,7 @@ py_test(
         ":dominator_tree",
         "//deeplearning/ml4pl/graphs:programl",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
+        "//deeplearning/ml4pl/testing:random_networkx_generator",
         "//deeplearning/ml4pl/testing:random_programl_generator",
         "//labm8/py:decorators",
         "//labm8/py:test",

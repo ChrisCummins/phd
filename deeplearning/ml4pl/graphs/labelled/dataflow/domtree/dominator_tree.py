@@ -1,11 +1,10 @@
 """Module for labelling program graphs with dominator trees information."""
 from typing import Dict
-from typing import List
+from typing import Optional
 from typing import Set
 
 import networkx as nx
 
-from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled.dataflow import data_flow_graphs
 from labm8.py import app
@@ -16,6 +15,15 @@ FLAGS = app.FLAGS
 # The real_y arrays for node reachability:
 NOT_DOMINATED = [1, 0]
 DOMINATED = [0, 1]
+
+
+def Predecessors(g: nx.MultiDiGraph, node: int) -> Set[int]:
+  """Get the control predecessors of a node."""
+  return set(
+    src
+    for src, _, flow in g.in_edges(node, data="flow")
+    if flow == programl_pb2.Edge.CONTROL
+  )
 
 
 class DominatorTreeAnnotator(data_flow_graphs.NetworkXDataFlowGraphAnnotator):
@@ -60,16 +68,10 @@ class DominatorTreeAnnotator(data_flow_graphs.NetworkXDataFlowGraphAnnotator):
       if data["type"] == programl_pb2.Node.STATEMENT
       and data["function"] == function
     }
-    # Pre-compute a mapping from statement to statement predecessors for all
-    # statements in the function.
-    predecessors: Dict[int, Set[int]] = {
-      node: set(
-        src
-        for src, _, flow in g.in_edges(node, data="flow")
-        if flow == programl_pb2.Edge.CONTROL
-      )
-      for node in statement_nodes
-    }
+
+    # A mapping from statement to statement predecessors. This is lazily
+    # evaluated.
+    predecessors: Dict[int, Set[int]] = {}
 
     # Initialize the dominator sets. These map nodes to the set of nodes that
     # dominate it.
@@ -87,7 +89,11 @@ class DominatorTreeAnnotator(data_flow_graphs.NetworkXDataFlowGraphAnnotator):
       for node in dominators:
         if node == root_node:
           continue
-        pred = predecessors[node]
+
+        # Get the predecessor nodes or compute them if required.
+        pred = predecessors.get(node, Predecessors(g, node))
+        predecessors[node] = pred
+
         dom_pred = [dominators[p] for p in pred]
         if dom_pred:
           dom_pred = set.intersection(*dom_pred)
