@@ -40,11 +40,11 @@ class ClassifierBase(object):
   Subclasses must implement the following methods:
     MakeBatch()        # construct a batch from input graphs.
     RunBatch()         # run the model on the batch.
+    GetModelData()     # get model data to save.
+    LoadModelData()    # load model data.
 
   And may optionally wish to implement these additional methods:
     CreateModelData()  # initialize an untrained model.
-    GetModelData()     # get model data to save.
-    LoadModelData()    # load model data.
     Summary()          # return a string model summary.
   """
 
@@ -170,7 +170,7 @@ class ClassifierBase(object):
     Args:
       data_to_load: The return value of GetModelData().
     """
-    return None
+    raise NotImplementedError("abstract class")
 
   def GetModelData(self) -> Any:
     """Return the model state.
@@ -179,7 +179,7 @@ class ClassifierBase(object):
       A  model-defined blob of data that can later be passed to LoadModelData()
       to restore the current model state.
     """
-    return None
+    raise NotImplementedError("abstract class")
 
   def Summary(self) -> str:
     """Return a long summary string describing the model."""
