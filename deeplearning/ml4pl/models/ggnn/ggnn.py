@@ -12,13 +12,13 @@ from torch import nn
 from deeplearning.ml4pl.graphs.labelled import graph_batcher
 from deeplearning.ml4pl.graphs.labelled import graph_tuple
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
+from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import node_encoder
 from deeplearning.ml4pl.models import batch as batches
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import run
 from deeplearning.ml4pl.models.ggnn.ggnn_config import GGNNConfig
 from deeplearning.ml4pl.models.ggnn.ggnn_modules import GGNNModel
-from labm8 import humanize
 from labm8.py import app
 from labm8.py import progress
 
@@ -128,7 +128,9 @@ class Ggnn(classifier_base.ClassifierBase):
       num_classes=self.y_dimensionality,
       has_graph_labels=self.graph_y_dimensionality > 0,
     )
-    inst2vec_embeddings = list(self.graph_db.embeddings_tables)[0]
+
+    inst2vec_embeddings = node_encoder.GraphEncoder().embeddings_tables[0]
+    app.Log(1, 'inst2vec_embeddings.shape=%s', inst2vec_embeddings.shape)
     inst2vec_embeddings = torch.from_numpy(
       np.array(inst2vec_embeddings, dtype=np.float32)
     )
