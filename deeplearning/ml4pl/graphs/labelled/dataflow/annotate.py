@@ -218,7 +218,6 @@ def Annotate(
   graph: Union[programl_pb2.ProgramGraph, bytes],
   n: int = 0,
   timeout: int = 120,
-  binary_graph: bool = False,
 ) -> data_flow_graphs.DataFlowGraphs:
   """Run an analysis
 
