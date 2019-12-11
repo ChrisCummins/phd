@@ -1,5 +1,4 @@
 """A gated graph neural network classifier."""
-import enum
 import math
 import typing
 from typing import Iterable
@@ -102,6 +101,11 @@ app.DEFINE_integer(
   "aux_in_layer_size",
   32,
   "Size for MLP that combines graph_features and aux_in features",
+)
+app.DEFINE_boolean(
+  "log1p_graph_x",
+  True,
+  "If set, apply a log(x + 1) transformation to incoming graph-level features.",
 )
 
 
@@ -306,9 +310,13 @@ class Ggnn(classifier_base.ClassifierBase):
       graph_nodes_list = torch.from_numpy(
         np.array(disjoint_graph.disjoint_nodes_list, dtype=np.int64)
       )
-      aux_in = torch.from_numpy(
-        np.array(disjoint_graph.graph_x, dtype=np.float32)
-      )
+
+      if FLAGS.log1p_graph_x:
+        graph_x = np.log1p(disjoint_graph.graph_x, dtype=np.float32)
+      else:
+        graph_x = np.array(disjoint_graph.graph_x, dtype=np.float32)
+
+      aux_in = torch.from_numpy(graph_x)
       num_graphs.to(self.dev)
       graph_nodes_list.to(self.dev)
       aux_in.to(self.dev)

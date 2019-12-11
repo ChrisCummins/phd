@@ -84,6 +84,12 @@ def epoch_type(request) -> epoch.Type:
   return request.param
 
 
+@test.Fixture(scope="session", params=(False, True))
+def log1p_graph_x(request) -> bool:
+  """Enumerate --log1p_graph_x values."""
+  return request.param
+
+
 @test.Fixture(scope="session", params=list(ggnn_config.NodeTextEmbeddingType))
 def node_text_embedding_type(request):
   return flags_parsers.EnumFlag(
@@ -183,9 +189,11 @@ def test_graph_classifier_call(
   logger: logging.Logger,
   graph_y_graph_db: graph_tuple_database.Database,
   node_text_embedding_type,
+  log1p_graph_x: bool,
 ):
   """Test running a graph classifier."""
   FLAGS.inst2vec_embeddings = node_text_embedding_type
+  FLAGS.log1p_graph_x = log1p_graph_x
 
   run_id = run_id_lib.RunId.GenerateUnique(
     f"mock{random.randint(0, int(1e6)):06}"
