@@ -173,7 +173,9 @@ class Ggnn(classifier_base.ClassifierBase):
     graph_iterator = GraphIterator(graphs)
 
     # Create a disjoint graph out of one or more input graphs.
-    batcher = graph_batcher.GraphBatcher.CreateFromFlags(graph_iterator, ctx=ctx)
+    batcher = graph_batcher.GraphBatcher.CreateFromFlags(
+      graph_iterator, ctx=ctx
+    )
 
     try:
       disjoint_graph = next(batcher)
@@ -266,10 +268,10 @@ class Ggnn(classifier_base.ClassifierBase):
     # torch.from_numpy() shares memory with numpy!
     # TODO(github.com/ChrisCummins/ProGraML/issues/27): maybe we can save memory copies in the training loop if we can turn the data into the required types (np.int64 and np.float32) once they come off the network from the database, where smaller i/o size (int32) is more important.
     vocab_ids = torch.from_numpy(
-      np.array(disjoint_graph.node_x_indices[:, 0], dtype=np.int64)
+      np.array(disjoint_graph.node_x[:, 0], dtype=np.int64)
     )
     selector_ids = torch.from_numpy(
-      np.array(disjoint_graph.node_x_indices[:, 1], dtype=np.int64)
+      np.array(disjoint_graph.node_x[:, 1], dtype=np.int64)
     )
     labels = (
       torch.from_numpy(disjoint_graph.node_y)
@@ -278,11 +280,13 @@ class Ggnn(classifier_base.ClassifierBase):
     )
     edge_lists = [
       torch.from_numpy(np.array(x, dtype=np.int64))
-      for x in disjoint_graph.adjacency_lists
+      for x in disjoint_graph.adjacencies
     ]
 
     # TODO(github.com/ChrisCummins/ProGraML/issues/30) still unused
-    edge_positions = [torch.from_numpy(x) for x in disjoint_graph.edge_positions]
+    edge_positions = [
+      torch.from_numpy(x) for x in disjoint_graph.edge_positions
+    ]
 
     if disjoint_graph.has_graph_y:
       num_graphs = torch.tensor(disjoint_graph.graph_count, dtype=torch.long)
@@ -355,7 +359,9 @@ class Ggnn(classifier_base.ClassifierBase):
 
   def LoadModelData(self, data_to_load: typing.Any) -> None:
     self.model.load_state_dict(data_to_load["model_state_dict"])
-    if not FLAGS.test_only:  # only restore opt if needed. opt should be None o/w.
+    if (
+      not FLAGS.test_only
+    ):  # only restore opt if needed. opt should be None o/w.
       self.model.opt.load_state_dict(data_to_load["optimizer_state_dict"])
 
 
