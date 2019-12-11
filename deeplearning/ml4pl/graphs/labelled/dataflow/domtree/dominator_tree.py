@@ -51,15 +51,17 @@ class DominatorTreeAnnotator(data_flow_graphs.NetworkXDataFlowGraphAnnotator):
       g.graph["data_flow_positive_node_count"] = 0
       return g
 
-    # Because domtree is not inter-procedural, we can limit ourselves to only
-    # statements within the same function as the root node.
-    statement_nodes: List[int] = [
+    # Because a node may only be dominated by a node from within the same
+    # function, we need only consider the statements nodes within the same
+    # function as the root node.
+    statement_nodes: Set[int] = {
       node
       for node, data in g.nodes(data=True)
       if data["type"] == programl_pb2.Node.STATEMENT
       and data["function"] == function
-    ]
-    # Create a map from nodes to predecessors.
+    }
+    # Pre-compute a mapping from statement to statement predecessors for all
+    # statements in the function.
     predecessors: Dict[int, Set[int]] = {
       node: set(
         src
@@ -69,10 +71,11 @@ class DominatorTreeAnnotator(data_flow_graphs.NetworkXDataFlowGraphAnnotator):
       for node in statement_nodes
     }
 
-    # Initialize the dominator sets.
-    # Mapping a node index to a set of dominator node indices.
+    # Initialize the dominator sets. These map nodes to the set of nodes that
+    # dominate it.
+    initial_dominators = statement_nodes - set([root_node])
     dominators: Dict[int, Set[int]] = {
-      n: set(predecessors.keys()) - set([root_node]) for n in statement_nodes
+      n: initial_dominators for n in statement_nodes
     }
     dominators[root_node] = set([root_node])
 
