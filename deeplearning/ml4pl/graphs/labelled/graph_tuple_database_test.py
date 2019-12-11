@@ -19,8 +19,8 @@ FLAGS = test.FLAGS
 ###############################################################################
 
 
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
-def db(request) -> graph_tuple_database.Database:
+@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+def empty_db(request) -> graph_tuple_database.Database:
   """A test fixture which yields an empty graph proto database."""
   yield from testing_databases.YieldDatabase(
     graph_tuple_database.Database, request.param
@@ -28,45 +28,47 @@ def db(request) -> graph_tuple_database.Database:
 
 
 @test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
-def db_session(
-  db: graph_tuple_database.Database,
-) -> graph_tuple_database.Database.SessionType:
+def db_session(request) -> graph_tuple_database.Database.SessionType:
   """A test fixture which yields an empty graph proto database session."""
-  with db.Session() as session:
-    yield session
+  with testing_databases.DatabaseContext(
+    graph_tuple_database.Database, request.param
+  ) as db:
+    with db.Session() as session:
+      yield session
 
 
-@test.Fixture(scope="function")
-def two_graph_db_session(
-  db: graph_tuple_database.Database,
-) -> graph_tuple_database.Database.SessionType:
+@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+def two_graph_db_session(request) -> graph_tuple_database.Database.SessionType:
   """A test fixture which yields a database with two graph tuples."""
-  a = graph_tuple_database.GraphTuple.CreateFromGraphTuple(
-    graph_tuple=random_graph_tuple_generator.CreateRandomGraphTuple(), ir_id=1
-  )
-  b = graph_tuple_database.GraphTuple.CreateFromGraphTuple(
-    graph_tuple=random_graph_tuple_generator.CreateRandomGraphTuple(), ir_id=2
-  )
-
-  with db.Session() as session:
-    session.add_all([a, b])
-    session.commit()
-
-    # Sanity check that the graphs have been added to the database.
-    assert (
-      session.query(
-        sql.func.count(graph_tuple_database.GraphTuple.ir_id)
-      ).scalar()
-      == 2
+  with testing_databases.DatabaseContext(
+    graph_tuple_database.Database, request.param
+  ) as db:
+    a = graph_tuple_database.GraphTuple.CreateFromGraphTuple(
+      graph_tuple=random_graph_tuple_generator.CreateRandomGraphTuple(), ir_id=1
     )
-    assert (
-      session.query(
-        sql.func.count(graph_tuple_database.GraphTupleData.id)
-      ).scalar()
-      == 2
+    b = graph_tuple_database.GraphTuple.CreateFromGraphTuple(
+      graph_tuple=random_graph_tuple_generator.CreateRandomGraphTuple(), ir_id=2
     )
 
-    yield session
+    with db.Session() as session:
+      session.add_all([a, b])
+      session.commit()
+
+      # Sanity check that the graphs have been added to the database.
+      assert (
+        session.query(
+          sql.func.count(graph_tuple_database.GraphTuple.ir_id)
+        ).scalar()
+        == 2
+      )
+      assert (
+        session.query(
+          sql.func.count(graph_tuple_database.GraphTupleData.id)
+        ).scalar()
+        == 2
+      )
+
+      yield session
 
 
 # Fixtures for enumerating populated databases.
@@ -107,7 +109,7 @@ def split_count(request) -> int:
   return request.param
 
 
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
 def populated_db_and_rows(
   request,
   graph_count: int,
@@ -307,9 +309,11 @@ def test_cascaded_delete_using_query(
 
 
 @decorators.loop_for(min_iteration_count=3)
-def test_database_stats_json_on_empty_db(db: graph_tuple_database.Database):
+def test_database_stats_json_on_empty_db(
+  empty_db: graph_tuple_database.Database,
+):
   """Test computing stats on an empty database."""
-  assert db.stats_json
+  assert empty_db.stats_json
 
 
 # Repeat test to use memoized property accessor.
@@ -324,11 +328,11 @@ def test_database_stats_on_empty_database(
 
 # Repeat test to use memoized property accessor.
 @decorators.loop_for(min_iteration_count=3)
-def test_database_stats_on_empty_db(db: graph_tuple_database.Database):
+def test_database_stats_on_empty_db(empty_db: graph_tuple_database.Database):
   """Test accessing database stats on an empty database."""
-  assert db.graph_count == 0
-  assert db.ir_count == 0
-  assert not db.has_data_flow
+  assert empty_db.graph_count == 0
+  assert empty_db.ir_count == 0
+  assert not empty_db.has_data_flow
 
 
 # Repeat test to use memoized property accessor.
