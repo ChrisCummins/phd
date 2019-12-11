@@ -1,6 +1,9 @@
 """This module prepares datasets for data flow analyses."""
 import multiprocessing
+import pathlib
+import sys
 import time
+import traceback
 from typing import Iterable
 from typing import List
 from typing import NamedTuple
@@ -8,6 +11,7 @@ from typing import Tuple
 
 import sqlalchemy as sql
 
+from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.graphs.labelled.dataflow import annotate
 from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
@@ -166,19 +170,33 @@ def ProcessWorker(packed_args) -> AnnotationResult:
       try:
         annotated_graphs = annotate.Annotate(
           analysis,
-          program_graph.serialized_proto,
+          programl.FromBytes(
+            program_graph.serialized_proto, programl.InputOutputFormat.PB
+          ),
           n=FLAGS.n,
-          binary_graph=True,
           timeout=FLAGS.annotator_timeout,
         )
         for annotated_graph in annotated_graphs.graphs:
           graph_tuples.append(
-            graph_tuple_database.GraphTuple.CreateFromGraphTuple(
+            graph_tuple_database.GraphTuple.CreateFromNetworkX(
               annotated_graph, ir_id=program_graph.ir_id
             )
           )
       except Exception as e:
-        ctx.Error("%s: %s", type(e).__name__, e)
+        _, _, tb = sys.exc_info()
+        tb = traceback.extract_tb(tb, 2)
+        filename, line_number, function_name, *_ = tb[-1]
+        filename = pathlib.Path(filename).name
+        ctx.Error(
+          "Failed to annotate graph for ProgramGraph.ir_id=%d: %s "
+          "(%s:%s:%s() -> %s)",
+          program_graph.ir_id,
+          e,
+          filename,
+          line_number,
+          function_name,
+          type(e).__name__,
+        )
         graph_tuples.append(
           graph_tuple_database.GraphTuple.CreateEmpty(ir_id=program_graph.ir_id)
         )
@@ -207,7 +225,7 @@ class DatasetGenerator(progress.Progress):
     if analysis not in annotate.ANALYSES:
       raise app.UsageError(
         f"Unknown analysis: {analysis}. "
-        f"Available analyses: {AVAILABLE_ANALYSES}",
+        f"Available analyses: {annotate.AVAILABLE_ANALYSES}",
       )
 
     # Get the graphs that have already been processed.

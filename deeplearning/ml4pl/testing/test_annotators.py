@@ -1,9 +1,9 @@
 """Data flow analyses for testing."""
 import random
 import time
-from typing import Iterable
 from typing import Optional
 
+from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled.dataflow import data_flow_graphs
 from labm8.py import app
@@ -17,9 +17,9 @@ class PassThruAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
 
   def MakeAnnotated(
     self, unlabelled_graph: programl_pb2.ProgramGraph, n: Optional[int] = None
-  ) -> Iterable[programl_pb2.ProgramGraph]:
-    for _ in range(n or 1):
-      yield unlabelled_graph
+  ) -> data_flow_graphs.NetworkxDataFlowGraphs:
+    g = programl.ProgramGraphToNetworkX(unlabelled_graph)
+    return data_flow_graphs.NetworkxDataFlowGraphs([g for _ in range(n or 1)])
 
 
 class FlakyAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
@@ -27,11 +27,12 @@ class FlakyAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
 
   def MakeAnnotated(
     self, unlabelled_graph: programl_pb2.ProgramGraph, n: Optional[int] = None
-  ) -> Iterable[programl_pb2.ProgramGraph]:
+  ) -> data_flow_graphs.NetworkxDataFlowGraphs:
     if random.random() < 0.2:
       raise OSError("something went wrong!")
-    for _ in range(n or 1):
-      yield unlabelled_graph
+
+    g = programl.ProgramGraphToNetworkX(unlabelled_graph)
+    return data_flow_graphs.NetworkxDataFlowGraphs([g for _ in range(n or 1)])
 
 
 class TimeoutAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
@@ -42,9 +43,9 @@ class TimeoutAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
 
   def MakeAnnotated(
     self, unlabelled_graph: programl_pb2.ProgramGraph, n: Optional[int] = None
-  ) -> Iterable[programl_pb2.ProgramGraph]:
+  ) -> data_flow_graphs.NetworkxDataFlowGraphs:
     time.sleep(self.seconds)
-    yield programl_pb2.ProgramGraph()
+    return data_flow_graphs.NetworkxDataFlowGraphs([])
 
 
 class ErrorAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
@@ -52,5 +53,5 @@ class ErrorAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
 
   def MakeAnnotated(
     self, unlabelled_graph: programl_pb2.ProgramGraph, n: Optional[int] = None
-  ) -> Iterable[programl_pb2.ProgramGraph]:
+  ) -> data_flow_graphs.NetworkxDataFlowGraphs:
     raise OSError("something went wrong!")

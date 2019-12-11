@@ -253,12 +253,9 @@ def Annotate(
 
   signal.signal(signal.SIGALRM, TimeoutHandler)
   signal.alarm(timeout)
+  annotator = ANALYSES[analysis]()
+
   try:
-    annotator = ANALYSES[analysis]()
-
-    if binary_graph:
-      graph = programl.FromBytes(graph, fmt=programl.InputOutputFormat.PB)
-
     annotated_graphs = annotator.MakeAnnotated(graph, n)
   finally:
     signal.alarm(0)
