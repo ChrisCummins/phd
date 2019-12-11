@@ -282,6 +282,14 @@ class Ggnn(classifier_base.ClassifierBase):
       for x in disjoint_graph.adjacencies
     ]
 
+    # Send data to the GPU.
+    with ctx.Profile(5, "Sent data to GPU"):
+      vocab_ids.to(self.dev)
+      selector_ids.to(self.dev)
+      labels.to(self.dev)
+      for edge_list in edge_lists:
+        edge_list.to(self.dev)
+
     # TODO(github.com/ChrisCummins/ProGraML/issues/30) still unused
     edge_positions = [
       torch.from_numpy(x) for x in disjoint_graph.edge_positions
@@ -295,6 +303,20 @@ class Ggnn(classifier_base.ClassifierBase):
       aux_in = torch.from_numpy(
         np.array(disjoint_graph.graph_x, dtype=np.float32)
       )
+      num_graphs.to(self.dev)
+      graph_nodes_list.to(self.dev)
+      aux_in.to(self.dev)
+      model_inputs = (
+        vocab_ids,
+        selector_ids,
+        labels,
+        edge_lists,
+        num_graphs,
+        graph_nodes_list,
+        aux_in,
+      )
+    else:
+      model_inputs = (vocab_ids, selector_ids, labels, edge_lists)
 
     # enter correct mode of model
     if epoch_type == epoch.Type.TRAIN and not self.model.training:
@@ -303,15 +325,6 @@ class Ggnn(classifier_base.ClassifierBase):
       self.model.eval()
       self.model.opt.zero_grad()
 
-    model_inputs = (
-      vocab_ids,
-      selector_ids,
-      labels,
-      edge_lists,
-      num_graphs,
-      graph_nodes_list,
-      aux_in,
-    )
     outputs = self.model(*model_inputs)
 
     logits, accuracy, logits, correct, targets, graph_features = outputs
@@ -335,10 +348,13 @@ class Ggnn(classifier_base.ClassifierBase):
     # tg = np.vstack(((tg + 1) % 2, tg)).T
     # assert np.all(labels.numpy() == tg), f"labels sanity check failed: labels={labels.numpy()},  tg={tg}"
 
+    # TODO(github.com/ChrisCummins/ProGraML/issues/27): Learning rate schedule
+    # will change this value.
+    learning_rate = self.model.config.lr
+
     # TODO(github.com/ChrisCummins/ProGraML/issues/27): Set these.
     model_converged = False
     iteration_count = 1
-    learning_rate = self.model.config.lr
 
     return batches.Results.Create(
       targets=labels.numpy(),

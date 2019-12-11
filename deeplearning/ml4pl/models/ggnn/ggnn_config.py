@@ -1,4 +1,5 @@
 from typing import List
+
 from labm8.py import app
 
 FLAGS = app.FLAGS
@@ -11,7 +12,7 @@ class GGNNConfig(object):
     self.inst2vec_embeddings: str = FLAGS.inst2vec_embeddings
     self.lr: float = FLAGS.learning_rate
     self.clip_grad_norm: bool = FLAGS.clamp_gradient_norm  # use 6.0 as default! Set to 0.0 for no clipping.
-    self.vocab_size: int = 8868  # embeddings = list(self.graph_db.embeddings_tables)
+    self.vocab_size: int = 8568  # embeddings = list(self.graph_db.embeddings_tables)
     self.emb_size: int = 200
     self.use_selector_embeddings: bool = True
     self.selector_size: int = 2 if self.use_selector_embeddings else 0

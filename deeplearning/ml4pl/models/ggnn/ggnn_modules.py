@@ -222,6 +222,7 @@ class NodeEmbeddings(nn.Module):
 class GGNNProper(nn.Module):
   def __init__(self, config):
     super().__init__()
+    self.backward_edges = config.backward_edges
     self.layer_timesteps = config.layer_timesteps
 
     self.message = []
@@ -233,9 +234,17 @@ class GGNNProper(nn.Module):
       self.update.append(GGNNLayer(config))
 
   def forward(self, edge_lists, node_states, position_embeddings=None):
+
+    # TODO(github.com/ChrisCummins/ProGraML/issues/27): This modifies the
+    # arguments in-place.
+
     old_node_states = torch.tensor(node_states, requires_grad=True)
     # TODO(github.com/ChrisCummins/ProGraML/issues/30): position embeddings
     assert position_embeddings is None, "Position Embs not implemented"
+
+    if self.backward_edges:
+      back_edge_lists = [x.flip([1]) for x in edge_lists]
+      edge_lists.extend(back_edge_lists)
 
     for (layer_idx, num_timesteps) in enumerate(self.layer_timesteps):
       for t in range(num_timesteps):
@@ -245,23 +254,24 @@ class GGNNProper(nn.Module):
 
 
 class MessagingLayer(nn.Module):
-  """takes an edge_list (for a single edge type) and node_states <N, D+S> and returns incoming messages per node of shape <N, D+S>"""
+  """takes an edge_list (for a single edge type) and node_states <N, D+S> and
+  returns incoming messages per node of shape <N, D+S>"""
 
   def __init__(self, config):
     super().__init__()
-    self.backward_edges = config.backward_edges
-    self.edge_type_count = (
+    self.forward_and_backward_edge_type_count = (
       config.edge_type_count * 2
-      if self.backward_edges
+      if config.backward_edges
       else config.edge_type_count
     )
     self.msg_mean_aggregation = config.msg_mean_aggregation
     self.dim = config.hidden_size
 
-    # TODO(github.com/ChrisCummins/ProGraML/issues/27): why do edges carry no bias? Seems restrictive. Now they can, maybe default corr. FLAG to true?
+    # TODO(github.com/ChrisCummins/ProGraML/issues/27): why do edges carry no
+    # bias? Seems restrictive. Now they can, maybe default corr. FLAG to true?
     self.transform = LinearNet(
       self.dim,
-      self.dim * self.edge_type_count,
+      self.dim * self.forward_and_backward_edge_type_count,
       bias=config.use_edge_bias,
       dropout=config.edge_weight_dropout,
     )
@@ -273,12 +283,8 @@ class MessagingLayer(nn.Module):
     propagated_states = (
       self.transform(node_states)
       .transpose(0, 1)
-      .view(self.edge_type_count, self.dim, -1)
+      .view(self.forward_and_backward_edge_type_count, self.dim, -1)
     )
-
-    if self.backward_edges:
-      back_edge_lists = [x.flip([1]) for x in edge_lists]
-      edge_lists.extend(back_edge_lists)
 
     messages_by_targets = torch.zeros_like(node_states)
     if self.msg_mean_aggregation:
