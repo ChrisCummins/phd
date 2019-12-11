@@ -666,37 +666,6 @@ def test_ControlFlowGraph_unequal_edge_data():
   assert g1 != g2
 
 
-def test_ControlFlowGraph_ToProto_FromProto_equivalency():
-  """Test that conversion to and from proto preserves values."""
-  g1 = control_flow_graph.ControlFlowGraph()
-  # Graph:
-  #
-  #     +----> B -----+
-  #     |             |
-  #     |             v
-  #     A             D
-  #     |             ^
-  #     |             |
-  #     +----> C -----+
-  g1.add_node(0, name="A", entry=True)
-  g1.add_node(1, name="B")
-  g1.add_node(2, name="C")
-  g1.add_node(3, name="D", exit=True)
-  g1.add_edge(0, 1)
-  g1.add_edge(0, 2)
-  g1.add_edge(1, 3)
-  g1.add_edge(2, 3)
-
-  proto = g1.ToProto()
-
-  g2 = control_flow_graph.ControlFlowGraph.FromProto(proto)
-
-  assert g1 == g2
-
-  # Graph names are not used in equality checks.
-  assert g1.name == g2.name
-
-
 def test_ControlFlowGraph_edge_density():
   """Test edge density property."""
   # Graph:
