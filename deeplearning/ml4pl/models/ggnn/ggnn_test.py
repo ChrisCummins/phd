@@ -10,9 +10,11 @@ from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models import logger as logging
 from deeplearning.ml4pl.models.ggnn import ggnn
+from deeplearning.ml4pl.models.ggnn import ggnn_config
 from deeplearning.ml4pl.testing import random_graph_tuple_database_generator
 from deeplearning.ml4pl.testing import testing_databases
 from labm8.py import test
+from labm8.py.internal import flags_parsers
 
 FLAGS = test.FLAGS
 
@@ -52,7 +54,7 @@ def logger(log_db: log_database.Database) -> logging.Logger:
     yield logger
 
 
-@test.Fixture(scope="session", params=(10, 100))
+@test.Fixture(scope="session", params=(50,))
 def graph_count(request) -> int:
   """A test fixture which enumerates graph counts."""
   return request.param
@@ -70,7 +72,7 @@ def graph_y_dimensionality(request) -> int:
   return request.param
 
 
-@test.Fixture(scope="session", params=(2, 3))
+@test.Fixture(scope="session", params=(2, 3, 104))
 def node_y_dimensionality(request) -> int:
   """A test fixture which enumerates graph label dimensionalities."""
   return request.param
@@ -82,8 +84,15 @@ def epoch_type(request) -> epoch.Type:
   return request.param
 
 
+@test.Fixture(scope="session", params=list(ggnn_config.NodeTextEmbeddingType))
+def node_text_embedding_type(request):
+  return flags_parsers.EnumFlag(
+    ggnn_config.NodeTextEmbeddingType, request.param
+  )
+
+
 @test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
-def graph_db(
+def node_y_graph_db(
   request, graph_count: int, node_y_dimensionality: int,
 ) -> graph_tuple_database.Database:
   """A test fixture which yields a graph database with 256 OpenCL IR entries."""
@@ -106,7 +115,7 @@ def graph_db(
 
 
 def test_load_restore_model_from_checkpoint_smoke_test(
-  logger: logging.Logger, graph_db: graph_tuple_database.Database,
+  logger: logging.Logger, node_y_graph_db: graph_tuple_database.Database,
 ):
   """Test creating and restoring model from checkpoint."""
   run_id = run_id_lib.RunId.GenerateUnique(
@@ -114,7 +123,7 @@ def test_load_restore_model_from_checkpoint_smoke_test(
   )
 
   # Create and initialize an untrained model.
-  model = ggnn.Ggnn(logger, graph_db, run_id=run_id)
+  model = ggnn.Ggnn(logger, node_y_graph_db, run_id=run_id)
   model.Initialize()
 
   # Smoke test save and restore.
@@ -122,22 +131,25 @@ def test_load_restore_model_from_checkpoint_smoke_test(
   model.RestoreFrom(checkpoint_ref)
 
 
-def test_call(
+def test_node_classifier_call(
   epoch_type: epoch.Type,
   logger: logging.Logger,
-  graph_db: graph_tuple_database.Database,
+  node_y_graph_db: graph_tuple_database.Database,
+  node_text_embedding_type,
 ):
-  """Test running a graph classifier."""
+  """Test running a node classifier."""
+  FLAGS.inst2vec_embeddings = node_text_embedding_type
+
   run_id = run_id_lib.RunId.GenerateUnique(
     f"mock{random.randint(0, int(1e6)):06}"
   )
 
   # Create and initialize an untrained model.
-  model = ggnn.Ggnn(logger, graph_db, run_id=run_id)
+  model = ggnn.Ggnn(logger, node_y_graph_db, run_id=run_id)
   model.Initialize()
 
   # Run the model over some random graphs.
-  batch_iterator = MakeBatchIterator(model, graph_db)
+  batch_iterator = MakeBatchIterator(model, node_y_graph_db)
 
   results = model(
     epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger,

@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from torch import nn
 from torch import optim
 
+from deeplearning.ml4pl.models.ggnn import ggnn_config
 from labm8.py import app
 
 FLAGS = app.FLAGS
@@ -159,7 +160,10 @@ class NodeEmbeddings(nn.Module):
   def __init__(self, config, pretrained_embeddings=None):
     super().__init__()
 
-    if config.inst2vec_embeddings == "constant":
+    if (
+      config.inst2vec_embeddings
+      == ggnn_config.NodeTextEmbeddingType.INST2VEC_CONSTANT
+    ):
       app.Log(
         1, "Using pre-trained inst2vec embeddings without further training"
       )
@@ -167,32 +171,32 @@ class NodeEmbeddings(nn.Module):
       self.node_embs = nn.Embedding.from_pretrained(
         pretrained_embeddings, freeze=True
       )
-
-    elif config.inst2vec_embeddings == "constant_zero":
+    elif (
+      config.inst2vec_embeddings
+      == ggnn_config.NodeTextEmbeddingType.ZERO_CONSTANT
+    ):
       init = torch.zeros(config.vocab_size, config.emb_size)
       self.node_embs = nn.Embedding.from_pretrained(init, freeze=True)
-
-    elif config.inst2vec_embeddings == "constant_random":
+    elif (
+      config.inst2vec_embeddings
+      == ggnn_config.NodeTextEmbeddingType.RANDOM_CONSTANT
+    ):
       init = torch.rand(config.vocab_size, config.emb_size)
       self.node_embs = nn.Embedding.from_pretrained(init, freeze=True)
-
-    elif config.inst2vec_embeddings == "finetune":
+    elif (
+      config.inst2vec_embeddings
+      == ggnn_config.NodeTextEmbeddingType.INST2VEC_FINETUNE
+    ):
       app.Log(1, "Fine-tuning inst2vec embeddings")
       assert pretrained_embeddings is not None
       self.node_embs = nn.Embedding.from_pretrained(
         pretrained_embeddings, freeze=False
       )
-
-    elif config.inst2vec_embeddings == "random":
+    elif config.inst2vec_embeddings == ggnn_config.NodeTextEmbeddingType.RANDOM:
       app.Log(1, "Initializing with random embeddings")
       self.node_embs = nn.Embedding(config.vocab_size, config.emb_size)
-
     else:
-      raise app.UsageError(
-        f"--inst2vec_embeddings=`{FLAGS.inst2vec_embeddings}` "
-        "unrecognized. Must be one of "
-        "{constant,constant_zero,finetune,random}"
-      )
+      raise NotImplementedError(config.inst2vec_embeddings)
 
     if config.use_selector_embeddings:
       selector_init = torch.tensor(

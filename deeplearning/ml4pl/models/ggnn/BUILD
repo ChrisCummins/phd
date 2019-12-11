@@ -26,6 +26,7 @@ py_test(
     srcs = ["ggnn_test.py"],
     deps = [
         ":ggnn",
+        ":ggnn_config",
         "//deeplearning/ml4pl:run_id",
         "//deeplearning/ml4pl/graphs/labelled:graph_database_reader",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
@@ -51,6 +52,7 @@ py_library(
     name = "ggnn_modules",
     srcs = ["ggnn_modules.py"],
     deps = [
+        ":ggnn_config",
         "//labm8/py:app",
         "//third_party/py/torch",
     ],
