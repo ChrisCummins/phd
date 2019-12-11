@@ -267,7 +267,7 @@ class Logger(object):
       checkpoint_entry = (
         session.query(log_database.Checkpoint)
         .filter(
-          log_database.Checkpoint.run_id == checkpoint_ref.run_id,
+          log_database.Checkpoint.run_id == str(checkpoint_ref.run_id),
           log_database.Checkpoint.epoch_num == checkpoint_ref.epoch_num,
         )
         .options(sql.orm.joinedload(log_database.Checkpoint.data))

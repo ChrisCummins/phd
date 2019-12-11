@@ -41,7 +41,7 @@ class RunLogAnalyzer(object):
     with self.log_db.Session() as session:
       if (
         not session.query(log_database.RunId)
-        .filter(log_database.RunId.run_id == run_id)
+        .filter(log_database.RunId.run_id == str(run_id))
         .scalar()
       ):
         raise ValueError(f"Run not found: {self.run_id}")
@@ -59,7 +59,7 @@ class RunLogAnalyzer(object):
       ).filter(
         log_database.Parameter.type_num
         == log_database.ParameterType.FLAG.value,
-        log_database.Parameter.run_id == self.run_id,
+        log_database.Parameter.run_id == str(self.run_id),
         log_database.Parameter.name == "graph_db",
       ).scalar()
       if not graph_param:
@@ -72,7 +72,7 @@ class RunLogAnalyzer(object):
   def tables(self) -> Dict[str, pd.DataFrame]:
     """Get the {parameters, epochs, runs} tables for the run."""
     return {
-      name: df for name, df in self.log_db.GetTables(run_id=[self.run_id])
+      name: df for name, df in self.log_db.GetTables(run_ids=[self.run_id])
     }
 
   @decorators.memoized_property
