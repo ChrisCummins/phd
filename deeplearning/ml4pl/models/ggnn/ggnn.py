@@ -71,60 +71,33 @@ app.DEFINE_string(
   "fancy learns another weight matrix B, s.th. propagation is A h + B pos"
   "We expect them to be part of the ds anyway, but you can toggle off their effect.",
 )
-# TODO(github.com/ChrisCummins/ProGraML/issues/27): Unused flag.
-app.DEFINE_boolean("freeze_graph_model", False, "???")
-# TODO(github.com/ChrisCummins/ProGraML/issues/27): Unused flag.
-app.DEFINE_string(
-  "graph_rnn_cell",
-  "GRU",
-  "The RNN cell type. One of {GRU,CudnnCompatibleGRUCell,RNN}",
-)
-# TODO(github.com/ChrisCummins/ProGraML/issues/27): Unused flag.
-app.DEFINE_string(
-  "graph_rnn_activation", "tanh", "The RNN activation type. One of {tanh,ReLU}"
-)
-# TODO(github.com/ChrisCummins/ProGraML/issues/27): Unused flag.
-app.DEFINE_boolean("use_propagation_attention", False, "")
-# TODO(github.com/ChrisCummins/ProGraML/issues/27): Unused flag.
+
 app.DEFINE_boolean("use_edge_bias", False, "")
+
 # TODO(github.com/ChrisCummins/ProGraML/issues/27): Unused flag.
 app.DEFINE_boolean(
-  "use_edge_msg_avg_aggregation",
+  "msg_mean_aggregation",
   True,
-  "If true, normalize incoming messages by the number of " "incoming messages.",
+  "If true, normalize incoming messages by the number of incoming messages.",
 )
 app.DEFINE_float(
-  "graph_state_dropout_keep_prob",
-  1.0,
-  "Graph state dropout keep probability (rate = 1 - keep_prob)",
+  "graph_state_dropout", 0.0, "Graph state dropout rate.",
 )
 app.DEFINE_float(
-  "edge_weight_dropout_keep_prob",
-  1.0,
-  "Edge weight dropout keep probability (rate = 1 - keep_prob)",
+  "edge_weight_dropout", 0.0, "Edge weight dropout rate.",
 )
 app.DEFINE_float(
-  "output_layer_dropout_keep_prob",
-  1.0,
-  "Dropout keep probability on the output layer. In range 0 < x <= 1.",
+  "output_layer_dropout", 0.0, "Dropout rate on the output layer.",
 )
 app.DEFINE_float(
-  "intermediate_loss_discount_factor",
+  "intermediate_loss_weight",
   0.2,
   "The actual loss is computed as loss + factor * intermediate_loss",
 )
 app.DEFINE_integer(
-  "auxiliary_inputs_dense_layer_size",
+  "aux_in_layer_size",
   32,
-  "Size for MLP that combines graph_x and GGNN output features",
-)
-# TODO(github.com/ChrisCummins/ProGraML/issues/27): Unused flag.
-app.DEFINE_boolean(
-  "use_dsc_loss",
-  False,
-  "Whether to use the DSC loss instead of Cross Entropy."
-  "DSC loss help with class imbalances. Refer to "
-  "https://arxiv.org/pdf/1911.02855.pdf",
+  "Size for MLP that combines graph_features and aux_in features",
 )
 
 
@@ -152,7 +125,7 @@ class Ggnn(classifier_base.ClassifierBase):
 
     # Instantiate model
     config = GGNNConfig(
-      y_dimensionality=self.y_dimensionality,
+      num_classes=self.y_dimensionality,
       has_graph_labels=self.graph_y_dimensionality > 0,
     )
     inst2vec_embeddings = list(self.graph_db.embeddings_tables)[0]
@@ -173,9 +146,9 @@ class Ggnn(classifier_base.ClassifierBase):
   ) -> batches.Data:
     """Create a mini-batch of data from an iterator of graphs.
 
-    Returns:
-      A single batch of data for feeding into RunBatch().
-    """
+  Returns:
+    A single batch of data for feeding into RunBatch().
+  """
     # TODO(github.com/ChrisCummins/ProGraML/issues/24): The new graph batcher
     # implementation is not well suited for reading the graph IDs, hence this
     # somewhat clumsy iterator wrapper. A neater approach would be to create
@@ -198,9 +171,7 @@ class Ggnn(classifier_base.ClassifierBase):
     graph_iterator = GraphIterator(graphs)
 
     # Create a disjoint graph out of one or more input graphs.
-    batcher = graph_batcher.GraphBatcher.CreateFromFlags(
-      graph_iterator, ctx=ctx
-    )
+    batcher = graph_batcher.GraphBatcher.CreateFromFlags(graph_iterator, ctx=ctx)
 
     try:
       disjoint_graph = next(batcher)
@@ -238,8 +209,8 @@ class Ggnn(classifier_base.ClassifierBase):
     unroll_factor: float,
   ) -> int:
     """Determine the unroll factor from the --unroll_strategy and --unroll_factor
-    flags, and the batch log.
-    """
+  flags, and the batch log.
+  """
     # Determine the unrolling strategy.
     if unroll_strategy == "none" or epoch_type == epoch.Type.TRAIN:
       # Perform no unrolling. The inputs are processed for a single run of
@@ -309,9 +280,7 @@ class Ggnn(classifier_base.ClassifierBase):
     ]
 
     # TODO(github.com/ChrisCummins/ProGraML/issues/30) still unused
-    edge_positions = [
-      torch.from_numpy(x) for x in disjoint_graph.edge_positions
-    ]
+    edge_positions = [torch.from_numpy(x) for x in disjoint_graph.edge_positions]
 
     if disjoint_graph.has_graph_y:
       num_graphs = torch.tensor(disjoint_graph.graph_count, dtype=torch.long)
@@ -384,9 +353,7 @@ class Ggnn(classifier_base.ClassifierBase):
 
   def LoadModelData(self, data_to_load: typing.Any) -> None:
     self.model.load_state_dict(data_to_load["model_state_dict"])
-    if (
-      not FLAGS.test_only
-    ):  # only restore opt if needed. opt should be None o/w.
+    if not FLAGS.test_only:  # only restore opt if needed. opt should be None o/w.
       self.model.opt.load_state_dict(data_to_load["optimizer_state_dict"])
 
 

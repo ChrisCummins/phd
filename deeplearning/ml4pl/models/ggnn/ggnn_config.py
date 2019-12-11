@@ -1,27 +1,39 @@
+from typing import List
 from labm8.py import app
 
 FLAGS = app.FLAGS
 
 
 class GGNNConfig(object):
-  def __init__(self, y_dimensionality: int, has_graph_labels: bool):
-    ##############
-    self.vocab_size = 8868  # embeddings = list(self.graph_db.embeddings_tables)
-    self.hidden_size = 202  # 200~
-    self.inst2vec_embeddings = FLAGS.inst2vec_embeddings
-    self.emb_size = 200
-    self.use_selector_embeddings = True
-    self.selector_size = 2
+  def __init__(
+    self, num_classes: int, has_graph_labels: bool, edge_type_count: int = 3
+  ):
+    self.inst2vec_embeddings: str = FLAGS.inst2vec_embeddings
+    self.lr: float = FLAGS.learning_rate
+    self.clip_grad_norm: bool = FLAGS.clamp_gradient_norm  # use 6.0 as default! Set to 0.0 for no clipping.
+    self.vocab_size: int = 8868  # embeddings = list(self.graph_db.embeddings_tables)
+    self.emb_size: int = 200
+    self.use_selector_embeddings: bool = True
+    self.selector_size: int = 2 if self.use_selector_embeddings else 0
+    # TODO(github.com/ChrisCummins/ProGraML/issues/27):: Maybe refactor non-rectangular edge passing matrices for independent hidden size.
+    # hidden size of the whole model
+    self.hidden_size: int = self.emb_size + self.selector_size
     ###############
-    self.num_classes = 2  # binary classification!
-    self.aux_in_len = 2
-    self.auxiliary_inputs_dense_layer_size = (
-      FLAGS.auxiliary_inputs_dense_layer_size
-    )
-    self.output_dropout = (
-      1.0 - FLAGS.output_layer_dropout_keep_prob
-    )  # dropout prob = 1-keep_prob. (self.placeholders["output_layer_dropout_keep_prob"])
-    self.labels_dimensionality = y_dimensionality
-    self.has_graph_labels = has_graph_labels
-    self.graph_loss_weight = FLAGS.intermediate_loss_discount_factor
-    self.lr = FLAGS.learning_rate
+
+    self.edge_type_count: int = edge_type_count
+    self.layer_timesteps: List[int] = [int(x) for x in FLAGS.layer_timesteps]
+    self.use_edge_bias: bool = FLAGS.use_edge_bias
+    self.msg_mean_aggregation: bool = FLAGS.msg_mean_aggregation
+    self.backward_edges: bool = True
+    ###############
+
+    self.num_classes: int = num_classes
+    self.aux_in_len: int = 2
+    self.aux_in_layer_size: int = FLAGS.aux_in_layer_size
+    self.output_dropout: float = FLAGS.output_layer_dropout  # dropout prob = 1-keep_prob
+    self.edge_weight_dropout: float = FLAGS.edge_weight_dropout
+    self.graph_state_dropout: float = FLAGS.graph_state_dropout
+    ###############
+
+    self.has_graph_labels: bool = has_graph_labels
+    self.intermediate_loss_weight: float = FLAGS.intermediate_loss_weight
