@@ -130,7 +130,6 @@ class Ggnn(classifier_base.ClassifierBase):
     )
 
     inst2vec_embeddings = node_encoder.GraphEncoder().embeddings_tables[0]
-    app.Log(1, 'inst2vec_embeddings.shape=%s', inst2vec_embeddings.shape)
     inst2vec_embeddings = torch.from_numpy(
       np.array(inst2vec_embeddings, dtype=np.float32)
     )

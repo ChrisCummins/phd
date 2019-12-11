@@ -100,7 +100,9 @@ class Loss(nn.Module):
     """inputs: (predictions) or (predictions, intermediate_predictions)"""
     loss = self.loss(inputs[0], targets)
     if self.config.has_graph_labels:
-      loss += self.config.intermediate_loss_weight * self.loss(inputs[1], targets)
+      loss += self.config.intermediate_loss_weight * self.loss(
+        inputs[1], targets
+      )
     return loss
 
 
@@ -158,7 +160,9 @@ class NodeEmbeddings(nn.Module):
     super().__init__()
 
     if config.inst2vec_embeddings == "constant":
-      app.Log(1, "Using pre-trained inst2vec embeddings without further training")
+      app.Log(
+        1, "Using pre-trained inst2vec embeddings without further training"
+      )
       assert pretrained_embeddings is not None
       self.node_embs = nn.Embedding.from_pretrained(
         pretrained_embeddings, freeze=True
@@ -274,27 +278,35 @@ class MessagingLayer(nn.Module):
 
     if self.backward_edges:
       back_edge_lists = [x.flip([1]) for x in edge_lists]
-      edge_lists = edge_lists.extend(back_edge_lists)
+      edge_lists.extend(back_edge_lists)
 
     messages_by_targets = torch.zeros_like(node_states)
+    if self.msg_mean_aggregation:
+      bincount = torch.zeros(node_states.size()[0], dtype=torch.long)
+
     for i, edge_list in enumerate(edge_lists):
       edge_targets = edge_list[:, 1]
       edge_sources = edge_list[:, 0]
-      # TODO(github.com/ChrisCummins/ProGraML/issues/27): transform all node_states? maybe wasteful, maybe MUCH better than propagating them after the embedding lookup (except if graph is super sparse (per edge_type)).
-      # TODO(github.com/ChrisCummins/ProGraML/issues/30): with edge positions, we can do better by distribution rule: A (h + p) = Ah + Ap, so the position table can be multiplied before addition as well.
-      # TODO(github.com/ChrisCummins/ProGraML/issues/30): with "fancy" mode, anyway it's just another edge type
+      # TODO(github.com/ChrisCummins/ProGraML/issues/27): transform all
+      # node_states? maybe wasteful, maybe MUCH better than propagating them
+      # after the embedding lookup (except if graph is super sparse
+      # (per edge_type)).
+      # TODO(github.com/ChrisCummins/ProGraML/issues/30): with edge positions,
+      # we can do better by distribution rule: A (h + p) = Ah + Ap, so the
+      # position table can be multiplied before addition as well.
+      # TODO(github.com/ChrisCummins/ProGraML/issues/30): with "fancy" mode,
+      # anyway it's just another edge type
       states_by_source = F.embedding(
         edge_sources, propagated_states[i].transpose(0, 1)
       )
       messages_by_targets.index_add_(0, edge_targets, states_by_source)
+      if self.msg_mean_aggregation:
+        bincount += edge_targets.bincount(minlength=node_states.size()[0])
 
     if self.msg_mean_aggregation:
-      bincount = torch.zeros(node_states.size()[0], dtype=torch.long)
-      for el in edge_lists:
-        bincount += el.bincount(minlength=node_states.size()[0])
       divisor = bincount.float()
       divisor[bincount == 0] = 1.0  # avoid div by zero for lonely nodes
-      messages_by_targets /= divisor
+      messages_by_targets /= divisor.unsqueeze_(1)
     return messages_by_targets
 
 
@@ -386,7 +398,9 @@ class LinearNet(nn.Module):
     self.dropout = dropout
     self.in_features = in_features
     self.out_features = out_features
-    self.weight = nn.parameter.Parameter(torch.Tensor(out_features, in_features))
+    self.weight = nn.parameter.Parameter(
+      torch.Tensor(out_features, in_features)
+    )
     if bias:
       self.bias = nn.parameter.Parameter(torch.Tensor(out_features))
     else:
@@ -439,9 +453,13 @@ class AuxiliaryReadout(nn.Module):
         nn.Linear(config.aux_in_layer_size, config.num_classes),
       )
 
-  def forward(self, raw_node_out, num_graphs, graph_nodes_list, auxiliary_features):
+  def forward(
+    self, raw_node_out, num_graphs, graph_nodes_list, auxiliary_features
+  ):
     graph_features = torch.zeros(num_graphs, self.config.num_classes)
-    graph_features.index_add_(dim=0, index=graph_nodes_list, source=raw_node_out)
+    graph_features.index_add_(
+      dim=0, index=graph_nodes_list, source=raw_node_out
+    )
 
     aggregate_features = torch.cat((graph_features, auxiliary_features), dim=1)
     return self.feed_forward(aggregate_features), graph_features
