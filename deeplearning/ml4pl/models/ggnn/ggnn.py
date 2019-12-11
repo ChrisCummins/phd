@@ -126,7 +126,7 @@ class Ggnn(classifier_base.ClassifierBase):
     # Instantiate model
     config = GGNNConfig(
       num_classes=self.y_dimensionality,
-      has_graph_labels=self.graph_y_dimensionality > 0,
+      has_graph_labels=self.graph_db.graph_y_dimensionality > 0,
     )
 
     inst2vec_embeddings = node_encoder.GraphEncoder().embeddings_tables[0]
