@@ -152,22 +152,25 @@ def main(argv):
   staged_files = linters_lib.GetGitDiffFilesOrDie(staged=True)
   unstaged_files = linters_lib.GetGitDiffFilesOrDie(staged=False)
 
-  linters_lib.Print(
-    "Checking if",
-    branch_name,
-    "is up to date with",
-    remote_name,
-    "...",
-    end=" ",
-  )
-  commits_behind_upstream = GetCommitsBehindUpstreamOrDie(
-    remote_name, branch_name
-  )
-  if commits_behind_upstream:
-    linters_lib.Print("⚠️  ", commits_behind_upstream, "commits behind")
-    PullAndRebaseOrDie()
+  if remote_name:
+    linters_lib.Print(
+      "Checking if",
+      branch_name,
+      "is up to date with",
+      remote_name,
+      "...",
+      end=" ",
+    )
+    commits_behind_upstream = GetCommitsBehindUpstreamOrDie(
+      remote_name, branch_name
+    )
+    if commits_behind_upstream:
+      linters_lib.Print("⚠️  ", commits_behind_upstream, "commits behind")
+      PullAndRebaseOrDie()
+    else:
+      linters_lib.Print("ok  {:.3f}s".format(time.time() - task_start_time))
   else:
-    linters_lib.Print("ok  {:.3f}s".format(time.time() - task_start_time))
+    linters_lib.Print("No upstream branch configured for", branch_name)
 
   files_that_exist = [f for f in staged_files if os.path.isfile(f)]
 

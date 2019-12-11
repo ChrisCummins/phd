@@ -107,13 +107,21 @@ def GetGitBranchOrDie():
 
 
 def GetGitRemoteOrDie(branch_name):
-  """Get the name of the current git remote."""
-  fully_qualified_name = ExecOrDie(
-    ["git", "rev-parse", "--abbrev-ref", branch_name + "@{upstream}"]
-  )
-  components = fully_qualified_name.split("/")
-  assert len(components) > 1
-  return components[0]
+  """Get the name of the current git remote.
+
+  If there is no remote configured for the given branch, returns None.
+  """
+  try:
+    fully_qualified_name = subprocess.check_output(
+      ["git", "rev-parse", "--abbrev-ref", branch_name + "@{upstream}"],
+      stderr=subprocess.PIPE,
+      universal_newlines=True,
+    )
+    components = fully_qualified_name.split("/")
+    assert len(components) > 1
+    return components[0]
+  except subprocess.CalledProcessError:
+    return None
 
 
 def Chunkify(iterable, chunk_size):
