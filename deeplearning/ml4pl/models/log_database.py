@@ -48,8 +48,12 @@ Base = declarative.declarative_base()
 
 class RunId(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   """A run ID. This single-column table enables one-to-many foreign key
-  relationships to {parameters,batches,checkpoints}. Deleting a run ID then
-  cascades to all other tables.
+  relationships to {parameters,batches,checkpoints}.
+
+  Deleting a run ID then cascades to all other tables.
+
+  Similarly, adding a batch / parameter / checkpoint that does not have a
+  corresponding RunId entry will raise an integrity error.
   """
 
   run_id: str = sql.Column(
