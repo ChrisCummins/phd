@@ -74,7 +74,7 @@ def two_graph_db_session(request) -> graph_tuple_database.Database.SessionType:
 # Fixtures for enumerating populated databases.
 
 
-@test.Fixture(scope="session", params=(1000,))
+@test.Fixture(scope="session", params=(500,))
 def graph_count(request) -> int:
   return request.param
 
