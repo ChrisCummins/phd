@@ -128,7 +128,9 @@ def CreateRandomProto(
       node.preprocessed_text = "!UNK"
 
     # Add the node features and labels.
-    node.x[:] = _CreateRandomList(node_x_dimensionality)
+    # Limit node feature values in range [0,1] to play nicely with models with
+    # hardcoded "binary selector" embeddings.
+    node.x[:] = _CreateRandomList(node_x_dimensionality, upper_value=1)
     if node_y_dimensionality:
       node.y[:] = _CreateRandomList(node_y_dimensionality)
 
