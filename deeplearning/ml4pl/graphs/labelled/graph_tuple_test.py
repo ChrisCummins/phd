@@ -289,11 +289,26 @@ def real_nx_graph(request) -> nx.MultiDiGraph:
 
 
 def test_on_real_graph(real_nx_graph: nx.MultiDiGraph):
-  """Test on real graphs."""
+  """Test nx -> graph_tuple -> nx conversion on real graphs."""
+  # Create graph tuple from networkx.
   t = graph_tuple.GraphTuple.CreateFromNetworkX(real_nx_graph)
+  try:
+    assert t.node_count == real_nx_graph.number_of_nodes()
+    assert t.edge_count == real_nx_graph.number_of_edges()
+  except AssertionError:
+    fs.Write("/tmp/graph_in.pickle", pickle.dumps(real_nx_graph))
+    fs.Write("/tmp/graph_tuple_out.pickle", pickle.dumps(t))
+    raise
+
+  # Convert graph tuple back to networkx.
   g = t.ToNetworkx()
-  assert g.number_of_nodes() == real_nx_graph.number_of_nodes()
-  assert g.number_of_edges() == real_nx_graph.number_of_edges()
+  try:
+    assert g.number_of_nodes() == real_nx_graph.number_of_nodes()
+    assert g.number_of_edges() == real_nx_graph.number_of_edges()
+  except AssertionError:
+    fs.Write("/tmp/graph_in.pickle", pickle.dumps(real_nx_graph))
+    fs.Write("/tmp/graph_out.pickle", pickle.dumps(g))
+    raise
 
 
 # Disjoint graph tests:
@@ -349,14 +364,10 @@ def test_FromGraphTuples_single_tuple(
       assert np.array_equal(d.graph_y[0], t.graph_y)
     else:
       assert d.graph_y == t.graph_y
-  except AssertionError as e:
+  except AssertionError:
     fs.Write("/tmp/graph_tuple_in.pickle", pickle.dumps(t))
     fs.Write("/tmp/graph_tuple_out.pickle", pickle.dumps(d))
-    app.Error(
-      "Assertion failed! Wrote graphs to /tmp/graph_tuple_in.pickle "
-      "and /tmp/graph_tuple_out.pickle"
-    )
-    raise e
+    raise
 
 
 @decorators.loop_for(seconds=5)
@@ -415,14 +426,14 @@ def test_FromGraphTuples_two_tuples(
     assert disjoint_tuple.node_y_dimensionality == node_y_dimensionality
     assert disjoint_tuple.graph_x_dimensionality == graph_x_dimensionality
     assert disjoint_tuple.graph_y_dimensionality == graph_y_dimensionality
-  except AssertionError as e:
+  except AssertionError:
     fs.Write("/tmp/graph_tuples_in.pickle", pickle.dumps(tuples_in))
     fs.Write("/tmp/graph_tuple_out.pickle", pickle.dumps(disjoint_tuple))
     app.Error(
       "Assertion failed! Wrote graphs to /tmp/graph_tuples_in.pickle "
       "and /tmp/graph_tuple_out.pickle"
     )
-    raise e
+    raise
 
 
 @decorators.loop_for(seconds=5)
@@ -482,31 +493,31 @@ def test_fuzz_graph_tuple_networkx():
     assert t.edge_position_max == max(
       position for _, _, position in graph_in.edges(data="position")
     )
-  except AssertionError as e:
+  except AssertionError:
     fs.Write("/tmp/graph_in.pickle", pickle.dumps(graph_in))
     fs.Write("/tmp/graph_tuple_out.pickle", pickle.dumps(t))
     app.Error(
       "Assertion failed! Wrote graphs to /tmp/graphs_in.pickle "
       "and /tmp/graph_tuple_out.pickle"
     )
-    raise e
+    raise
 
+  g_out = t.ToNetworkx()
   try:
-    g_out = t.ToNetworkx()
     assert graph_in.number_of_nodes() == g_out.number_of_nodes()
     assert graph_in.number_of_edges() == g_out.number_of_edges()
     assert len(g_out.nodes[0]["x"]) == node_x_dimensionality
     assert len(g_out.nodes[0]["y"]) == node_y_dimensionality
     assert len(g_out.graph["x"]) == graph_x_dimensionality
     assert len(g_out.graph["y"]) == graph_y_dimensionality
-  except AssertionError as e:
+  except AssertionError:
     fs.Write("/tmp/graph_in.pickle", pickle.dumps(graph_in))
     fs.Write("/tmp/graph_out.pickle", pickle.dumps(g_out))
     app.Error(
       "Assertion failed! Wrote graphs to /tmp/graphs_in.pickle "
       "and /tmp/graphs_out.pickle"
     )
-    raise e
+    raise
 
 
 @decorators.loop_for(seconds=60)
@@ -541,14 +552,10 @@ def test_fuzz_disjoint_graph_tuples():
     assert t.node_y_dimensionality == node_y_dimensionality
     assert t.graph_x_dimensionality == graph_x_dimensionality
     assert t.graph_y_dimensionality == graph_y_dimensionality
-  except AssertionError as e:
+  except AssertionError:
     fs.Write("/tmp/graph_tuples_in.pickle", pickle.dumps(graph_tuples_in))
     fs.Write("/tmp/graph_tuple_out.pickle", pickle.dumps(t))
-    app.Error(
-      "Fuzzing failed! Wrote graphs to /tmp/graphs_tuples_in.pickle "
-      "and /tmp/graph_tuple_out.pickle"
-    )
-    raise e
+    raise
 
   graph_tuples_out = list(t.ToGraphTuples())
   try:
@@ -570,14 +577,10 @@ def test_fuzz_disjoint_graph_tuples():
       assert np.array_equal(tuple_in.node_y, tuple_out.node_y)
       assert np.array_equal(tuple_in.graph_x, tuple_out.graph_x)
       assert np.array_equal(tuple_in.graph_y, tuple_out.graph_y)
-  except AssertionError as e:
+  except AssertionError:
     fs.Write("/tmp/graph_tuples_in.pickle", pickle.dumps(graph_tuples_in))
     fs.Write("/tmp/graph_tuples_out.pickle", pickle.dumps(graph_tuples_out))
-    app.Error(
-      "Fuzzing failed! Wrote graphs to /tmp/graphs_tuples_in.pickle "
-      "and /tmp/graph_tuples_out.pickle"
-    )
-    raise e
+    raise
 
 
 if __name__ == "__main__":
