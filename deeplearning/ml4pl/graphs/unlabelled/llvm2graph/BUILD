@@ -43,6 +43,7 @@ py_library(
     name = "node_encoder",
     srcs = ["node_encoder.py"],
     data = ["//deeplearning/ml4pl/graphs/unlabelled/cdfg/node_embeddings:embeddings"],
+    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
     deps = [
         "//labm8/py:app",
         "//labm8/py:bazelutil",
