@@ -199,9 +199,7 @@ def ir_db(request, opencl_relpaths: List[str]) -> ir_database.Database:
 @test.XFail(
   reason="TODO(github.com/ChrisCummins/ProGraML/issues/24): Cannot use the given session to evaluate tensor: the tensor's graph is different from the session's graph"
 )
-@test.Parametrize(
-  "model_class", (lstm.LstmGraphClassifier, lstm.LstmNodeClassifier)
-)
+@test.Parametrize("model_class", (lstm.GraphLstm, lstm.NodeLstm))
 def test_load_restore_model_from_checkpoint_smoke_test(
   logger: logging.Logger,
   node_y_db: graph_tuple_database.Database,
@@ -234,7 +232,7 @@ def test_graph_classifier_call(
     f"mock{random.randint(0, int(1e6)):06}"
   )
 
-  model = lstm.LstmGraphClassifier(
+  model = lstm.GraphLstm(
     logger,
     graph_y_db,
     ir_db=ir_db,
@@ -271,7 +269,7 @@ def test_node_classifier_call(
     f"mock{random.randint(0, int(1e6)):06}"
   )
 
-  model = lstm.LstmGraphClassifier(
+  model = lstm.GraphLstm(
     logger,
     node_y_db,
     ir_db=ir_db,

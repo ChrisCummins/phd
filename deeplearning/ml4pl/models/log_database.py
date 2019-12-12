@@ -23,6 +23,8 @@ from deeplearning.ml4pl.models import batch as batches
 from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import epoch
 from labm8.py import app
+from labm8.py import crypto
+from labm8.py import humanize
 from labm8.py import jsonutil
 from labm8.py import pdutil
 from labm8.py import prof
@@ -37,6 +39,12 @@ app.DEFINE_boolean(
   False,
   "When //deeplearning/ml4pl/models:log_database is executed as a script, "
   "using this flag will prune any runs that do not have a checkpoint.",
+)
+app.DEFINE_list(
+  "rm",
+  [],
+  "When //deeplearning/ml4pl/models:log_database is executed as a script, "
+  "pass a list of run IDs to this argument to delete them.",
 )
 
 Base = declarative.declarative_base()
@@ -62,6 +70,8 @@ class RunId(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     primary_key=True,
     nullable=False,
   )
+
+  timestamp: datetime.datetime = sqlutil.ColumnFactory.MillisecondDatetime()
 
   # Relationships to logs.
   parameters: "Parameter" = sql.orm.relationship(
@@ -136,6 +146,11 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   binary_value: bytes = sql.Column(
     sqlutil.ColumnTypes.LargeBinary(), nullable=False
   )
+  # The sha1sum of the 'binary_value' column. Use this for querying and
+  # grouping by value.
+  binary_value_sha1: str = sql.Column(
+    sql.String(40), nullable=False, index=True
+  )
 
   timestamp: datetime.datetime = sqlutil.ColumnFactory.MillisecondDatetime()
 
@@ -168,11 +183,13 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     Returns:
       A Parameter instance.
     """
+    binary_value = pickle.dumps(value)
     return cls(
       run_id=str(run_id),
       type_num=type.value,
       name=str(name),
-      binary_value=pickle.dumps(value),
+      binary_value=binary_value,
+      binary_value_sha1=crypto.sha1(binary_value),
     )
 
   @classmethod
@@ -1045,10 +1062,12 @@ class Database(sqlutil.Database):
 
             if len(epoch_df) == 1:
               for column in epoch_type_columns:
-                row[f"{epoch_type}_{column}"] = epoch_df.iloc[0][column]
+                row[f"{epoch_type.name.lower()}_{column}"] = epoch_df.iloc[0][
+                  column
+                ]
             elif len(epoch_df) == 0:
               for column in epoch_type_columns:
-                row[f"{epoch_type}_{column}"] = "-"
+                row[f"{epoch_type.name.lower()}_{column}"] = "-"
             else:
               raise ValueError
 
@@ -1056,8 +1075,10 @@ class Database(sqlutil.Database):
 
       # Build the column name list.
       columns = ["run_id", "timestamp", "epoch_num"] + extra_flag_names
-      for epoch_type in ["train", "val", "test"]:
-        columns += [f"{epoch_type}_{column}" for column in epoch_type_columns]
+      for epoch_type in list(epoch.Type):
+        columns += [
+          f"{epoch_type.name.lower()}_{column}" for column in epoch_type_columns
+        ]
 
       # Put it into a dataframe.
       per_epoch_df = pd.DataFrame(rows, columns=columns)
@@ -1118,7 +1139,7 @@ class Database(sqlutil.Database):
       )
       session.query(RunId).filter(
         RunId.run_id.in_(runs_with_no_checkpoints)
-      ).delete()
+      ).delete(synchronize_session=False)
 
 
 app.DEFINE_database(
@@ -1134,8 +1155,21 @@ def DatetimeHandler(object):
 def Main():
   """Main entry point."""
   log_db = FLAGS.log_db()
-  if FLAGS.prune_logst:
+  if FLAGS.prune_logs:
     log_db.Prune()
+
+  if FLAGS.rm:
+    run_ids_to_remove = FLAGS.rm
+    with log_db.Session(commit=True) as session:
+      app.Log(
+        1,
+        "Removing %s: %s",
+        humanize.Plural(len(run_ids_to_remove), "run"),
+        run_ids_to_remove,
+      )
+      session.query(RunId).filter(RunId.run_id.in_(run_ids_to_remove)).delete(
+        synchronize_session=False
+      )
 
   print(jsonutil.format_json(log_db.stats_json, default=DatetimeHandler))
 

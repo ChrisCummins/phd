@@ -426,9 +426,6 @@ class EpochThread(progress.Progress):
         rec=rolling_results.recall,
       )
 
-    if self.epoch_type == epoch.Type.VAL:
-      rolling_results.weighted_accuracy_sum = 0
-
     self.results = epoch.Results.FromRollingResults(rolling_results)
     self.logger.OnEpochEnd(
       self.model.run_id, self.epoch_type, self.model.epoch_num, self.results
