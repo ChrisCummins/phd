@@ -448,7 +448,7 @@ def main():
   if generator.ctx.i != generator.ctx.n:
     app.FatalWithoutStackTrace(
       f"Dataset generation terminated after processing only "
-      f"{humanize.Comas(generator.ctx.i)} of an expected "
+      f"{humanize.Commas(generator.ctx.i)} of an expected "
       f"{humanize.Commas(generator.ctx.n)} graphs "
       f"({generator.ctx.i / generator.ctx.n:.3%})."
     )
