@@ -48,4 +48,6 @@ class GGNNConfig(object):
     ###############
 
     self.has_graph_labels: bool = has_graph_labels
+    self.log1p_graph_x = FLAGS.log1p_graph_x
+
     self.intermediate_loss_weight: float = FLAGS.intermediate_loss_weight

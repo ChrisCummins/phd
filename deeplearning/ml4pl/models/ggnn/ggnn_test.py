@@ -2,6 +2,9 @@
 import random
 from typing import Iterable
 
+from labm8.py import test
+from labm8.py.internal import flags_parsers
+
 from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
@@ -13,8 +16,6 @@ from deeplearning.ml4pl.models.ggnn import ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_config
 from deeplearning.ml4pl.testing import random_graph_tuple_database_generator
 from deeplearning.ml4pl.testing import testing_databases
-from labm8.py import test
-from labm8.py.internal import flags_parsers
 
 FLAGS = test.FLAGS
 
@@ -81,6 +82,12 @@ def node_y_dimensionality(request) -> int:
 @test.Fixture(scope="session", params=list(epoch.Type))
 def epoch_type(request) -> epoch.Type:
   """A test fixture which enumerates epoch types."""
+  return request.param
+
+
+@test.Fixture(scope="session", params=(False, True))
+def log1p_graph_x(request) -> bool:
+  """Enumerate --log1p_graph_x values."""
   return request.param
 
 
@@ -183,9 +190,11 @@ def test_graph_classifier_call(
   logger: logging.Logger,
   graph_y_graph_db: graph_tuple_database.Database,
   node_text_embedding_type,
+  log1p_graph_x: bool,
 ):
   """Test running a graph classifier."""
   FLAGS.inst2vec_embeddings = node_text_embedding_type
+  FLAGS.log1p_graph_x = log1p_graph_x
 
   run_id = run_id_lib.RunId.GenerateUnique(
     f"mock{random.randint(0, int(1e6)):06}"

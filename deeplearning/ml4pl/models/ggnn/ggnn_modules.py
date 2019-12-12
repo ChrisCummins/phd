@@ -1,11 +1,11 @@
 """Modules that make up the pytorch GGNN model."""
 import torch
 import torch.nn.functional as F
+from labm8.py import app
 from torch import nn
 from torch import optim
 
 from deeplearning.ml4pl.models.ggnn import ggnn_config
-from labm8.py import app
 
 FLAGS = app.FLAGS
 SMALL_NUMBER = 1e-7
@@ -165,7 +165,7 @@ class NodeEmbeddings(nn.Module):
       == ggnn_config.NodeTextEmbeddingType.INST2VEC_CONSTANT
     ):
       app.Log(
-        1, "Using pre-trained inst2vec embeddings without further training"
+        1, "Using pre-trained inst2vec embeddings without further training",
       )
       assert pretrained_embeddings is not None
       self.node_embs = nn.Embedding.from_pretrained(
@@ -435,7 +435,7 @@ class LinearNet(nn.Module):
 
   def extra_repr(self):
     return "in_features={}, out_features={}, bias={}, dropout={}".format(
-      self.in_features, self.out_features, self.bias is not None, self.dropout
+      self.in_features, self.out_features, self.bias is not None, self.dropout,
     )
 
 
@@ -449,7 +449,8 @@ class AuxiliaryReadout(nn.Module):
   # TODO(github.com/ChrisCummins/ProGraML/issues/27): I don't like that we only introduce the global features AFTER the per node predictions have been made and not while we do those! This is limiting the expressivity of the model.
   def __init__(self, config):
     super().__init__()
-    self.config = config
+    self.num_classes = config.num_classes
+    self.log1p_graph_x = config.log1p_graph_x
 
     self.feed_forward = None
     if config.has_graph_labels:
@@ -466,10 +467,13 @@ class AuxiliaryReadout(nn.Module):
   def forward(
     self, raw_node_out, num_graphs, graph_nodes_list, auxiliary_features
   ):
-    graph_features = torch.zeros(num_graphs, self.config.num_classes)
+    graph_features = torch.zeros(num_graphs, self.num_classes)
     graph_features.index_add_(
       dim=0, index=graph_nodes_list, source=raw_node_out
     )
+
+    if self.log1p_graph_x:
+      auxiliary_features.log1p_()
 
     aggregate_features = torch.cat((graph_features, auxiliary_features), dim=1)
     return self.feed_forward(aggregate_features), graph_features

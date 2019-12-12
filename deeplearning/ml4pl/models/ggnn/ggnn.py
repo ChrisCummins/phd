@@ -1,5 +1,4 @@
 """A gated graph neural network classifier."""
-import enum
 import math
 import typing
 from typing import Iterable
@@ -8,6 +7,8 @@ from typing import NamedTuple
 
 import numpy as np
 import torch
+from labm8.py import app
+from labm8.py import progress
 from torch import nn
 
 from deeplearning.ml4pl.graphs.labelled import graph_batcher
@@ -21,8 +22,6 @@ from deeplearning.ml4pl.models import run
 from deeplearning.ml4pl.models.ggnn import ggnn_config
 from deeplearning.ml4pl.models.ggnn.ggnn_config import GGNNConfig
 from deeplearning.ml4pl.models.ggnn.ggnn_modules import GGNNModel
-from labm8.py import app
-from labm8.py import progress
 
 FLAGS = app.FLAGS
 
@@ -103,6 +102,11 @@ app.DEFINE_integer(
   32,
   "Size for MLP that combines graph_features and aux_in features",
 )
+app.DEFINE_boolean(
+  "log1p_graph_x",
+  True,
+  "If set, apply a log(x + 1) transformation to incoming graph-level features.",
+)
 
 
 class GgnnBatchData(NamedTuple):
@@ -152,7 +156,7 @@ class Ggnn(classifier_base.ClassifierBase):
     """Create a mini-batch of data from an iterator of graphs.
 
   Returns:
-    A single batch of data for feeding into RunBatch().
+  A single batch of data for feeding into RunBatch().
   """
     # TODO(github.com/ChrisCummins/ProGraML/issues/24): The new graph batcher
     # implementation is not well suited for reading the graph IDs, hence this
@@ -306,12 +310,15 @@ class Ggnn(classifier_base.ClassifierBase):
       graph_nodes_list = torch.from_numpy(
         np.array(disjoint_graph.disjoint_nodes_list, dtype=np.int64)
       )
+
       aux_in = torch.from_numpy(
         np.array(disjoint_graph.graph_x, dtype=np.float32)
       )
+
       num_graphs.to(self.dev)
       graph_nodes_list.to(self.dev)
       aux_in.to(self.dev)
+
       model_inputs = (
         vocab_ids,
         selector_ids,
