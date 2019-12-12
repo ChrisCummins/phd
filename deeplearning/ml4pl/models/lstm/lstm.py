@@ -132,6 +132,9 @@ class LstmBase(classifier_base.ClassifierBase):
   ):
     super(LstmBase, self).__init__(*args, **kwargs)
 
+    # Reset any previous session.
+    tf.keras.backend.clear_session()
+
     # The Tensorflow session and graph for the model.
     self.session = utils.SetAllowedGrowthOnKerasSession()
     self.graph = tf.compat.v1.get_default_graph()
