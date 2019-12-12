@@ -47,3 +47,6 @@ class TestOn(enum.Enum):
   EVERY = 1
   # Test on validation improvement.
   IMPROVEMENT = 2
+  # Test on validation improvement and the last epoch (whether or not it was an
+  # improvement).
+  IMPROVEMENT_AND_LAST = 3

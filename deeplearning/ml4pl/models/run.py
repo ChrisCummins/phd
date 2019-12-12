@@ -311,10 +311,23 @@ def PrintExperimentFooter(
   model: classifier_base.ClassifierBase, logger: logger_lib.Logger
 ) -> pd.Series:
   epochs = GetModelEpochsTable(model, logger)
-  best_epoch_num = epochs["val_accuracy"].idxmax()
-  best_epoch = epochs.loc[best_epoch_num]
 
-  print(f"\rResults at best val epoch {best_epoch_num} / {model.epoch_num}:")
+  # Select only from the epochs with test accuracy, if available.
+  only_with_test_epochs = epochs[
+    (epochs["test_accuracy"].astype(str) != "-")
+    & (epochs["test_accuracy"].notnull())
+  ]
+  if len(only_with_test_epochs):
+    epochs = only_with_test_epochs
+
+  epochs.reset_index(inplace=True)
+
+  # Select the row with the greatest validation accuracy.
+  best_epoch = epochs.loc[epochs["val_accuracy"].idxmax()]
+
+  print(
+    f"\rResults at best val epoch {best_epoch['epoch_num']} / {model.epoch_num}:"
+  )
   print("==================================================================")
   print(best_epoch.to_string())
   print("==================================================================")
@@ -410,13 +423,23 @@ def RunKFold(model_class) -> Optional[pd.DataFrame]:
   run_ids = list(df.index.values)
   # Select only the subset of columns that we're interested in: test metrics.
   df = df[
-    ["test_loss", "test_accuracy", "test_precision", "test_recall", "test_f1"]
+    [
+      "epoch_num",
+      "test_loss",
+      "test_accuracy",
+      "test_precision",
+      "test_recall",
+      "test_f1",
+    ]
   ]
   # Add an averages row.
   df = df.append(df.mean(axis=0), ignore_index=True)
   # Strip the "test_" prefix from column names.
   df.rename(
-    columns={c: c[len("test_") :] for c in df.columns.values}, inplace=True
+    columns={
+      c: c[len("test_") :] for c in df.columns.values if c.startswith("test_")
+    },
+    inplace=True,
   )
   # Set the run IDs again.
   df["run_id"] = run_ids + ["Average"]
