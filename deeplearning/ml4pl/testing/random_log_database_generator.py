@@ -298,19 +298,19 @@ class RandomLogDatabaseGenerator(object):
         node_counts = [id_to_node_count[id] for id in graph_ids]
       else:
         node_counts = [random.randint(5, 50) for _ in range(len(graph_ids))]
-      instance_count = sum(node_counts)
+      target_count = sum(node_counts)
       y_dimensionality = self.node_y_dimensionality
     else:
       # Generate graph predictions/targets.
-      instance_count = len(graph_ids)
+      target_count = len(graph_ids)
       y_dimensionality = self.graph_y_dimensionality
 
     data = batches.Data(
       graph_ids=graph_ids, data=list(range(random.randint(10000, 100000))),
     )
     results = batches.Results.Create(
-      targets=np.random.rand(instance_count, y_dimensionality),
-      predictions=np.random.rand(instance_count, y_dimensionality),
+      targets=np.random.rand(target_count, y_dimensionality),
+      predictions=np.random.rand(target_count, y_dimensionality),
       iteration_count=random.randint(1, 3),
       model_converged=random.choice([False, True]),
       learning_rate=random.random(),

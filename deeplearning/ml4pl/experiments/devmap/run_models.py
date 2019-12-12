@@ -50,6 +50,7 @@ def Main():
   db_stem = FLAGS.db_stem
   models = FLAGS.model
   tag_suffix = FLAGS.tag_suffix
+  datasets = FLAGS.dataset
 
   # Set model and dataset-invariant flags.
   FLAGS.log_db = flags_parsers.DatabaseFlag(
@@ -61,7 +62,7 @@ def Main():
   FLAGS.k_fold = True
   FLAGS.test_on = schedules.TestOn.IMPROVEMENT_AND_LAST
 
-  for dataset in FLAGS.dataset:
+  for dataset in datasets:
     # Set model-invariant flags.
     FLAGS.graph_db = flags_parsers.DatabaseFlag(
       graph_tuple_database.Database,
