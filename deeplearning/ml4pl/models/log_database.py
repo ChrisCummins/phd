@@ -1071,7 +1071,9 @@ class Database(sqlutil.Database):
     Returns:
       An iterator over <name, dataframe> tuples.
     """
-    extra_flag_names = ["tag", "graph_db"] + (extra_flags or [])
+    extra_flag_names = ["tag", "graph_db", "val_split", "test_split"] + (
+      extra_flags or []
+    )
 
     with self.Session(session=session) as session:
 
@@ -1170,7 +1172,7 @@ class Database(sqlutil.Database):
       per_epoch_df = pd.DataFrame(rows, columns=columns)
       if len(per_epoch_df):
         per_epoch_df.sort_values(
-          ["run_id", "timestamp", "epoch_num"], inplace=True
+          ["tag", "run_id", "timestamp", "epoch_num"], inplace=True
         )
 
       yield "epochs", per_epoch_df
@@ -1185,7 +1187,10 @@ class Database(sqlutil.Database):
       epoch_counts: List[int] = []
       for run_id in set(per_epoch_df.run_id.values):
 
-        run_df = per_epoch_df[per_epoch_df["run_id"] == run_id]
+        run_df = per_epoch_df[
+          (per_epoch_df["run_id"] == run_id)
+          & (per_epoch_df["test_accuracy"].notnull())
+        ]
         # Safely hand 'null' values.
         run_df = run_df[run_df["val_accuracy"].notnull()]
         if len(run_df):
@@ -1195,7 +1200,7 @@ class Database(sqlutil.Database):
       per_run_df = pd.DataFrame(rows, columns=per_epoch_df.columns.values)
       per_run_df["epoch_count"] = epoch_counts
       if len(rows):
-        per_run_df.sort_values(["run_id", "timestamp"], inplace=True)
+        per_run_df.sort_values(["tag", "run_id", "timestamp"], inplace=True)
       per_run_df.rename(columns={"epoch_num": "best_epoch"}, inplace=True)
 
       # Rejig the columns so that epoch_count comes after best_epoch.
@@ -1205,6 +1210,27 @@ class Database(sqlutil.Database):
       per_run_df = per_run_df[columns]
 
       yield "runs", per_run_df
+
+      #########################################################################
+      # Per-tag stats.
+      # Average stats across runs with the same tag.
+      #########################################################################
+
+      rows = []
+      tag_df = per_run_df.groupby("tag").mean().reset_index()
+      # for tag in set(per_run_df.tag.values):
+      #   tag_df = per_run_df[per_run_df["tag"] == tag]
+      #   # Safely hand 'null' values.
+      #   tag_df = tag_df[tag_df["val_accuracy"].notnull()]
+      #   if len(tag_df):
+      #     rows.append(tag_df.mean())
+      #   # TODO: Drop unwanted columns.
+      #
+      # per_tag_df = pd.DataFrame(rows, columns=per_run_df.columns.values)
+      # if len(rows):
+      #   per_tag_df.sort_values(["tag", "timestamp"], inplace=True)
+
+      yield "tags", tag_df
 
   def Prune(self, session: Optional[sqlutil.Database.SessionType] = None):
     """Remove any runs that do not have a model checkpoint.
