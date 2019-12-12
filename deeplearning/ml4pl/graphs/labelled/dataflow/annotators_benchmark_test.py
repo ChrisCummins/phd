@@ -16,19 +16,20 @@ PROTOS = list(random_programl_generator.EnumerateProtoTestSet(n=20))
 
 # The annotators to test.
 ANNOTATORS = {
-  analysis: annotate.ANALYSES[analysis]()
+  analysis: annotate.ANALYSES[analysis]
   for analysis in annotate.AVAILABLE_ANALYSES
 }
 
 
-def AnnotatorBenchmark(annotator):
+def AnnotatorBenchmark(annotator_class):
   """A micro-benchmark that runs annotator over a list of test graphs."""
   with prof.Profile(
     f"Completed benchmark of {len(PROTOS) * 5} annotations "
-    f"using {type(annotator).__name__}"
+    f"using {annotator_class.__name__}"
   ):
     for graph in PROTOS:
-      annotator.MakeAnnotated(graph, n=5)
+      annotator = annotator_class(graph)
+      annotator.MakeAnnotated(5)
 
 
 @test.Parametrize(

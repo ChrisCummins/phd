@@ -15,12 +15,6 @@ FLAGS = test.FLAGS
 ###############################################################################
 
 
-@test.Fixture(scope="function")
-def annotator() -> liveness.LivenessAnnotator:
-  """A test fixture which yield an annotator."""
-  return liveness.LivenessAnnotator()
-
-
 @test.Fixture(
   scope="session",
   params=list(random_programl_generator.EnumerateProtoTestSet()),
@@ -36,7 +30,7 @@ def real_graph(request) -> programl_pb2.ProgramGraph:
 
 
 @test.Fixture(scope="function")
-def wiki() -> nx.MultiDiGraph:
+def wiki() -> programl_pb2.ProgramGraph:
   """A test fixture which yields a program graph."""
   # Example graph taken from Wikipedia:
   # <https://en.wikipedia.org/wiki/Live_variable_analysis>
@@ -98,131 +92,135 @@ def wiki() -> nx.MultiDiGraph:
   builder.AddEdge(b, b3b, flow=programl_pb2.Edge.DATA)
   builder.AddEdge(d, b3b, flow=programl_pb2.Edge.DATA)
   builder.AddEdge(c, b3b, flow=programl_pb2.Edge.DATA)
-  return builder.g
+  return builder.proto
 
 
-def test_AnnotateLiveness_wiki_b1(
-  wiki: nx.MultiDiGraph, annotator: liveness.LivenessAnnotator
-):
+def test_AnnotateLiveness_wiki_b1(wiki: programl_pb2.ProgramGraph):
   """Test liveness annotations from block b1."""
-  annotated = annotator.Annotate(wiki, 5)
-  assert annotated.graph["data_flow_positive_node_count"] == 3
-  assert annotated.graph["data_flow_steps"] == 5
+  annotator = liveness.LivenessAnnotator(wiki)
+  g = annotator.g
+
+  annotator.Annotate(g, 5)
+  assert g.graph["data_flow_positive_node_count"] == 3
+  assert g.graph["data_flow_steps"] == 5
 
   # Features:
-  assert wiki.nodes[5]["x"] == [-1, 1]
-  assert wiki.nodes[6]["x"] == [-1, 0]
-  assert wiki.nodes[7]["x"] == [-1, 0]
-  assert wiki.nodes[8]["x"] == [-1, 0]
+  assert g.nodes[5]["x"] == [-1, 1]
+  assert g.nodes[6]["x"] == [-1, 0]
+  assert g.nodes[7]["x"] == [-1, 0]
+  assert g.nodes[8]["x"] == [-1, 0]
 
-  assert wiki.nodes[0]["x"] == [-1, 0]
-  assert wiki.nodes[1]["x"] == [-1, 0]
-  assert wiki.nodes[2]["x"] == [-1, 0]
-  assert wiki.nodes[3]["x"] == [-1, 0]
+  assert g.nodes[0]["x"] == [-1, 0]
+  assert g.nodes[1]["x"] == [-1, 0]
+  assert g.nodes[2]["x"] == [-1, 0]
+  assert g.nodes[3]["x"] == [-1, 0]
 
   # Labels:
-  assert wiki.nodes[5]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[6]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[7]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[8]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[5]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[6]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[7]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[8]["y"] == liveness.NOT_LIVE_OUT
 
-  assert wiki.nodes[0]["y"] == liveness.LIVE_OUT
-  assert wiki.nodes[1]["y"] == liveness.LIVE_OUT
-  assert wiki.nodes[2]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[3]["y"] == liveness.LIVE_OUT
+  assert g.nodes[0]["y"] == liveness.LIVE_OUT
+  assert g.nodes[1]["y"] == liveness.LIVE_OUT
+  assert g.nodes[2]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[3]["y"] == liveness.LIVE_OUT
 
 
-def test_AnnotateLiveness_wiki_b2(
-  wiki: nx.MultiDiGraph, annotator: liveness.LivenessAnnotator
-):
+def test_AnnotateLiveness_wiki_b2(wiki: programl_pb2.ProgramGraph):
   """Test liveness annotations from block b2."""
-  annotated = annotator.Annotate(wiki, 6)
-  assert annotated.graph["data_flow_positive_node_count"] == 2
-  assert annotated.graph["data_flow_steps"] == 5
+  annotator = liveness.LivenessAnnotator(wiki)
+  g = annotator.g
+
+  annotator.Annotate(g, 6)
+  assert g.graph["data_flow_positive_node_count"] == 2
+  assert g.graph["data_flow_steps"] == 5
 
   # Features:
-  assert wiki.nodes[5]["x"] == [-1, 0]
-  assert wiki.nodes[6]["x"] == [-1, 1]
-  assert wiki.nodes[7]["x"] == [-1, 0]
-  assert wiki.nodes[8]["x"] == [-1, 0]
+  assert g.nodes[5]["x"] == [-1, 0]
+  assert g.nodes[6]["x"] == [-1, 1]
+  assert g.nodes[7]["x"] == [-1, 0]
+  assert g.nodes[8]["x"] == [-1, 0]
 
-  assert wiki.nodes[0]["x"] == [-1, 0]
-  assert wiki.nodes[1]["x"] == [-1, 0]
-  assert wiki.nodes[2]["x"] == [-1, 0]
-  assert wiki.nodes[3]["x"] == [-1, 0]
+  assert g.nodes[0]["x"] == [-1, 0]
+  assert g.nodes[1]["x"] == [-1, 0]
+  assert g.nodes[2]["x"] == [-1, 0]
+  assert g.nodes[3]["x"] == [-1, 0]
 
   # Labels:
-  assert wiki.nodes[5]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[6]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[7]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[8]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[5]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[6]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[7]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[8]["y"] == liveness.NOT_LIVE_OUT
 
-  assert wiki.nodes[0]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[1]["y"] == liveness.LIVE_OUT
-  assert wiki.nodes[2]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[3]["y"] == liveness.LIVE_OUT
+  assert g.nodes[0]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[1]["y"] == liveness.LIVE_OUT
+  assert g.nodes[2]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[3]["y"] == liveness.LIVE_OUT
 
 
-def test_AnnotateLiveness_wiki_b3a(
-  wiki: nx.MultiDiGraph, annotator: liveness.LivenessAnnotator
-):
+def test_AnnotateLiveness_wiki_b3a(wiki: programl_pb2.ProgramGraph):
   """Test liveness annotations from block b3a."""
-  annotated = annotator.Annotate(wiki, 7)
-  assert annotated.graph["data_flow_positive_node_count"] == 3
-  assert annotated.graph["data_flow_steps"] == 5
+  annotator = liveness.LivenessAnnotator(wiki)
+  g = annotator.g
+
+  annotator.Annotate(g, 7)
+  assert g.graph["data_flow_positive_node_count"] == 3
+  assert g.graph["data_flow_steps"] == 5
 
   # Features:
-  assert wiki.nodes[5]["x"] == [-1, 0]
-  assert wiki.nodes[6]["x"] == [-1, 0]
-  assert wiki.nodes[7]["x"] == [-1, 1]
-  assert wiki.nodes[8]["x"] == [-1, 0]
+  assert g.nodes[5]["x"] == [-1, 0]
+  assert g.nodes[6]["x"] == [-1, 0]
+  assert g.nodes[7]["x"] == [-1, 1]
+  assert g.nodes[8]["x"] == [-1, 0]
 
-  assert wiki.nodes[0]["x"] == [-1, 0]
-  assert wiki.nodes[1]["x"] == [-1, 0]
-  assert wiki.nodes[2]["x"] == [-1, 0]
-  assert wiki.nodes[3]["x"] == [-1, 0]
+  assert g.nodes[0]["x"] == [-1, 0]
+  assert g.nodes[1]["x"] == [-1, 0]
+  assert g.nodes[2]["x"] == [-1, 0]
+  assert g.nodes[3]["x"] == [-1, 0]
 
   # Labels:
-  assert wiki.nodes[5]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[6]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[7]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[8]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[5]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[6]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[7]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[8]["y"] == liveness.NOT_LIVE_OUT
 
-  assert wiki.nodes[0]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[1]["y"] == liveness.LIVE_OUT
-  assert wiki.nodes[2]["y"] == liveness.LIVE_OUT
-  assert wiki.nodes[3]["y"] == liveness.LIVE_OUT
+  assert g.nodes[0]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[1]["y"] == liveness.LIVE_OUT
+  assert g.nodes[2]["y"] == liveness.LIVE_OUT
+  assert g.nodes[3]["y"] == liveness.LIVE_OUT
 
 
-def test_AnnotateLiveness_wiki_b3b(
-  wiki: nx.MultiDiGraph, annotator: liveness.LivenessAnnotator
-):
+def test_AnnotateLiveness_wiki_b3b(wiki: programl_pb2.ProgramGraph):
   """Test liveness annotations from block b3b."""
-  annotated = annotator.Annotate(wiki, 8)
-  assert annotated.graph["data_flow_positive_node_count"] == 0
-  assert annotated.graph["data_flow_steps"] == 5
+  annotator = liveness.LivenessAnnotator(wiki)
+  g = annotator.g
+
+  annotator.Annotate(g, 8)
+  assert g.graph["data_flow_positive_node_count"] == 0
+  assert g.graph["data_flow_steps"] == 5
 
   # Features:
-  assert wiki.nodes[5]["x"] == [-1, 0]
-  assert wiki.nodes[6]["x"] == [-1, 0]
-  assert wiki.nodes[7]["x"] == [-1, 0]
-  assert wiki.nodes[8]["x"] == [-1, 1]
+  assert g.nodes[5]["x"] == [-1, 0]
+  assert g.nodes[6]["x"] == [-1, 0]
+  assert g.nodes[7]["x"] == [-1, 0]
+  assert g.nodes[8]["x"] == [-1, 1]
 
-  assert wiki.nodes[0]["x"] == [-1, 0]
-  assert wiki.nodes[1]["x"] == [-1, 0]
-  assert wiki.nodes[2]["x"] == [-1, 0]
-  assert wiki.nodes[3]["x"] == [-1, 0]
+  assert g.nodes[0]["x"] == [-1, 0]
+  assert g.nodes[1]["x"] == [-1, 0]
+  assert g.nodes[2]["x"] == [-1, 0]
+  assert g.nodes[3]["x"] == [-1, 0]
 
   # Labels:
-  assert wiki.nodes[5]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[6]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[7]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[8]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[5]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[6]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[7]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[8]["y"] == liveness.NOT_LIVE_OUT
 
-  assert wiki.nodes[0]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[1]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[2]["y"] == liveness.NOT_LIVE_OUT
-  assert wiki.nodes[3]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[0]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[1]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[2]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[3]["y"] == liveness.NOT_LIVE_OUT
 
 
 ###############################################################################
@@ -231,7 +229,7 @@ def test_AnnotateLiveness_wiki_b3b(
 
 
 @test.Fixture(scope="function")
-def graph() -> nx.MultiDiGraph:
+def graph() -> programl_pb2.ProgramGraph:
   """A test fixture which yields a program graph."""
   builder = programl.GraphBuilder()
   a = builder.AddNode(type=programl_pb2.Node.STATEMENT, x=[-1])
@@ -252,111 +250,115 @@ def graph() -> nx.MultiDiGraph:
   builder.AddEdge(b, v2, flow=programl_pb2.Edge.DATA)
   builder.AddEdge(v2, d, flow=programl_pb2.Edge.DATA)
 
-  return builder.g
+  return builder.proto
 
 
-def test_AnnotateDominatorTree_graph_A(
-  graph: nx.MultiDiGraph, annotator: liveness.LivenessAnnotator
-):
-  annotated = annotator.Annotate(graph, 0)
-  assert annotated.graph["data_flow_positive_node_count"] == 2
-  assert annotated.graph["data_flow_steps"] == 4
+def test_AnnotateDominatorTree_graph_A(graph: programl_pb2.ProgramGraph):
+  annotator = liveness.LivenessAnnotator(graph)
+  g = annotator.g
 
-  # Features:
-  assert graph.nodes[0]["x"] == [-1, 1]
-  assert graph.nodes[1]["x"] == [-1, 0]
-  assert graph.nodes[2]["x"] == [-1, 0]
-  assert graph.nodes[3]["x"] == [-1, 0]
-
-  assert graph.nodes[4]["x"] == [-1, 0]
-  assert graph.nodes[5]["x"] == [-1, 0]
-
-  # Labels:
-  assert graph.nodes[0]["y"] == liveness.NOT_LIVE_OUT
-  assert graph.nodes[1]["y"] == liveness.NOT_LIVE_OUT
-  assert graph.nodes[2]["y"] == liveness.NOT_LIVE_OUT
-  assert graph.nodes[3]["y"] == liveness.NOT_LIVE_OUT
-
-  assert graph.nodes[4]["y"] == liveness.LIVE_OUT
-  assert graph.nodes[5]["y"] == liveness.LIVE_OUT
-
-
-def test_AnnotateDominatorTree_graph_B(
-  graph: nx.MultiDiGraph, annotator: liveness.LivenessAnnotator
-):
-  annotated = annotator.Annotate(graph, 1)
-  assert annotated.graph["data_flow_positive_node_count"] == 1
-  assert annotated.graph["data_flow_steps"] == 4
+  annotator.Annotate(g, 0)
+  assert g.graph["data_flow_positive_node_count"] == 2
+  assert g.graph["data_flow_steps"] == 4
 
   # Features:
-  assert graph.nodes[0]["x"] == [-1, 0]
-  assert graph.nodes[1]["x"] == [-1, 1]
-  assert graph.nodes[2]["x"] == [-1, 0]
-  assert graph.nodes[3]["x"] == [-1, 0]
+  assert g.nodes[0]["x"] == [-1, 1]
+  assert g.nodes[1]["x"] == [-1, 0]
+  assert g.nodes[2]["x"] == [-1, 0]
+  assert g.nodes[3]["x"] == [-1, 0]
 
-  assert graph.nodes[4]["x"] == [-1, 0]
-  assert graph.nodes[5]["x"] == [-1, 0]
+  assert g.nodes[4]["x"] == [-1, 0]
+  assert g.nodes[5]["x"] == [-1, 0]
 
   # Labels:
-  assert graph.nodes[0]["y"] == liveness.NOT_LIVE_OUT
-  assert graph.nodes[1]["y"] == liveness.NOT_LIVE_OUT
-  assert graph.nodes[2]["y"] == liveness.NOT_LIVE_OUT
-  assert graph.nodes[3]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[0]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[1]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[2]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[3]["y"] == liveness.NOT_LIVE_OUT
 
-  assert graph.nodes[4]["y"] == liveness.NOT_LIVE_OUT
-  assert graph.nodes[5]["y"] == liveness.LIVE_OUT
+  assert g.nodes[4]["y"] == liveness.LIVE_OUT
+  assert g.nodes[5]["y"] == liveness.LIVE_OUT
 
 
-def test_AnnotateDominatorTree_graph_C(
-  graph: nx.MultiDiGraph, annotator: liveness.LivenessAnnotator
-):
-  annotated = annotator.Annotate(graph, 2)
-  assert annotated.graph["data_flow_positive_node_count"] == 1
-  assert annotated.graph["data_flow_steps"] == 4
+def test_AnnotateDominatorTree_graph_B(graph: programl_pb2.ProgramGraph):
+  annotator = liveness.LivenessAnnotator(graph)
+  g = annotator.g
+
+  annotator.Annotate(g, 1)
+  assert g.graph["data_flow_positive_node_count"] == 1
+  assert g.graph["data_flow_steps"] == 4
 
   # Features:
-  assert graph.nodes[0]["x"] == [-1, 0]
-  assert graph.nodes[1]["x"] == [-1, 0]
-  assert graph.nodes[2]["x"] == [-1, 1]
-  assert graph.nodes[3]["x"] == [-1, 0]
+  assert g.nodes[0]["x"] == [-1, 0]
+  assert g.nodes[1]["x"] == [-1, 1]
+  assert g.nodes[2]["x"] == [-1, 0]
+  assert g.nodes[3]["x"] == [-1, 0]
 
-  assert graph.nodes[4]["x"] == [-1, 0]
-  assert graph.nodes[5]["x"] == [-1, 0]
+  assert g.nodes[4]["x"] == [-1, 0]
+  assert g.nodes[5]["x"] == [-1, 0]
 
   # Labels:
-  assert graph.nodes[0]["y"] == liveness.NOT_LIVE_OUT
-  assert graph.nodes[1]["y"] == liveness.NOT_LIVE_OUT
-  assert graph.nodes[2]["y"] == liveness.NOT_LIVE_OUT
-  assert graph.nodes[3]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[0]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[1]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[2]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[3]["y"] == liveness.NOT_LIVE_OUT
 
-  assert graph.nodes[4]["y"] == liveness.NOT_LIVE_OUT
-  assert graph.nodes[5]["y"] == liveness.LIVE_OUT
+  assert g.nodes[4]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[5]["y"] == liveness.LIVE_OUT
 
 
-def test_AnnotateDominatorTree_graph_D(
-  graph: nx.MultiDiGraph, annotator: liveness.LivenessAnnotator
-):
-  annotated = annotator.Annotate(graph, 3)
-  assert annotated.graph["data_flow_positive_node_count"] == 0
-  assert annotated.graph["data_flow_steps"] == 4
+def test_AnnotateDominatorTree_graph_C(graph: programl_pb2.ProgramGraph):
+  annotator = liveness.LivenessAnnotator(graph)
+  g = annotator.g
+
+  annotator.Annotate(g, 2)
+  assert g.graph["data_flow_positive_node_count"] == 1
+  assert g.graph["data_flow_steps"] == 4
 
   # Features:
-  assert graph.nodes[0]["x"] == [-1, 0]
-  assert graph.nodes[1]["x"] == [-1, 0]
-  assert graph.nodes[2]["x"] == [-1, 0]
-  assert graph.nodes[3]["x"] == [-1, 1]
+  assert g.nodes[0]["x"] == [-1, 0]
+  assert g.nodes[1]["x"] == [-1, 0]
+  assert g.nodes[2]["x"] == [-1, 1]
+  assert g.nodes[3]["x"] == [-1, 0]
 
-  assert graph.nodes[4]["x"] == [-1, 0]
-  assert graph.nodes[5]["x"] == [-1, 0]
+  assert g.nodes[4]["x"] == [-1, 0]
+  assert g.nodes[5]["x"] == [-1, 0]
 
   # Labels:
-  assert graph.nodes[0]["y"] == liveness.NOT_LIVE_OUT
-  assert graph.nodes[1]["y"] == liveness.NOT_LIVE_OUT
-  assert graph.nodes[2]["y"] == liveness.NOT_LIVE_OUT
-  assert graph.nodes[3]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[0]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[1]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[2]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[3]["y"] == liveness.NOT_LIVE_OUT
 
-  assert graph.nodes[4]["y"] == liveness.NOT_LIVE_OUT
-  assert graph.nodes[5]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[4]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[5]["y"] == liveness.LIVE_OUT
+
+
+def test_AnnotateDominatorTree_graph_D(graph: programl_pb2.ProgramGraph):
+  annotator = liveness.LivenessAnnotator(graph)
+  g = annotator.g
+
+  annotator.Annotate(g, 3)
+  assert g.graph["data_flow_positive_node_count"] == 0
+  assert g.graph["data_flow_steps"] == 4
+
+  # Features:
+  assert g.nodes[0]["x"] == [-1, 0]
+  assert g.nodes[1]["x"] == [-1, 0]
+  assert g.nodes[2]["x"] == [-1, 0]
+  assert g.nodes[3]["x"] == [-1, 1]
+
+  assert g.nodes[4]["x"] == [-1, 0]
+  assert g.nodes[5]["x"] == [-1, 0]
+
+  # Labels:
+  assert g.nodes[0]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[1]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[2]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[3]["y"] == liveness.NOT_LIVE_OUT
+
+  assert g.nodes[4]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[5]["y"] == liveness.NOT_LIVE_OUT
 
 
 ###############################################################################
@@ -365,7 +367,7 @@ def test_AnnotateDominatorTree_graph_D(
 
 
 @test.Fixture(scope="function")
-def while_loop() -> nx.MultiDiGraph:
+def while_loop() -> programl_pb2.ProgramGraph:
   """Test fixture which returns a simple "while loop" graph."""
   #          (v1)
   #            |
@@ -413,127 +415,131 @@ def while_loop() -> nx.MultiDiGraph:
   builder.AddEdge(bb, v2, flow=programl_pb2.Edge.DATA)
   builder.AddEdge(v2, c, flow=programl_pb2.Edge.DATA)
 
-  return builder.g
+  return builder.proto
 
 
 def test_AnnotateDominatorTree_while_loop_A(
-  while_loop: nx.MultiDiGraph, annotator: liveness.LivenessAnnotator
+  while_loop: programl_pb2.ProgramGraph,
 ):
-  annotated = annotator.Annotate(while_loop, 0)
-  assert annotated.graph["data_flow_positive_node_count"] == 1
-  assert annotated.graph["data_flow_steps"] == 5
+  annotator = liveness.LivenessAnnotator(while_loop)
+  g = annotator.g
+
+  annotator.Annotate(g, 0)
+  assert g.graph["data_flow_positive_node_count"] == 1
+  assert g.graph["data_flow_steps"] == 5
 
   # Features:
-  assert while_loop.nodes[0]["x"] == [-1, 1]
-  assert while_loop.nodes[1]["x"] == [-1, 0]
-  assert while_loop.nodes[2]["x"] == [-1, 0]
-  assert while_loop.nodes[3]["x"] == [-1, 0]
+  assert g.nodes[0]["x"] == [-1, 1]
+  assert g.nodes[1]["x"] == [-1, 0]
+  assert g.nodes[2]["x"] == [-1, 0]
+  assert g.nodes[3]["x"] == [-1, 0]
 
-  assert while_loop.nodes[4]["x"] == [-1, 0]
-  assert while_loop.nodes[5]["x"] == [-1, 0]
-  assert while_loop.nodes[6]["x"] == [-1, 0]
+  assert g.nodes[4]["x"] == [-1, 0]
+  assert g.nodes[5]["x"] == [-1, 0]
+  assert g.nodes[6]["x"] == [-1, 0]
 
   # Labels:
-  assert while_loop.nodes[0]["y"] == liveness.NOT_LIVE_OUT
-  assert while_loop.nodes[1]["y"] == liveness.NOT_LIVE_OUT
-  assert while_loop.nodes[2]["y"] == liveness.NOT_LIVE_OUT
-  assert while_loop.nodes[3]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[0]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[1]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[2]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[3]["y"] == liveness.NOT_LIVE_OUT
 
-  assert (
-    while_loop.nodes[4]["y"] == liveness.NOT_LIVE_OUT
-  )  # Loop induction variable
-  assert while_loop.nodes[5]["y"] == liveness.LIVE_OUT  # Computed result
-  assert while_loop.nodes[6]["y"] == liveness.NOT_LIVE_OUT  # Intermediate value
+  assert g.nodes[4]["y"] == liveness.NOT_LIVE_OUT  # Loop induction variable
+  assert g.nodes[5]["y"] == liveness.LIVE_OUT  # Computed result
+  assert g.nodes[6]["y"] == liveness.NOT_LIVE_OUT  # Intermediate value
 
 
 def test_AnnotateDominatorTree_while_loop_Ba(
-  while_loop: nx.MultiDiGraph, annotator: liveness.LivenessAnnotator
+  while_loop: programl_pb2.ProgramGraph,
 ):
-  annotated = annotator.Annotate(while_loop, 1)
-  assert annotated.graph["data_flow_positive_node_count"] == 1
-  assert annotated.graph["data_flow_steps"] == 5
+  annotator = liveness.LivenessAnnotator(while_loop)
+  g = annotator.g
+
+  annotator.Annotate(g, 1)
+  assert g.graph["data_flow_positive_node_count"] == 1
+  assert g.graph["data_flow_steps"] == 5
 
   # Features:
-  assert while_loop.nodes[0]["x"] == [-1, 0]
-  assert while_loop.nodes[1]["x"] == [-1, 1]
-  assert while_loop.nodes[2]["x"] == [-1, 0]
-  assert while_loop.nodes[3]["x"] == [-1, 0]
+  assert g.nodes[0]["x"] == [-1, 0]
+  assert g.nodes[1]["x"] == [-1, 1]
+  assert g.nodes[2]["x"] == [-1, 0]
+  assert g.nodes[3]["x"] == [-1, 0]
 
-  assert while_loop.nodes[4]["x"] == [-1, 0]
-  assert while_loop.nodes[5]["x"] == [-1, 0]
-  assert while_loop.nodes[6]["x"] == [-1, 0]
+  assert g.nodes[4]["x"] == [-1, 0]
+  assert g.nodes[5]["x"] == [-1, 0]
+  assert g.nodes[6]["x"] == [-1, 0]
 
   # Labels:
-  assert while_loop.nodes[0]["y"] == liveness.NOT_LIVE_OUT
-  assert while_loop.nodes[1]["y"] == liveness.NOT_LIVE_OUT
-  assert while_loop.nodes[2]["y"] == liveness.NOT_LIVE_OUT
-  assert while_loop.nodes[2]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[0]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[1]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[2]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[2]["y"] == liveness.NOT_LIVE_OUT
 
-  assert (
-    while_loop.nodes[4]["y"] == liveness.NOT_LIVE_OUT
-  )  # Loop induction variable
-  assert while_loop.nodes[5]["y"] == liveness.NOT_LIVE_OUT  # Computed result
-  assert while_loop.nodes[6]["y"] == liveness.LIVE_OUT  # Intermediate value
+  assert g.nodes[4]["y"] == liveness.NOT_LIVE_OUT  # Loop induction variable
+  assert g.nodes[5]["y"] == liveness.NOT_LIVE_OUT  # Computed result
+  assert g.nodes[6]["y"] == liveness.LIVE_OUT  # Intermediate value
 
 
 def test_AnnotateDominatorTree_while_loop_Bb(
-  while_loop: nx.MultiDiGraph, annotator: liveness.LivenessAnnotator
+  while_loop: programl_pb2.ProgramGraph,
 ):
-  annotated = annotator.Annotate(while_loop, 2)
-  assert annotated.graph["data_flow_positive_node_count"] == 1
-  assert annotated.graph["data_flow_steps"] == 5
+  annotator = liveness.LivenessAnnotator(while_loop)
+  g = annotator.g
+
+  annotator.Annotate(g, 2)
+  assert g.graph["data_flow_positive_node_count"] == 1
+  assert g.graph["data_flow_steps"] == 5
 
   # Features:
-  assert while_loop.nodes[0]["x"] == [-1, 0]
-  assert while_loop.nodes[1]["x"] == [-1, 0]
-  assert while_loop.nodes[2]["x"] == [-1, 1]
-  assert while_loop.nodes[3]["x"] == [-1, 0]
+  assert g.nodes[0]["x"] == [-1, 0]
+  assert g.nodes[1]["x"] == [-1, 0]
+  assert g.nodes[2]["x"] == [-1, 1]
+  assert g.nodes[3]["x"] == [-1, 0]
 
-  assert while_loop.nodes[4]["x"] == [-1, 0]
-  assert while_loop.nodes[5]["x"] == [-1, 0]
-  assert while_loop.nodes[6]["x"] == [-1, 0]
+  assert g.nodes[4]["x"] == [-1, 0]
+  assert g.nodes[5]["x"] == [-1, 0]
+  assert g.nodes[6]["x"] == [-1, 0]
 
   # Labels:
-  assert while_loop.nodes[0]["y"] == liveness.NOT_LIVE_OUT
-  assert while_loop.nodes[1]["y"] == liveness.NOT_LIVE_OUT
-  assert while_loop.nodes[2]["y"] == liveness.NOT_LIVE_OUT
-  assert while_loop.nodes[2]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[0]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[1]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[2]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[2]["y"] == liveness.NOT_LIVE_OUT
 
-  assert (
-    while_loop.nodes[4]["y"] == liveness.NOT_LIVE_OUT
-  )  # Loop induction variable
-  assert while_loop.nodes[5]["y"] == liveness.LIVE_OUT  # Computed result
-  assert while_loop.nodes[6]["y"] == liveness.NOT_LIVE_OUT  # Intermediate value
+  assert g.nodes[4]["y"] == liveness.NOT_LIVE_OUT  # Loop induction variable
+  assert g.nodes[5]["y"] == liveness.LIVE_OUT  # Computed result
+  assert g.nodes[6]["y"] == liveness.NOT_LIVE_OUT  # Intermediate value
 
 
 def test_AnnotateDominatorTree_while_loop_C(
-  while_loop: nx.MultiDiGraph, annotator: liveness.LivenessAnnotator
+  while_loop: programl_pb2.ProgramGraph,
 ):
-  annotated = annotator.Annotate(while_loop, 3)
-  assert annotated.graph["data_flow_positive_node_count"] == 0
-  assert annotated.graph["data_flow_steps"] == 5
+  annotator = liveness.LivenessAnnotator(while_loop)
+  g = annotator.g
+
+  annotator.Annotate(g, 3)
+  assert g.graph["data_flow_positive_node_count"] == 0
+  assert g.graph["data_flow_steps"] == 5
 
   # Features:
-  assert while_loop.nodes[0]["x"] == [-1, 0]
-  assert while_loop.nodes[1]["x"] == [-1, 0]
-  assert while_loop.nodes[2]["x"] == [-1, 0]
-  assert while_loop.nodes[3]["x"] == [-1, 1]
+  assert g.nodes[0]["x"] == [-1, 0]
+  assert g.nodes[1]["x"] == [-1, 0]
+  assert g.nodes[2]["x"] == [-1, 0]
+  assert g.nodes[3]["x"] == [-1, 1]
 
-  assert while_loop.nodes[4]["x"] == [-1, 0]
-  assert while_loop.nodes[5]["x"] == [-1, 0]
-  assert while_loop.nodes[6]["x"] == [-1, 0]
+  assert g.nodes[4]["x"] == [-1, 0]
+  assert g.nodes[5]["x"] == [-1, 0]
+  assert g.nodes[6]["x"] == [-1, 0]
 
   # Labels:
-  assert while_loop.nodes[0]["y"] == liveness.NOT_LIVE_OUT
-  assert while_loop.nodes[1]["y"] == liveness.NOT_LIVE_OUT
-  assert while_loop.nodes[2]["y"] == liveness.NOT_LIVE_OUT
-  assert while_loop.nodes[2]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[0]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[1]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[2]["y"] == liveness.NOT_LIVE_OUT
+  assert g.nodes[2]["y"] == liveness.NOT_LIVE_OUT
 
-  assert (
-    while_loop.nodes[4]["y"] == liveness.NOT_LIVE_OUT
-  )  # Loop induction variable
-  assert while_loop.nodes[5]["y"] == liveness.NOT_LIVE_OUT  # Computed result
-  assert while_loop.nodes[6]["y"] == liveness.NOT_LIVE_OUT  # Intermediate value
+  assert g.nodes[4]["y"] == liveness.NOT_LIVE_OUT  # Loop induction variable
+  assert g.nodes[5]["y"] == liveness.NOT_LIVE_OUT  # Computed result
+  assert g.nodes[6]["y"] == liveness.NOT_LIVE_OUT  # Intermediate value
 
 
 ###############################################################################
@@ -542,17 +548,17 @@ def test_AnnotateDominatorTree_while_loop_C(
 
 
 def test_AnnotateLiveness_exit_block_is_removed(
-  wiki: nx.MultiDiGraph, annotator: liveness.LivenessAnnotator
+  wiki: programl_pb2.ProgramGraph,
 ):
-  n = wiki.number_of_nodes()
-  assert n == annotator.Annotate(wiki, 5).number_of_nodes()
+  n = len(wiki.node)
+  annotator = liveness.LivenessAnnotator(wiki)
+  assert n == annotator.Annotate(annotator.g, 5).number_of_nodes()
 
 
-def test_MakeAnnotated_real_graphs(
-  real_graph: programl_pb2.ProgramGraph, annotator: liveness.LivenessAnnotator,
-):
+def test_MakeAnnotated_real_graphs(real_graph: programl_pb2.ProgramGraph,):
   """Opaque black-box test of annotator."""
-  annotated = annotator.MakeAnnotated(real_graph, n=10)
+  annotator = liveness.LivenessAnnotator(real_graph)
+  annotated = annotator.MakeAnnotated(10)
   assert len(annotated.graphs) <= 10
   # Assume all graphs produce annotations.
   for graph in annotated.graphs:

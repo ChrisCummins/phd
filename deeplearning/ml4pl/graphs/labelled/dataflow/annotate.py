@@ -67,17 +67,17 @@ FLAGS = app.FLAGS
 # A map from analysis name to a callback which instantiates a
 # DataFlowGraphAnnotator object for this anlysis. To add a new analysis, create
 # a new entry in this table.
-ANALYSES: Dict[str, Callable[[], data_flow_graphs.DataFlowGraphAnnotator]] = {
-  "reachability": lambda: reachability.ReachabilityAnnotator(),
-  "domtree": lambda: dominator_tree.DominatorTreeAnnotator(),
-  "liveness": lambda: liveness.LivenessAnnotator(),
+ANALYSES = {
+  "reachability": reachability.ReachabilityAnnotator,
+  "domtree": dominator_tree.DominatorTreeAnnotator,
+  "liveness": liveness.LivenessAnnotator,
   # Annotators which are used for testing this script. These should, for obvious
   # reasons, not be used in prod. However, they must remain here so that we can
   # test the behaviour of the annotator under various conditions.
-  "test_pass_thru": lambda: test_annotators.PassThruAnnotator(),
-  "test_flaky": lambda: test_annotators.FlakyAnnotator(),
-  "test_timeout": lambda: test_annotators.TimeoutAnnotator(),
-  "test_error": lambda: test_annotators.ErrorAnnotator(),
+  "test_pass_thru": test_annotators.PassThruAnnotator,
+  "test_flaky": test_annotators.FlakyAnnotator,
+  "test_timeout": test_annotators.TimeoutAnnotator,
+  "test_error": test_annotators.ErrorAnnotator,
 }
 
 # A list of the available analyses. We filter out the test_xxx named annotators
@@ -254,10 +254,10 @@ def Annotate(
 
   signal.signal(signal.SIGALRM, TimeoutHandler)
   signal.alarm(timeout)
-  annotator = ANALYSES[analysis]()
+  annotator = ANALYSES[analysis](graph)
 
   try:
-    annotated_graphs = annotator.MakeAnnotated(graph, n)
+    annotated_graphs = annotator.MakeAnnotated(n)
   finally:
     signal.alarm(0)
 
@@ -272,17 +272,17 @@ def Main():
 
   n = FLAGS.n
 
-  annotator = ANALYSES[FLAGS.analysis]()
-
   try:
     input_graph = programl.ReadStdin()
   except Exception as e:
     print(f"Error parsing stdin: {e}", file=sys.stderr)
     sys.exit(E_INVALID_INPUT)
 
+  annotator = ANALYSES[FLAGS.analysis](input_graph)
+
   annotated_graphs: List[programl_pb2.ProgramGraph] = []
   try:
-    for annotated_graph in annotator.MakeAnnotated(input_graph, n):
+    for annotated_graph in annotator.MakeAnnotated(n):
       annotated_graphs.append(annotated_graph)
   except Exception as e:
     print(f"{e}", file=sys.stderr)

@@ -63,76 +63,83 @@ def IsExitStatement(g: nx.MultiDiGraph, node: int):
 class LivenessAnnotator(data_flow_graphs.NetworkXDataFlowGraphAnnotator):
   """Annotate graphs with liveness."""
 
-  def RootNodeType(self) -> programl_pb2.Node.Type:
-    """Liveness is a statement-based analysis."""
-    return programl_pb2.Node.STATEMENT
-
-  def Annotate(self, g: nx.MultiDiGraph, root_node: int) -> nx.MultiDiGraph:
-    """Annotate nodes in the graph with liveness."""
+  def __init__(self, *args, **kwargs):
+    super(LivenessAnnotator, self).__init__(*args, **kwargs)
     # Liveness analysis begins at the exit block and works backwards.
-    exit_nodes = [
+    self.exit_nodes = [
       node
-      for node, type_ in g.nodes(data="type")
-      if type_ == programl_pb2.Node.STATEMENT and IsExitStatement(g, node)
+      for node, type_ in self.g.nodes(data="type")
+      if type_ == programl_pb2.Node.STATEMENT and IsExitStatement(self.g, node)
     ]
-
-    # A graph may not have any exit blocks.
-    if not exit_nodes:
-      g.graph["data_flow_root_node"] = root_node
-      g.graph["data_flow_steps"] = 0
-      g.graph["data_flow_positive_node_count"] = 0
-      return g
 
     # Since we can't guarantee that input graphs have a single exit point, add
     # a temporary exit block which we will remove after computing liveness
     # results.
-    liveness_start_node = g.number_of_nodes()
-    assert liveness_start_node not in g.nodes
-    g.add_node(liveness_start_node, type=programl_pb2.Node.STATEMENT)
-    for exit_node in exit_nodes:
-      g.add_edge(exit_node, liveness_start_node, flow=programl_pb2.Edge.CONTROL)
+    liveness_start_node = self.g.number_of_nodes()
+    assert liveness_start_node not in self.g.nodes
+    self.g.add_node(liveness_start_node, type=programl_pb2.Node.STATEMENT)
+    for exit_node in self.exit_nodes:
+      self.g.add_edge(
+        exit_node, liveness_start_node, flow=programl_pb2.Edge.CONTROL
+      )
 
     # Ignore the liveness starting block when totalling up the data flow steps.
     data_flow_steps = -1
 
     # Create live-in and live-out maps that will be lazily evaluated.
-    in_sets = collections.defaultdict(set)
-    out_sets = collections.defaultdict(set)
+    self.in_sets = collections.defaultdict(set)
+    self.out_sets = collections.defaultdict(set)
 
     work_list = collections.deque([liveness_start_node])
     while work_list:
       data_flow_steps += 1
       node = work_list.popleft()
-      defs, successors = GetDefsAndSuccessors(g, node)
-      uses, predecessors = GetUsesAndPredecessors(g, node)
+      defs, successors = GetDefsAndSuccessors(self.g, node)
+      uses, predecessors = GetUsesAndPredecessors(self.g, node)
 
       # LiveOut(n) = U {LiveIn(p) for p in succ(n)}
-      new_out_set = set().union(*[in_sets[p] for p in successors])
+      new_out_set = set().union(*[self.in_sets[p] for p in successors])
 
       # LiveIn(n) = Gen(n) U {LiveOut(n) - Kill(n)}
       new_in_set = set(uses).union(new_out_set - set(defs))
 
       # No need to visit predecessors if the in-set is non-empty and has not
       # changed.
-      if not new_in_set or new_in_set != in_sets[node]:
+      if not new_in_set or new_in_set != self.in_sets[node]:
         work_list.extend([p for p in predecessors if p not in work_list])
 
-      in_sets[node] = new_in_set
-      out_sets[node] = new_out_set
+      self.in_sets[node] = new_in_set
+      self.out_sets[node] = new_out_set
 
     # Remove the temporary node that we added.
-    g.remove_node(liveness_start_node)
+    self.g.remove_node(liveness_start_node)
 
-    # Now that we've computed the liveness results, annotate the graph.
+    self.data_flow_steps = data_flow_steps
+
+  def IsValidRootNode(self, node: int, data) -> bool:
+    """Liveness is a statement-based analysis."""
+    return data["type"] == programl_pb2.Node.STATEMENT
+
+  def Annotate(self, g: nx.MultiDiGraph, root_node: int) -> None:
+    """Annotate nodes in the graph with liveness."""
+
+    # A graph may not have any exit blocks.
+    if not self.exit_nodes:
+      g.graph["data_flow_root_node"] = root_node
+      g.graph["data_flow_steps"] = 0
+      g.graph["data_flow_positive_node_count"] = 0
+      return
+
+    # We have already pre-computed the live-out sets, so just add the
+    # annotations.
     for _, data in g.nodes(data=True):
       data["x"].append(data_flow_graphs.ROOT_NODE_NO)
       data["y"] = NOT_LIVE_OUT
     g.nodes[root_node]["x"][-1] = data_flow_graphs.ROOT_NODE_YES
 
-    for node in out_sets[root_node]:
+    for node in self.out_sets[root_node]:
       g.nodes[node]["y"] = LIVE_OUT
 
     g.graph["data_flow_root_node"] = root_node
-    g.graph["data_flow_steps"] = data_flow_steps
-    g.graph["data_flow_positive_node_count"] = len(out_sets[root_node])
-    return g
+    g.graph["data_flow_steps"] = self.data_flow_steps
+    g.graph["data_flow_positive_node_count"] = len(self.out_sets[root_node])
