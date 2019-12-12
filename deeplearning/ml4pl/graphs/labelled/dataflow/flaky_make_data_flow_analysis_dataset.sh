@@ -17,7 +17,7 @@ main() {
     i=$((i+1))
     echo "Beginning run $i of dataset generator"
     # Run the dataset generator for 30 minutes.
-    timesout -s9 1800 deeplearning/ml4pl/graphs/labelled/dataflow/make_data_flow_analysis_dataset $@
+    timeout -s9 1800 deeplearning/ml4pl/graphs/labelled/dataflow/make_data_flow_analysis_dataset --max_instances=10000 $@
     # If the dataset generator completed with a zero return code, terminate.
     if $@ ; then
       echo "Dataset generator terminated gracefully after $i iterations"
