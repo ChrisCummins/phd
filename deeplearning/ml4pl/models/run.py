@@ -404,6 +404,7 @@ def RunOne(
     return best_epoch
 
 
+# TODO: Make this a progress.Progress with vertical_position=2.
 def RunKFold(model_class) -> Optional[pd.DataFrame]:
   """Run k-fold cross-validation of the given model."""
   graph_db: graph_tuple_database.Database = FLAGS.graph_db()

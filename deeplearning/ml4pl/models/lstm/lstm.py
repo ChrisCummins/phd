@@ -371,7 +371,7 @@ class GraphLstm(LstmBase):
       encoded_sequences,
       maxlen=self.padded_sequence_length,
       dtype="int32",
-      padding="post",
+      padding="pre",
       truncating="post",
       value=self.padding_element,
     )
@@ -563,7 +563,7 @@ class NodeLstm(LstmBase):
       encoded_sequences,
       maxlen=self.padded_sequence_length,
       dtype="int32",
-      padding="post",
+      padding="pre",
       truncating="post",
       value=self.padding_element,
     )
@@ -574,18 +574,27 @@ class NodeLstm(LstmBase):
     segment_ids = keras.preprocessing.sequence.pad_sequences(
       segment_ids,
       maxlen=self.padded_sequence_length,
+      dtype="int32",
+      padding="pre",
+      truncating="post",
       value=segment_id_padding_element,
     )
 
     selector_vectors = keras.preprocessing.sequence.pad_sequences(
       selector_vectors,
       maxlen=self.max_nodes_in_graph,
+      dtype="int32",
+      padding="pre",
+      truncating="post",
       value=np.array((0, 0), dtype=np.int32),
     )
 
     node_y = keras.preprocessing.sequence.pad_sequences(
       node_y,
       maxlen=self.max_nodes_in_graph,
+      dtype="int32",
+      padding="pre",
+      truncating="post",
       value=np.zeros(self.graph_db.node_y_dimensionality, dtype=np.int32),
     )
 
