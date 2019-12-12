@@ -1071,7 +1071,7 @@ class Database(sqlutil.Database):
     Returns:
       An iterator over <name, dataframe> tuples.
     """
-    extra_flag_names = ["graph_db"] + (extra_flags or [])
+    extra_flag_names = ["tag", "graph_db"] + (extra_flags or [])
 
     with self.Session(session=session) as session:
 
@@ -1148,15 +1148,13 @@ class Database(sqlutil.Database):
             if not i:
               row["timestamp"] = min(epoch_df["timestamp"].values)
 
+            # Sanity check that we have exctly one epoch.
             if len(epoch_df) == 1:
               for column in epoch_type_columns:
                 row[f"{epoch_type.name.lower()}_{column}"] = epoch_df.iloc[0][
                   column
                 ]
-            elif len(epoch_df) == 0:
-              for column in epoch_type_columns:
-                row[f"{epoch_type.name.lower()}_{column}"] = "-"
-            else:
+            elif len(epoch_df) > 1:
               raise ValueError
 
           rows.append(row)
@@ -1186,7 +1184,10 @@ class Database(sqlutil.Database):
       rows = []
       epoch_counts: List[int] = []
       for run_id in set(per_epoch_df.run_id.values):
+
         run_df = per_epoch_df[per_epoch_df["run_id"] == run_id]
+        # Safely hand 'null' values.
+        run_df = run_df[run_df["val_accuracy"].notnull()]
         if len(run_df):
           epoch_counts.append(len(run_df))
           rows.append(run_df.loc[run_df["val_accuracy"].idxmax()])

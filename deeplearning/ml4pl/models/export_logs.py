@@ -33,17 +33,18 @@ import pandas as pd
 
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models import schedules
-from deeplearning.ml4pl.models.lstm import lstm
+from deeplearning.ml4pl.models.lstm.lstm import Ir2SeqType
 from labm8.py import app
 from labm8.py import google_sheets
 from labm8.py import pdutil
 from labm8.py import prof
 
 # During table export, we be able to de-pickle any of the class objects from
-# this project. Import the modules which define these classes here.
+# this project. List those classes / modules here to make the dependency
+# explicit.
 
-_unused_modules_ = (log_database, schedules, lstm)
-del _unused_modules_
+_unused_imports_ = (log_database, schedules, Ir2SeqType)
+del _unused_imports_
 
 
 FLAGS = app.FLAGS
@@ -154,8 +155,6 @@ def Main():
     exporters.append(GoogleSheetsExport(FLAGS.google_sheet))
   if FLAGS.print:
     exporters.append(AsciiTableExport(FLAGS.print))
-  if not exporters:
-    raise app.UsageError("No exporters")
 
   with log_db.Session() as session:
     # Resolve the runs to export.
