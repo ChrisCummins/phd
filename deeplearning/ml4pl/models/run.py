@@ -298,6 +298,17 @@ def PrintExperimentHeader(model: classifier_base.ClassifierBase) -> None:
   print("==================================================================")
 
 
+def PrintExperimentFooter(
+  model: classifier_base.ClassifierBase, best_epoch: pd.Series
+) -> None:
+  print(
+    f"\rResults at best val epoch {best_epoch['epoch_num']} / {model.epoch_num}:"
+  )
+  print("==================================================================")
+  print(best_epoch.to_string())
+  print("==================================================================")
+
+
 def GetModelEpochsTable(
   model: classifier_base.ClassifierBase, logger: logger_lib.Logger
 ) -> pd.DataFrame:
@@ -308,33 +319,6 @@ def GetModelEpochsTable(
     ):
       if name == "epochs":
         return df.set_index("epoch_num")
-
-
-def PrintExperimentFooter(
-  model: classifier_base.ClassifierBase, logger: logger_lib.Logger
-) -> pd.Series:
-  epochs = GetModelEpochsTable(model, logger)
-
-  # Select only from the epochs with test accuracy, if available.
-  only_with_test_epochs = epochs[
-    (epochs["test_accuracy"].astype(str) != "-")
-    & (epochs["test_accuracy"].notnull())
-  ]
-  if len(only_with_test_epochs):
-    epochs = only_with_test_epochs
-
-  epochs.reset_index(inplace=True)
-
-  # Select the row with the greatest validation accuracy.
-  best_epoch = epochs.loc[epochs["val_accuracy"].idxmax()]
-
-  print(
-    f"\rResults at best val epoch {best_epoch['epoch_num']} / {model.epoch_num}:"
-  )
-  print("==================================================================")
-  print(best_epoch.to_string())
-  print("==================================================================")
-  return best_epoch
 
 
 def CreateModel(
@@ -367,12 +351,15 @@ def RunOne(
   model_class,
   val_splits: Optional[List[int]] = None,
   test_splits: Optional[List[int]] = None,
+  print_header: bool = True,
+  print_footer: bool = True,
 ) -> pd.Series:
   graph_db: graph_tuple_database.Database = FLAGS.graph_db()
   with logger_lib.Logger.FromFlags() as logger:
     model = CreateModel(model_class, graph_db, logger)
 
-    PrintExperimentHeader(model)
+    if print_header:
+      PrintExperimentHeader(model)
 
     if FLAGS.test_only:
       batch_iterator = MakeBatchIterator(
@@ -395,7 +382,26 @@ def RunOne(
       if train.ctx.i != train.ctx.n:
         app.FatalWithoutStackTrace("Model failed")
 
-    return PrintExperimentFooter(model, logger)
+    # Get the results for the best epoch.
+    epochs = GetModelEpochsTable(model, logger)
+
+    # Select only from the epochs with test accuracy, if available.
+    only_with_test_epochs = epochs[
+      (epochs["test_accuracy"].astype(str) != "-")
+      & (epochs["test_accuracy"].notnull())
+    ]
+    if len(only_with_test_epochs):
+      epochs = only_with_test_epochs
+
+    epochs.reset_index(inplace=True)
+
+    # Select the row with the greatest validation accuracy.
+    best_epoch = epochs.loc[epochs["val_accuracy"].idxmax()]
+
+    if print_footer:
+      PrintExperimentFooter(model, best_epoch)
+
+    return best_epoch
 
 
 def RunKFold(model_class) -> Optional[pd.DataFrame]:
@@ -410,8 +416,18 @@ def RunKFold(model_class) -> Optional[pd.DataFrame]:
   for i in range(len(splits)):
     test_split = splits[i]
     val_split = splits[(i + 1) % len(splits)]
+    app.Log(1, "Beginning iteration %s of %s", i + 1, len(splits))
+
+    # Print the header only on the first split.
+    print_header = False if i else True
+
     results.append(
-      RunOne(model_class, val_splits=[val_split], test_splits=[test_split])
+      RunOne(
+        model_class,
+        val_splits=[val_split],
+        test_splits=[test_split],
+        print_header=print_header,
+      )
     )
 
   # If we got no results then there was an error during model runs.
