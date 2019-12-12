@@ -1,11 +1,11 @@
 """Modules that make up the pytorch GGNN model."""
 import torch
 import torch.nn.functional as F
-from labm8.py import app
 from torch import nn
 from torch import optim
 
 from deeplearning.ml4pl.models.ggnn import ggnn_config
+from labm8.py import app
 
 FLAGS = app.FLAGS
 SMALL_NUMBER = 1e-7
@@ -229,11 +229,11 @@ class GGNNProper(nn.Module):
     self.backward_edges = config.backward_edges
     self.layer_timesteps = config.layer_timesteps
 
-    self.message = []
+    self.message = nn.ModuleList()
     for i in range(len(self.layer_timesteps)):
       self.message.append(MessagingLayer(config))
 
-    self.update = []
+    self.update = nn.ModuleList()
     for i in range(len(self.layer_timesteps)):
       self.update.append(GGNNLayer(config))
 
@@ -242,7 +242,7 @@ class GGNNProper(nn.Module):
     # TODO(github.com/ChrisCummins/ProGraML/issues/27): This modifies the
     # arguments in-place.
 
-    old_node_states = torch.tensor(node_states, requires_grad=True)
+    old_node_states = node_states.clone()
     # TODO(github.com/ChrisCummins/ProGraML/issues/30): position embeddings
     assert position_embeddings is None, "Position Embs not implemented"
 
@@ -292,7 +292,14 @@ class MessagingLayer(nn.Module):
 
     messages_by_targets = torch.zeros_like(node_states)
     if self.msg_mean_aggregation:
-      bincount = torch.zeros(node_states.size()[0], dtype=torch.long)
+      device = node_states.device
+      bincount = torch.zeros(
+        node_states.size()[0], dtype=torch.long, device=device
+      )
+      assert bincount.device in [
+        torch.device("cuda"),
+        torch.device("cuda:0"),
+      ], f"Expected cuda but got {bincount.device}."
 
     for i, edge_list in enumerate(edge_lists):
       edge_targets = edge_list[:, 1]
@@ -311,7 +318,9 @@ class MessagingLayer(nn.Module):
       )
       messages_by_targets.index_add_(0, edge_targets, states_by_source)
       if self.msg_mean_aggregation:
-        bincount += edge_targets.bincount(minlength=node_states.size()[0])
+        bins = edge_targets.bincount(minlength=node_states.size()[0])
+
+        bincount += bins
 
     if self.msg_mean_aggregation:
       divisor = bincount.float()
@@ -362,6 +371,20 @@ class PositionEmbeddings(nn.Module):
   def forward(self, *args, **kwargs):
     return args, kwargs
 
+  def create_sinusoidal_embeddings(n_pos, dim, out):
+    import numpy as np
+
+    position_enc = np.array(
+      [
+        [pos / np.power(10000, 2 * (j // 2) / dim) for j in range(dim)]
+        for pos in range(n_pos)
+      ]
+    )
+    out[:, 0::2] = torch.FloatTensor(np.sin(position_enc[:, 0::2]))
+    out[:, 1::2] = torch.FloatTensor(np.cos(position_enc[:, 1::2]))
+    out.detach_()
+    out.requires_grad = False
+
 
 ########################################
 # Output Layer
@@ -382,7 +405,7 @@ class NodewiseReadout(nn.Module):
 
   def forward(self, raw_node_in, raw_node_out):
     gate_input = torch.cat((raw_node_in, raw_node_out), dim=-1)
-    gating = F.sigmoid(self.regression_gate(gate_input))
+    gating = torch.sigmoid(self.regression_gate(gate_input))
     return gating * self.regression_transform(raw_node_out)
 
 
@@ -408,17 +431,15 @@ class LinearNet(nn.Module):
     self.dropout = dropout
     self.in_features = in_features
     self.out_features = out_features
-    self.weight = nn.parameter.Parameter(
-      torch.Tensor(out_features, in_features)
-    )
+    self.test = nn.Parameter(torch.Tensor(out_features, in_features))
     if bias:
-      self.bias = nn.parameter.Parameter(torch.Tensor(out_features))
+      self.bias = nn.Parameter(torch.Tensor(out_features))
     else:
       self.register_parameter("bias", None)
     self.reset_parameters()
 
   def reset_parameters(self):
-    nn.init.xavier_uniform_(self.weight)
+    nn.init.xavier_uniform_(self.test)
     # TODO(github.com/ChrisCummins/ProGraML/issues/27): why use xavier_uniform, not kaiming init? Seems old-school
     if self.bias is not None:
       #    fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight)
@@ -428,9 +449,9 @@ class LinearNet(nn.Module):
 
   def forward(self, input):
     if self.dropout > 0.0:
-      w = F.dropout(self.weight, p=self.dropout, training=self.training)
+      w = F.dropout(self.test, p=self.dropout, training=self.training)
     else:
-      w = self.weight
+      w = self.test
     return F.linear(input, w, self.bias)
 
   def extra_repr(self):
@@ -467,7 +488,8 @@ class AuxiliaryReadout(nn.Module):
   def forward(
     self, raw_node_out, num_graphs, graph_nodes_list, auxiliary_features
   ):
-    graph_features = torch.zeros(num_graphs, self.num_classes)
+    device = raw_node_out.device
+    graph_features = torch.zeros(num_graphs, self.num_classes, device=device)
     graph_features.index_add_(
       dim=0, index=graph_nodes_list, source=raw_node_out
     )

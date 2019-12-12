@@ -7,8 +7,6 @@ from typing import NamedTuple
 
 import numpy as np
 import torch
-from labm8.py import app
-from labm8.py import progress
 from torch import nn
 
 from deeplearning.ml4pl.graphs.labelled import graph_batcher
@@ -22,6 +20,8 @@ from deeplearning.ml4pl.models import run
 from deeplearning.ml4pl.models.ggnn import ggnn_config
 from deeplearning.ml4pl.models.ggnn.ggnn_config import GGNNConfig
 from deeplearning.ml4pl.models.ggnn.ggnn_modules import GGNNModel
+from labm8.py import app
+from labm8.py import progress
 
 FLAGS = app.FLAGS
 
@@ -130,6 +130,7 @@ class Ggnn(classifier_base.ClassifierBase):
       torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     )
     app.Log(1, "Using device %s", self.dev)
+    app.Log(1, "Default torch dtype %s", torch.get_default_dtype())
 
     # Instantiate model
     config = GGNNConfig(
@@ -274,62 +275,47 @@ class Ggnn(classifier_base.ClassifierBase):
     # Batch to model-inputs
     # torch.from_numpy() shares memory with numpy!
     # TODO(github.com/ChrisCummins/ProGraML/issues/27): maybe we can save memory copies in the training loop if we can turn the data into the required types (np.int64 and np.float32) once they come off the network from the database, where smaller i/o size (int32) is more important.
-    vocab_ids = torch.from_numpy(
-      np.array(disjoint_graph.node_x[:, 0], dtype=np.int64)
-    )
-    selector_ids = torch.from_numpy(
-      np.array(disjoint_graph.node_x[:, 1], dtype=np.int64)
-    )
-    labels = (
-      torch.from_numpy(disjoint_graph.node_y)
-      if disjoint_graph.has_node_y
-      else torch.from_numpy(disjoint_graph.graph_y)
-    )
-    edge_lists = [
-      torch.from_numpy(np.array(x, dtype=np.int64))
-      for x in disjoint_graph.adjacencies
-    ]
-
-    # Send data to the GPU.
     with ctx.Profile(5, "Sent data to GPU"):
-      vocab_ids.to(self.dev)
-      selector_ids.to(self.dev)
-      labels.to(self.dev)
-      for edge_list in edge_lists:
-        edge_list.to(self.dev)
+      vocab_ids = torch.from_numpy(disjoint_graph.node_x[:, 0]).to(
+        self.dev, torch.long
+      )
+      selector_ids = torch.from_numpy(disjoint_graph.node_x[:, 1]).to(
+        self.dev, torch.long
+      )
+      # we need those as a result on cpu and can save device i/o
+      cpu_labels = (
+        disjoint_graph.node_y
+        if disjoint_graph.has_node_y
+        else disjoint_graph.graph_y
+      )
+      labels = torch.from_numpy(cpu_labels).to(self.dev)
+      edge_lists = [
+        torch.from_numpy(x).to(self.dev, torch.long)
+        for x in disjoint_graph.adjacencies
+      ]
 
-    # TODO(github.com/ChrisCummins/ProGraML/issues/30) still unused
-    edge_positions = [
-      torch.from_numpy(x) for x in disjoint_graph.edge_positions
-    ]
+      # TODO(github.com/ChrisCummins/ProGraML/issues/30) still unused
+      edge_positions = [
+        torch.from_numpy(x).to(self.dev, torch.long)
+        for x in disjoint_graph.edge_positions
+      ]
 
+    model_inputs = (vocab_ids, selector_ids, labels, edge_lists)
+
+    # maybe fetch more inputs.
     if disjoint_graph.has_graph_y:
-      num_graphs = torch.tensor(
-        disjoint_graph.disjoint_graph_count, dtype=torch.long
+      num_graphs = torch.tensor(disjoint_graph.disjoint_graph_count).to(
+        self.dev, torch.long
       )
       graph_nodes_list = torch.from_numpy(
-        np.array(disjoint_graph.disjoint_nodes_list, dtype=np.int64)
+        disjoint_graph.disjoint_nodes_list
+      ).to(self.dev, torch.long)
+
+      aux_in = torch.from_numpy(disjoint_graph.graph_x).to(
+        self.dev, torch.get_default_dtype()
       )
 
-      aux_in = torch.from_numpy(
-        np.array(disjoint_graph.graph_x, dtype=np.float32)
-      )
-
-      num_graphs.to(self.dev)
-      graph_nodes_list.to(self.dev)
-      aux_in.to(self.dev)
-
-      model_inputs = (
-        vocab_ids,
-        selector_ids,
-        labels,
-        edge_lists,
-        num_graphs,
-        graph_nodes_list,
-        aux_in,
-      )
-    else:
-      model_inputs = (vocab_ids, selector_ids, labels, edge_lists)
+      model_inputs = model_inputs + (num_graphs, graph_nodes_list, aux_in,)
 
     # enter correct mode of model
     if epoch_type == epoch.Type.TRAIN and not self.model.training:
@@ -370,8 +356,8 @@ class Ggnn(classifier_base.ClassifierBase):
     iteration_count = 1
 
     return batches.Results.Create(
-      targets=labels.numpy(),
-      predictions=logits.detach().numpy(),
+      targets=cpu_labels,
+      predictions=logits.detach().cpu().numpy(),
       model_converged=model_converged,
       learning_rate=learning_rate,
       iteration_count=iteration_count,
