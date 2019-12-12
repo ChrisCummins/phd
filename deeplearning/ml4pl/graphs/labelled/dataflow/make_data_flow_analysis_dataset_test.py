@@ -6,6 +6,7 @@ from deeplearning.ml4pl.graphs.labelled.dataflow import (
   make_data_flow_analysis_dataset,
 )
 from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
+from deeplearning.ml4pl.testing import random_programl_generator
 from deeplearning.ml4pl.testing import (
   random_unlabelled_graph_database_generator,
 )
@@ -22,16 +23,15 @@ FLAGS = app.FLAGS
 ###############################################################################
 
 
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
-def graph_db(request) -> graph_tuple_database.Database:
-  """A test fixture which yields an empty graph database."""
-  yield from testing_databases.YieldDatabase(
-    graph_tuple_database.Database, request.param
-  )
-
-
 @test.Fixture(scope="session", params=(1, 3))
 def n(request) -> int:
+  """Enumerate the number of labelled graphs per input proto."""
+  return request.param
+
+
+@test.Fixture(scope="session", params=("in_order", "random"))
+def order_by(request) -> str:
+  """Enumerate the number of --order_by options."""
   return request.param
 
 
@@ -47,6 +47,32 @@ def proto_db(request,) -> unlabelled_graph_database.Database.SessionType:
     yield db
 
 
+@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+def proto_db_10(request,) -> unlabelled_graph_database.Database.SessionType:
+  """A test fixture which yields a database with 10 protos."""
+  with testing_databases.DatabaseContext(
+    unlabelled_graph_database.Database, request.param
+  ) as db:
+    with db.Session(commit=True) as session:
+      session.add_all(
+        [
+          unlabelled_graph_database.ProgramGraph.Create(proto, ir_id=i + 1)
+          for i, proto in enumerate(
+            list(random_programl_generator.EnumerateProtoTestSet())[:10]
+          )
+        ]
+      )
+    yield db
+
+
+@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+def graph_db(request) -> graph_tuple_database.Database:
+  """A test fixture which yields an empty graph database."""
+  yield from testing_databases.YieldDatabase(
+    graph_tuple_database.Database, request.param
+  )
+
+
 ###############################################################################
 # Tests.
 ###############################################################################
@@ -55,13 +81,17 @@ def proto_db(request,) -> unlabelled_graph_database.Database.SessionType:
 def test_pass_thru_analysis(
   proto_db: unlabelled_graph_database.Database,
   graph_db: graph_tuple_database.Database,
+  order_by: str,
   n: int,
 ):
   """Test that pass-thru annotator produces n * protos graphs."""
   FLAGS.n = n
   progress.Run(
     make_data_flow_analysis_dataset.DatasetGenerator(
-      proto_db, "test_pass_thru", graph_db
+      input_db=proto_db,
+      analysis="test_pass_thru",
+      output_db=graph_db,
+      order_by=order_by,
     )
   )
   with graph_db.Session() as session, proto_db.Session() as proto_session:
@@ -100,13 +130,17 @@ def test_pass_thru_analysis(
 def test_error_analysis(
   proto_db: unlabelled_graph_database.Database,
   graph_db: graph_tuple_database.Database,
+  order_by: str,
   n: int,
 ):
   """Test that error annotator produces one 'empty' graph for each input."""
   FLAGS.n = n
   progress.Run(
     make_data_flow_analysis_dataset.DatasetGenerator(
-      proto_db, "test_error", graph_db
+      input_db=proto_db,
+      analysis="test_error",
+      output_db=graph_db,
+      order_by=order_by,
     )
   )
   with graph_db.Session() as session, proto_db.Session() as proto_session:
@@ -130,13 +164,17 @@ def test_error_analysis(
 def test_flaky_analysis(
   proto_db: unlabelled_graph_database.Database,
   graph_db: graph_tuple_database.Database,
+  order_by: str,
   n: int,
 ):
   """Test that flaky annotator produces "some" graphs."""
   FLAGS.n = n
   progress.Run(
     make_data_flow_analysis_dataset.DatasetGenerator(
-      proto_db, "test_flaky", graph_db
+      input_db=proto_db,
+      analysis="test_flaky",
+      output_db=graph_db,
+      order_by=order_by,
     )
   )
   with graph_db.Session() as session, proto_db.Session() as proto_session:
@@ -154,19 +192,23 @@ def test_flaky_analysis(
 
 
 def test_timeout_analysis(
-  proto_db: unlabelled_graph_database.Database,
+  proto_db_10: unlabelled_graph_database.Database,
   graph_db: graph_tuple_database.Database,
+  order_by: str,
   n: int,
 ):
   """Test that timeout annotator produces one 'empty' graph for each input."""
   FLAGS.n = n
-  FLAGS.annotator_timeout = 2
+  FLAGS.annotator_timeout = 1
   progress.Run(
     make_data_flow_analysis_dataset.DatasetGenerator(
-      proto_db, "test_timeout", graph_db
+      input_db=proto_db_10,
+      analysis="test_timeout",
+      output_db=graph_db,
+      order_by=order_by,
     )
   )
-  with graph_db.Session() as session, proto_db.Session() as proto_session:
+  with graph_db.Session() as session, proto_db_10.Session() as proto_session:
     assert (
       session.query(sql.func.count(graph_tuple_database.GraphTuple.id)).scalar()
       == proto_session.query(

@@ -32,6 +32,13 @@ app.DEFINE_integer(
 app.DEFINE_integer(
   "max_instances", 0, "If set, limit the number of processed instances."
 )
+app.DEFINE_string(
+  "order_by",
+  "in_order",
+  "The order to read input programs in. One of {in_order,random}. In-order "
+  "reading is faster, but an incomplete run of this script may lead to missing "
+  "outputs, which the random order will find.",
+)
 
 app.DEFINE_integer(
   "patience",
@@ -98,6 +105,7 @@ def BatchedProtoReader(
   proto_db: unlabelled_graph_database.Database,
   ids_and_sizes_to_do: List[Tuple[int, int]],
   batch_size_in_bytes: int,
+  order_by: str,
   ctx: progress.ProgressBarContext,
 ) -> Iterable[List[ProgramGraphProto]]:
   """Read from the given list of IDs in batches."""
@@ -119,17 +127,28 @@ def BatchedProtoReader(
         f"[reader] Read {humanize.BinaryPrefix(batch_size, 'B')} "
         f"batch of {end_i - i} unlabelled graphs",
       ):
-        start_id = ids_and_sizes_to_do[i][0]
-        end_id = ids_and_sizes_to_do[end_i - 1][0]
-        graphs = (
-          session.query(unlabelled_graph_database.ProgramGraph)
-          .filter(unlabelled_graph_database.ProgramGraph.ir_id >= start_id)
-          .filter(unlabelled_graph_database.ProgramGraph.ir_id <= end_id)
-          .options(
-            sql.orm.joinedload(unlabelled_graph_database.ProgramGraph.data)
-          )
-          .all()
+        graphs = session.query(unlabelled_graph_database.ProgramGraph).options(
+          sql.orm.joinedload(unlabelled_graph_database.ProgramGraph.data)
         )
+        if order_by == "in_order":
+          # For in-order reading, we can do fast range checks on the IR id.
+          start_id = ids_and_sizes_to_do[i][0]
+          end_id = ids_and_sizes_to_do[end_i - 1][0]
+          graphs = graphs.filter(
+            unlabelled_graph_database.ProgramGraph.ir_id >= start_id,
+            unlabelled_graph_database.ProgramGraph.ir_id <= end_id,
+          )
+        elif order_by == "random":
+          # For random order, have to do set lookups on each ID in the batch.
+          batch_ids_and_sizes = ids_and_sizes_to_do[i:end_i]
+          batch_ids = [x[0] for x in batch_ids_and_sizes]
+          graphs = graphs.filter(
+            unlabelled_graph_database.ProgramGraph.ir_id.in_(batch_ids),
+          )
+        else:
+          raise app.UsageError(f"Unknown order: {order_by}")
+
+        graphs = graphs.all()
       yield [
         ProgramGraphProto(
           ir_id=graph.ir_id, serialized_proto=graph.data.serialized_proto
@@ -236,6 +255,7 @@ class DatasetGenerator(progress.Progress):
     input_db: unlabelled_graph_database.Database,
     analysis: str,
     output_db: graph_tuple_database.Database,
+    order_by: str = "in_order",
     max_instances: int = 0,
   ):
     self.analysis = analysis
@@ -248,8 +268,8 @@ class DatasetGenerator(progress.Progress):
         f"Available analyses: {annotate.AVAILABLE_ANALYSES}",
       )
 
-    # Get the graphs that have already been processed.
-    with output_db.Session() as out_session:
+    with input_db.Session() as in_session, output_db.Session() as out_session:
+      # Get the graphs that have already been processed.
       already_done_max, already_done_count = out_session.query(
         sql.func.max(graph_tuple_database.GraphTuple.ir_id),
         sql.func.count(
@@ -258,20 +278,38 @@ class DatasetGenerator(progress.Progress):
       ).one()
       already_done_max = already_done_max or -1
 
-    # Get the total number of graphs to process, and the IDs of the graphs to
-    # process.
-    with input_db.Session() as in_session:
+      # Get the total number of graphs, including those that have already been
+      # processed.
       total_graph_count = in_session.query(
         sql.func.count(unlabelled_graph_database.ProgramGraph.ir_id)
       ).scalar()
-      ids_and_sizes_to_do = (
-        in_session.query(
-          unlabelled_graph_database.ProgramGraph.ir_id,
-          unlabelled_graph_database.ProgramGraph.serialized_proto_size,
-        )
-        .filter(unlabelled_graph_database.ProgramGraph.ir_id > already_done_max)
-        .order_by(unlabelled_graph_database.ProgramGraph.ir_id)
+
+      # Get the total number of graphs to process, and the IDs of the graphs to
+      # process.
+      ids_and_sizes_to_do = in_session.query(
+        unlabelled_graph_database.ProgramGraph.ir_id,
+        unlabelled_graph_database.ProgramGraph.serialized_proto_size,
       )
+      if order_by == "in_order":
+        ids_and_sizes_to_do = ids_and_sizes_to_do.filter(
+          unlabelled_graph_database.ProgramGraph.ir_id > already_done_max
+        ).order_by(unlabelled_graph_database.ProgramGraph.ir_id)
+      elif order_by == "random":
+        # Filter out the graphs that have already been processed.
+        if already_done_count:
+          already_done_ids = {
+            row.ir_id
+            for row in out_session.query(graph_tuple_database.GraphTuple.ir_id)
+          }
+          assert already_done_ids != already_done_count
+          ids_and_sizes_to_do = ids_and_sizes_to_do.filter(
+            ~unlabelled_graph_database.ProgramGraph.ir_id.in_(already_done_ids)
+          )
+        # Order the graphs to do randomly.
+        ids_and_sizes_to_do = ids_and_sizes_to_do.order_by(input_db.Random())
+      else:
+        raise app.UsageError(f"Unknown order: {order_by}")
+
       # Optionally limit the number of IDs to process.
       if max_instances:
         ids_and_sizes_to_do = ids_and_sizes_to_do.limit(max_instances)
@@ -311,6 +349,7 @@ class DatasetGenerator(progress.Progress):
         input_db,
         ids_and_sizes_to_do,
         FLAGS.proto_batch_mb * 1024 * 1024,
+        order_by,
         self.ctx.ToProgressContext(),
       ),
       max_queue_size=FLAGS.max_reader_queue_size,
@@ -399,7 +438,11 @@ def main():
   output_db = FLAGS.graph_db()
 
   generator = DatasetGenerator(
-    input_db, FLAGS.analysis, output_db, max_instances=FLAGS.max_instances
+    input_db,
+    FLAGS.analysis,
+    output_db,
+    order_by=FLAGS.order_by,
+    max_instances=FLAGS.max_instances,
   )
   progress.Run(generator, patience=FLAGS.patience)
   if generator.ctx.i != generator.ctx.n:
