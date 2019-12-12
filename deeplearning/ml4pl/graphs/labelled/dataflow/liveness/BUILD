@@ -14,10 +14,13 @@ py_library(
 
 py_test(
     name = "liveness_test",
+    size = "large",
     srcs = ["liveness_test.py"],
     deps = [
         ":liveness",
-        "//labm8/py:app",
+        "//deeplearning/ml4pl/graphs:programl",
+        "//deeplearning/ml4pl/graphs:programl_pb_py",
+        "//deeplearning/ml4pl/testing:random_programl_generator",
         "//labm8/py:test",
         "//third_party/py/networkx",
     ],

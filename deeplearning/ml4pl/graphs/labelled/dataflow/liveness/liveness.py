@@ -95,9 +95,9 @@ class LivenessAnnotator(data_flow_graphs.NetworkXDataFlowGraphAnnotator):
     # Ignore the liveness starting block when totalling up the data flow steps.
     data_flow_steps = -1
 
-    # This assumes that graph nodes are in the range [0,...,n].
-    in_sets = [set() for _ in range(g.number_of_nodes())]
-    out_sets = [set() for _ in range(g.number_of_nodes())]
+    # Create live-in and live-out maps that will be lazily evaluated.
+    in_sets = collections.defaultdict(set)
+    out_sets = collections.defaultdict(set)
 
     work_list = collections.deque([liveness_start_node])
     while work_list:

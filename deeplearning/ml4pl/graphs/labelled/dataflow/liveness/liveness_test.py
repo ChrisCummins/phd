@@ -4,16 +4,35 @@ import networkx as nx
 from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled.dataflow.liveness import liveness
-from labm8.py import app
+from deeplearning.ml4pl.testing import random_programl_generator
 from labm8.py import test
 
-FLAGS = app.FLAGS
+FLAGS = test.FLAGS
+
+
+###############################################################################
+# Fixtures.
+###############################################################################
 
 
 @test.Fixture(scope="function")
 def annotator() -> liveness.LivenessAnnotator:
   """A test fixture which yield an annotator."""
   return liveness.LivenessAnnotator()
+
+
+@test.Fixture(
+  scope="session",
+  params=list(random_programl_generator.EnumerateProtoTestSet()),
+)
+def real_graph(request) -> programl_pb2.ProgramGraph:
+  """A test fixture which yields one of 100 "real" graphs."""
+  return request.param
+
+
+###############################################################################
+# Graph test.
+###############################################################################
 
 
 @test.Fixture(scope="function")
@@ -80,13 +99,6 @@ def wiki() -> nx.MultiDiGraph:
   builder.AddEdge(d, b3b, flow=programl_pb2.Edge.DATA)
   builder.AddEdge(c, b3b, flow=programl_pb2.Edge.DATA)
   return builder.g
-
-
-def test_AnnotateLiveness_exit_block_is_removed(
-  wiki: nx.MultiDiGraph, annotator: liveness.LivenessAnnotator
-):
-  n = wiki.number_of_nodes()
-  assert n == annotator.Annotate(wiki, 5).number_of_nodes()
 
 
 def test_AnnotateLiveness_wiki_b1(
@@ -211,6 +223,11 @@ def test_AnnotateLiveness_wiki_b3b(
   assert wiki.nodes[1]["y"] == liveness.NOT_LIVE_OUT
   assert wiki.nodes[2]["y"] == liveness.NOT_LIVE_OUT
   assert wiki.nodes[3]["y"] == liveness.NOT_LIVE_OUT
+
+
+###############################################################################
+# Graph test.
+###############################################################################
 
 
 @test.Fixture(scope="function")
@@ -340,6 +357,11 @@ def test_AnnotateDominatorTree_graph_D(
 
   assert graph.nodes[4]["y"] == liveness.NOT_LIVE_OUT
   assert graph.nodes[5]["y"] == liveness.NOT_LIVE_OUT
+
+
+###############################################################################
+# Graph test.
+###############################################################################
 
 
 @test.Fixture(scope="function")
@@ -512,6 +534,29 @@ def test_AnnotateDominatorTree_while_loop_C(
   )  # Loop induction variable
   assert while_loop.nodes[5]["y"] == liveness.NOT_LIVE_OUT  # Computed result
   assert while_loop.nodes[6]["y"] == liveness.NOT_LIVE_OUT  # Intermediate value
+
+
+###############################################################################
+# Tests.
+###############################################################################
+
+
+def test_AnnotateLiveness_exit_block_is_removed(
+  wiki: nx.MultiDiGraph, annotator: liveness.LivenessAnnotator
+):
+  n = wiki.number_of_nodes()
+  assert n == annotator.Annotate(wiki, 5).number_of_nodes()
+
+
+def test_MakeAnnotated_real_graphs(
+  real_graph: programl_pb2.ProgramGraph, annotator: liveness.LivenessAnnotator,
+):
+  """Opaque black-box test of annotator."""
+  annotated = annotator.MakeAnnotated(real_graph, n=10)
+  assert len(annotated.graphs) <= 10
+  # Assume all graphs produce annotations.
+  for graph in annotated.graphs:
+    assert graph.graph["data_flow_steps"] >= 1
 
 
 if __name__ == "__main__":
