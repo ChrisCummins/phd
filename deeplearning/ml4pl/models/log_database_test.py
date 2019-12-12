@@ -373,6 +373,11 @@ def test_run_ids_list(disposable_populated_log_db: log_database.Database,):
   )
 
 
+def test_tag_run_counts(populated_log_db: log_database.Database,):
+  """Test filtering from a list of run IDs."""
+  assert len(populated_log_db.tag_run_count) == 0
+
+
 def test_SelectRunIds_no_filters(populated_log_db: log_database.Database,):
   """Test filtering from a list of run IDs."""
   assert len(populated_log_db.SelectRunIds()) == 0

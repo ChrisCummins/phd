@@ -873,6 +873,23 @@ class Database(sqlutil.Database):
         ]
       )
 
+  @database_statistic
+  def tag_run_count(self) -> Dict[str, int]:
+    """Returns a mapping from tag to the number of runs with that count."""
+    with self.Session() as session:
+      return {
+        pickle.loads(row.binary_value): row.count
+        for row in session.query(
+          Parameter.binary_value,
+          sql.func.count(Parameter.binary_value).label("count"),
+        )
+        .filter(
+          Parameter.type_num == ParameterType.FLAG.value,
+          Parameter.name == "tag",
+        )
+        .group_by(Parameter.binary_value)
+      }
+
   @property
   def stats_json(self) -> Dict[str, Any]:
     """Returns the database statics as a JSON dictionary."""
