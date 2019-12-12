@@ -3,6 +3,7 @@
 py_binary(
     name = "lstm",
     srcs = ["lstm.py"],
+    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
     deps = [
         "//deeplearning/ml4pl/graphs/labelled:graph_database_reader",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",

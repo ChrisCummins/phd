@@ -106,6 +106,7 @@ py_binary(
         ":log_database",
         ":logger",
         ":schedules",
+        "//deeplearning/ml4pl/models/lstm",
         "//labm8/py:app",
         "//labm8/py:google_sheets",
         "//labm8/py:pdutil",
