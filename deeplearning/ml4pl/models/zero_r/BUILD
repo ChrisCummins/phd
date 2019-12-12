@@ -3,7 +3,7 @@
 py_binary(
     name = "zero_r",
     srcs = ["zero_r.py"],
-    visibility = ["//visibility:public"],
+    visibility = ["//deeplearning/ml4pl:__subpackages__"],
     deps = [
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//deeplearning/ml4pl/models:batch",

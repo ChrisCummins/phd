@@ -153,7 +153,7 @@ py_test(
 py_binary(
     name = "log_database",
     srcs = ["log_database.py"],
-    visibility = ["//visibility:public"],
+    visibility = ["//deeplearning/ml4pl:__subpackages__"],
     deps = [
         ":batch",
         ":checkpoints",
@@ -214,7 +214,10 @@ py_library(
 py_binary(
     name = "run",
     srcs = ["run.py"],
-    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
+    visibility = [
+        "//deeplearning/ml4pl/experiments:__subpackages__",
+        "//deeplearning/ml4pl/models:__subpackages__",
+    ],
     deps = [
         ":classifier_base",
         ":epoch",
@@ -233,6 +236,10 @@ py_binary(
 py_library(
     name = "schedules",
     srcs = ["schedules.py"],
+    visibility = [
+        "//deeplearning/ml4pl/experiments:__subpackages__",
+        "//deeplearning/ml4pl/models:__subpackages__",
+    ],
     deps = [
         "//labm8/py:app",
     ],

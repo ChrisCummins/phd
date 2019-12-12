@@ -3,6 +3,7 @@
 py_binary(
     name = "ggnn",
     srcs = ["ggnn.py"],
+    visibility = ["//deeplearning/ml4pl/experiments:__subpackages__"],
     deps = [
         ":ggnn_config",
         ":ggnn_modules",
