@@ -159,6 +159,7 @@ py_binary(
         ":epoch",
         "//deeplearning/ml4pl:run_id",
         "//labm8/py:app",
+        "//labm8/py:crypto",
         "//labm8/py:decorators",
         "//labm8/py:google_sheets",
         "//labm8/py:humanize",

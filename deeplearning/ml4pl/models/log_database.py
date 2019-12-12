@@ -46,6 +46,12 @@ app.DEFINE_list(
   "When //deeplearning/ml4pl/models:log_database is executed as a script, "
   "pass a list of run IDs to this argument to delete them.",
 )
+app.DEFINE_list(
+  "rm_tag",
+  [],
+  "When //deeplearning/ml4pl/models:log_database is executed as a script, "
+  "this specifies a list of --tag strings to remove the runs for.",
+)
 
 Base = declarative.declarative_base()
 
@@ -1155,12 +1161,44 @@ def DatetimeHandler(object):
 def Main():
   """Main entry point."""
   log_db = FLAGS.log_db()
+
+  # Delete runs without checkpoints.
   if FLAGS.prune_logs:
     log_db.Prune()
 
+  # Delete by run ID.
   if FLAGS.rm:
-    run_ids_to_remove = FLAGS.rm
     with log_db.Session(commit=True) as session:
+      run_ids_to_remove = [
+        row.run_id
+        for row in session.query(RunId).filter(RunId.run_id.in_(FLAGS.rm))
+      ]
+      app.Log(
+        1,
+        "Removing %s: %s",
+        humanize.Plural(len(run_ids_to_remove), "run"),
+        run_ids_to_remove,
+      )
+      session.query(RunId).filter(RunId.run_id.in_(run_ids_to_remove)).delete(
+        synchronize_session=False
+      )
+
+  # Delete tags.
+  if FLAGS.rm_tag:
+    with log_db.Session(commit=True) as session:
+      binary_value_sha1 = [
+        crypto.sha1(pickle.dumps(tag)) for tag in FLAGS.rm_tag
+      ]
+      run_ids_to_remove = [
+        row.run_id
+        for row in session.query(
+          sql.func.distinct(Parameter.run_id).label("run_id")
+        ).filter(
+          Parameter.type_num == ParameterType.FLAG.value,
+          Parameter.name == "tag",
+          Parameter.binary_value_sha1.in_(binary_value_sha1),
+        )
+      ]
       app.Log(
         1,
         "Removing %s: %s",
