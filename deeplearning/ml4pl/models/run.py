@@ -1,6 +1,7 @@
-"""This file contains TODO: one line summary.
+"""Run script for machine learning models.
 
-TODO: Detailed explanation of the file.
+This defines the schedules for running training / validation / testing loops
+of a machine learning model.
 """
 from typing import Dict
 from typing import List
@@ -8,6 +9,7 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
+import warnings
 import pandas as pd
 import pyfiglet
 
@@ -101,6 +103,11 @@ app.DEFINE_boolean(
 )
 
 
+class RunError(OSError):
+  """An error that occurs during model execution."""
+  pass
+
+
 def SplitStringsToInts(split_strings: List[str]):
   """Convert string split names to integers."""
 
@@ -108,9 +115,7 @@ def SplitStringsToInts(split_strings: List[str]):
     try:
       return int(split)
     except Exception:
-      raise app.UsageError(
-        f"Splits must be a list of integers, found '{split}'"
-      )
+      raise app.UsageError(f"Invalid split number: {split}")
 
   return [MakeInt(split) for split in split_strings]
 
@@ -119,14 +124,12 @@ def MakeBatchIterator(
   epoch_type: epoch.Type,
   model: classifier_base.ClassifierBase,
   graph_db: graph_tuple_database.Database,
-  val_splits: Optional[List[int]] = None,
-  test_splits: Optional[List[int]] = None,
   ctx: progress.ProgressContext = progress.NullContext,
 ) -> batchs.BatchIterator:
   """Create an iterator over batches."""
   # Filter the graph database to load graphs from the requested splits.
-  val_splits = val_splits or SplitStringsToInts(FLAGS.val_split)
-  test_splits = test_splits or SplitStringsToInts(FLAGS.test_split)
+  val_splits = SplitStringsToInts(FLAGS.val_split)
+  test_splits = SplitStringsToInts(FLAGS.test_split)
 
   if epoch_type == epoch.Type.TRAIN:
     splits = list(set(graph_db.splits) - set(val_splits) - set(test_splits))
@@ -349,13 +352,13 @@ def CreateModel(
 
 def RunOne(
   model_class,
-  val_splits: Optional[List[int]] = None,
-  test_splits: Optional[List[int]] = None,
   print_header: bool = True,
   print_footer: bool = True,
+  ctx: progress.ProgressContext = progress.NullContext,
 ) -> pd.Series:
   graph_db: graph_tuple_database.Database = FLAGS.graph_db()
   with logger_lib.Logger.FromFlags() as logger:
+    logger.ctx = ctx
     model = CreateModel(model_class, graph_db, logger)
 
     if print_header:
@@ -366,8 +369,6 @@ def RunOne(
         epoch_type=epoch.Type.TEST,
         model=model,
         graph_db=graph_db,
-        val_splits=val_splits,
-        test_splits=test_splits,
       )
       RunEpoch(
         epoch_name="test",
@@ -380,7 +381,7 @@ def RunOne(
       train = Train(model, graph_db, logger)
       progress.Run(train)
       if train.ctx.i != train.ctx.n:
-        app.FatalWithoutStackTrace("Model failed")
+        raise RunError("Model failed")
 
     # Get the results for the best epoch.
     epochs = GetModelEpochsTable(model, logger)
@@ -404,79 +405,139 @@ def RunOne(
     return best_epoch
 
 
-# TODO: Make this a progress.Progress with vertical_position=2.
-def RunKFold(model_class) -> Optional[pd.DataFrame]:
-  """Run k-fold cross-validation of the given model."""
-  graph_db: graph_tuple_database.Database = FLAGS.graph_db()
+class KFoldCrossValidation(progress.Progress):
+  """A k cross-validation jobs.
 
-  splits: List[int] = graph_db.splits
-  if not splits:
-    raise ValueError("Database contains no splits")
+  This runs the requested train/val/test schedule using every split in the
+  graph database.
+  """
 
-  results: List[pd.Series] = []
-  for i in range(len(splits)):
-    test_split = splits[i]
-    val_split = splits[(i + 1) % len(splits)]
-    app.Log(1, "Beginning iteration %s of %s", i + 1, len(splits))
+  def __init__(
+    self,
+    model_class,
+  ):
+    """Constructor.
 
-    # Print the header only on the first split.
-    print_header = False if i else True
+    Args:
+      model_class: A model constructor.
 
-    results.append(
-      RunOne(
-        model_class,
-        val_splits=[val_split],
-        test_splits=[test_split],
-        print_header=print_header,
+    Raises:
+      ValueError: If the database contains invalid splits.
+    """
+    self.model_class = model_class
+    self.graph_db: graph_tuple_database.Database = FLAGS.graph_db()
+    self.results: Optional[pd.DataFrame] = []
+    if not self.graph_db.splits:
+      raise ValueError("Database contains no splits")
+    if self.graph_db.splits != list(range(len(self.graph_db.splits))):
+      raise ValueError(
+        "Graph database splits are not a contiguous sequence:
+        f"{self.graph_db.splits}"
       )
+    super(KFoldCrossValidation, self).__init__(
+      f"{self.graph_db.split_count}-fold xval",
+      i=0,
+      n=self.graph_db.split_count,
+      unit="split",
+      # Stack below the per-epoch and per-model progress bars.
+      vertical_position=2,
+      leave=False,
     )
 
-  # If we got no results then there was an error during model runs.
-  if not results:
-    return None
+  def Run(self):
+    """Run the train/val/test loop."""
+    results: List[pd.Series] = []
+    splits = self.graph_db.splits
 
-  # Concatenate each of the run results into a dataframe.
-  df = pd.concat(results, axis=1).transpose()
-  # Get the list of run names and remove them from the columns. We'll set them
-  # again later.
-  df.set_index("run_id", inplace=True)
-  run_ids = list(df.index.values)
-  # Select only the subset of columns that we're interested in: test metrics.
-  df = df[
-    [
-      "epoch_num",
-      "test_loss",
-      "test_accuracy",
-      "test_precision",
-      "test_recall",
-      "test_f1",
+    # This assumes splits have values [0, ..., n-1].
+    for i in range(len(splits)):
+      self.ctx.i = i
+
+      # Set the splits flags so that the logger captures the correct
+      # parameters.
+      FLAGS.test_split = [str(splits[i])]
+      FLAGS.val_split = [str(splits[(i + 1) % len(splits)])]
+
+      app.Log(1, "Beginning cross-validation run %s of %s", i + 1,
+              len(splits))
+
+      # Print the header only on the first split.
+      print_header = False if i else True
+
+      results.append(
+        RunOne(
+          self.model_class,
+          print_header=print_header,
+          ctx=self.ctx,
+        )
+      )
+    self.ctx.i += 1
+
+    # If we got no results then there was an error during model runs.
+    if not results:
+      return
+
+    # Concatenate each of the run results into a dataframe.
+    df = pd.concat(results, axis=1).transpose()
+    # Get the list of run names and remove them from the columns. We'll set them
+    # again later.
+    df.set_index("run_id", inplace=True)
+    run_ids = list(df.index.values)
+    # Select only the subset of columns that we're interested in: test metrics.
+    df = df[
+      [
+        "epoch_num",
+        "test_loss",
+        "test_accuracy",
+        "test_precision",
+        "test_recall",
+        "test_f1",
+      ]
     ]
-  ]
-  # Add an averages row.
-  df = df.append(df.mean(axis=0), ignore_index=True)
-  # Strip the "test_" prefix from column names.
-  df.rename(
-    columns={
-      c: c[len("test_") :] for c in df.columns.values if c.startswith("test_")
-    },
-    inplace=True,
-  )
-  # Set the run IDs again.
-  df["run_id"] = run_ids + ["Average"]
-  df.set_index("run_id", inplace=True)
-  print()
-  print(f"Tests results of {len(results)}-fold cross-validation:")
-  print(pdutil.FormatDataFrameAsAsciiTable(df))
+    # Add an averages row.
+    df = df.append(df.mean(axis=0), ignore_index=True)
+    # Strip the "test_" prefix from column names.
+    df.rename(
+      columns={
+        c: c[len("test_") :] for c in df.columns.values if c.startswith("test_")
+      },
+      inplace=True,
+    )
+    # Set the run IDs again.
+    df["run_id"] = run_ids + ["Average"]
+    df.set_index("run_id", inplace=True)
+    print()
+    print(f"Tests results of {len(results)}-fold cross-validation:")
+    print(pdutil.FormatDataFrameAsAsciiTable(df))
 
-  return df
+    self.results = df
+
+
+def RunKFold(model_class) -> pd.DataFrame:
+  """Run k-fold cross-validation of the given model."""
+  kfold = KFoldCrossValidation(model_class)
+  progress.Run(kfold)
+  if kfold.ctx.i != kfold.ctx.n:
+    raise RunError(f"Expected to run {kfold.ctx.n} folds but only ran {kfold.ctx.i}")
+  if not isinstance(kfold.results, pd.DataFrame):
+    raise RunError("K-fold returned no results")
+  if len(kfold.results) < kfold.ctx.n:
+    raise RunError(f"Ran {kfold.ctx.n} folds buts only have {kfold.results} results")
+  return kfold.results
 
 
 def Run(model_class) -> Optional[Union[pd.Series, pd.DataFrame]]:
   """Run the model."""
-  if FLAGS.k_fold:
-    return RunKFold(model_class)
-  else:
-    return RunOne(model_class)
+  # TODO(github.com/ChrisCummins/ProGraML/issues/13): Only filter https://scikit-learn.org/stable/modules/generated/sklearn.exceptions.UndefinedMetricWarning.html
+  warnings.filterwarnings("ignore")
+
+  try:
+    if FLAGS.k_fold:
+      return RunKFold(model_class)
+    else:
+      return RunOne(model_class)
+  except RunError as e:
+    app.FatalWithoutStackTrace("%s", e)
 
 
 def Main():
