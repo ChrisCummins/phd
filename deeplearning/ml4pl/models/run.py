@@ -47,7 +47,7 @@ app.DEFINE_enum(
 app.DEFINE_enum(
   "test_on",
   schedules.TestOn,
-  schedules.TestOn.IMPROVEMENT,
+  schedules.TestOn.IMPROVEMENT_AND_LAST,
   "Determine when to run the test set.",
 )
 app.DEFINE_boolean(
@@ -245,6 +245,11 @@ class Train(progress.Progress):
       val_results, val_improved = self.RunEpoch(epoch.Type.VAL, batch_iterators)
 
       if test_on == schedules.TestOn.IMPROVEMENT and val_improved:
+        self.RunEpoch(epoch.Type.TEST, batch_iterators)
+      elif (
+        test_on == schedules.TestOn.IMPROVEMENT_AND_LAST
+        and self.ctx.i == self.ctx.n - 1
+      ):
         self.RunEpoch(epoch.Type.TEST, batch_iterators)
 
       # Determine whether to make a checkpoint.
