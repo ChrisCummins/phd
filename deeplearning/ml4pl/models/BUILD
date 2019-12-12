@@ -23,6 +23,16 @@ py_library(
     ],
 )
 
+py_test(
+    name = "batch_test",
+    srcs = ["batch_test.py"],
+    deps = [
+        ":batch",
+        "//labm8/py:test",
+        "//third_party/py/networkx",
+    ],
+)
+
 py_library(
     name = "checkpoints",
     srcs = ["checkpoints.py"],

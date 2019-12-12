@@ -219,7 +219,7 @@ class RollingResults:
     self.batch_count += 1
     self.graph_count += data.graph_count
     self.target_count += results.target_count
-    self.weighted_iteration_count_sum += results.iteration_count
+    self.weighted_iteration_count_sum += results.iteration_count * weight
     self.weighted_model_converged_sum += (
       weight if results.model_converged else 0
     )
