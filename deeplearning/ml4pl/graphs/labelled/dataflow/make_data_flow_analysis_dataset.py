@@ -1,6 +1,7 @@
 """This module prepares datasets for data flow analyses."""
 import multiprocessing
 import pathlib
+import resource
 import sys
 import time
 import traceback
@@ -9,6 +10,7 @@ from typing import List
 from typing import NamedTuple
 from typing import Tuple
 
+import psutil
 import sqlalchemy as sql
 
 from deeplearning.ml4pl.graphs import programl
@@ -73,6 +75,13 @@ app.DEFINE_integer(
   "write_buffer_length",
   10000,
   "Tuning parameter. The maximum length of the write buffer.",
+)
+app.DEFINE_float(
+  "worker_mem_util",
+  0.8,
+  "Tuning parameter. The ratio of total system memory to divide equally "
+  "for utilization by worker processes. If a worker exceeds its its memory "
+  "allocation, it is killed.",
 )
 
 FLAGS = app.FLAGS
@@ -151,9 +160,15 @@ def ProcessWorker(packed_args) -> AnnotationResult:
   # Index into the tuple rather than arg unpacking so that we can assign
   # type annotations.
   worker_id: str = f"{packed_args[0]:06d}"
-  analysis: str = packed_args[1]
-  program_graphs: List[ProgramGraphProto] = packed_args[2]
-  ctx: progress.ProgressBarContext = packed_args[3]
+  max_mem_size: int = packed_args[1]
+  analysis: str = packed_args[2]
+  program_graphs: List[ProgramGraphProto] = packed_args[3]
+  ctx: progress.ProgressBarContext = packed_args[4]
+
+  # Set the hard limit on the memory size. Exceeding this limit will raise
+  # a MemoryError.
+  resource.setrlimit(resource.RLIMIT_DATA, (max_mem_size, max_mem_size))
+  resource.setrlimit(resource.RLIMIT_AS, (max_mem_size, max_mem_size))
 
   graph_tuples = []
 
@@ -303,6 +318,21 @@ class DatasetGenerator(progress.Progress):
 
   def Run(self):
     """Run the dataset generation."""
+    num_workers = FLAGS.nproc
+
+    total_system_memory = psutil.virtual_memory().total
+    per_worker_memory = int(
+      (total_system_memory / num_workers) * FLAGS.worker_mem_util
+    )
+
+    self.ctx.Log(
+      1,
+      "Divding %s of system memory to %s worker processes, %s each",
+      humanize.BinaryPrefix(total_system_memory, "B", precision=2),
+      num_workers,
+      humanize.BinaryPrefix(per_worker_memory, "B", precision=2),
+    )
+
     pool = multiprocessing.Pool(
       processes=FLAGS.nproc, maxtasksperchild=FLAGS.max_tasks_per_worker
     )
@@ -310,7 +340,13 @@ class DatasetGenerator(progress.Progress):
     def ProcessWorkerArgsGenerator(graph_reader):
       """Generate packed arguments for a multiprocessing worker."""
       for i, graph_batch in enumerate(graph_reader):
-        yield (i, self.analysis, graph_batch, self.ctx.ToProgressContext())
+        yield (
+          i,
+          per_worker_memory,
+          self.analysis,
+          graph_batch,
+          self.ctx.ToProgressContext(),
+        )
 
     # Have a thread generating inputs, a pool of processes processing them,
     # and another thread writing their results to the database.
