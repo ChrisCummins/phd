@@ -288,7 +288,6 @@ def test_CopyRunLogs_invalid_run_id(
     populated_log_db.CopyRunLogs(run_ids=[invalid_run_id], output_db=empty_db)
 
 
-@test.XFail("TODO(github.com/ChrisCummins/ProGraML/issues/28): Fix me")
 @test.Parametrize("extra_flags", (None, [], ["foo"], ["foo", "vmodule"]))
 def test_GetTables(populated_log_db: log_database.Database, extra_flags):
   """Test GetTables()."""
@@ -302,6 +301,8 @@ def test_GetTables(populated_log_db: log_database.Database, extra_flags):
 
   # Test epoch column types.
   for table in ["epochs", "runs"]:
+    # Check that table is not empty.
+    assert len(tables[table])
     assert "run_id" in tables[table]
     for type in ["train", "val"]:
       test.Log("table=%s, type=%s", table, type)

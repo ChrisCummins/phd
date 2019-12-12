@@ -10,6 +10,7 @@ from typing import Iterable
 from typing import List
 from typing import NamedTuple
 from typing import Optional
+from typing import Set
 from typing import Tuple
 from typing import Union
 
@@ -988,6 +989,52 @@ class Database(sqlutil.Database):
         )
       }
 
+  def SelectRunIds(
+    self,
+    run_ids: Optional[Iterable[str]] = None,
+    tags: Optional[Iterable[str]] = None,
+    session: Optional[sqlutil.Database.SessionType] = None,
+  ) -> Set[str]:
+    """Select a list of run ID strings using the given filters.
+
+    Args:
+      run_ids: A list of candidate runs. Only those that exist are returned.
+      tags: A list of tags. All runs belonging to those tags are returned.
+      session: A session to re-use.
+
+    Returns:
+      A (possible empty) set of run ID strings.
+    """
+    selected_run_ids = set()
+
+    with self.Session(session=session) as session:
+      # Select runs by run ID.
+      if run_ids:
+        selected_run_ids = selected_run_ids.union(
+          {
+            row.run_id
+            for row in session.query(RunId).filter(RunId.run_id.in_(run_ids))
+          }
+        )
+
+      # Select runs by tag name.
+      if tags:
+        binary_value_sha1 = [crypto.sha1(pickle.dumps(tag)) for tag in tags]
+        selected_run_ids = selected_run_ids.union(
+          {
+            row.run_id
+            for row in session.query(
+              sql.func.distinct(Parameter.run_id).label("run_id")
+            ).filter(
+              Parameter.type_num == ParameterType.FLAG.value,
+              Parameter.name == "tag",
+              Parameter.binary_value_sha1.in_(binary_value_sha1),
+            )
+          }
+        )
+
+    return selected_run_ids
+
   def GetTables(
     self,
     run_ids: List[run_id_lib.RunId] = None,
@@ -1104,9 +1151,10 @@ class Database(sqlutil.Database):
 
       # Put it into a dataframe.
       per_epoch_df = pd.DataFrame(rows, columns=columns)
-      per_epoch_df.sort_values(
-        ["run_id", "timestamp", "epoch_num"], inplace=True
-      )
+      if len(per_epoch_df):
+        per_epoch_df.sort_values(
+          ["run_id", "timestamp", "epoch_num"], inplace=True
+        )
 
       yield "epochs", per_epoch_df
 
@@ -1124,9 +1172,10 @@ class Database(sqlutil.Database):
           epoch_counts.append(len(run_df))
           rows.append(run_df.loc[run_df["val_accuracy"].idxmax()])
 
-      per_run_df = pd.DataFrame(rows)
+      per_run_df = pd.DataFrame(rows, columns=per_epoch_df.columns.values)
       per_run_df["epoch_count"] = epoch_counts
-      per_run_df.sort_values(["run_id", "timestamp"], inplace=True)
+      if len(rows):
+        per_run_df.sort_values(["run_id", "timestamp"], inplace=True)
       per_run_df.rename(columns={"epoch_num": "best_epoch"}, inplace=True)
 
       # Rejig the columns so that epoch_count comes after best_epoch.
@@ -1182,39 +1231,12 @@ def Main():
   if FLAGS.prune_logs:
     log_db.Prune()
 
-  # Delete by run ID.
-  if FLAGS.rm:
-    with log_db.Session(commit=True) as session:
-      run_ids_to_remove = [
-        row.run_id
-        for row in session.query(RunId).filter(RunId.run_id.in_(FLAGS.rm))
-      ]
-      app.Log(
-        1,
-        "Removing %s: %s",
-        humanize.Plural(len(run_ids_to_remove), "run"),
-        run_ids_to_remove,
-      )
-      session.query(RunId).filter(RunId.run_id.in_(run_ids_to_remove)).delete(
-        synchronize_session=False
-      )
-
-  # Delete tags.
-  if FLAGS.rm_tag:
-    with log_db.Session(commit=True) as session:
-      binary_value_sha1 = [
-        crypto.sha1(pickle.dumps(tag)) for tag in FLAGS.rm_tag
-      ]
-      run_ids_to_remove = [
-        row.run_id
-        for row in session.query(
-          sql.func.distinct(Parameter.run_id).label("run_id")
-        ).filter(
-          Parameter.type_num == ParameterType.FLAG.value,
-          Parameter.name == "tag",
-          Parameter.binary_value_sha1.in_(binary_value_sha1),
-        )
-      ]
+  # Delete logs as requested.
+  with log_db.Session() as session:
+    run_ids_to_remove = log_db.SelectRunIds(
+      run_ids=FLAGS.rm, tags=FLAGS.rm_tag, session=session
+    )
+    if run_ids_to_remove:
       app.Log(
         1,
         "Removing %s: %s",

@@ -53,6 +53,12 @@ app.DEFINE_list(
   "A list of run IDs to export. If not set, all runs in the database are "
   "exported. Run IDs that do not exist are silently ignored.",
 )
+app.DEFINE_list(
+  "tag",
+  [],
+  "A list of tags to export. If not set, all runs in the database are "
+  "exported. Tags that do not exist are silently ignored.",
+)
 # Flags for augmenting the data that is exported:
 app.DEFINE_list(
   "extra_flags",
@@ -149,13 +155,25 @@ def Main():
   if not exporters:
     raise app.UsageError("No exporters")
 
-  for name, df in log_db.GetTables(FLAGS.run_id, extra_flags=FLAGS.extra_flags):
-    for exporter in exporters:
-      exporter.OnTable(name, df)
+  with log_db.Session() as session:
+    # Resolve the runs to export.
+    run_ids_to_export = log_db.SelectRunIds(
+      run_ids=FLAGS.run_id, tags=FLAGS.tag, session=session
+    )
 
-  # Export to another database.
-  if FLAGS.dst_db:
-    log_db.CopyRunLogs(FLAGS.dst_db(), run_ids=FLAGS.run_id)
+    # Create tables for the given runs.
+    tables = log_db.GetTables(
+      run_ids=run_ids_to_export, extra_flags=FLAGS.extra_flags, session=session
+    )
+    for name, df in tables:
+      for exporter in exporters:
+        exporter.OnTable(name, df)
+
+    # Export to another database.
+    if FLAGS.dst_db:
+      log_db.CopyRunLogs(
+        FLAGS.dst_db(), run_ids=run_ids_to_export, session=session
+      )
 
 
 if __name__ == "__main__":
