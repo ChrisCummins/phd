@@ -13,6 +13,7 @@ import pickle
 import random
 from typing import Iterable
 from typing import List
+from typing import Optional
 from typing import Set
 from typing import Tuple
 
@@ -189,10 +190,14 @@ def CreateRandomProto(
   return proto
 
 
-def EnumerateProtoTestSet() -> Iterable[programl_pb2.ProgramGraph]:
+def EnumerateProtoTestSet(
+  n: Optional[int] = None,
+) -> Iterable[programl_pb2.ProgramGraph]:
   """Enumerate a test set of "real" program graphs."""
   with NETWORKX_GRAPHS_ARCHIVE as pickled_dir:
-    for path in pickled_dir.iterdir():
+    for i, path in enumerate(pickled_dir.iterdir()):
+      if n and i >= n:
+        break
       with open(path, "rb") as f:
         old_nx_graph = pickle.load(f)
         yield networkx_to_protos.NetworkXGraphToProgramGraphProto(old_nx_graph)
