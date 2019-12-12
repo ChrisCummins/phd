@@ -991,7 +991,7 @@ class Database(sqlutil.Database):
 
   def SelectRunIds(
     self,
-    run_ids: Optional[Iterable[str]] = None,
+    run_ids: Optional[Iterable[Union[run_id_lib.RunId, str]]] = None,
     tags: Optional[Iterable[str]] = None,
     session: Optional[sqlutil.Database.SessionType] = None,
   ) -> Set[str]:
@@ -1013,7 +1013,9 @@ class Database(sqlutil.Database):
         selected_run_ids = selected_run_ids.union(
           {
             row.run_id
-            for row in session.query(RunId).filter(RunId.run_id.in_(run_ids))
+            for row in session.query(RunId).filter(
+              RunId.run_id.in_({str(s) for s in run_ids})
+            )
           }
         )
 

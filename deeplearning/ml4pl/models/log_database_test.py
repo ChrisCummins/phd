@@ -86,6 +86,18 @@ def populated_log_db(
     yield db
 
 
+@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+def disposable_populated_log_db(
+  request, generator: random_log_database_generator.RandomLogDatabaseGenerator
+) -> log_database.Database:
+  """Same as populated_log_db, but is generated fresh for each test."""
+  with testing_databases.DatabaseContext(
+    log_database.Database, request.param
+  ) as db:
+    db._run_ids = generator.PopulateLogDatabase(db, run_count=10)
+    yield db
+
+
 class DatabaseSessionWithRunLogs(NamedTuple):
   """Tuple for a test fixture which returns a database session with run logs."""
 
@@ -354,20 +366,45 @@ def test_GetWeightedEpochStats_filter_all_results(
   )
 
 
-def test_Prune(populated_log_db: log_database.Database,):
+def test_run_ids_list(disposable_populated_log_db: log_database.Database,):
+  """Test that the correct run IDs are returned."""
+  assert set(disposable_populated_log_db.run_ids) == set(
+    disposable_populated_log_db._run_ids
+  )
+
+
+def test_SelectRunIds_no_filters(populated_log_db: log_database.Database,):
+  """Test filtering from a list of run IDs."""
+  assert len(populated_log_db.SelectRunIds()) == 0
+
+
+def test_SelectRunIds_with_run_ids(populated_log_db: log_database.Database,):
+  """Test filtering from a list of run IDs."""
+  run_ids = populated_log_db._run_ids[:3]
+  assert len(run_ids) == 3
+  assert len(populated_log_db.SelectRunIds(run_ids=run_ids)) == 3
+
+
+def test_Prune(disposable_populated_log_db: log_database.Database,):
   """Test that pruning a database deletes all runs."""
-  populated_log_db.Prune()
+  disposable_populated_log_db.Prune()
   # Currently log databases have no checkpoints, so pruning them will delete
   # everything.
-  with populated_log_db.Session() as session:
-    assert session.query(sql.func.count(log_database.RunId)).scalar() == 0
-    assert session.query(sql.func.count(log_database.Batch)).scalar() == 0
+  with disposable_populated_log_db.Session() as session:
     assert (
-      session.query(sql.func.count(log_database.BatchDetails)).scalar() == 0
+      session.query(sql.func.count(log_database.RunId.run_id)).scalar() == 0
     )
-    assert session.query(sql.func.count(log_database.Checkpoint)).scalar() == 0
+    assert session.query(sql.func.count(log_database.Batch.id)).scalar() == 0
     assert (
-      session.query(sql.func.count(log_database.CheckpointModelData)).scalar()
+      session.query(sql.func.count(log_database.BatchDetails.id)).scalar() == 0
+    )
+    assert (
+      session.query(sql.func.count(log_database.Checkpoint.id)).scalar() == 0
+    )
+    assert (
+      session.query(
+        sql.func.count(log_database.CheckpointModelData.id)
+      ).scalar()
       == 0
     )
 
