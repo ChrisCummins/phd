@@ -856,6 +856,22 @@ class Database(sqlutil.Database):
     with self.Session() as session:
       return [row.run_id for row in session.query(RunId.run_id)]
 
+  @database_statistic
+  def tags(self) -> List[str]:
+    """Returns the list of run IDs."""
+    with self.Session() as session:
+      return sorted(
+        [
+          pickle.loads(row.binary_value)
+          for row in session.query(
+            sql.func.distinct(Parameter.binary_value).label("binary_value")
+          ).filter(
+            Parameter.type_num == ParameterType.FLAG.value,
+            Parameter.name == "tag",
+          )
+        ]
+      )
+
   @property
   def stats_json(self) -> Dict[str, Any]:
     """Returns the database statics as a JSON dictionary."""
