@@ -83,6 +83,12 @@ app.DEFINE_integer(
   10000,
   "Tuning parameter. The maximum length of the write buffer.",
 )
+app.DEFINE_boolean(
+  "limit_worker_mem",
+  False,
+  "Tuning parameter. If set, this adds an rlimit on the per-worker process "
+  "memory consumption.",
+)
 app.DEFINE_float(
   "worker_mem_util",
   0.8,
@@ -186,8 +192,9 @@ def ProcessWorker(packed_args) -> AnnotationResult:
 
   # Set the hard limit on the memory size. Exceeding this limit will raise
   # a MemoryError.
-  resource.setrlimit(resource.RLIMIT_DATA, (max_mem_size, max_mem_size))
-  resource.setrlimit(resource.RLIMIT_AS, (max_mem_size, max_mem_size))
+  if FLAGS.limit_worker_mem:
+    resource.setrlimit(resource.RLIMIT_DATA, (max_mem_size, max_mem_size))
+    resource.setrlimit(resource.RLIMIT_AS, (max_mem_size, max_mem_size))
 
   graph_tuples = []
 
