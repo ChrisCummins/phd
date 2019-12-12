@@ -6,7 +6,7 @@ Usage:
         --db_stem='sqlite:////tmp/programl/db/'
         --dataset=amd,nvidia \
         --model=zero_r,lstm_opencl,lstm_ir,lstm_inst2vec,ggnn \
-        --tag_suffix=v1 \
+        --tag_suffix=v1
 """
 import time
 
