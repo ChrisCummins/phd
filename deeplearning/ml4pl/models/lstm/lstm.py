@@ -165,7 +165,10 @@ class LstmBase(classifier_base.ClassifierBase):
     ):
       # Node-wise classification with selector vector.
       if not FLAGS.nodes:
-        raise app.UsageError("--nodes is required")
+        raise app.UsageError(
+          "--nodes={statement,identifier} is required when running a "
+          "node-level classification task"
+        )
       self.encoder = FLAGS.nodes().ToEncoder(self.graph_db, self.ir2seq_encoder)
     else:
       raise TypeError("Unsupported graph dimensionalities")
