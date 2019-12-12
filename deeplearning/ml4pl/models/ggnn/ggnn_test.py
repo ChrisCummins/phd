@@ -2,6 +2,9 @@
 import random
 from typing import Iterable
 
+from labm8.py import test
+from labm8.py.internal import flags_parsers
+
 from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
@@ -13,8 +16,6 @@ from deeplearning.ml4pl.models.ggnn import ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_config
 from deeplearning.ml4pl.testing import random_graph_tuple_database_generator
 from deeplearning.ml4pl.testing import testing_databases
-from labm8.py import test
-from labm8.py.internal import flags_parsers
 
 FLAGS = test.FLAGS
 
