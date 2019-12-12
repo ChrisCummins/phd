@@ -2,6 +2,7 @@
 from deeplearning.ml4pl.graphs.labelled.dataflow import annotate
 from deeplearning.ml4pl.graphs.labelled.dataflow import data_flow_graphs
 from deeplearning.ml4pl.testing import random_programl_generator
+from labm8.py import prof
 from labm8.py import test
 
 FLAGS = test.FLAGS
@@ -22,8 +23,12 @@ ANNOTATORS = {
 
 def AnnotatorBenchmark(annotator):
   """A micro-benchmark that runs annotator over a list of test graphs."""
-  for graph in PROTOS:
-    annotator.MakeAnnotated(graph, n=5)
+  with prof.Profile(
+    f"Completed benchmark of {len(PROTOS) * 5} annotations "
+    f"using {type(annotator).__name__}"
+  ):
+    for graph in PROTOS:
+      annotator.MakeAnnotated(graph, n=5)
 
 
 @test.Parametrize(
