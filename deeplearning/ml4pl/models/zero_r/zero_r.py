@@ -91,7 +91,9 @@ class ZeroR(classifier_base.ClassifierBase):
 
     # "Training" step updates the class frequency counts.
     if epoch_type == epoch.Type.TRAIN:
-      bincount = np.bincount(np.argmax(targets, axis=1))
+      bincount = np.bincount(
+        np.argmax(targets, axis=1), minlength=self.y_dimensionality
+      )
       self.class_counts += bincount
 
       assert targets.shape[1] == self.y.shape[0]
