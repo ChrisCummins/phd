@@ -56,7 +56,7 @@ app.DEFINE_list(
   "exported. Run IDs that do not exist are silently ignored.",
 )
 app.DEFINE_list(
-  "tag",
+  "export_tag",
   [],
   "A list of tags to export. If not set, all runs in the database are "
   "exported. Tags that do not exist are silently ignored.",
@@ -160,7 +160,7 @@ def Main():
   with log_db.Session() as session:
     # Resolve the runs to export.
     run_ids_to_export = log_db.SelectRunIds(
-      run_ids=FLAGS.run_id, tags=FLAGS.tag, session=session
+      run_ids=FLAGS.run_id, tags=FLAGS.export_tag, session=session
     )
 
     # Create tables for the given runs.
