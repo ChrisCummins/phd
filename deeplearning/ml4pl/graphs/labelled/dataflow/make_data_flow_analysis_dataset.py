@@ -403,7 +403,12 @@ def main():
   )
   progress.Run(generator, patience=FLAGS.patience)
   if generator.ctx.i != generator.ctx.n:
-    app.FatalWithoutStackTrace(f"{generator.ctx.i} != {generator.ctx.n}")
+    app.FatalWithoutStackTrace(
+      f"Dataset generation terminated after processing only "
+      f"{humanize.Comass(generator.ctx.i)} of an expected "
+      f"{humanize.Commas(generator.ctx.n)} graphs "
+      f"({generator.ctx.i / generator.ctx.n:.3%})."
+    )
 
 
 if __name__ == "__main__":
