@@ -244,7 +244,10 @@ class Train(progress.Progress):
 
       val_results, val_improved = self.RunEpoch(epoch.Type.VAL, batch_iterators)
 
-      if test_on == schedules.TestOn.IMPROVEMENT and val_improved:
+      if val_improved and (
+        test_on == schedules.TestOn.IMPROVEMENT
+        or test_on == schedules.TestOn.IMPROVEMENT_AND_LAST
+      ):
         self.RunEpoch(epoch.Type.TEST, batch_iterators)
       elif (
         test_on == schedules.TestOn.IMPROVEMENT_AND_LAST
