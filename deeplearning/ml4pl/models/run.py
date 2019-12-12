@@ -3,13 +3,13 @@
 This defines the schedules for running training / validation / testing loops
 of a machine learning model.
 """
+import warnings
 from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
 from typing import Union
 
-import warnings
 import pandas as pd
 import pyfiglet
 
@@ -105,6 +105,7 @@ app.DEFINE_boolean(
 
 class RunError(OSError):
   """An error that occurs during model execution."""
+
   pass
 
 
@@ -366,9 +367,7 @@ def RunOne(
 
     if FLAGS.test_only:
       batch_iterator = MakeBatchIterator(
-        epoch_type=epoch.Type.TEST,
-        model=model,
-        graph_db=graph_db,
+        epoch_type=epoch.Type.TEST, model=model, graph_db=graph_db,
       )
       RunEpoch(
         epoch_name="test",
@@ -413,8 +412,7 @@ class KFoldCrossValidation(progress.Progress):
   """
 
   def __init__(
-    self,
-    model_class,
+    self, model_class,
   ):
     """Constructor.
 
@@ -431,7 +429,7 @@ class KFoldCrossValidation(progress.Progress):
       raise ValueError("Database contains no splits")
     if self.graph_db.splits != list(range(len(self.graph_db.splits))):
       raise ValueError(
-        "Graph database splits are not a contiguous sequence:
+        "Graph database splits are not a contiguous sequence: "
         f"{self.graph_db.splits}"
       )
     super(KFoldCrossValidation, self).__init__(
@@ -458,18 +456,11 @@ class KFoldCrossValidation(progress.Progress):
       FLAGS.test_split = [str(splits[i])]
       FLAGS.val_split = [str(splits[(i + 1) % len(splits)])]
 
-      app.Log(1, "Beginning cross-validation run %s of %s", i + 1,
-              len(splits))
-
       # Print the header only on the first split.
       print_header = False if i else True
 
       results.append(
-        RunOne(
-          self.model_class,
-          print_header=print_header,
-          ctx=self.ctx,
-        )
+        RunOne(self.model_class, print_header=print_header, ctx=self.ctx,)
       )
     self.ctx.i += 1
 
@@ -518,11 +509,15 @@ def RunKFold(model_class) -> pd.DataFrame:
   kfold = KFoldCrossValidation(model_class)
   progress.Run(kfold)
   if kfold.ctx.i != kfold.ctx.n:
-    raise RunError(f"Expected to run {kfold.ctx.n} folds but only ran {kfold.ctx.i}")
+    raise RunError(
+      f"Expected to run {kfold.ctx.n} folds but only ran {kfold.ctx.i}"
+    )
   if not isinstance(kfold.results, pd.DataFrame):
     raise RunError("K-fold returned no results")
   if len(kfold.results) < kfold.ctx.n:
-    raise RunError(f"Ran {kfold.ctx.n} folds buts only have {kfold.results} results")
+    raise RunError(
+      f"Ran {kfold.ctx.n} folds buts only have {kfold.results} results"
+    )
   return kfold.results
 
 
