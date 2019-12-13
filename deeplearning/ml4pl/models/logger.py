@@ -30,6 +30,11 @@ app.DEFINE_enum(
   schedules.KeepCheckpoints.ALL,
   "How many checkpoints to keep.",
 )
+app.DEFINE_list(
+  "detailed_batch_types",
+  ["val", "test"],
+  "The types of epochs to keep detailed batch logs for.",
+)
 app.DEFINE_enum(
   "keep_detailed_batches",
   schedules.KeepDetailedBatches,
@@ -89,6 +94,20 @@ class Logger(object):
       max_seconds_since_flush=max_seconds_since_flush,
       log_level=log_level,
     )
+
+    # Build a set of epoch types to keep detailed batches for.
+    self.detailed_batch_epoch_types = set()
+    for detailed_batch_type in FLAGS.detailed_batch_types:
+      if detailed_batch_type == "train":
+        self.detailed_batch_epoch_types.add(epoch.Type.TRAIN)
+      elif detailed_batch_type == "val":
+        self.detailed_batch_epoch_types.add(epoch.Type.VAL)
+      elif detailed_batch_type == "test":
+        self.detailed_batch_epoch_types.add(epoch.Type.TEST)
+      else:
+        raise app.UsageError(
+          "Unknown --detailed_batch_types: " f"'{detailed_batch_type}'"
+        )
 
   def __enter__(self):
     return self
@@ -160,6 +179,11 @@ class Logger(object):
     data: batch.Data,
     results: batch.Results,
   ):
+    if epoch_type in self.detailed_batch_epoch_types:
+      details = log_database.BatchDetails.Create(data=data, results=results)
+    else:
+      details = None
+
     self._writer.AddOne(
       log_database.Batch.Create(
         run_id=run_id,
@@ -169,7 +193,7 @@ class Logger(object):
         timer=timer,
         data=data,
         results=results,
-        details=log_database.BatchDetails.Create(data=data, results=results),
+        details=details,
       )
     )
 
