@@ -100,7 +100,7 @@ def Main():
         # Reduced batch size because OOM errors with larger batches on my
         # NVIDIA GTX 1080 GPU.
         FLAGS.graph_batch_size = 32
-        FLAGS.epoch_count = 300
+        FLAGS.epoch_count = 100
         run.Run(ggnn.Ggnn)
       else:
         raise app.UsageError(f"Unknown model: {model}")
