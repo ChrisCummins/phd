@@ -40,7 +40,7 @@ app.DEFINE_string(
 )
 app.DEFINE_string(
   "db_stem",
-  "file:///var/phd/db/cc1.mysql?programl_",
+  "file:///var/phd/db/cc1.mysql?programl",
   "The stem for database names.",
 )
 
@@ -54,7 +54,7 @@ def Main():
 
   # Set model and dataset-invariant flags.
   FLAGS.log_db = flags_parsers.DatabaseFlag(
-    log_database.Database, f"{db_stem}_logs", must_exist=True
+    log_database.Database, f"{db_stem}_devmap_logs", must_exist=True
   )
   FLAGS.ir_db = flags_parsers.DatabaseFlag(
     ir_database.Database, f"{db_stem}_ir", must_exist=True
