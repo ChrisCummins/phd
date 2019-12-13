@@ -368,7 +368,7 @@ class Ggnn(classifier_base.ClassifierBase):
       model_converged=model_converged,
       learning_rate=learning_rate,
       iteration_count=iteration_count,
-      loss=loss,
+      # TODO(github.com/ChrisCummins/ProGraML/issues/37): fix me: loss=loss,
     )
 
   def GetModelData(self) -> typing.Any:
