@@ -129,8 +129,9 @@ class Ggnn(classifier_base.ClassifierBase):
     self.dev = (
       torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     )
-    app.Log(1, "Using device %s", self.dev)
-    app.Log(1, "Default torch dtype %s", torch.get_default_dtype())
+    app.Log(
+      1, "Using device %s with dtype %s", self.dev, torch.get_default_dtype()
+    )
 
     # Instantiate model
     config = GGNNConfig(
