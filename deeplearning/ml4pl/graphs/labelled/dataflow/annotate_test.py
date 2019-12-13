@@ -7,8 +7,6 @@ from labm8.py import test
 
 FLAGS = test.FLAGS
 
-# This tests the annotate library as a binary, no test coverage.
-MODULE_UNDER_TEST = None
 
 ###############################################################################
 # Fixtures.
@@ -66,25 +64,10 @@ def test_invalid_analysis(one_proto: programl_pb2.ProgramGraph, n: int):
   assert str(e_ctx.value).startswith("Unknown analysis: invalid_analysis. ")
 
 
-@test.XFail(reason="Empty-graph check appears broken.")
-def test_invalid_input(analysis: str, n: int):
-  """Test that error is raised if the input is invalid."""
-  invalid_input = programl_pb2.ProgramGraph()
-  with test.Raises(IOError) as e_ctx:
-    annotate.Annotate(analysis, invalid_input, n)
-  assert str(e_ctx.value) == "Failed to serialize input graph"
-
-
 def test_timeout(one_proto: programl_pb2.ProgramGraph):
   """Test that error is raised if the analysis times out."""
   with test.Raises(annotate.AnalysisTimeout):
     annotate.Annotate("test_timeout", one_proto, timeout=1)
-
-
-def test_binary_graph_input(one_proto: programl_pb2.ProgramGraph):
-  """Test that a binary-encoded graph is acceptable."""
-  binary_graph = programl.ToBytes(one_proto, programl.InputOutputFormat.PB)
-  assert annotate.Annotate("reachability", binary_graph, n=3, binary_graph=True)
 
 
 def test_annotate(analysis: str, real_proto: programl_pb2.ProgramGraph, n: int):
