@@ -46,6 +46,7 @@ py_test(
 py_library(
     name = "ggnn_config",
     srcs = ["ggnn_config.py"],
+    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
     deps = [
         "//labm8/py:app",
     ],
