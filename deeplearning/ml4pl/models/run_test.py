@@ -6,14 +6,11 @@ from typing import Tuple
 
 import numpy as np
 
-from deeplearning.ml4pl import run_id as run_id_lib
-from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch as batches
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import log_database
-from deeplearning.ml4pl.models import logger as logging
 from deeplearning.ml4pl.models import run
 from deeplearning.ml4pl.testing import random_graph_tuple_database_generator
 from deeplearning.ml4pl.testing import testing_databases
@@ -29,46 +26,6 @@ FLAGS = test.FLAGS
 ###############################################################################
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
-def log_db(request) -> log_database.Database:
-  """A test fixture which yields an empty log database."""
-  yield from testing_databases.YieldDatabase(
-    log_database.Database, request.param
-  )
-
-
-@test.Fixture(scope="session")
-def logger(log_db: log_database.Database) -> logging.Logger:
-  """A test fixture which yields a logger."""
-  with logging.Logger(log_db, max_buffer_length=128) as logger:
-    yield logger
-
-
-@test.Fixture(scope="session", params=(0, 3))
-def edge_position_max(request) -> int:
-  """A test fixture which enumerates edge positions."""
-  return request.param
-
-
-@test.Fixture(scope="session", params=(10, 100))
-def graph_count(request) -> int:
-  """A test fixture which enumerates graph counts."""
-  return request.param
-
-
-# Currently, only 2-dimension node features are supported.
-@test.Fixture(scope="session", params=(2,))
-def node_x_dimensionality(request) -> int:
-  """A test fixture which enumerates node feature dimensionalities."""
-  return request.param
-
-
-@test.Fixture(scope="session", params=(0, 2))
-def graph_x_dimensionality(request) -> int:
-  """A test fixture which enumerates graph feature dimensionalities."""
-  return request.param
-
-
 @test.Fixture(scope="session", params=((0, 2), (0, 3), (2, 0), (10, 0)))
 def y_dimensionalities(request) -> Tuple[int, int]:
   """A test fixture which enumerates node and graph label dimensionalities.
@@ -82,20 +39,11 @@ def y_dimensionalities(request) -> Tuple[int, int]:
   return request.param
 
 
-@test.Fixture(scope="session", params=(True,))
-def with_data_flow(request) -> int:
-  """A test fixture which enumerates 'with dataflow' values."""
-  return request.param
-
-
 @test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
 def graph_db(
-  request,
-  graph_count: int,
-  y_dimensionalities: Tuple[int, int],
-  with_data_flow: bool,
+  request, y_dimensionalities: Tuple[int, int],
 ) -> graph_tuple_database.Database:
-  """A test fixture which enumerates graph databases."""
+  """A test fixture which enumerates session-level graph databases."""
   node_y_dimensionality, graph_y_dimensionality = y_dimensionalities
 
   with testing_databases.DatabaseContext(
@@ -103,15 +51,23 @@ def graph_db(
   ) as db:
     random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
       db,
-      graph_count=graph_count,
+      graph_count=100,
       node_x_dimensionality=2,
       node_y_dimensionality=node_y_dimensionality,
       graph_x_dimensionality=2,
       graph_y_dimensionality=graph_y_dimensionality,
-      with_data_flow=with_data_flow,
+      with_data_flow=False,
       split_count=3,
     )
     yield db
+
+
+@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+def disposable_log_db(request) -> log_database.Database:
+  """A test fixture which yields an empty log database."""
+  yield from testing_databases.YieldDatabase(
+    log_database.Database, request.param
+  )
 
 
 class MockModel(classifier_base.ClassifierBase):
@@ -194,66 +150,22 @@ class MockModel(classifier_base.ClassifierBase):
     self.model_data = copy.deepcopy(data_to_load)
 
 
-@test.Fixture(scope="function")
-def model(
-  logger: logging.Logger,
-  graph_db: graph_tuple_database.Database,
-  has_loss: bool,
-  has_learning_rate: bool,
-) -> MockModel:
-  """A test fixture which enumerates mock models."""
-  run_id = run_id_lib.RunId.GenerateUnique(
-    f"mock{random.randint(0, int(1e6)):06}"
-  )
-
-  return MockModel(
-    logger=logger,
-    graph_db=graph_db,
-    run_id=run_id,
-    has_loss=has_loss,
-    has_learning_rate=has_learning_rate,
-  )
-
-
-@test.Fixture(scope="function")
-def batch_iterator(
-  model: MockModel, graph_db: graph_tuple_database.Database,
-) -> batches.BatchIterator:
-  return batches.BatchIterator(
-    batches=model.BatchIterator(
-      graph_database_reader.BufferedGraphReader(graph_db)
-    ),
-    graph_count=graph_db.graph_count,
-  )
-
-
-@test.Fixture(scope="session", params=(1, 5))
-def epoch_count(request) -> epoch.Type:
-  """A test fixture which enumerates --epoch_count values."""
-  return request.param
-
-
-@test.Fixture(scope="session", params=list(epoch.Type))
-def epoch_type(request) -> epoch.Type:
-  """A test fixture which enumerates epoch types."""
-  return request.param
-
-
-@test.Fixture(scope="session", params=(0, 5))
-def epoch_num(request) -> int:
-  return request.param
-
-
 ###############################################################################
 # Tests.
 ###############################################################################
 
 
+@test.Parametrize("epoch_count", (1, 5))
+@test.Parametrize("k_fold", (False, True))
 def test_Run_with_mock_module(
-  log_db: log_database.Database,
+  disposable_log_db: log_database.Database,
   graph_db: graph_tuple_database.Database,
   epoch_count: int,
+  k_fold: bool,
 ):
+  """Test the run.Run() method."""
+  log_db = disposable_log_db
+
   FLAGS.graph_db = flags_parsers.DatabaseFlag(
     graph_tuple_database.Database, graph_db.url, must_exist=True
   )
@@ -261,8 +173,12 @@ def test_Run_with_mock_module(
     log_database.Database, log_db.url, must_exist=True
   )
   FLAGS.epoch_count = epoch_count
+  FLAGS.k_fold = k_fold
 
   run.Run(MockModel)
+
+  # Test that k-fold produces multiple runs.
+  assert log_db.run_count == graph_db.split_count if k_fold else 1
 
 
 if __name__ == "__main__":
