@@ -55,10 +55,15 @@ class Results(NamedTuple):
     return self.loss is not None
 
   def __repr__(self) -> str:
-    return (
+    string = (
       f"accuracy={self.accuracy:.2%}%, "
-      f"precision={self.precision:.3f}, recall={self.recall:.3f}, f1={self.f1:.3f}"
+      f"precision={self.precision:.3f}, recall={self.recall:.3f}, "
+      f"f1={self.f1:.3f}"
     )
+    if self.has_loss:
+      string = f"{string}, loss={self.loss:0.6f}"
+
+    return string
 
   def ToFormattedString(self, previous: Optional["Results"]) -> str:
     previous: Results = previous or self()
