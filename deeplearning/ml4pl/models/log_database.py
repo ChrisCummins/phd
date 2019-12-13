@@ -1223,19 +1223,7 @@ class Database(sqlutil.Database):
       # Average stats across runs with the same tag.
       #########################################################################
 
-      rows = []
       tag_df = per_run_df.groupby("tag").mean().reset_index()
-      # for tag in set(per_run_df.tag.values):
-      #   tag_df = per_run_df[per_run_df["tag"] == tag]
-      #   # Safely hand 'null' values.
-      #   tag_df = tag_df[tag_df["val_accuracy"].notnull()]
-      #   if len(tag_df):
-      #     rows.append(tag_df.mean())
-      #   # TODO: Drop unwanted columns.
-      #
-      # per_tag_df = pd.DataFrame(rows, columns=per_run_df.columns.values)
-      # if len(rows):
-      #   per_tag_df.sort_values(["tag", "timestamp"], inplace=True)
 
       yield "tags", tag_df
 
