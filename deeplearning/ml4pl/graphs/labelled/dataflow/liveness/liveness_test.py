@@ -552,7 +552,8 @@ def test_AnnotateLiveness_exit_block_is_removed(
 ):
   n = len(wiki.node)
   annotator = liveness.LivenessAnnotator(wiki)
-  assert n == annotator.Annotate(annotator.g, 5).number_of_nodes()
+  annotator.Annotate(annotator.g, 5)
+  assert n == annotator.g.number_of_nodes()
 
 
 def test_MakeAnnotated_real_graphs(real_graph: programl_pb2.ProgramGraph,):
