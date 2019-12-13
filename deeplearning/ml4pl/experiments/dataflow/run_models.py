@@ -54,33 +54,62 @@ def Main():
 
   # Set model and dataset-invariant flags.
   FLAGS.log_db = flags_parsers.DatabaseFlag(
-    log_database.Database, f"{db_stem}_logs", must_exist=True
+    log_database.Database,
+    f"{db_stem}_dataflow_logs",
+    must_exist=False,  # , must_exist=True
   )
   FLAGS.ir_db = flags_parsers.DatabaseFlag(
     ir_database.Database, f"{db_stem}_ir", must_exist=True
   )
-  FLAGS.k_fold = True
   FLAGS.test_on = flags_parsers.EnumFlag(
     schedules.TestOn, schedules.TestOn.IMPROVEMENT_AND_LAST
   )
+  FLAGS.max_train_per_epoch = 5000
+  FLAGS.max_val_per_epoch = 1000
 
   for dataset in datasets:
-    # Set model-invariant flags.
-    FLAGS.graph_db = flags_parsers.DatabaseFlag(
-      graph_tuple_database.Database, f"{db_stem}_{dataset}", must_exist=True,
+    graph_db = graph_tuple_database.Database(
+      f"{db_stem}_{dataset}", must_exist=True
     )
+    FLAGS.graph_db = flags_parsers.DatabaseFlag(
+      graph_tuple_database.Database, graph_db.url, must_exist=True,
+    )
+
+    # Use binary prec/rec/f1 scores for binary node classification tasks.
+    if graph_db.node_y_dimensionality == 3:
+      # alias_sets uses 3-D node labels:
+      FLAGS.batch_scores_averaging_method = "weighted"
+    elif graph_db.node_y_dimensionality == 2:
+      # Binary node classification.
+      FLAGS.batch_scores_averaging_method = "binary"
+    else:
+      raise ValueError(
+        f"Unknown node dimensionality: {graph_db.node_y_dimensionality}"
+      )
+
+    # Liveness is identifier-based, all others are statement-based.
+    if dataset == "liveness":
+      FLAGS.nodes = flags_parsers.EnumFlag(
+        lstm.NodeEncoder, lstm.NodeEncoder.IDENTIFIER
+      )
+    else:
+      FLAGS.nodes = flags_parsers.EnumFlag(
+        lstm.NodeEncoder, lstm.NodeEncoder.STATEMENT
+      )
 
     for model in models:
       FLAGS.tag = f"{dataset}_{model}_{tag_suffix}"
 
       if model == "zero_r":
         FLAGS.epoch_count = 1
+        FLAGS.graph_reader_order = "in_order"
         run.Run(zero_r.ZeroR)
       elif model == "lstm_ir":
         FLAGS.epoch_count = 50
         FLAGS.ir2seq = flags_parsers.EnumFlag(
           lstm.Ir2SeqType, lstm.Ir2SeqType.LLVM
         )
+        FLAGS.graph_reader_order = "batch_random"
         FLAGS.padded_sequence_length = 15000
         FLAGS.batch_size = 64
         run.Run(lstm.GraphLstm)
@@ -89,13 +118,12 @@ def Main():
         FLAGS.ir2seq = flags_parsers.EnumFlag(
           lstm.Ir2SeqType, lstm.Ir2SeqType.INST2VEC
         )
+        FLAGS.graph_reader_order = "batch_random"
         FLAGS.padded_sequence_length = 15000
         FLAGS.batch_size = 64
         run.Run(lstm.GraphLstm)
       elif model == "ggnn":
         FLAGS.graph_batch_node_count = 15000
-        FLAGS.max_train_per_epoch = 5000
-        FLAGS.max_val_per_epoch = 1000
         FLAGS.graph_reader_order = "global_random"
         FLAGS.epoch_count = 300
         run.Run(ggnn.Ggnn)
