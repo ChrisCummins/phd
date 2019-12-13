@@ -305,10 +305,6 @@ class MessagingLayer(nn.Module):
       bincount = torch.zeros(
         node_states.size()[0], dtype=torch.long, device=device
       )
-      assert bincount.device in [
-        torch.device("cuda"),
-        torch.device("cuda:0"),
-      ], f"Expected cuda but got {bincount.device}."
 
     for i, edge_list in enumerate(edge_lists):
       edge_targets = edge_list[:, 1]
