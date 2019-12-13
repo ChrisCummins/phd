@@ -47,7 +47,7 @@ def CreateRandomGraphTuple(
       graph_y_dimensionality=graph_y_dimensionality,
     ),
     ir_id=random.randint(0, int(4e6)),
-    split=random.randint(1, split_count) if split_count else None,
+    split=random.randint(0, split_count - 1) if split_count else None,
   )
 
   if with_data_flow:
