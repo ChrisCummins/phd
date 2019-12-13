@@ -80,19 +80,25 @@ def Main():
         run.Run(zero_r.ZeroR)
       elif model == "lstm_opencl":
         FLAGS.epoch_count = 50
-        FLAGS.ir2seq = lstm.Ir2SeqType.OPENCL
+        FLAGS.ir2seq = flags_parsers.EnumFlag(
+          lstm.Ir2SeqType, lstm.Ir2SeqType.OPENCL
+        )
         FLAGS.padded_sequence_length = 1024
         FLAGS.batch_size = 64
         run.Run(lstm.GraphLstm)
       elif model == "lstm_ir":
         FLAGS.epoch_count = 50
-        FLAGS.ir2seq = lstm.Ir2SeqType.LLVM
+        FLAGS.ir2seq = flags_parsers.EnumFlag(
+          lstm.Ir2SeqType, lstm.Ir2SeqType.LLVM
+        )
         FLAGS.padded_sequence_length = 15000
         FLAGS.batch_size = 64
         run.Run(lstm.GraphLstm)
       elif model == "lstm_inst2vec":
         FLAGS.epoch_count = 50
-        FLAGS.ir2seq = lstm.Ir2SeqType.INST2VEC
+        FLAGS.ir2seq = flags_parsers.EnumFlag(
+          lstm.Ir2SeqType, lstm.Ir2SeqType.INST2VEC
+        )
         FLAGS.padded_sequence_length = 15000
         FLAGS.batch_size = 64
         run.Run(lstm.GraphLstm)
