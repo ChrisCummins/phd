@@ -349,8 +349,6 @@ class Ggnn(classifier_base.ClassifierBase):
       self.model.opt.step()
       self.model.opt.zero_grad()
 
-    loss = loss.item()
-
     # tg = targets.numpy()
     # tg = np.vstack(((tg + 1) % 2, tg)).T
     # assert np.all(labels.numpy() == tg), f"labels sanity check failed: labels={labels.numpy()},  tg={tg}"
@@ -369,7 +367,7 @@ class Ggnn(classifier_base.ClassifierBase):
       model_converged=model_converged,
       learning_rate=learning_rate,
       iteration_count=iteration_count,
-      # TODO(github.com/ChrisCummins/ProGraML/issues/37): fix me: loss=loss,
+      loss=loss.item(),
     )
 
   def GetModelData(self) -> typing.Any:
