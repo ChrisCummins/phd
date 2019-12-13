@@ -97,7 +97,9 @@ def Main():
         FLAGS.batch_size = 64
         run.Run(lstm.GraphLstm)
       elif model == "ggnn":
-        FLAGS.graph_batch_size = 64
+        # Reduced batch size because OOM errors with larger batches on my
+        # NVIDIA GTX 1080 GPU.
+        FLAGS.graph_batch_size = 32
         FLAGS.epoch_count = 300
         run.Run(ggnn.Ggnn)
       else:
