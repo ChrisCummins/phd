@@ -158,7 +158,8 @@ def test_load_restore_model_from_checkpoint_smoke_test(
 
 
 def CheckResultsProperties(
-    results: epoch.Results
+    results: epoch.Results, graph_db: graph_tuple_database.Database,
+    epoch_type: epoch.Type
 ):
   assert isinstance(results, epoch.Results)
   # Check that model produced one or more batches.
@@ -168,6 +169,9 @@ def CheckResultsProperties(
   assert results.has_loss
   assert results.loss
   assert not math.isnan(results.loss)
+
+  # Test that model saw every graph in the database.
+  assert results.graph_count == graph_db.split_counts[epoch_type.value]
 
 
 def test_node_classifier_call(
@@ -194,7 +198,7 @@ def test_node_classifier_call(
     epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger,
   )
 
-  CheckResultsProperties(results)
+  CheckResultsProperties(results, node_y_graph_db, epoch_type)
 
 
 def test_graph_classifier_call(
@@ -223,7 +227,7 @@ def test_graph_classifier_call(
     epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger,
   )
 
-  CheckResultsProperties(results)
+  CheckResultsProperties(results, graph_y_graph_db, epoch_type)
 
 
 if __name__ == "__main__":

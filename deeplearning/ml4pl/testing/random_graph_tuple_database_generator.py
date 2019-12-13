@@ -102,6 +102,8 @@ def PopulateDatabaseWithRandomGraphTuples(
   with db.Session(commit=True) as session:
     session.add_all([copy.deepcopy(t) for t in rows])
 
+  db.RefreshStats()
+
   return DatabaseAndRows(db, rows)
 
 
