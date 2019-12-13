@@ -60,7 +60,9 @@ def Main():
     ir_database.Database, f"{db_stem}_ir", must_exist=True
   )
   FLAGS.k_fold = True
-  FLAGS.test_on = schedules.TestOn.IMPROVEMENT_AND_LAST
+  FLAGS.test_on = flags_parsers.EnumFlag(
+    schedules.TestOn, schedules.TestOn.IMPROVEMENT_AND_LAST
+  )
 
   for dataset in datasets:
     # Set model-invariant flags.
