@@ -32,7 +32,7 @@ app.DEFINE_enum(
 )
 app.DEFINE_list(
   "detailed_batch_types",
-  ["val", "test"],
+  [],
   "The types of epochs to keep detailed batch logs for.",
 )
 app.DEFINE_enum(
