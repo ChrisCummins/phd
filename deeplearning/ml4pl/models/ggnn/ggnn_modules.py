@@ -38,8 +38,8 @@ class GGNNModel(nn.Module):
     self.loss = Loss(config)
     self.metrics = Metrics()
 
-    # not instantiating the optimizer should save ~67% of GPU memory, bc Adam carries two momentum params
-    # per trainable model parameter!
+    # not instantiating the optimizer should save ~67% of GPU memory, bc Adam
+    # carries two momentum params per trainable model parameter.
     if test_only:
       self.opt = None
       self.eval()
@@ -62,7 +62,8 @@ class GGNNModel(nn.Module):
     raw_in = self.node_embeddings(vocab_ids, selector_ids)
     raw_out, raw_in = self.ggnn(
       edge_lists, raw_in
-    )  # OBS! self.ggnn might change raw_in inplace, so use the two outputs instead!
+    )  # OBS! self.ggnn might change raw_in inplace, so use the two outputs
+    # instead!
     prediction = self.nodewise_readout(raw_in, raw_out)
 
     if self.graphlevel_readout:
@@ -94,7 +95,10 @@ class Loss(nn.Module):
     if config.num_classes == 1:
       self.loss = nn.BCELoss()  # in: (N, *), target: (N, *)
     else:
-      # TODO(github.com/ChrisCummins/ProGraML/issues/27): class labels '-1' don't contribute to the gradient! I was under the impression that we wanted to exploit this fact somewhere. I.e. not predicting labels on nodes that don't constitute branching statements. Let's discuss!
+      # TODO(github.com/ChrisCummins/ProGraML/issues/27): class labels '-1'
+      # don't contribute to the gradient! I was under the impression that we
+      # wanted to exploit this fact somewhere. I.e. not predicting labels on
+      # nodes that don't constitute branching statements. Let's discuss!
       self.loss = nn.CrossEntropyLoss(ignore_index=-1)
 
   def forward(self, inputs, targets):
@@ -133,7 +137,9 @@ class Metrics(nn.Module):
 class NodeEmbeddings(nn.Module):
   """Construct node embeddings (content embeddings + selector embeddings)
   Args:
-  pretrained_embeddings (Tensor, optional) – FloatTensor containing weights for the Embedding. First dimension is being passed to Embedding as num_embeddings, second as embedding_dim.
+  pretrained_embeddings (Tensor, optional) – FloatTensor containing weights for
+  the Embedding. First dimension is being passed to Embedding as
+  num_embeddings, second as embedding_dim.
 
   Forward
   Args:
@@ -143,8 +149,10 @@ class NodeEmbeddings(nn.Module):
   node_states: <N, config.hidden_size>
   """
 
-  # TODO(github.com/ChrisCummins/ProGraML/issues/27):: Maybe LayerNorm and Dropout on node_embeddings?
-  # TODO(github.com/ChrisCummins/ProGraML/issues/27):: Make selector embs trainable?
+  # TODO(github.com/ChrisCummins/ProGraML/issues/27):: Maybe LayerNorm and
+  # Dropout on node_embeddings?
+  # TODO(github.com/ChrisCummins/ProGraML/issues/27):: Make selector embs
+  # trainable?
 
   # TODO(github.com/ChrisCummins/ml4pl/issues/12): In the future we may want
   # to be more flexible in supporting multiple types of embeddings tables, but
@@ -200,7 +208,8 @@ class NodeEmbeddings(nn.Module):
 
     if config.use_selector_embeddings:
       selector_init = torch.tensor(
-        # TODO(github.com/ChrisCummins/ProGraML/issues/27): x50 is maybe a problem for unrolling (for selector_embs)?
+        # TODO(github.com/ChrisCummins/ProGraML/issues/27): x50 is maybe a
+        # problem for unrolling (for selector_embs)?
         [[0, 50.0], [50.0, 0]],
         dtype=torch.get_default_dtype(),
       )
@@ -333,7 +342,9 @@ class GGNNLayer(nn.Module):
   def __init__(self, config):
     super().__init__()
     self.dropout = config.graph_state_dropout
-    # TODO(github.com/ChrisCummins/ProGraML/issues/27): Maybe decouple hidden GRU size: make hidden GRU size larger and EdgeTrafo size non-square instead? Or implement stacking gru layers between message  passing steps.
+    # TODO(github.com/ChrisCummins/ProGraML/issues/27): Maybe decouple hidden
+    # GRU size: make hidden GRU size larger and EdgeTrafo size non-square
+    # instead? Or implement stacking gru layers between message passing steps.
     self.gru = nn.GRUCell(
       input_size=config.hidden_size, hidden_size=config.hidden_size
     )
@@ -410,8 +421,9 @@ class NodewiseReadout(nn.Module):
 
 
 class LinearNet(nn.Module):
-  """Single Linear layer with WeightDropout, ReLU and Xavier Uniform initialization.
-  Applies a linear transformation to the incoming data: :math:`y = xA^T + b`
+  """Single Linear layer with WeightDropout, ReLU and Xavier Uniform
+  initialization. Applies a linear transformation to the incoming data:
+  :math:`y = xA^T + b`
 
   Args:
   in_features: size of each input sample
@@ -440,7 +452,8 @@ class LinearNet(nn.Module):
 
   def reset_parameters(self):
     nn.init.xavier_uniform_(self.test)
-    # TODO(github.com/ChrisCummins/ProGraML/issues/27): why use xavier_uniform, not kaiming init? Seems old-school
+    # TODO(github.com/ChrisCummins/ProGraML/issues/27): why use xavier_uniform,
+    # not kaiming init? Seems old-school
     if self.bias is not None:
       #    fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight)
       #    bound = 1 / math.sqrt(fan_in)
@@ -467,7 +480,9 @@ class LinearNet(nn.Module):
 class AuxiliaryReadout(nn.Module):
   """Produces per-graph predictions using the per-node predictions and auxiliary features"""
 
-  # TODO(github.com/ChrisCummins/ProGraML/issues/27): I don't like that we only introduce the global features AFTER the per node predictions have been made and not while we do those! This is limiting the expressivity of the model.
+  # TODO(github.com/ChrisCummins/ProGraML/issues/27): I don't like that we only
+  # introduce the global features AFTER the per node predictions have been made
+  # and not while we do those! This is limiting the expressivity of the model.
   def __init__(self, config):
     super().__init__()
     self.num_classes = config.num_classes

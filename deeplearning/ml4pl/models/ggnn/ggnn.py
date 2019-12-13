@@ -274,7 +274,10 @@ class Ggnn(classifier_base.ClassifierBase):
 
     # Batch to model-inputs
     # torch.from_numpy() shares memory with numpy!
-    # TODO(github.com/ChrisCummins/ProGraML/issues/27): maybe we can save memory copies in the training loop if we can turn the data into the required types (np.int64 and np.float32) once they come off the network from the database, where smaller i/o size (int32) is more important.
+    # TODO(github.com/ChrisCummins/ProGraML/issues/27): maybe we can save
+    # memory copies in the training loop if we can turn the data into the
+    # required types (np.int64 and np.float32) once they come off the network
+    # from the database, where smaller i/o size (int32) is more important.
     with ctx.Profile(5, "Sent data to GPU"):
       vocab_ids = torch.from_numpy(disjoint_graph.node_x[:, 0]).to(
         self.dev, torch.long
@@ -332,8 +335,12 @@ class Ggnn(classifier_base.ClassifierBase):
 
     if epoch_type == epoch.Type.TRAIN:
       loss.backward()
-      # TODO(github.com/ChrisCummins/ProGraML/issues/27):: Clip gradients (done). NB, pytorch clips by norm of the gradient of the model, while tf clips by norm of the grad of eeach tensor separately. Therefore we change default from 1.0 to 6.0.
-      # TODO(github.com/ChrisCummins/ProGraML/issues/27):: Anyway: Gradients shouldn't really be clipped if not necessary?
+      # TODO(github.com/ChrisCummins/ProGraML/issues/27):: Clip gradients
+      # (done). NB, pytorch clips by norm of the gradient of the model, while
+      # tf clips by norm of the grad of each tensor separately. Therefore we
+      # change default from 1.0 to 6.0.
+      # TODO(github.com/ChrisCummins/ProGraML/issues/27):: Anyway: Gradients
+      # shouldn't really be clipped if not necessary?
       if self.model.config.clip_grad_norm > 0.0:
         nn.utils.clip_grad_norm_(
           self.model.parameters(), self.model.config.clip_grad_norm
