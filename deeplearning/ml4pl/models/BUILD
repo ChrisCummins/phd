@@ -244,6 +244,26 @@ py_binary(
     ],
 )
 
+py_test(
+    name = "run_test",
+    size = "enormous",
+    srcs = ["run_test.py"],
+    deps = [
+        ":batch",
+        ":classifier_base",
+        ":epoch",
+        ":log_database",
+        ":logger",
+        ":run",
+        "//deeplearning/ml4pl:run_id",
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
+        "//deeplearning/ml4pl/testing:random_graph_tuple_database_generator",
+        "//deeplearning/ml4pl/testing:testing_databases",
+        "//labm8/py:progress",
+        "//labm8/py:test",
+    ],
+)
+
 py_library(
     name = "schedules",
     srcs = ["schedules.py"],
