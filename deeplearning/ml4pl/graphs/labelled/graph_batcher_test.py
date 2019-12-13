@@ -42,16 +42,47 @@ def test_GraphBatcher_collect_all_inputs(graph_count: int):
   assert batches[0].disjoint_graph_count == graph_count
 
 
-def test_GraphBatcher_first_graph_larger_than_max():
-  """Error is raised when graph is larger than max node count."""
+def test_GraphBatcher_max_node_count_limit_handler_error():
+  """Test that error is raised when graph is larger than max node count."""
   big_graph = random_graph_tuple_generator.CreateRandomGraphTuple(node_count=10)
 
   batcher = graph_batcher.GraphBatcher(
-    MockIterator([big_graph]), max_node_count=5
+    MockIterator([big_graph]),
+    max_node_count=5,
+    max_node_count_limit_handler="error",
   )
 
   with test.Raises(ValueError):
     next(batcher)
+
+
+def test_GraphBatcher_max_node_count_limit_handler_skip():
+  """Test that graph is included when larger than max node count."""
+  big_graph = random_graph_tuple_generator.CreateRandomGraphTuple(node_count=10)
+
+  batcher = graph_batcher.GraphBatcher(
+    MockIterator([big_graph]),
+    max_node_count=5,
+    max_node_count_limit_handler="include",
+  )
+
+  assert next(batcher)
+
+
+def test_GraphBatcher_max_node_count_limit_handler_skip():
+  """Test that graph is skipped when larger than max node count."""
+  big_graph = random_graph_tuple_generator.CreateRandomGraphTuple(node_count=10)
+
+  batcher = graph_batcher.GraphBatcher(
+    MockIterator([big_graph]),
+    max_node_count=5,
+    max_node_count_limit_handler="skip",
+  )
+
+  try:
+    next(batcher)
+  except StopIteration:
+    pass
 
 
 def test_GraphBatcher_divisible_node_count():
