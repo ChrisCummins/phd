@@ -1,8 +1,8 @@
-"""Run the device mapping models.
+"""Run the dataflow models.
 
 Usage:
 
-    $ bazel run //deeplearning/ml4pl/experiments/devmap:run_models -- \
+    $ bazel run //deeplearning/ml4pl/experiments/dataflow:run_models -- \
         --db_stem='sqlite:////tmp/programl/db/'
         --dataset=reachability,domtree \
         --model=zero_r,lstm_ir,lstm_inst2vec,ggnn \
