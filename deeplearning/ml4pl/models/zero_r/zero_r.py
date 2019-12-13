@@ -26,7 +26,7 @@ class ZeroR(classifier_base.ClassifierBase):
   def __init__(self, *args, **kwargs):
     super(ZeroR, self).__init__(*args, **kwargs)
     # The table used to count training labels.
-    self.class_counts = np.zeros(self.y_dimensionality, dtype=np.int32)
+    self.class_counts = np.zeros(self.y_dimensionality, dtype=np.int64)
 
   @property
   def y(self) -> np.array:
