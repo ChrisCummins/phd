@@ -1278,7 +1278,7 @@ def Main():
     log_db.Prune()
 
   # Delete logs as requested.
-  with log_db.Session() as session:
+  with log_db.Session(commit=True) as session:
     run_ids_to_remove = log_db.SelectRunIds(
       run_ids=FLAGS.rm, tags=FLAGS.rm_tag, session=session
     )
