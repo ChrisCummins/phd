@@ -71,6 +71,7 @@ ANALYSES = {
   "reachability": reachability.ReachabilityAnnotator,
   "domtree": dominator_tree.DominatorTreeAnnotator,
   "liveness": liveness.LivenessAnnotator,
+  "subexpressions": subexpressions.CommonSubexpressionAnnotator,
   # Annotators which are used for testing this script. These should, for obvious
   # reasons, not be used in prod. However, they must remain here so that we can
   # test the behaviour of the annotator under various conditions.
