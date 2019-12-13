@@ -11,6 +11,7 @@ from deeplearning.ml4pl.ir import ir_database
 from deeplearning.ml4pl.ir import split as ir_split
 from labm8.py import app
 from labm8.py import humanize
+from labm8.py import labtypes
 from labm8.py import prof
 
 FLAGS = app.FLAGS
@@ -34,12 +35,13 @@ class TrainValTestSplitter(ir_split.TrainValTestSplitter):
       with prof.Profile(
         f"Set {split} split on {humanize.Plural(len(ir_ids), 'IR')}"
       ):
-        update = (
-          sql.update(graph_tuple_database.GraphTuple)
-          .where(graph_tuple_database.GraphTuple.ir_id.in_(ir_ids))
-          .values(split=split)
-        )
-        graph_db.engine.execute(update)
+        for chunk in labtypes.Chunkify(ir_ids, 10000):
+          update = (
+            sql.update(graph_tuple_database.GraphTuple)
+            .where(graph_tuple_database.GraphTuple.ir_id.in_(chunk))
+            .values(split=split)
+          )
+          graph_db.engine.execute(update)
 
 
 def CopySplits(
