@@ -1,7 +1,7 @@
 """Unit tests for //deeplearning/ml4pl/models/ggnn."""
 import random
 from typing import Iterable
-
+import math
 from labm8.py import test
 from labm8.py.internal import flags_parsers
 
@@ -182,7 +182,13 @@ def test_node_classifier_call(
   )
   assert isinstance(results, epoch.Results)
 
+  # Check that model produced one or more batches.
   assert results.batch_count
+
+  # Check that model produced a loss value.
+  assert results.has_loss
+  assert results.loss
+  assert not math.isnan(results.loss)
 
 
 def test_graph_classifier_call(
@@ -212,7 +218,13 @@ def test_graph_classifier_call(
   )
   assert isinstance(results, epoch.Results)
 
+  # Check that model produced one or more batches.
   assert results.batch_count
+
+  # Check that model produced a loss value.
+  assert results.has_loss
+  assert results.loss
+  assert not math.isnan(results.loss)
 
 
 if __name__ == "__main__":
