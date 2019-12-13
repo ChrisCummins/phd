@@ -12,6 +12,7 @@ from typing import Union
 
 import pandas as pd
 import pyfiglet
+from sklearn.exceptions import UndefinedMetricWarning
 
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
@@ -27,7 +28,6 @@ from labm8.py import ppar
 from labm8.py import prof
 from labm8.py import progress
 from labm8.py import shell
-
 
 FLAGS = app.FLAGS
 
@@ -523,8 +523,13 @@ def RunKFold(model_class) -> pd.DataFrame:
 
 def Run(model_class) -> Optional[Union[pd.Series, pd.DataFrame]]:
   """Run the model."""
-  # TODO(github.com/ChrisCummins/ProGraML/issues/13): Only filter https://scikit-learn.org/stable/modules/generated/sklearn.exceptions.UndefinedMetricWarning.html
-  warnings.filterwarnings("ignore")
+  if not FLAGS.graph_db:
+    raise app.UsageError("--graph_db is required")
+
+  # NOTE(github.com/ChrisCummins/ProGraML/issues/13): F1 score computation
+  # warnings that it's undefined when there are missing instances from a class,
+  # which is fine for our usage.
+  warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
 
   try:
     if FLAGS.k_fold:
