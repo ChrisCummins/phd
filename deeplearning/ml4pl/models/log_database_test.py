@@ -301,6 +301,19 @@ def test_CopyRunLogs_invalid_run_id(
 
 
 @test.Parametrize("extra_flags", (None, [], ["foo"], ["foo", "vmodule"]))
+def test_GetTables_empty_db(empty_db: log_database.Database, extra_flags):
+  """Test GetTables() on an empty database."""
+  tables = {
+    name: df for name, df in empty_db.GetTables(extra_flags=extra_flags)
+  }
+
+  assert "parameters" in tables
+  assert "epochs" in tables
+  assert "runs" in tables
+  assert "tags" in tables
+
+
+@test.Parametrize("extra_flags", (None, [], ["foo"], ["foo", "vmodule"]))
 def test_GetTables(populated_log_db: log_database.Database, extra_flags):
   """Test GetTables()."""
   tables = {
@@ -310,6 +323,7 @@ def test_GetTables(populated_log_db: log_database.Database, extra_flags):
   assert "parameters" in tables
   assert "epochs" in tables
   assert "runs" in tables
+  assert "tags" in tables
 
   # Test epoch column types.
   for table in ["epochs", "runs"]:
@@ -331,18 +345,6 @@ def test_GetTables(populated_log_db: log_database.Database, extra_flags):
       assert tables[table][f"{type}_f1"].values.dtype == np.float64
       assert tables[table][f"{type}_runtime"].values.dtype == np.float64
       assert tables[table][f"{type}_throughput"].values.dtype == np.float64
-
-
-@test.Parametrize("extra_flags", (None, [], ["foo"], ["foo", "vmodule"]))
-def test_GetTables_empty_db(empty_db: log_database.Database, extra_flags):
-  """Test GetTables() on an empty database."""
-  tables = {
-    name: df for name, df in empty_db.GetTables(extra_flags=extra_flags)
-  }
-
-  assert "parameters" in tables
-  assert "epochs" in tables
-  assert "runs" in tables
 
 
 def test_GetWeightedEpochStats(populated_log_db: log_database.Database):

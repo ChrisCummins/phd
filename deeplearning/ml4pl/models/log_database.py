@@ -1060,7 +1060,7 @@ class Database(sqlutil.Database):
     extra_flags: List[str] = None,
     session: Optional[sqlutil.Database.SessionType] = None,
   ) -> Iterable[Tuple[str, pd.DataFrame]]:
-    """Compute tables of database statisics.
+    """Compute tables of aggregate model performance.
 
     Args:
       run_id: An optional list of run IDs to generate the tables for. If not
@@ -1079,6 +1079,7 @@ class Database(sqlutil.Database):
 
       #########################################################################
       # Parameters.
+      # This table dumps all parameter values for each run.
       #########################################################################
 
       # A map from parameter name to values.
@@ -1107,6 +1108,7 @@ class Database(sqlutil.Database):
 
       #########################################################################
       # Per-epoch stats.
+      # This aggregates the per-batch statics for each epoch for each run.
       #########################################################################
 
       if run_ids:
@@ -1187,21 +1189,26 @@ class Database(sqlutil.Database):
       epoch_counts: List[int] = []
       for run_id in set(per_epoch_df.run_id.values):
 
-        run_df = per_epoch_df[
-          (per_epoch_df["run_id"] == run_id)
-          & (per_epoch_df["test_accuracy"].notnull())
+        run_df = per_epoch_df[per_epoch_df["run_id"] == run_id]
+        # Select the subset of epochs with best validation and test accuracy,
+        # which we use to determine the best model performance (selected on
+        # val_accuracy).
+        runs_with_val_and_test = run_df[
+          (run_df["val_accuracy"].notnull())
+          & (run_df["test_accuracy"].notnull())
         ]
-        # Safely hand 'null' values.
-        run_df = run_df[run_df["val_accuracy"].notnull()]
-        if len(run_df):
+        if len(runs_with_val_and_test):
           epoch_counts.append(len(run_df))
-          rows.append(run_df.loc[run_df["val_accuracy"].idxmax()])
+          # Select the best epoch by validation accuracy.
+          best_epoch = runs_with_val_and_test["val_accuracy"].idxmax()
+          rows.append(runs_with_val_and_test.loc[best_epoch])
 
       per_run_df = pd.DataFrame(rows, columns=per_epoch_df.columns.values)
+      # Add the per-run epoch counts and set the best_epoch values.
       per_run_df["epoch_count"] = epoch_counts
+      per_run_df.rename(columns={"epoch_num": "best_epoch"}, inplace=True)
       if len(rows):
         per_run_df.sort_values(["tag", "run_id", "timestamp"], inplace=True)
-      per_run_df.rename(columns={"epoch_num": "best_epoch"}, inplace=True)
 
       # Rejig the columns so that epoch_count comes after best_epoch.
       columns = per_run_df.columns.tolist()
