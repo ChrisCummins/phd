@@ -157,6 +157,19 @@ def test_load_restore_model_from_checkpoint_smoke_test(
   model.RestoreFrom(checkpoint_ref)
 
 
+def CheckResultsProperties(
+    results: epoch.Results
+):
+  assert isinstance(results, epoch.Results)
+  # Check that model produced one or more batches.
+  assert results.batch_count
+
+  # Check that model produced a loss value.
+  assert results.has_loss
+  assert results.loss
+  assert not math.isnan(results.loss)
+
+
 def test_node_classifier_call(
   epoch_type: epoch.Type,
   logger: logging.Logger,
@@ -180,15 +193,8 @@ def test_node_classifier_call(
   results = model(
     epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger,
   )
-  assert isinstance(results, epoch.Results)
 
-  # Check that model produced one or more batches.
-  assert results.batch_count
-
-  # Check that model produced a loss value.
-  assert results.has_loss
-  assert results.loss
-  assert not math.isnan(results.loss)
+  CheckResultsProperties(results)
 
 
 def test_graph_classifier_call(
@@ -216,15 +222,8 @@ def test_graph_classifier_call(
   results = model(
     epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger,
   )
-  assert isinstance(results, epoch.Results)
 
-  # Check that model produced one or more batches.
-  assert results.batch_count
-
-  # Check that model produced a loss value.
-  assert results.has_loss
-  assert results.loss
-  assert not math.isnan(results.loss)
+  CheckResultsProperties(results)
 
 
 if __name__ == "__main__":
