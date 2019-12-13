@@ -1,5 +1,6 @@
 """Unit tests for //deeplearning/ml4pl/models:log_database."""
 import random
+from typing import List
 from typing import NamedTuple
 from typing import Tuple
 
@@ -74,28 +75,37 @@ def generator(
   )
 
 
+class DatabaseAndRunIds(NamedTuple):
+  """A populated log database and the run IDs used to populate it."""
+
+  db: log_database.Database
+  run_ids: List[run_id.RunId]
+
+
 @test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
 def populated_log_db(
   request, generator: random_log_database_generator.RandomLogDatabaseGenerator
-) -> log_database.Database:
+) -> DatabaseAndRunIds:
   """A test fixture which yields an empty log database."""
   with testing_databases.DatabaseContext(
     log_database.Database, request.param
   ) as db:
-    db._run_ids = generator.PopulateLogDatabase(db, run_count=10)
-    yield db
+    yield DatabaseAndRunIds(
+      db=db, run_ids=generator.PopulateLogDatabase(db, run_count=10)
+    )
 
 
 @test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
 def disposable_populated_log_db(
   request, generator: random_log_database_generator.RandomLogDatabaseGenerator
-) -> log_database.Database:
+) -> DatabaseAndRunIds:
   """Same as populated_log_db, but is generated fresh for each test."""
   with testing_databases.DatabaseContext(
     log_database.Database, request.param
   ) as db:
-    db._run_ids = generator.PopulateLogDatabase(db, run_count=10)
-    yield db
+    yield DatabaseAndRunIds(
+      db=db, run_ids=generator.PopulateLogDatabase(db, run_count=10)
+    )
 
 
 class DatabaseSessionWithRunLogs(NamedTuple):
@@ -234,13 +244,13 @@ def test_RunId_cascaded_delete(two_run_id_session: DatabaseSessionWithRunLogs):
 @test.Parametrize("eager_batch_details", (False, True))
 @test.Parametrize("eager_checkpoint_data", (False, True))
 def test_GetRunLogs(
-  populated_log_db: log_database.Database,
+  populated_log_db: DatabaseAndRunIds,
   eager_batch_details: bool,
   eager_checkpoint_data: bool,
 ):
   """Test that run logs are returned."""
-  run_id = random.choice(populated_log_db._run_ids)
-  run_logs = populated_log_db.GetRunLogs(
+  run_id = random.choice(populated_log_db.run_ids)
+  run_logs = populated_log_db.db.GetRunLogs(
     run_id,
     eager_batch_details=eager_batch_details,
     eager_checkpoint_data=eager_checkpoint_data,
@@ -248,56 +258,56 @@ def test_GetRunLogs(
   assert isinstance(run_logs, log_database.RunLogs)
 
 
-def test_GetRunLogs_invalid_run_id(populated_log_db: log_database.Database):
+def test_GetRunLogs_invalid_run_id(populated_log_db: DatabaseAndRunIds):
   """Test that error is raised when run not found."""
   with test.Raises(ValueError):
-    populated_log_db.GetRunLogs("foo")
+    populated_log_db.db.GetRunLogs("foo")
 
 
-def test_GetRunParameters(populated_log_db: log_database.Database):
+def test_GetRunParameters(populated_log_db: DatabaseAndRunIds):
   """Test that parameters are returned."""
-  run_id = random.choice(populated_log_db._run_ids)
-  assert isinstance(populated_log_db.GetRunParameters(run_id), pd.DataFrame)
+  run_id = random.choice(populated_log_db.run_ids)
+  assert isinstance(populated_log_db.db.GetRunParameters(run_id), pd.DataFrame)
 
 
-def test_GetRunParameters_invalid_run_id(
-  populated_log_db: log_database.Database,
-):
+def test_GetRunParameters_invalid_run_id(populated_log_db: DatabaseAndRunIds,):
   """Test that error is raised when run not found."""
   with test.Raises(ValueError):
-    populated_log_db.GetRunParameters("foo")
+    populated_log_db.db.GetRunParameters("foo")
 
 
-def test_GetBestResults(populated_log_db: log_database.Database):
+def test_GetBestResults(populated_log_db: DatabaseAndRunIds):
   """Test that run logs are returned."""
-  run_id = random.choice(populated_log_db._run_ids)
-  assert populated_log_db.GetBestResults(run_id)
+  run_id = random.choice(populated_log_db.run_ids)
+  assert populated_log_db.db.GetBestResults(run_id)
 
 
-def test_GetBestResults_invalid_run_id(populated_log_db: log_database.Database):
+def test_GetBestResults_invalid_run_id(populated_log_db: DatabaseAndRunIds):
   """Test that error is raised when run not found."""
   with test.Raises(ValueError):
-    populated_log_db.GetBestResults("foo")
+    populated_log_db.db.GetBestResults("foo")
 
 
 def test_CopyRunLogs(
-  populated_log_db: log_database.Database, empty_db: log_database.Database
+  populated_log_db: DatabaseAndRunIds, empty_db: log_database.Database
 ):
   """That copying logs."""
-  run_id = random.choice(populated_log_db._run_ids)
-  assert populated_log_db.CopyRunLogs(run_ids=[run_id], output_db=empty_db)
+  run_id = random.choice(populated_log_db.run_ids)
+  assert populated_log_db.db.CopyRunLogs(run_ids=[run_id], output_db=empty_db)
   # Copying again will raise an error because the run already exists.
   with test.Raises(ValueError):
-    populated_log_db.CopyRunLogs(run_ids=[run_id], output_db=empty_db)
+    populated_log_db.db.CopyRunLogs(run_ids=[run_id], output_db=empty_db)
 
 
 def test_CopyRunLogs_invalid_run_id(
-  populated_log_db: log_database.Database, empty_db: log_database.Database
+  populated_log_db: DatabaseAndRunIds, empty_db: log_database.Database
 ):
   """Test that an error is raised if the run is not found."""
   invalid_run_id = run_id.RunId.GenerateUnique("foo")
   with test.Raises(ValueError):
-    populated_log_db.CopyRunLogs(run_ids=[invalid_run_id], output_db=empty_db)
+    populated_log_db.db.CopyRunLogs(
+      run_ids=[invalid_run_id], output_db=empty_db
+    )
 
 
 @test.Parametrize("extra_flags", (None, [], ["foo"], ["foo", "vmodule"]))
@@ -314,10 +324,11 @@ def test_GetTables_empty_db(empty_db: log_database.Database, extra_flags):
 
 
 @test.Parametrize("extra_flags", (None, [], ["foo"], ["foo", "vmodule"]))
-def test_GetTables(populated_log_db: log_database.Database, extra_flags):
+def test_GetTables(populated_log_db: DatabaseAndRunIds, extra_flags):
   """Test GetTables()."""
   tables = {
-    name: df for name, df in populated_log_db.GetTables(extra_flags=extra_flags)
+    name: df
+    for name, df in populated_log_db.db.GetTables(extra_flags=extra_flags)
   }
 
   assert "parameters" in tables
@@ -347,20 +358,20 @@ def test_GetTables(populated_log_db: log_database.Database, extra_flags):
       assert tables[table][f"{type}_throughput"].values.dtype == np.float64
 
 
-def test_GetWeightedEpochStats(populated_log_db: log_database.Database):
+def test_GetWeightedEpochStats(populated_log_db: DatabaseAndRunIds):
   """Test that a filter returns a table."""
-  df = populated_log_db.GetWeightedEpochStats()
+  df = populated_log_db.db.GetWeightedEpochStats()
   assert len(df)
-  assert set(df.run_id) == set(str(s) for s in populated_log_db._run_ids)
+  assert set(df.run_id) == set(str(s) for s in populated_log_db.run_ids)
 
 
 def test_GetWeightedEpochStats_filter_all_results(
-  populated_log_db: log_database.Database,
+  populated_log_db: DatabaseAndRunIds,
 ):
   """Test that a filter that excludes all batches returns empty dataframe."""
   assert (
     len(
-      populated_log_db.GetWeightedEpochStats(
+      populated_log_db.db.GetWeightedEpochStats(
         batch_filters=[lambda: log_database.Batch.epoch_num < -1]
       )
     )
@@ -368,36 +379,36 @@ def test_GetWeightedEpochStats_filter_all_results(
   )
 
 
-def test_run_ids_list(disposable_populated_log_db: log_database.Database,):
+def test_run_ids_list(disposable_populated_log_db: DatabaseAndRunIds,):
   """Test that the correct run IDs are returned."""
-  assert set(disposable_populated_log_db.run_ids) == set(
-    disposable_populated_log_db._run_ids
+  assert set(disposable_populated_log_db.db.run_ids) == set(
+    set(str(s) for s in disposable_populated_log_db.run_ids)
   )
 
 
-def test_tag_run_counts(populated_log_db: log_database.Database,):
+def test_tag_run_counts(populated_log_db: DatabaseAndRunIds,):
   """Test filtering from a list of run IDs."""
-  assert len(populated_log_db.tag_run_count) == 0
+  assert len(populated_log_db.db.tag_run_count) == 0
 
 
-def test_SelectRunIds_no_filters(populated_log_db: log_database.Database,):
+def test_SelectRunIds_no_filters(populated_log_db: DatabaseAndRunIds,):
   """Test filtering from a list of run IDs."""
-  assert len(populated_log_db.SelectRunIds()) == 0
+  assert len(populated_log_db.db.SelectRunIds()) == 0
 
 
-def test_SelectRunIds_with_run_ids(populated_log_db: log_database.Database,):
+def test_SelectRunIds_with_run_ids(populated_log_db: DatabaseAndRunIds,):
   """Test filtering from a list of run IDs."""
-  run_ids = populated_log_db._run_ids[:3]
+  run_ids = populated_log_db.run_ids[:3]
   assert len(run_ids) == 3
-  assert len(populated_log_db.SelectRunIds(run_ids=run_ids)) == 3
+  assert len(populated_log_db.db.SelectRunIds(run_ids=run_ids)) == 3
 
 
-def test_Prune(disposable_populated_log_db: log_database.Database,):
+def test_Prune(disposable_populated_log_db: DatabaseAndRunIds,):
   """Test that pruning a database deletes all runs."""
-  disposable_populated_log_db.Prune()
+  disposable_populated_log_db.db.Prune()
   # Currently log databases have no checkpoints, so pruning them will delete
   # everything.
-  with disposable_populated_log_db.Session() as session:
+  with disposable_populated_log_db.db.Session() as session:
     assert (
       session.query(sql.func.count(log_database.RunId.run_id)).scalar() == 0
     )
