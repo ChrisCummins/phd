@@ -88,7 +88,7 @@ def test_RunLogAnalyser_smoke_tests(populated_log_db: log_database.Database):
   for run_id in populated_log_db._run_ids:
     run = log_analysis.RunLogAnalyzer(populated_log_db, run_id)
     assert run.graph_db
-    assert run.tables.keys() == {"parameters", "epochs", "runs"}
+    assert run.tables.keys() == {"parameters", "epochs", "runs", "tags"}
 
 
 @test.Parametrize(
