@@ -62,7 +62,7 @@ def GetDatabaseUrls() -> List[str]:
 
   # Always test with a file-backed SQLite database. Don't test with in-memory
   # SQLite database as these don't work with multi-threaded code.
-  db_urls = [f"sqlite:////tmp/{run_id_}.db"]
+  db_urls = [f"sqlite:////tmp/ml4pl/test/db/{run_id_}.db"]
 
   for path in TEST_DB_FILES:
     if path.is_file():
