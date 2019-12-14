@@ -34,6 +34,21 @@ py_test(
 )
 
 py_library(
+    name = "batch_iterator",
+    srcs = ["batch_iterator.py"],
+    deps = [
+        ":batch",
+        ":classifier_base",
+        ":epoch",
+        "//deeplearning/ml4pl/graphs/labelled:graph_database_reader",
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
+        "//labm8/py:app",
+        "//labm8/py:ppar",
+        "//labm8/py:progress",
+    ],
+)
+
+py_library(
     name = "checkpoints",
     srcs = ["checkpoints.py"],
     deps = [
@@ -230,14 +245,13 @@ py_library(
         "//deeplearning/ml4pl/models:__subpackages__",
     ],
     deps = [
+        ":batch_iterator",
         ":classifier_base",
         ":epoch",
         ":logger",
-        "//deeplearning/ml4pl/graphs/labelled:graph_database_reader",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//labm8/py:app",
         "//labm8/py:pdutil",
-        "//labm8/py:ppar",
         "//labm8/py:prof",
         "//labm8/py:progress",
         "//third_party/py/memory_profiler",

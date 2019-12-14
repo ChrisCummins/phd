@@ -15,9 +15,9 @@ import pandas as pd
 import pyfiglet
 from sklearn.exceptions import UndefinedMetricWarning
 
-from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch as batchs
+from deeplearning.ml4pl.models import batch_iterator as batch_iterator_lib
 from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import epoch
@@ -25,7 +25,6 @@ from deeplearning.ml4pl.models import logger as logger_lib
 from deeplearning.ml4pl.models import schedules
 from labm8.py import app
 from labm8.py import pdutil
-from labm8.py import ppar
 from labm8.py import prof
 from labm8.py import progress
 from labm8.py import shell
@@ -64,19 +63,6 @@ app.DEFINE_integer(
   300,
   "The number of epochs to train for without any improvement in validation "
   "accuracy before stopping.",
-)
-app.DEFINE_integer(
-  "max_train_per_epoch",
-  None,
-  "Use this flag to limit the maximum number of instances used in a single "
-  "training epoch. For k-fold cross-validation, each of the k folds will "
-  "train on a maximum of this many graphs.",
-)
-app.DEFINE_integer(
-  "max_val_per_epoch",
-  None,
-  "Use this flag to limit the maximum number of instances used in a single "
-  "validation epoch.",
 )
 app.DEFINE_list(
   "val_split",
@@ -128,49 +114,17 @@ def SplitStringsToInts(split_strings: List[str]):
   return [MakeInt(split) for split in split_strings]
 
 
-def MakeBatchIterator(
-  epoch_type: epoch.Type,
-  model: classifier_base.ClassifierBase,
+def SplitsFromFlags(
   graph_db: graph_tuple_database.Database,
-  ctx: progress.ProgressContext = progress.NullContext,
-) -> batchs.BatchIterator:
-  """Create an iterator over batches."""
-  # Filter the graph database to load graphs from the requested splits.
+) -> Dict[epoch.Type, List[int]]:
   val_splits = SplitStringsToInts(FLAGS.val_split)
   test_splits = SplitStringsToInts(FLAGS.test_split)
-
-  if epoch_type == epoch.Type.TRAIN:
-    splits = list(set(graph_db.splits) - set(val_splits) - set(test_splits))
-    limit = FLAGS.max_train_per_epoch
-  elif epoch_type == epoch.Type.VAL:
-    splits = val_splits
-    limit = FLAGS.max_val_per_epoch
-  elif epoch_type == epoch.Type.TEST:
-    splits = test_splits
-    limit = None  # Never limit the test set.
-  else:
-    raise NotImplementedError("unreachable")
-
-  ctx.Log(
-    3, "Using %s graph splits %s", epoch_type.name.lower(), sorted(splits)
-  )
-
-  if len(splits) == 1:
-    split_filter = lambda: graph_tuple_database.GraphTuple.split == splits[0]
-  else:
-    split_filter = lambda: graph_tuple_database.GraphTuple.split.in_(splits)
-
-  graph_reader = graph_database_reader.BufferedGraphReader.CreateFromFlags(
-    filters=[split_filter], ctx=ctx, limit=limit
-  )
-
-  return batchs.BatchIterator(
-    batches=ppar.ThreadedIterator(
-      model.BatchIterator(graph_reader, ctx=ctx),
-      max_queue_size=FLAGS.batch_queue_size,
-    ),
-    graph_count=graph_reader.n,
-  )
+  train_splits = list(set(graph_db.splits) - set(val_splits) - set(test_splits))
+  return {
+    epoch.Type.TRAIN: train_splits,
+    epoch.Type.VAL: val_splits,
+    epoch.Type.TEST: test_splits,
+  }
 
 
 def RunEpoch(
@@ -221,10 +175,12 @@ class Train(progress.Progress):
     model: classifier_base.ClassifierBase,
     graph_db: graph_tuple_database.Database,
     logger: logger_lib.Logger,
+    splits: Dict[epoch.Type, List[int]],
   ):
     self.model = model
     self.graph_db = graph_db
     self.logger = logger
+    self.splits = splits
     super(Train, self).__init__(
       str(self.model.run_id),
       i=self.model.epoch_num,
@@ -245,8 +201,11 @@ class Train(progress.Progress):
       # Create the batch iterators ahead of time so that they can asynchronously
       # start reading from the graph database.
       batch_iterators = {
-        epoch_type: MakeBatchIterator(
-          epoch_type, self.model, self.graph_db, ctx=self.ctx
+        epoch_type: batch_iterator_lib.MakeBatchIterator(
+          model=self.model,
+          splits=self.splits,
+          epoch_type=epoch_type,
+          ctx=self.ctx,
         )
         for epoch_type in [epoch.Type.TRAIN, epoch.Type.VAL, epoch.Type.TEST]
       }
@@ -372,9 +331,11 @@ def RunOne(
     if print_header:
       PrintExperimentHeader(model)
 
+    splits = SplitsFromFlags(graph_db)
+
     if FLAGS.test_only:
-      batch_iterator = MakeBatchIterator(
-        epoch_type=epoch.Type.TEST, model=model, graph_db=graph_db,
+      batch_iterator = batch_iterator_lib.MakeBatchIterator(
+        model=model, splits=splits, epoch_type=epoch.Type.TEST,
       )
       RunEpoch(
         epoch_name="test",
@@ -384,7 +345,9 @@ def RunOne(
         logger=logger,
       )
     else:
-      train = Train(model, graph_db, logger)
+      train = Train(
+        model=model, graph_db=graph_db, logger=logger, splits=splits
+      )
       progress.Run(train)
       if train.ctx.i != train.ctx.n:
         raise RunError("Model failed")
