@@ -167,17 +167,24 @@ class MockModel(classifier_base.ClassifierBase):
 ###############################################################################
 
 
-@test.Parametrize("epoch_count", (1, 5), names=['1_epoch', '5_epochs'])
-@test.Parametrize("k_fold", (False, True), names=['one_run', 'k_fold'])
+@test.Parametrize("epoch_count", (1, 5), names=["1_epoch", "5_epochs"])
+@test.Parametrize("k_fold", (False, True), names=["one_run", "k_fold"])
+@test.Parametrize(
+  "run_with_memory_profiler",
+  (False, True),
+  names=("memprof=false", "memprof=true"),
+)
 def test_Run_with_mock_module(
   disposable_log_db: log_database.Database,
   graph_db: graph_tuple_database.Database,
   epoch_count: int,
   k_fold: bool,
+  run_with_memory_profiler: bool,
 ):
   """Test the run.Run() method."""
   log_db = disposable_log_db
 
+  # Set the flags that determine the behaviour of Run().
   FLAGS.graph_db = flags_parsers.DatabaseFlag(
     graph_tuple_database.Database, graph_db.url, must_exist=True
   )
@@ -186,6 +193,7 @@ def test_Run_with_mock_module(
   )
   FLAGS.epoch_count = epoch_count
   FLAGS.k_fold = k_fold
+  FLAGS.run_with_memory_profiler = run_with_memory_profiler
 
   run.Run(MockModel)
 

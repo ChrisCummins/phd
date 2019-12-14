@@ -10,6 +10,7 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
+import memory_profiler
 import pandas as pd
 import pyfiglet
 from sklearn.exceptions import UndefinedMetricWarning
@@ -100,6 +101,12 @@ app.DEFINE_boolean(
   False,
   "If set, iterate over all K splits in the database, training and evaluating "
   "a model for each.",
+)
+app.DEFINE_boolean(
+  "run_with_memory_profiler",
+  False,
+  "If set, run the program with memory profiling enabled. See "
+  "https://pypi.org/project/memory-profiler/",
 )
 
 
@@ -521,8 +528,15 @@ def RunKFold(model_class) -> pd.DataFrame:
   return kfold.results
 
 
-def Run(model_class) -> Optional[Union[pd.Series, pd.DataFrame]]:
-  """Run the model."""
+def _RunFlagsActionsOnModelOrDir(model_class):
+  """Run the model with the requested flags actions.
+
+  Args:
+    model_class: The model to run.
+
+  Returns:
+    A DataFrame of k-fold results, or a single series of results.
+  """
   if not FLAGS.graph_db:
     raise app.UsageError("--graph_db is required")
 
@@ -540,5 +554,21 @@ def Run(model_class) -> Optional[Union[pd.Series, pd.DataFrame]]:
     app.FatalWithoutStackTrace("%s", e)
 
 
+memory_profiler_log = open("/tmp/memory_profiler.log", "w+")
 
 
+@memory_profiler.profile(stream=memory_profiler_log)
+def RunWithMemoryProfiler(func, *args, **kwargs):
+  """Given the given argument with a memory profiler.
+
+  See: https://pypi.org/project/memory-profiler/
+  """
+  return func(*args, **kwargs)
+
+
+def Run(model_class) -> Optional[Union[pd.Series, pd.DataFrame]]:
+  """Run the model."""
+  if FLAGS.run_with_memory_profiler:
+    return RunWithMemoryProfiler(_RunFlagsActionsOnModelOrDir, model_class)
+  else:
+    return _RunFlagsActionsOnModelOrDir(model_class)
