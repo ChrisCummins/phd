@@ -203,6 +203,7 @@ class Train(progress.Progress):
       batch_iterators = {
         epoch_type: batch_iterator_lib.MakeBatchIterator(
           model=self.model,
+          graph_db=self.graph_db,
           splits=self.splits,
           epoch_type=epoch_type,
           ctx=self.ctx,
@@ -335,7 +336,10 @@ def RunOne(
 
     if FLAGS.test_only:
       batch_iterator = batch_iterator_lib.MakeBatchIterator(
-        model=model, splits=splits, epoch_type=epoch.Type.TEST,
+        model=model,
+        graph_db=graph_db,
+        splits=splits,
+        epoch_type=epoch.Type.TEST,
       )
       RunEpoch(
         epoch_name="test",

@@ -31,6 +31,7 @@ app.DEFINE_integer(
 
 def MakeBatchIterator(
   model: classifier_base.ClassifierBase,
+  graph_db: graph_tuple_database.Database,
   splits: Dict[epoch.Type, List[int]],
   epoch_type: epoch.Type,
   ctx: progress.ProgressContext = progress.NullContext,
@@ -74,7 +75,7 @@ def MakeBatchIterator(
     )
 
   graph_reader = graph_database_reader.BufferedGraphReader.CreateFromFlags(
-    filters=[split_filter], ctx=ctx, limit=limit
+    graph_db=graph_db, filters=[split_filter], ctx=ctx, limit=limit
   )
 
   return batches.BatchIterator(
