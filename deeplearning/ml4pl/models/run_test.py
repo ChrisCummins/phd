@@ -26,7 +26,11 @@ FLAGS = test.FLAGS
 ###############################################################################
 
 
-@test.Fixture(scope="session", params=((0, 2), (0, 3), (2, 0), (10, 0)))
+@test.Fixture(
+  scope="session",
+  params=((0, 2), (0, 3), (2, 0), (10, 0)),
+  names=("node_y=2", "node_y=3", "graph_y=2", "graph_y=10"),
+)
 def y_dimensionalities(request) -> Tuple[int, int]:
   """A test fixture which enumerates node and graph label dimensionalities.
 
@@ -39,7 +43,11 @@ def y_dimensionalities(request) -> Tuple[int, int]:
   return request.param
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("graph_db"),
+)
 def graph_db(
   request, y_dimensionalities: Tuple[int, int],
 ) -> graph_tuple_database.Database:
@@ -62,9 +70,13 @@ def graph_db(
     yield db
 
 
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="function",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("log_db"),
+)
 def disposable_log_db(request) -> log_database.Database:
-  """A test fixture which yields an empty log database."""
+  """A test fixture which yields an empty log database for every test."""
   yield from testing_databases.YieldDatabase(
     log_database.Database, request.param
   )
@@ -155,8 +167,8 @@ class MockModel(classifier_base.ClassifierBase):
 ###############################################################################
 
 
-@test.Parametrize("epoch_count", (1, 5))
-@test.Parametrize("k_fold", (False, True))
+@test.Parametrize("epoch_count", (1, 5), names=['1_epoch', '5_epochs'])
+@test.Parametrize("k_fold", (False, True), names=['one_run', 'k_fold'])
 def test_Run_with_mock_module(
   disposable_log_db: log_database.Database,
   graph_db: graph_tuple_database.Database,
