@@ -540,9 +540,5 @@ def Run(model_class) -> Optional[Union[pd.Series, pd.DataFrame]]:
     app.FatalWithoutStackTrace("%s", e)
 
 
-def Main():
-  Run(classifier_base.ClassifierBase)
 
 
-if __name__ == "__main__":
-  app.Run(Main)

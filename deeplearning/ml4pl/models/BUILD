@@ -222,7 +222,7 @@ py_library(
     ],
 )
 
-py_binary(
+py_library(
     name = "run",
     srcs = ["run.py"],
     visibility = [
