@@ -94,32 +94,6 @@ SELF = bazelutil.DataPath(
 )
 
 
-class AnalysisFailed(ValueError):
-  """An error raised if the analysis failed."""
-
-  def __init__(self, returncode: int, stderr: str):
-    self.returncode = returncode
-    self.stderr = stderr
-
-  def __repr__(self) -> str:
-    return f"{self.stderr}"
-
-  def __str__(self) -> str:
-    return repr(self)
-
-
-class AnalysisTimeout(AnalysisFailed):
-  def __init__(self, timeout: int):
-    # super(AnalysisTimeout, self).__init__(returncode, stderr)
-    self.timeout = timeout
-
-  def __repr__(self) -> str:
-    return f"Analysis failed to complete within {self.timeout} seconds"
-
-  def __str__(self) -> str:
-    return repr(self)
-
-
 # Return codes for error conditions.
 #
 # Error reading stdin.
@@ -160,9 +134,9 @@ def _AnnotateInSubprocess(
   Raises:
     IOError: If serializing the input or output protos fails.
     ValueError: If an invalid analysis is requested.
-    AnalysisFailed: If the analysis raised an error.
-    AnalysisTimeout: If the analysis did not complete within the requested
-      timeout.
+    data_flow_graphs.AnalysisFailed: If the analysis raised an error.
+    data_flow_graphs.AnalysisTimeout: If the analysis did not complete within
+      the requested timeout.
   """
   process = subprocess.Popen(
     [
@@ -196,13 +170,16 @@ def _AnnotateInSubprocess(
   if process.returncode == 9 or process.returncode == -9:
     # Process was killed. We assume this is because of timeout, though it could
     # be the user.
-    raise AnalysisTimeout(timeout)
+    raise data_flow_graphs.AnalysisTimeout(timeout)
   elif process.returncode == E_INVALID_INPUT:
     raise IOError("Failed to serialize input graph")
   elif process.returncode == E_INVALID_STDOUT:
     raise IOError("Analysis failed to write stdout")
   elif process.returncode:
-    raise AnalysisFailed(process.returncode, stderr.decode("utf-8"))
+    raise data_flow_graphs.AnalysisFailed(
+      f"Analysis failed with returncode {process.returncode}: "
+      f"{stderr.decode('utf-8')}"
+    )
 
   # Construct the protocol buffer from stdout.
   output = programl.FromBytes(
@@ -237,9 +214,9 @@ def Annotate(
   Raises:
     ValueError: If an invalid analysis is requested.
     IOError: If serializing the input or output protos fails.
-    AnalysisFailed: If the analysis raised an error.
-    AnalysisTimeout: If the analysis did not complete within the requested
-      timeout.
+    data_flow_graphs.AnalysisFailed: If the analysis raised an error.
+    data_flow_graphs.AnalysisTimeout: If the analysis did not complete within
+      the requested timeout.
   """
   if analysis not in ANALYSES:
     raise ValueError(
@@ -251,7 +228,7 @@ def Annotate(
     """Callback to raise a timeout error."""
     del signum
     del frame
-    raise AnalysisTimeout(timeout)
+    raise data_flow_graphs.AnalysisTimeout(timeout)
 
   signal.signal(signal.SIGALRM, TimeoutHandler)
   signal.alarm(timeout)

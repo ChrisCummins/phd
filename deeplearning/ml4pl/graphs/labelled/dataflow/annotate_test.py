@@ -2,6 +2,7 @@
 from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled.dataflow import annotate
+from deeplearning.ml4pl.graphs.labelled.dataflow import data_flow_graphs
 from deeplearning.ml4pl.testing import random_programl_generator
 from labm8.py import test
 
@@ -66,12 +67,12 @@ def test_invalid_analysis(one_proto: programl_pb2.ProgramGraph, n: int):
 
 def test_timeout(one_proto: programl_pb2.ProgramGraph):
   """Test that error is raised if the analysis times out."""
-  with test.Raises(annotate.AnalysisTimeout):
+  with test.Raises(data_flow_graphs.AnalysisTimeout):
     annotate.Annotate("test_timeout", one_proto, timeout=1)
 
 
 def test_annotate(analysis: str, real_proto: programl_pb2.ProgramGraph, n: int):
-  """Test annotating real program graphs."""
+  """Test all annotators over all real protos."""
   try:
     # Use a lower timeout for testing.
     annotated = annotate.Annotate(analysis, real_proto, n, timeout=30)
@@ -83,7 +84,7 @@ def test_annotate(analysis: str, real_proto: programl_pb2.ProgramGraph, n: int):
     for graph in annotated.protos:
       assert len(graph.node) == len(real_proto.node)
       assert len(graph.edge) == len(real_proto.edge)
-  except annotate.AnalysisTimeout:
+  except data_flow_graphs.AnalysisTimeout:
     # A timeout error is acceptable.
     pass
 
