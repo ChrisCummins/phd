@@ -157,9 +157,9 @@ class Ggnn(classifier_base.ClassifierBase):
   ) -> batches.Data:
     """Create a mini-batch of data from an iterator of graphs.
 
-  Returns:
-  A single batch of data for feeding into RunBatch().
-  """
+    Returns:
+      A single batch of data for feeding into RunBatch().
+    """
     # TODO(github.com/ChrisCummins/ProGraML/issues/24): The new graph batcher
     # implementation is not well suited for reading the graph IDs, hence this
     # somewhat clumsy iterator wrapper. A neater approach would be to create
