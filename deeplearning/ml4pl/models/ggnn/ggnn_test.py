@@ -4,9 +4,9 @@ import random
 from typing import Iterable
 
 from deeplearning.ml4pl import run_id as run_id_lib
-from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch as batches
+from deeplearning.ml4pl.models import batch_iterator as batch_iterator_lib
 from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models import logger as logging
@@ -19,20 +19,8 @@ from labm8.py.internal import flags_parsers
 
 FLAGS = test.FLAGS
 
-###############################################################################
-# Utility functions.
-###############################################################################
-
-
-def MakeBatchIterator(
-  model: ggnn.Ggnn, graph_db: graph_tuple_database.Database
-) -> Iterable[graph_tuple_database.GraphTuple]:
-  return batches.BatchIterator(
-    batches=model.BatchIterator(
-      graph_database_reader.BufferedGraphReader(graph_db)
-    ),
-    graph_count=graph_db.graph_count,
-  )
+# For testing models, always use --strict_graph_segmentation.
+FLAGS.strict_graph_segmentation = True
 
 
 ###############################################################################
@@ -120,6 +108,7 @@ def node_y_graph_db(
       node_y_dimensionality=node_y_dimensionality,
       node_x_dimensionality=2,
       graph_y_dimensionality=0,
+      split_count=3,
     )
     yield db
 
@@ -143,6 +132,7 @@ def graph_y_graph_db(
       node_y_dimensionality=0,
       graph_x_dimensionality=2,
       graph_y_dimensionality=graph_y_dimensionality,
+      split_count=3,
     )
     yield db
 
@@ -174,16 +164,18 @@ def CheckResultsProperties(
   graph_db: graph_tuple_database.Database,
   epoch_type: epoch.Type,
 ):
+  """Check for various properties of well-formed epoch results."""
   assert isinstance(results, epoch.Results)
-  # Check that model produced one or more batches.
+  # Check that the epoch contains batches.
   assert results.batch_count
 
-  # Check that model produced a loss value.
+  # Check that results contain a loss value.
   assert results.has_loss
   assert results.loss
   assert not math.isnan(results.loss)
 
-  # Test that model saw every graph in the database.
+  # Test that the epoch included every graph (of the appropriate type) in the
+  # database.
   assert results.graph_count == graph_db.split_counts[epoch_type.value]
 
 
@@ -205,7 +197,12 @@ def test_node_classifier_call(
   model.Initialize()
 
   # Run the model over some random graphs.
-  batch_iterator = MakeBatchIterator(model, node_y_graph_db)
+  batch_iterator = batch_iterator_lib.MakeBatchIterator(
+    model=model,
+    graph_db=node_y_graph_db,
+    splits={epoch.Type.TRAIN: [0], epoch.Type.VAL: [1], epoch.Type.TEST: [2],},
+    epoch_type=epoch_type,
+  )
 
   results = model(
     epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger,
@@ -234,7 +231,12 @@ def test_graph_classifier_call(
   model.Initialize()
 
   # Run the model over some random graphs.
-  batch_iterator = MakeBatchIterator(model, graph_y_graph_db)
+  batch_iterator = batch_iterator_lib.MakeBatchIterator(
+    model=model,
+    graph_db=graph_y_graph_db,
+    splits={epoch.Type.TRAIN: [0], epoch.Type.VAL: [1], epoch.Type.TEST: [2],},
+    epoch_type=epoch_type,
+  )
 
   results = model(
     epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger,

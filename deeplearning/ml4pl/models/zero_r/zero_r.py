@@ -15,6 +15,9 @@ from labm8.py import progress
 
 FLAGS = app.FLAGS
 
+# For testing models, always use --strict_graph_segmentation.
+FLAGS.strict_graph_segmentation = True
+
 
 class ZeroR(classifier_base.ClassifierBase):
   """A Zero-R classifier that supports node-level or graph-level labels.

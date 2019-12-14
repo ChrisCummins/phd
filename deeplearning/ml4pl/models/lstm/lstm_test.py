@@ -21,6 +21,9 @@ from labm8.py import test
 
 FLAGS = test.FLAGS
 
+# For testing models, always use --strict_graph_segmentation.
+FLAGS.strict_graph_segmentation = True
+
 ###############################################################################
 # Utility functions.
 ###############################################################################
