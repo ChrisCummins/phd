@@ -273,6 +273,7 @@ class ClassifierBase(object):
 
     Args:
       graphs: The graphs to construct batches from.
+      ctx: A logging context.
 
     Returns:
       A batch iterator.
