@@ -75,7 +75,11 @@ def MakeBatchIterator(
 ###############################################################################
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("log_db"),
+)
 def log_db(request) -> log_database.Database:
   """A test fixture which yields an empty log database."""
   yield from testing_databases.YieldDatabase(
@@ -129,7 +133,11 @@ def opencl_relpaths() -> List[str]:
   return list(set(opencl_df.relpath.values))
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("node_y_db"),
+)
 def node_y_db(
   request, opencl_relpaths: List[str], node_y_dimensionality: int,
 ) -> graph_tuple_database.Database:
@@ -147,7 +155,11 @@ def node_y_db(
     yield db
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("graph_y_db"),
+)
 def graph_y_db(
   request, opencl_relpaths: List[str], graph_y_dimensionality: int,
 ) -> graph_tuple_database.Database:
@@ -165,7 +177,11 @@ def graph_y_db(
     yield db
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("ir_db"),
+)
 def ir_db(request, opencl_relpaths: List[str]) -> ir_database.Database:
   """A test fixture which yields an IR database with 256 OpenCL entries."""
   with testing_databases.DatabaseContext(

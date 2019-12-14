@@ -26,7 +26,11 @@ class Database(sqlutil.Database):
     super(Database, self).__init__(url, Base, must_exist=must_exist)
 
 
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="function",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("db"),
+)
 def empty_db(request) -> Database:
   """A test fixture which yields an empty database."""
   yield from testing_databases.YieldDatabase(Database, request.param)
@@ -38,7 +42,11 @@ def test_YieldDatabase_fixture(empty_db: Database):
     assert session.query(Table).first() is None
 
 
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="function",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("db"),
+)
 def populated_db(request) -> Database:
   """A test fixture which yields an empty database."""
   with testing_databases.DatabaseContext(Database, request.param) as db:

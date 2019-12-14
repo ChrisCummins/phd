@@ -7,7 +7,11 @@ from labm8.py import test
 FLAGS = test.FLAGS
 
 
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="function",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("ir_db"),
+)
 def db(request) -> ir_database.Database:
   """A test fixture which yields an empty IR database."""
   yield from testing_databases.YieldDatabase(

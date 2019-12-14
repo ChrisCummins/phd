@@ -22,7 +22,11 @@ def CreateRandomString(min_length: int = 1, max_length: int = 1024) -> str:
   )
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("ir_db"),
+)
 def ir_db(request) -> ir_database.Database:
   """A test fixture which yields an IR database."""
   with testing_databases.DatabaseContext(
@@ -54,7 +58,11 @@ def ir_db(request) -> ir_database.Database:
     yield db
 
 
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="function",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("proto_db"),
+)
 def proto_db(
   request, ir_db: ir_database.Database
 ) -> unlabelled_graph_database.Database:

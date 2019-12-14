@@ -1,9 +1,7 @@
 """Unit tests for //deeplearning/ml4pl/models/ggnn."""
+import math
 import random
 from typing import Iterable
-import math
-from labm8.py import test
-from labm8.py.internal import flags_parsers
 
 from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
@@ -16,6 +14,8 @@ from deeplearning.ml4pl.models.ggnn import ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_config
 from deeplearning.ml4pl.testing import random_graph_tuple_database_generator
 from deeplearning.ml4pl.testing import testing_databases
+from labm8.py import test
+from labm8.py.internal import flags_parsers
 
 FLAGS = test.FLAGS
 
@@ -40,7 +40,11 @@ def MakeBatchIterator(
 ###############################################################################
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("log_db"),
+)
 def log_db(request) -> log_database.Database:
   """A test fixture which yields an empty log database."""
   yield from testing_databases.YieldDatabase(
@@ -98,7 +102,11 @@ def node_text_embedding_type(request):
   )
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("node_y_db"),
+)
 def node_y_graph_db(
   request, graph_count: int, node_y_dimensionality: int,
 ) -> graph_tuple_database.Database:
@@ -116,7 +124,11 @@ def node_y_graph_db(
     yield db
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("graph_y_db"),
+)
 def graph_y_graph_db(
   request, graph_count: int, graph_y_dimensionality: int,
 ) -> graph_tuple_database.Database:
@@ -158,8 +170,9 @@ def test_load_restore_model_from_checkpoint_smoke_test(
 
 
 def CheckResultsProperties(
-    results: epoch.Results, graph_db: graph_tuple_database.Database,
-    epoch_type: epoch.Type
+  results: epoch.Results,
+  graph_db: graph_tuple_database.Database,
+  epoch_type: epoch.Type,
 ):
   assert isinstance(results, epoch.Results)
   # Check that model produced one or more batches.

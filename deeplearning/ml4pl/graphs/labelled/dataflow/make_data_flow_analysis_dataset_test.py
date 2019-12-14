@@ -35,7 +35,11 @@ def order_by(request) -> str:
   return request.param
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("proto_db"),
+)
 def proto_db(request,) -> unlabelled_graph_database.Database.SessionType:
   """A test fixture which yields a proto database."""
   with testing_databases.DatabaseContext(
@@ -47,7 +51,11 @@ def proto_db(request,) -> unlabelled_graph_database.Database.SessionType:
     yield db
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("proto_db"),
+)
 def proto_db_10(request,) -> unlabelled_graph_database.Database.SessionType:
   """A test fixture which yields a database with 10 protos."""
   with testing_databases.DatabaseContext(
@@ -65,7 +73,11 @@ def proto_db_10(request,) -> unlabelled_graph_database.Database.SessionType:
     yield db
 
 
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="function",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("graph_db"),
+)
 def graph_db(request) -> graph_tuple_database.Database:
   """A test fixture which yields an empty graph database."""
   yield from testing_databases.YieldDatabase(

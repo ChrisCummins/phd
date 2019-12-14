@@ -9,7 +9,11 @@ from labm8.py import test
 FLAGS = test.FLAGS
 
 
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="function",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("graph_db"),
+)
 def empty_graph_db(request) -> graph_tuple_database.Database:
   """A test fixture which yields a graph database with random graph tuples."""
   yield from testing_databases.YieldDatabase(
@@ -17,7 +21,11 @@ def empty_graph_db(request) -> graph_tuple_database.Database:
   )
 
 
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="function",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("graph_db"),
+)
 def populated_graph_db(request) -> graph_tuple_database.Database:
   """A test fixture which yields a graph database with random graph tuples."""
   with testing_databases.DatabaseContext(

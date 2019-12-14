@@ -28,7 +28,11 @@ FLAGS = test.FLAGS
 ###############################################################################
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("log_db"),
+)
 def log_db(request) -> log_database.Database:
   """A test fixture which yields an empty log database."""
   yield from testing_databases.YieldDatabase(
@@ -87,7 +91,11 @@ def with_data_flow(request) -> int:
   return request.param
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("graph_db"),
+)
 def graph_db(
   request,
   graph_count: int,

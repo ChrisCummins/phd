@@ -24,7 +24,11 @@ FLAGS = app.FLAGS
 ###############################################################################
 
 
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="function",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("log_db"),
+)
 def empty_db(request) -> log_database.Database:
   """A test fixture which yields an empty log database."""
   yield from testing_databases.YieldDatabase(
@@ -47,7 +51,11 @@ def y_dimensionalities(request) -> Tuple[int, int]:
   return request.param
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("graph_db"),
+)
 def populated_graph_db(
   request, y_dimensionalities: Tuple[int, int]
 ) -> graph_tuple_database.Database:
@@ -82,7 +90,11 @@ class DatabaseAndRunIds(NamedTuple):
   run_ids: List[run_id.RunId]
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("log_db"),
+)
 def populated_log_db(
   request, generator: random_log_database_generator.RandomLogDatabaseGenerator
 ) -> DatabaseAndRunIds:
@@ -95,7 +107,11 @@ def populated_log_db(
     )
 
 
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="function",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("log_db"),
+)
 def disposable_populated_log_db(
   request, generator: random_log_database_generator.RandomLogDatabaseGenerator
 ) -> DatabaseAndRunIds:

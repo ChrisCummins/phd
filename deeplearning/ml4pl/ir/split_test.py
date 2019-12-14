@@ -58,7 +58,11 @@ def CreateRandomString(min_length: int = 1, max_length: int = 1024) -> str:
   )
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("ir_db"),
+)
 def populated_db(request, opencl_relpaths: Set[str]) -> ir_database.Database:
   """A test fixture which yields an IR database."""
   with testing_databases.DatabaseContext(

@@ -20,7 +20,9 @@ FLAGS = test.FLAGS
 ###############################################################################
 
 
-@test.Fixture(scope="session", params=((0, 2), (2, 0)))
+@test.Fixture(
+  scope="session", params=((0, 2), (2, 0)), names=("node_y=2", "graph_y=2")
+)
 def graph_db(request) -> graph_tuple_database.Database:
   """A test fixture which returns a graph database with random graphs."""
   graph_y_dimensionality, node_y_dimensionality = request.param
@@ -42,7 +44,11 @@ def generator(
   return random_log_database_generator.RandomLogDatabaseGenerator(graph_db)
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("log_db"),
+)
 def empty_log_db(request) -> log_database.Database:
   """A test fixture which yields an empty log database."""
   yield from testing_databases.YieldDatabase(
@@ -50,7 +56,11 @@ def empty_log_db(request) -> log_database.Database:
   )
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("log_db"),
+)
 def populated_log_db(
   request, generator: random_log_database_generator.RandomLogDatabaseGenerator
 ) -> log_database.Database:

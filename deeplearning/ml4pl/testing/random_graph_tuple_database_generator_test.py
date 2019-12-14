@@ -45,7 +45,11 @@ def test_CreateRandomGraphTuple(
     assert graph_tuple.data_flow_positive_node_count is None
 
 
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="function",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("db"),
+)
 def db(request) -> graph_tuple_database.Database:
   """A test fixture which yields an empty graph proto database."""
   yield from testing_databases.YieldDatabase(

@@ -36,7 +36,11 @@ def test_CreateRandomProgramGraph(
   assert program_graph.graph_y_dimensionality == graph_y_dimensionality
 
 
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="function",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("db"),
+)
 def db(request) -> unlabelled_graph_database.Database:
   """A test fixture which yields an empty graph proto database."""
   yield from testing_databases.YieldDatabase(

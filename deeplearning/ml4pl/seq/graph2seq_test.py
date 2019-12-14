@@ -19,7 +19,11 @@ from labm8.py import test
 FLAGS = test.FLAGS
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("ir_db"),
+)
 def ir_db(request) -> ir_database.Database:
   """A test fixture which yields an empty graph proto database."""
   yield from testing_databases.YieldDatabase(
@@ -27,7 +31,11 @@ def ir_db(request) -> ir_database.Database:
   )
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("graph_db"),
+)
 def graph_db(request) -> graph_tuple_database.Database:
   yield from testing_databases.YieldDatabase(
     graph_tuple_database.Database, request.param
@@ -51,7 +59,11 @@ def opencl_relpaths() -> Set[str]:
   return set(opencl_df.relpath.values)
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("graph_db"),
+)
 def populated_graph_db(
   request, opencl_relpaths: Set[str]
 ) -> graph_tuple_database.Database:
@@ -75,7 +87,11 @@ def populated_graph_db(
     yield db
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("ir_db"),
+)
 def populated_ir_db(request, opencl_relpaths: Set[str]) -> ir_database.Database:
   """A test fixture which yields an IR database with 256 OpenCL entries."""
   with testing_databases.DatabaseContext(

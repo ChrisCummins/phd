@@ -36,7 +36,11 @@ def MakeBatchIterator(
 ###############################################################################
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("log_db"),
+)
 def log_db(request) -> log_database.Database:
   """A test fixture which yields an empty log database."""
   yield from testing_databases.YieldDatabase(
@@ -81,7 +85,11 @@ def epoch_type(request) -> epoch.Type:
   return request.param
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("graph_db"),
+)
 def node_classification_graph_db(
   request, graph_count: int, node_y_dimensionality: int,
 ) -> graph_tuple_database.Database:
@@ -99,7 +107,11 @@ def node_classification_graph_db(
     yield db
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("graph_db"),
+)
 def graph_classification_graph_db(
   request, graph_count: int, graph_y_dimensionality: int,
 ) -> graph_tuple_database.Database:

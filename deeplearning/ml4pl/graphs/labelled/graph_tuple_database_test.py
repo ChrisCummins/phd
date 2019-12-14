@@ -19,7 +19,11 @@ FLAGS = test.FLAGS
 ###############################################################################
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("graph_db"),
+)
 def empty_db(request) -> graph_tuple_database.Database:
   """A test fixture which yields an empty graph proto database."""
   yield from testing_databases.YieldDatabase(
@@ -27,7 +31,11 @@ def empty_db(request) -> graph_tuple_database.Database:
   )
 
 
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="function",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("graph_db"),
+)
 def db_session(request) -> graph_tuple_database.Database.SessionType:
   """A test fixture which yields an empty graph proto database session."""
   with testing_databases.DatabaseContext(
@@ -37,7 +45,11 @@ def db_session(request) -> graph_tuple_database.Database.SessionType:
       yield session
 
 
-@test.Fixture(scope="function", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="function",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("graph_db"),
+)
 def two_graph_db_session(request) -> graph_tuple_database.Database.SessionType:
   """A test fixture which yields a database with two graph tuples."""
   with testing_databases.DatabaseContext(
@@ -109,7 +121,11 @@ def split_count(request) -> int:
   return request.param
 
 
-@test.Fixture(scope="session", params=testing_databases.GetDatabaseUrls())
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("graph_db"),
+)
 def populated_db_and_rows(
   request,
   graph_count: int,
