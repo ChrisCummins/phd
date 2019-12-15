@@ -84,7 +84,7 @@ def MakeBatchIterator(
 
   return batches.BatchIterator(
     batches=ppar.ThreadedIterator(
-      model.BatchIterator(graph_reader, ctx=ctx),
+      model.BatchIterator(epoch_type, graph_reader, ctx=ctx),
       max_queue_size=FLAGS.batch_queue_size,
     ),
     graph_count=graph_reader.n,

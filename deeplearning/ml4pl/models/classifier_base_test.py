@@ -241,7 +241,7 @@ def batch_iterator(
 ) -> batches.BatchIterator:
   return batches.BatchIterator(
     batches=model.BatchIterator(
-      graph_database_reader.BufferedGraphReader(graph_db)
+      epoch.Type.TRAIN, graph_database_reader.BufferedGraphReader(graph_db)
     ),
     graph_count=graph_db.graph_count,
   )

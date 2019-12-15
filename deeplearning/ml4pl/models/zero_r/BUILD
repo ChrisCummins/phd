@@ -22,9 +22,8 @@ py_test(
     deps = [
         ":zero_r",
         "//deeplearning/ml4pl:run_id",
-        "//deeplearning/ml4pl/graphs/labelled:graph_database_reader",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
-        "//deeplearning/ml4pl/models:batch",
+        "//deeplearning/ml4pl/models:batch_iterator",
         "//deeplearning/ml4pl/models:epoch",
         "//deeplearning/ml4pl/models:log_database",
         "//deeplearning/ml4pl/models:logger",

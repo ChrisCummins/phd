@@ -274,12 +274,15 @@ class ClassifierBase(object):
 
   def BatchIterator(
     self,
+    epoch_type: epoch.Type,
     graphs: Iterable[graph_tuple_database.GraphTuple],
     ctx: progress.ProgressContext = progress.NullContext,
   ) -> Iterable[batches.Data]:
     """Generate model batches from a iterator of graphs.
 
     Args:
+      epoch_type: The type of epoch that batches are being constructed for.
+        This is used only for logging printouts.
       graphs: The graphs to construct batches from.
       ctx: A logging context.
 
@@ -291,7 +294,7 @@ class ClassifierBase(object):
         4,
         lambda t: (
           f"Constructed batch of "
-          f"{humanize.Plural(batch.graph_count, 'graph')}"
+          f"{humanize.Plural(batch.graph_count, f'{epoch_type.name.lower()} graph')}"
         ),
       ):
         batch = self.MakeBatch(graphs)

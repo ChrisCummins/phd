@@ -6,12 +6,11 @@ from typing import List
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.ml4pl import run_id as run_id_lib
-from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.graphs.labelled.devmap import make_devmap_dataset
 from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
 from deeplearning.ml4pl.ir import ir_database
-from deeplearning.ml4pl.models import batch as batches
+from deeplearning.ml4pl.models import batch_iterator as batch_iterator_lib
 from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models import logger as logging
@@ -64,17 +63,6 @@ def CreateRandomString(min_length: int = 1, max_length: int = 1024) -> str:
   return "".join(
     random.choice(string.ascii_lowercase)
     for _ in range(random.randint(min_length, max_length))
-  )
-
-
-def MakeBatchIterator(
-  model: lstm.LstmBase, graph_db: graph_tuple_database.Database
-) -> Iterable[graph_tuple_database.GraphTuple]:
-  return batches.BatchIterator(
-    batches=model.BatchIterator(
-      graph_database_reader.BufferedGraphReader(graph_db)
-    ),
-    graph_count=graph_db.graph_count,
   )
 
 
@@ -291,7 +279,12 @@ def test_graph_classifier_call(
   )
   model.Initialize()
 
-  batch_iterator = MakeBatchIterator(model, graph_y_db)
+  batch_iterator = batch_iterator = batch_iterator_lib.MakeBatchIterator(
+    model=model,
+    graph_db=graph_y_db,
+    splits={epoch.Type.TRAIN: [0], epoch.Type.VAL: [1], epoch.Type.TEST: [2],},
+    epoch_type=epoch_type,
+  )
 
   results = model(
     epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger,
@@ -337,7 +330,12 @@ def test_node_classifier_call(
   )
   model.Initialize()
 
-  batch_iterator = MakeBatchIterator(model, node_y_db)
+  batch_iterator = batch_iterator = batch_iterator_lib.MakeBatchIterator(
+    model=model,
+    graph_db=node_y_db,
+    splits={epoch.Type.TRAIN: [0], epoch.Type.VAL: [1], epoch.Type.TEST: [2],},
+    epoch_type=epoch_type,
+  )
 
   results = model(
     epoch_type=epoch_type, batch_iterator=batch_iterator, logger=logger,
