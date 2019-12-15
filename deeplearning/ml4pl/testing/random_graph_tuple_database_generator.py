@@ -12,17 +12,16 @@ from typing import List
 from typing import NamedTuple
 
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
+from deeplearning.ml4pl.testing import generator_flags
 from deeplearning.ml4pl.testing import random_graph_tuple_generator
 from labm8.py import app
+
+# This module is required to pull in FLAGS.
+_unused_imports_ = generator_flags
 
 FLAGS = app.FLAGS
 
 app.DEFINE_integer("graph_count", 1000, "The number of graphs to generate.")
-app.DEFINE_integer(
-  "split_count",
-  10,
-  "The number of splits for random graphs. If 0, no splits are assigned.",
-)
 app.DEFINE_integer(
   "random_graph_pool_size",
   128,

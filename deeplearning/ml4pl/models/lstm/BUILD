@@ -1,4 +1,4 @@
-# TODO(github.com/ChrisCummins/ProGraML/issues/28): Fix me.
+# LSTM models.
 
 py_binary(
     name = "lstm",
@@ -7,6 +7,7 @@ py_binary(
     deps = [
         "//deeplearning/ml4pl/graphs/labelled:graph_database_reader",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
+        "//deeplearning/ml4pl/graphs/unlabelled:unlabelled_graph_database",
         "//deeplearning/ml4pl/ir:ir_database",
         "//deeplearning/ml4pl/models:batch",
         "//deeplearning/ml4pl/models:classifier_base",
@@ -32,6 +33,7 @@ py_test(
         "//deeplearning/ml4pl/graphs/labelled:graph_database_reader",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//deeplearning/ml4pl/graphs/labelled/devmap:make_devmap_dataset",
+        "//deeplearning/ml4pl/graphs/unlabelled:unlabelled_graph_database",
         "//deeplearning/ml4pl/ir:ir_database",
         "//deeplearning/ml4pl/models:batch",
         "//deeplearning/ml4pl/models:classifier_base",
@@ -39,6 +41,7 @@ py_test(
         "//deeplearning/ml4pl/models:log_database",
         "//deeplearning/ml4pl/models:logger",
         "//deeplearning/ml4pl/testing:random_graph_tuple_database_generator",
+        "//deeplearning/ml4pl/testing:random_unlabelled_graph_database_generator",
         "//deeplearning/ml4pl/testing:testing_databases",
         "//labm8/py:progress",
         "//labm8/py:test",

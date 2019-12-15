@@ -1,4 +1,4 @@
-"""Module for conversion from labelled graphs to encoded sequences."""
+"""Module for conversion from unlabelled graphs to encoded sequences."""
 import enum
 from typing import Dict
 from typing import Iterable
@@ -12,9 +12,11 @@ from typing import Union
 import lru
 import networkx as nx
 import numpy as np
+import sqlalchemy as sql
 
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
+from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
 from deeplearning.ml4pl.seq import ir2seq
 from labm8.py import app
 from labm8.py import progress
@@ -112,17 +114,16 @@ class GraphEncoder(EncoderBase):
     can then be processed by sequential models.
 
     Args:
-      ids: A list of graphs to encode.
+      graphs: A list of unlabelled graphs to encode.
+      ctx: A logging context.
 
     Returns:
       A list of encoded sequences.
     """
     unknown_ir_ids = set(
-      [
-        graph.ir_id
-        for graph in graphs
-        if graph.ir_id not in self.ir_id_to_encoded
-      ]
+      graph.ir_id
+      for graph in graphs
+      if graph.ir_id not in self.ir_id_to_encoded
     )
 
     if unknown_ir_ids:
@@ -149,9 +150,21 @@ class StatementEncoderBase(EncoderBase):
   within the encoded output.
   """
 
+  def __init__(
+    self,
+    graph_db: graph_tuple_database.Database,
+    proto_db: unlabelled_graph_database.Database,
+    ir2seq_encoder: ir2seq.EncoderBase,
+    cache_size: Optional[int] = None,
+  ):
+    super(StatementEncoderBase, self).__init__(
+      graph_db, ir2seq_encoder, cache_size
+    )
+    self.proto_db = proto_db
+
   def GraphToSubsequences(
     self,
-    graph: nx.MultiDiGraph,
+    graph: programl_pb2.ProgramGraph,
     ctx: progress.ProgressContext = progress.NullContext,
   ) -> EncodedSubsequences:
     raise NotImplementedError("abstract class")
@@ -204,6 +217,7 @@ class StatementEncoderBase(EncoderBase):
 
     Args:
       graphs: A list of graphs to encode.
+      ctx: A logging context.
 
     Returns:
       A list of EncodedSubsequence tuples, where each tuple maps a graph to
@@ -211,18 +225,42 @@ class StatementEncoderBase(EncoderBase):
       the nodes which are selected from each graph.
     """
     # Look for any graphs that are unknown.
-    graphs_to_encode = {
-      graph.ir_id: graph
+    graph_ids_to_encode: Set[int] = {
+      graph.ir_id
       for graph in graphs
       if graph.ir_id not in self.ir_id_to_encoded
     }
 
-    if graphs_to_encode:
+    if graph_ids_to_encode:
+      sorted_graph_ids_to_encode = sorted(graph_ids_to_encode)
+
+      # Fetch the protos for the graphs that we need to encode.
+      with self.proto_db.Session() as session:
+        sorted_protos_to_encode = [
+          row.proto
+          for row in session.query(unlabelled_graph_database.ProgramGraph)
+          .options(
+            sql.orm.joinedload(unlabelled_graph_database.ProgramGraph.data)
+          )
+          .filter(
+            unlabelled_graph_database.ProgramGraph.ir_id.in_(
+              graph_ids_to_encode
+            )
+          )
+          .order_by(unlabelled_graph_database.ProgramGraph.ir_id)
+        ]
+        if len(sorted_protos_to_encode) != len(sorted_graph_ids_to_encode):
+          raise OSError(
+            f"Requested {len(sorted_graph_ids_to_encode)} protos "
+            "from database but received "
+            f"{len(sorted_protos_to_encode)}"
+          )
+
       # Encode and cache the unknown graphs.
-      for ir_id, graph in graphs_to_encode.items():
-        self.ir_id_to_encoded[ir_id] = self.GraphToSubsequences(
-          graph.tuple.ToNetworkx(), ctx=ctx
-        )
+      for ir_id, proto in zip(
+        sorted_graph_ids_to_encode, sorted_protos_to_encode
+      ):
+        self.ir_id_to_encoded[ir_id] = self.GraphToSubsequences(proto, ctx=ctx)
 
     return [self.ir_id_to_encoded[graph.ir_id] for graph in graphs]
 
@@ -234,7 +272,7 @@ class StatementEncoderBase(EncoderBase):
     """Encode the given strings and return a flattened list of the encoded
     values and the segment IDs.
     """
-    encoded_sequences = self.ir2seq_encoder.Encode(strings, ctx=ctx)
+    encoded_sequences = self.ir2seq_encoder.EncodeStrings(strings, ctx=ctx)
     statement_indices = []
     for i, enc in enumerate(encoded_sequences):
       statement_indices.append([i] * len(enc))
@@ -250,7 +288,7 @@ class StatementEncoderBase(EncoderBase):
 class StatementEncoder(StatementEncoderBase):
   def GraphToSubsequences(
     self,
-    graph: nx.MultiDiGraph,
+    graph: programl_pb2.ProgramGraph,
     ctx: progress.ProgressContext = progress.NullContext,
   ) -> EncodedSubsequences:
     """Serialize a graph to an encoded sequence of statements."""
@@ -259,7 +297,7 @@ class StatementEncoder(StatementEncoderBase):
     # Create a mask of the graph nodes which are statements.
     statement_nodes = set(serialized_node_list)
     statement_node_mask = np.array(
-      [1 if node in statement_nodes else 0 for node in graph.nodes()],
+      [1 if node in statement_nodes else 0 for node in range(len(graph.node))],
       dtype=np.int32,
     )
 
@@ -267,18 +305,16 @@ class StatementEncoder(StatementEncoderBase):
     if not any(statement_node_mask):
       raise ValueError("Graph contains no statement nodes")
 
-    strings_to_encode = [
-      graph.nodes[node]["text"] for node in serialized_node_list
-    ]
+    strings_to_encode = [graph.node[node].text for node in serialized_node_list]
 
     encoded_sequence, segment_ids = self.EncodeWithSegmentIds(
       strings_to_encode, ctx=ctx
     )
 
-    if segment_ids[-1] > graph.number_of_nodes():
+    if segment_ids[-1] > len(graph.node):
       raise ValueError(
         f"Found max segment ID {segment_ids[-1]} in graph with "
-        f"only {graph.number_of_nodes()} nodes"
+        f"only {len(graph.node)} nodes"
       )
 
     return EncodedSubsequences(
@@ -291,14 +327,14 @@ class StatementEncoder(StatementEncoderBase):
 class IdentifierEncoder(StatementEncoderBase):
   def GraphToSubsequences(
     self,
-    graph: nx.MultiDiGraph,
+    graph: programl_pb2.ProgramGraph,
     ctx: progress.ProgressContext = progress.NullContext,
   ) -> EncodedSubsequences:
     """Serialize a graph to an encoded sequence of identifier statement groups.
     """
     identifier_nodes, identifier_node_mask = [], []
-    for node, type in graph.nodes(data="type"):
-      if type == programl_pb2.Node.IDENTIFIER:
+    for node in graph.node:
+      if node.type == programl_pb2.Node.IDENTIFIER:
         identifier_nodes.append(node)
         identifier_node_mask.append(1)
       else:
@@ -311,17 +347,17 @@ class IdentifierEncoder(StatementEncoderBase):
     strings_to_encode = []
     for identifier in identifier_nodes:
       strings_to_encode += [
-        graph.nodes[n]["text"] for n in GetStatementsForNode(graph, identifier)
+        graph.node[n].text for n in GetStatementsForNode(graph, identifier)
       ]
 
     encoded_sequence, segment_ids = self.EncodeWithSegmentIds(
       strings_to_encode, ctx=ctx
     )
 
-    if segment_ids[-1] > graph.number_of_nodes():
+    if segment_ids[-1] > len(graph.node):
       raise ValueError(
         f"Found max segment ID {segment_ids[-1]} in graph with "
-        f"only {graph.number_of_nodes()} nodes"
+        f"only {len(graph.node)} nodes"
       )
 
     return EncodedSubsequences(
@@ -331,13 +367,24 @@ class IdentifierEncoder(StatementEncoderBase):
     )
 
 
-def SerializeGraphToStatementNodes(g: nx.MultiDiGraph) -> Iterable[int]:
+def SerializeGraphToStatementNodes(
+  graph: programl_pb2.ProgramGraph,
+) -> Iterable[int]:
   """Walk a program graph and emit the node IDs of statements using depth-first
   traversal order.
 
   Returns:
     An iterator over node IDs.
   """
+  # Construct control-flow and call graphs from the unlabelled graph.
+  cfg = nx.DiGraph()
+  cg = nx.DiGraph()
+  for edge in graph.edge:
+    if edge.flow == programl_pb2.Edge.CONTROL:
+      cfg.add_edge(edge.source_node, edge.destination_node)
+    elif edge.flow == programl_pb2.Edge.CALL:
+      cg.add_edge(edge.source_node, edge.destination_node)
+
   visited_statements: Set[int] = set()
   visited_functions: Set[str] = set()
 
@@ -361,18 +408,21 @@ def SerializeGraphToStatementNodes(g: nx.MultiDiGraph) -> Iterable[int]:
 
       visited_statements.add(node)
       yield node
-      for _, dst, flow in g.out_edges(node, data="flow"):
-        if flow == programl_pb2.Edge.CONTROL:
-          # Follow control edges.
+      # Follow control edges.
+      if node in cfg:
+        for _, dst in cfg.out_edges(node):
           if dst not in visited_statements:
             statement_node_stack.append(dst)
-        elif flow == programl_pb2.Edge.CALL:
-          # Make a not of call edges to be visited later.
+      # Make a note of call edges to be visited later.
+      if node in cg:
+        for _, dst in cg.out_edges(node):
           if dst not in visited_functions:
             function_entry_stack.append(dst)
 
 
-def GetStatementsForNode(graph: nx.MultiDiGraph, node: int) -> Iterable[int]:
+def GetStatementsForNode(
+  graph: programl_pb2.ProgramGraph, node: int
+) -> Iterable[int]:
   """Return the statements which are connected to the given node.
 
   Args:
@@ -384,15 +434,17 @@ def GetStatementsForNode(graph: nx.MultiDiGraph, node: int) -> Iterable[int]:
   Returns:
     An iterator over statement nodes.
   """
-  root = graph.nodes[node]
-  if root["type"] == programl_pb2.Node.STATEMENT:
+  if graph.node[node].type == programl_pb2.Node.STATEMENT:
     yield node
-  elif root["type"] == programl_pb2.Node.IDENTIFIER:
-    for src, _ in graph.in_edges(node):
-      if graph.nodes[src]["type"] == programl_pb2.Node.STATEMENT:
-        yield src
-    for _, dst in graph.out_edges(node):
-      if graph.nodes[dst]["type"] == programl_pb2.Node.STATEMENT:
-        yield dst
+  elif graph.node[node].type == programl_pb2.Node.IDENTIFIER:
+    for edge in graph.edge:
+      if edge.source_node == node:
+        if (
+          graph.node[edge.destination_node].type == programl_pb2.Node.STATEMENT
+        ):
+          yield edge.destination_node
+      elif edge.destination_node == node:
+        if graph.node[edge.source_node].type == programl_pb2.Node.STATEMENT:
+          yield edge.source_node
   else:
-    raise ValueError(f"Unknown statement type `{root['type']}`")
+    raise ValueError(f"Invalid statement type `{graph.node[node].type}`")

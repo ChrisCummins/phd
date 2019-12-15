@@ -9,6 +9,7 @@ from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.graphs.labelled.devmap import make_devmap_dataset
+from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
 from deeplearning.ml4pl.ir import ir_database
 from deeplearning.ml4pl.models import batch as batches
 from deeplearning.ml4pl.models import epoch
@@ -16,8 +17,12 @@ from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models import logger as logging
 from deeplearning.ml4pl.models.lstm import lstm
 from deeplearning.ml4pl.testing import random_graph_tuple_database_generator
+from deeplearning.ml4pl.testing import (
+  random_unlabelled_graph_database_generator,
+)
 from deeplearning.ml4pl.testing import testing_databases
 from labm8.py import test
+from labm8.py.internal import flags_parsers
 
 FLAGS = test.FLAGS
 
@@ -210,6 +215,31 @@ def ir_db(request, opencl_relpaths: List[str]) -> ir_database.Database:
     yield db
 
 
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("proto_db"),
+)
+def proto_db(request, opencl_relpaths: List[str]) -> ir_database.Database:
+  """A test fixture which yields an IR database with 256 OpenCL entries."""
+  with testing_databases.DatabaseContext(
+    unlabelled_graph_database.Database, request.param
+  ) as db:
+    rows = []
+    # Create IRs using OpenCL relpaths.
+    for i, relpath in enumerate(opencl_relpaths):
+      proto = (
+        random_unlabelled_graph_database_generator.CreateRandomProgramGraph()
+      )
+      proto.ir_id = i + 1
+      rows.append(proto)
+
+    with db.Session(commit=True) as session:
+      session.add_all(rows)
+
+    yield db
+
+
 ###############################################################################
 # Tests.
 ###############################################################################
@@ -277,25 +307,29 @@ def test_graph_classifier_call(
     assert not results.has_loss
 
 
-@test.Parametrize("nodes", ("statement", "identifier"))
+@test.Parametrize("nodes", list(x.name.lower() for x in lstm.NodeEncoder))
 def test_node_classifier_call(
   epoch_type: epoch.Type,
   logger: logging.Logger,
   node_y_db: graph_tuple_database.Database,
+  proto_db: unlabelled_graph_database.Database,
   ir_db: ir_database.Database,
   nodes: str,
 ):
   """Test running a node classifier."""
-  FLAGS.nodes = nodes
+  FLAGS.nodes = flags_parsers.EnumFlag(
+    lstm.NodeEncoder, lstm.NodeEncoder[nodes.upper()]
+  )
 
   run_id = run_id_lib.RunId.GenerateUnique(
     f"mock{random.randint(0, int(1e6)):06}"
   )
 
-  model = lstm.GraphLstm(
+  model = lstm.NodeLstm(
     logger,
     node_y_db,
     ir_db=ir_db,
+    proto_db=proto_db,
     batch_size=8,
     padded_sequence_length=100,
     run_id=run_id,

@@ -47,6 +47,7 @@ class ClassifierBase(object):
   And may optionally wish to implement these additional methods:
     CreateModelData()  # initialize an untrained model.
     Summary()          # return a string model summary.
+    NeedsGraphTuples() # return whether MakeBatch() receives graph tuples.
   """
 
   def __init__(
@@ -185,6 +186,9 @@ class ClassifierBase(object):
   def Summary(self) -> str:
     """Return a long summary string describing the model."""
     return type(self).__name__
+
+  def NeedsGraphTuples(self) -> bool:
+    return True
 
   #############################################################################
   # Automatic methods.

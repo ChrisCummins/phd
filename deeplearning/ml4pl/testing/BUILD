@@ -1,6 +1,15 @@
 # This package contains utility code for writing tests.
 
 py_library(
+    name = "generator_flags",
+    testonly = 1,
+    srcs = ["generator_flags.py"],
+    deps = [
+        "//labm8/py:app",
+    ],
+)
+
+py_library(
     name = "random_graph_tuple_generator",
     testonly = 1,
     srcs = ["random_graph_tuple_generator.py"],
@@ -29,6 +38,7 @@ py_binary(
     srcs = ["random_graph_tuple_database_generator.py"],
     visibility = ["//deeplearning/ml4pl:__subpackages__"],
     deps = [
+        ":generator_flags",
         ":random_graph_tuple_generator",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//labm8/py:app",
@@ -135,6 +145,7 @@ py_binary(
     srcs = ["random_unlabelled_graph_database_generator.py"],
     visibility = ["//deeplearning/ml4pl:__subpackages__"],
     deps = [
+        ":generator_flags",
         ":random_programl_generator",
         "//deeplearning/ml4pl/graphs/unlabelled:unlabelled_graph_database",
         "//labm8/py:app",

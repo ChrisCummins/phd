@@ -39,6 +39,14 @@ class EncoderBase(object):
     """Convert a list of IR IDs to a list of encoded sequences."""
     raise NotImplementedError("abstract class")
 
+  def EncodeStrings(
+    self,
+    strings: List[str],
+    ctx: progress.ProgressContext = progress.NullContext,
+  ) -> List[np.array]:
+    """Convert a list of strings to a list of encoded sequences."""
+    raise NotImplementedError("abstract class")
+
   @property
   def vocabulary_size(self) -> int:
     """Get the size of the vocabulary, including the unknown-vocab element."""
@@ -92,10 +100,11 @@ class LlvmEncoder(EncoderBase):
       if len(sorted_unique_ir) != len(sorted_unique_ids):
         raise KeyError(
           f"Requested {len(sorted_unique_ids)} IRs from database but received "
-          f"{len(sorted_unique_ir)}"
+          f"{len(sorted_unique_ir)}: "
+          f"{set(sorted_unique_ids) - set(ir.id for ir in sorted_unique_ir)}"
         )
 
-      sorted_unique_encodeds: List[np.array] = self.lexer.Lex(
+      sorted_unique_encodeds: List[np.array] = self.EncodeStrings(
         sorted_unique_ir, ctx=ctx
       )
 
@@ -105,6 +114,13 @@ class LlvmEncoder(EncoderBase):
       }
 
     return [id_to_encoded[id] for id in ids]
+
+  def EncodeStrings(
+    self,
+    strings: List[str],
+    ctx: progress.ProgressContext = progress.NullContext,
+  ) -> List[np.array]:
+    return self.lexer.Lex(strings, ctx=ctx)
 
   @property
   def vocabulary_size(self) -> int:
@@ -195,6 +211,13 @@ class OpenClEncoder(EncoderBase):
     """
     return [self.id_to_encoded[id] for id in ids]
 
+  def EncodeStrings(
+    self,
+    strings: List[str],
+    ctx: progress.ProgressContext = progress.NullContext,
+  ) -> List[np.array]:
+    raise TypeError("OpenCL encoder does not support encoding strings")
+
   @property
   def vocabulary_size(self) -> int:
     """Return the size of the encoder vocabulary."""
@@ -230,7 +253,7 @@ class Inst2VecEncoder(EncoderBase):
 
   def Encode(
     self, ids: List[int], ctx: progress.ProgressContext = progress.NullContext,
-  ):
+  ) -> List[np.array]:
     """Encode a list of IR IDs.
 
     Args:
@@ -267,10 +290,9 @@ class Inst2VecEncoder(EncoderBase):
           f"({humanize.DecimalPrefix(token_count / t, ' tokens/sec')})"
         ),
       ):
-        sorted_unique_encodeds: List[np.array] = [
-          np.array(inst2vec.EncodeLlvmBytecode(ir, self.vocab), dtype=np.int32)
-          for ir in sorted_unique_ir
-        ]
+        sorted_unique_encodeds: List[np.array] = self.EncodeStrings(
+          sorted_unique_ir
+        )
         token_count = sum(len(encoded) for encoded in sorted_unique_encodeds)
 
       id_to_encoded = {
@@ -279,6 +301,16 @@ class Inst2VecEncoder(EncoderBase):
       }
 
     return [id_to_encoded[id] for id in ids]
+
+  def EncodeStrings(
+    self,
+    strings: List[str],
+    ctx: progress.ProgressContext = progress.NullContext,
+  ) -> List[np.array]:
+    return [
+      np.array(inst2vec.EncodeLlvmBytecode(string, self.vocab), dtype=np.int32)
+      for string in strings
+    ]
 
   @property
   def vocabulary_size(self) -> int:

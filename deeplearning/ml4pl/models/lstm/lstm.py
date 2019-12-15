@@ -15,6 +15,7 @@ import tensorflow as tf
 
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
+from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
 from deeplearning.ml4pl.ir import ir_database
 from deeplearning.ml4pl.models import batch as batches
 from deeplearning.ml4pl.models import classifier_base
@@ -54,16 +55,17 @@ class NodeEncoder(enum.Enum):
   def ToEncoder(
     self,
     graph_db: graph_tuple_database.Database,
+    proto_db: unlabelled_graph_database.Database,
     ir2seq_encoder: ir2seq.EncoderBase,
   ) -> graph2seq.EncoderBase:
     """Create the graph2seq encoder."""
     if self == NodeEncoder.STATEMENT:
       return graph2seq.StatementEncoder(
-        graph_db=graph_db, ir2seq_encoder=ir2seq_encoder
+        graph_db=graph_db, proto_db=proto_db, ir2seq_encoder=ir2seq_encoder
       )
     elif self == NodeEncoder.IDENTIFIER:
       return graph2seq.IdentifierEncoder(
-        graph_db=graph_db, ir2seq_encoder=ir2seq_encoder
+        graph_db=graph_db, proto_db=proto_db, ir2seq_encoder=ir2seq_encoder
       )
     else:
       raise NotImplementedError("unreachable")
@@ -125,6 +127,7 @@ class LstmBase(classifier_base.ClassifierBase):
     *args,
     padded_sequence_length: Optional[int] = None,
     ir_db: Optional[ir_database.Database] = None,
+    proto_db: Optional[unlabelled_graph_database.Database] = None,
     ir2seq_encoder: Optional[ir2seq.EncoderBase] = None,
     graph2seq_encoder: Optional[graph2seq.EncoderBase] = None,
     batch_size: Optional[int] = None,
@@ -154,6 +157,7 @@ class LstmBase(classifier_base.ClassifierBase):
     elif (
       self.graph_db.graph_y_dimensionality
       and self.graph_db.node_x_dimensionality == 2
+      and self.graph_db.node_y_dimensionality == 0
     ):
       # Graph-level classification.
       self.encoder = graph2seq.GraphEncoder(
@@ -162,6 +166,7 @@ class LstmBase(classifier_base.ClassifierBase):
     elif (
       self.graph_db.node_y_dimensionality
       and self.graph_db.node_x_dimensionality == 2
+      and self.graph_db.graph_y_dimensionality == 0
     ):
       # Node-wise classification with selector vector.
       if not FLAGS.nodes:
@@ -169,7 +174,13 @@ class LstmBase(classifier_base.ClassifierBase):
           "--nodes={statement,identifier} is required when running a "
           "node-level classification task"
         )
-      self.encoder = FLAGS.nodes().ToEncoder(self.graph_db, self.ir2seq_encoder)
+      if not FLAGS.proto_db and not proto_db:
+        raise app.UsageError(
+          "--proto_db is required when running node-level classification"
+        )
+      self.encoder = FLAGS.nodes().ToEncoder(
+        self.graph_db, proto_db, self.ir2seq_encoder
+      )
     else:
       raise TypeError("Unsupported graph dimensionalities")
 
@@ -185,6 +196,36 @@ class LstmBase(classifier_base.ClassifierBase):
     # Set by subclasses.
     self.model = None
 
+    # To enable thread-safe use of a Keras model we must make sure to fix the
+    # graph and session whenever we are going to use self.model.
+    with self.graph.as_default():
+      tf.compat.v1.keras.backend.set_session(self.session)
+      self.CreateTensorFlowModel()
+
+      # To enable thread-safe use of the Keras model we must ensure that
+      # the computation graph is fully instantiated before the first call
+      # to RunBatch(). Keras lazily instantiates parts of the graph (such as
+      # training ops), so make sure those are created by running the training
+      # loop now on a single graph.
+      reader = graph_database_reader.BufferedGraphReader(self.graph_db, limit=1)
+      batch = self.MakeBatch(reader)
+      assert batch.graph_count == 1
+      self.RunBatch(epoch.Type.TRAIN, batch)
+
+      # Run private model methods that instantiate graph components.
+      # See: https://stackoverflow.com/a/46801607
+      self.model._make_predict_function()
+      self.model._make_test_function()
+      self.model._make_train_function()
+
+      # Saving the graph also creates new ops, so run it now.
+      with tempfile.TemporaryDirectory(prefix="ml4pl_lstm_") as d:
+        self.model.save(pathlib.Path(d) / "delete_md.h5")
+
+    # Finally we have instantiated the graph, so freeze it to mane any
+    # implicit modification raise an error.
+    self.graph.finalize()
+
   def Summary(self) -> str:
     """Get a summary"""
     buf = io.StringIO()
@@ -198,6 +239,9 @@ class LstmBase(classifier_base.ClassifierBase):
       file=buf,
     )
     return buf.getvalue()
+
+  def NeedsGraphTuples(self) -> bool:
+    return False
 
   @property
   def padded_vocabulary_size(self) -> int:
@@ -259,46 +303,15 @@ class GraphLstm(LstmBase):
       End-to-end Deep Learning of Optimization Heuristics. In PACT. IEEE.
   """
 
-  def __init__(self, *args, **kwargs):
-    super(GraphLstm, self).__init__(*args, **kwargs)
-
-    # To enable thread-safe use of a Keras model we must make sure to fix the
-    # graph and session whenever we are going to use self.model.
-    with self.graph.as_default():
-      tf.compat.v1.keras.backend.set_session(self.session)
-      self.CreateTensorFlowModel()
-
-      # To enable thread-safe use of the Keras model we must ensure that
-      # the computation graph is fully instantiated before the first call
-      # to RunBatch(). Keras lazily instantiates parts of the graph (such as
-      # training ops), so make sure those are created by running the training
-      # loop now on a single graph.
-      reader = graph_database_reader.BufferedGraphReader(self.graph_db, limit=1)
-      batch = self.MakeBatch(reader)
-      assert batch.graph_count == 1
-      self.RunBatch(epoch.Type.TRAIN, batch)
-
-      # Run private model methods that instantiate graph components.
-      # See: https://stackoverflow.com/a/46801607
-      self.model._make_predict_function()
-      self.model._make_test_function()
-      self.model._make_train_function()
-
-      # Saving the graph also creates new ops, so run it now.
-      with tempfile.TemporaryDirectory(prefix="ml4pl_lstm_") as d:
-        self.model.save(pathlib.Path(d) / "delete_md.h5")
-
-    # Finall we have instantiated the graph, so freeze it to mane any
-    # implicit modification raise an error.
-    self.graph.finalize()
-
   def CreateTensorFlowModel(self):
     """Construct the tensorflow computation graph."""
     sequence_input = keras.Input(
       shape=(self.padded_sequence_length,), dtype="int32", name="sequence_in",
     )
     graph_x_input = keras.Input(
-      shape=(self.graph_db.graph_x_dimensionality,), name="graph_x"
+      shape=(self.graph_db.graph_x_dimensionality,),
+      dtype="flaot32",
+      name="graph_x",
     )
 
     # Construct the LSTM language model which summarizes a sequence of shape
@@ -439,7 +452,24 @@ class NodeLstmBatch(NamedTuple):
 class NodeLstm(LstmBase):
   """An extension of the LSTM model to support node-level classification."""
 
-  def __init__(self, *args, max_nodes_in_graph: Optional[int] = None, **kwargs):
+  def __init__(
+    self,
+    *args,
+    max_nodes_in_graph: Optional[int] = None,
+    padded_sequence_length: Optional[int] = None,
+    **kwargs,
+  ):
+    # Determine the size of padded sequences. Use the requested
+    # padded_sequence_length, or the maximum encoded length if it is shorter.
+    self.padded_sequence_length = (
+      padded_sequence_length or FLAGS.padded_sequence_length
+    )
+
+    self.max_nodes_in_graph = min(
+      self.padded_sequence_length,
+      max_nodes_in_graph or FLAGS.max_nodes_in_graph,
+    )
+
     super(NodeLstm, self).__init__(*args, **kwargs)
 
     if isinstance(self.ir2seq_encoder, ir2seq.OpenClEncoder):
@@ -447,11 +477,8 @@ class NodeLstm(LstmBase):
         "OpenCL encoder is not supported for node-level " "classification"
       )
 
-    self.max_nodes_in_graph = min(
-      self.padded_sequence_length,
-      max_nodes_in_graph or FLAGS.max_nodes_in_graph,
-    )
-
+  def CreateTensorFlowModel(self):
+    """Construct the tensorflow computation graph."""
     sequence_input = keras.Input(
       batch_shape=(self.batch_size, self.padded_sequence_length,),
       dtype="int32",
@@ -463,7 +490,9 @@ class NodeLstm(LstmBase):
       name="segment_ids",
     )
     selector_vector = keras.Input(
-      batch_shape=(self.batch_size, None, 2), name="selector_vector"
+      batch_shape=(self.batch_size, None, 2),
+      dtype="float32",
+      name="selector_vector",
     )
 
     # Embed the sequence inputs and sum the embeddings by nodes.
@@ -601,10 +630,10 @@ class NodeLstm(LstmBase):
     return batches.Data(
       graph_ids=[graph.id for graph in graphs],
       data=NodeLstmBatch(
-        encoded_sequences=np.vstack(encoded_sequences),
-        segment_ids=np.vstack(segment_ids),
-        selector_vectors=np.vstack(selector_vectors),
-        node_y=np.vstack(node_y),
+        encoded_sequences=encoded_sequences,
+        segment_ids=segment_ids,
+        selector_vectors=selector_vectors,
+        node_y=node_y,
       ),
     )
 

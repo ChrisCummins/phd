@@ -6,17 +6,37 @@ from typing import Set
 import sqlalchemy as sql
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
-from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.graphs.labelled.devmap import make_devmap_dataset
+from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
 from deeplearning.ml4pl.ir import ir_database
 from deeplearning.ml4pl.seq import graph2seq
 from deeplearning.ml4pl.seq import ir2seq
-from deeplearning.ml4pl.testing import random_graph_tuple_database_generator
+from deeplearning.ml4pl.testing import (
+  random_unlabelled_graph_database_generator,
+)
 from deeplearning.ml4pl.testing import testing_databases
 from labm8.py import decorators
 from labm8.py import test
 
 FLAGS = test.FLAGS
+
+
+###############################################################################
+# Utility code.
+###############################################################################
+
+
+def CreateRandomString(min_length: int = 1, max_length: int = 1024) -> str:
+  """Generate a random string."""
+  return "".join(
+    random.choice(string.ascii_lowercase)
+    for _ in range(random.randint(min_length, max_length))
+  )
+
+
+###############################################################################
+# Fixtures.
+###############################################################################
 
 
 @test.Fixture(
@@ -36,17 +56,9 @@ def ir_db(request) -> ir_database.Database:
   params=testing_databases.GetDatabaseUrls(),
   namer=testing_databases.DatabaseUrlNamer("graph_db"),
 )
-def graph_db(request) -> graph_tuple_database.Database:
+def graph_db(request) -> unlabelled_graph_database.Database:
   yield from testing_databases.YieldDatabase(
-    graph_tuple_database.Database, request.param
-  )
-
-
-def CreateRandomString(min_length: int = 1, max_length: int = 1024) -> str:
-  """Generate a random string."""
-  return "".join(
-    random.choice(string.ascii_lowercase)
-    for _ in range(random.randint(min_length, max_length))
+    unlabelled_graph_database.Database, request.param
   )
 
 
@@ -66,16 +78,16 @@ def opencl_relpaths() -> Set[str]:
 )
 def populated_graph_db(
   request, opencl_relpaths: Set[str]
-) -> graph_tuple_database.Database:
+) -> unlabelled_graph_database.Database:
   """A test fixture which yields a graph database with 256 OpenCL IR entries."""
   with testing_databases.DatabaseContext(
-    graph_tuple_database.Database, request.param
+    unlabelled_graph_database.Database, request.param
   ) as db:
     rows = []
     # Create random rows using OpenCL relpaths.
     for i, relpath in enumerate(opencl_relpaths):
       graph_tuple = (
-        random_graph_tuple_database_generator.CreateRandomGraphTuple()
+        random_unlabelled_graph_database_generator.CreateRandomProgramGraph()
       )
       graph_tuple.ir_id = i + 1
       graph_tuple.id = len(opencl_relpaths) - i
@@ -128,7 +140,11 @@ def ir2seq_encoder(
   return request.param(populated_ir_db)
 
 
-@test.Fixture(scope="session", params=(None, 256))
+@test.Fixture(
+  scope="session",
+  params=(None, 256),
+  names=("cache_size:default", "cache_size:256"),
+)
 def cache_size(request) -> int:
   """A test fixture to enumerate cache sizes."""
   return request.param
@@ -144,13 +160,18 @@ def cache_size(request) -> int:
 )
 def graph2seq_encoder(
   ir2seq_encoder: ir2seq.EncoderBase,
-  populated_graph_db: graph_tuple_database.Database,
+  populated_graph_db: unlabelled_graph_database.Database,
   cache_size: int,
 ) -> graph2seq.EncoderBase:
   """Test fixture that returns a graph encoder."""
   return graph2seq.GraphEncoder(
     populated_graph_db, ir2seq_encoder, cache_size=cache_size
   )
+
+
+###############################################################################
+# Tests.
+###############################################################################
 
 
 @decorators.loop_for(seconds=10)
@@ -160,18 +181,18 @@ def test_fuzz_Encode(graph2seq_encoder: ir2seq.EncoderBase):
     # Load a random collection of graphs. Note the joined load that is required
     # by StatementEncoder and IdentifierEncoder.
     graphs = (
-      session.query(graph_tuple_database.GraphTuple)
+      session.query(unlabelled_graph_database.ProgramGraph)
       .order_by(graph2seq_encoder.graph_db.Random())
-      .options(sql.orm.joinedload(graph_tuple_database.GraphTuple.data))
+      .options(sql.orm.joinedload(unlabelled_graph_database.ProgramGraph.data))
       .limit(random.randint(1, 200))
       .all()
     )
     # Sanity check that graphs are returned.
     assert graphs
 
-  encodeds = graph2seq_encoder.Encode(graphs)
+  encoded = graph2seq_encoder.Encode(graphs)
 
-  assert len(encodeds) == len(graphs)
+  assert len(encoded) == len(graphs)
 
 
 if __name__ == "__main__":

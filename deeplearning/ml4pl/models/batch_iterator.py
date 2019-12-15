@@ -75,7 +75,11 @@ def MakeBatchIterator(
     )
 
   graph_reader = graph_database_reader.BufferedGraphReader.CreateFromFlags(
-    graph_db=graph_db, filters=[split_filter], ctx=ctx, limit=limit
+    graph_db=graph_db,
+    filters=[split_filter],
+    ctx=ctx,
+    limit=limit,
+    eager_graph_loading=model.NeedsGraphTuples(),
   )
 
   return batches.BatchIterator(
