@@ -196,33 +196,39 @@ class Train(progress.Progress):
     )
     self.logger.ctx = self.ctx
 
+  def MakeBatchIterator(self, epoch_type: epoch.Type) -> batchs.BatchIterator:
+    """Construct a batch iterator."""
+    return batch_iterator_lib.MakeBatchIterator(
+      model=self.model,
+      graph_db=self.graph_db,
+      splits=self.splits,
+      epoch_type=epoch_type,
+      ctx=self.ctx,
+    )
+
   @memory_profiler.profile
   def RunOneEpoch(self, test_on: str, save_on) -> None:
     """Inner loop to run a single train/val/test epoch.
     """
-    # Create the batch iterators ahead of time so that they can asynchronously
-    # start reading from the graph database.
-    batch_iterators = {
-      epoch_type: batch_iterator_lib.MakeBatchIterator(
-        model=self.model,
-        graph_db=self.graph_db,
-        splits=self.splits,
-        epoch_type=epoch_type,
-        ctx=self.ctx,
-      )
-      for epoch_type in [epoch.Type.TRAIN, epoch.Type.VAL, epoch.Type.TEST]
-    }
+    # Create both training and validation batch iterators ahead of time to start
+    # asynchronously constructing batches. The testing iterator must be produced
+    # on demand as it isn't always needed.
+    train_batches = self.MakeBatchIterator(epoch.Type.TRAIN)
+    val_batches = self.MakeBatchIterator(epoch.Type.VAL)
+    if test_on == "every":
+      # If we know that we're going to use them, produce the test batches.
+      test_batches = self.MakeBatchIterator(epoch.Type.TEST)
 
-    train_results, _ = self.RunEpoch(epoch.Type.TRAIN, batch_iterators)
-
-    val_results, val_improved = self.RunEpoch(epoch.Type.VAL, batch_iterators)
+    # Run the training and validation epochs.
+    train_results, _ = self.RunEpoch(epoch.Type.TRAIN, train_batches)
+    val_results, val_improved = self.RunEpoch(epoch.Type.VAL, val_batches)
 
     if val_improved and (
       test_on == "improvement" or test_on == "improvement_and_last"
     ):
-      self.RunEpoch(epoch.Type.TEST, batch_iterators)
+      self.RunEpoch(epoch.Type.TEST, self.MakeBatchIterator(epoch.Type.TEST))
     elif test_on == "improvement_and_last" and self.ctx.i == self.ctx.n - 1:
-      self.RunEpoch(epoch.Type.TEST, batch_iterators)
+      self.RunEpoch(epoch.Type.TEST, self.MakeBatchIterator(epoch.Type.TEST))
 
     # Determine whether to make a checkpoint.
     if save_on == schedules.SaveOn.EVERY_EPOCH or (
@@ -231,7 +237,7 @@ class Train(progress.Progress):
       self.model.SaveCheckpoint()
 
     if test_on == "every":
-      self.RunEpoch(epoch.Type.TEST, batch_iterators)
+      self.RunEpoch(epoch.Type.TEST, test_batches)
 
   def Run(self):
     """Run the train/val/test loop."""
@@ -248,9 +254,7 @@ class Train(progress.Progress):
     self.ctx.i += 1
 
   def RunEpoch(
-    self,
-    epoch_type: epoch.Type,
-    batch_iterators: Dict[epoch.Type, batchs.BatchIterator],
+    self, epoch_type: epoch.Type, batch_iterator: batchs.BatchIterator,
   ) -> Tuple[epoch.Results, int]:
     """Run an epoch of the given type."""
     epoch_name = (
@@ -260,7 +264,7 @@ class Train(progress.Progress):
     return RunEpoch(
       epoch_name=epoch_name,
       model=self.model,
-      batch_iterator=batch_iterators[epoch_type],
+      batch_iterator=batch_iterator,
       epoch_type=epoch_type,
       logger=self.logger,
     )
