@@ -94,29 +94,21 @@ app.DEFINE_float(
   "lang_model_loss_weight", 0.2, "Weight for language model auxiliary loss."
 )
 app.DEFINE_integer(
-  "padded_sequence_length", 25000, "The size of the dense output layer."
+  "padded_sequence_length",
+  25000,
+  "The padded/truncated length of encoded text sequences.",
 )
 app.DEFINE_integer(
-  "max_nodes_in_graph",
-  25000,
-  "The maximum number of segmented nodes to process per graph.",
+  "padded_nodes_sequence_length",
+  5000,
+  "For node-level models, the padded/truncated length of encoded node "
+  "sequences.",
 )
 app.DEFINE_integer(
   "batch_size",
   64,
   "The number of padded sequences to concatenate into a batch.",
 )
-
-
-class GraphLstmBatch(NamedTuple):
-  """The data for an LSTM batch."""
-
-  # Shape (batch_size, padded_sequence_length, 1), dtype np.int32
-  encoded_sequences: np.array
-  # Shape (batch_size, graph_x_dimensionality), dtype np.int32
-  graph_x: np.array
-  # Shape (batch_size, graph_y_dimensionality), dtype np.float32
-  graph_y: np.array
 
 
 class LstmBase(classifier_base.ClassifierBase):
@@ -193,23 +185,23 @@ class LstmBase(classifier_base.ClassifierBase):
       padded_sequence_length, self.encoder.max_encoded_length
     )
 
-    # Set by subclasses.
-    self.model = None
-
     # To enable thread-safe use of a Keras model we must make sure to fix the
     # graph and session whenever we are going to use self.model.
     with self.graph.as_default():
       tf.compat.v1.keras.backend.set_session(self.session)
-      self.CreateTensorFlowModel()
+      self.model = self.CreateKerasModel()
 
       # To enable thread-safe use of the Keras model we must ensure that
       # the computation graph is fully instantiated before the first call
       # to RunBatch(). Keras lazily instantiates parts of the graph (such as
       # training ops), so make sure those are created by running the training
       # loop now on a single graph.
-      reader = graph_database_reader.BufferedGraphReader(self.graph_db, limit=1)
+      warm_up_batch_size = 1 if isinstance(self, GraphLstm) else self.batch_size
+      reader = graph_database_reader.BufferedGraphReader(
+        self.graph_db, limit=warm_up_batch_size
+      )
       batch = self.MakeBatch(reader)
-      assert batch.graph_count == 1
+      assert batch.graph_count == warm_up_batch_size
       self.RunBatch(epoch.Type.TRAIN, batch)
 
       # Run private model methods that instantiate graph components.
@@ -293,6 +285,64 @@ class LstmBase(classifier_base.ClassifierBase):
       tf.compat.v1.keras.backend.set_session(self.session)
       self.model = tf.keras.models.load_model(path)
 
+  def CreateKerasModel(self) -> keras.models.Model:
+    """Create the LSTM model."""
+    raise NotImplementedError("abstract class")
+
+  def RunBatch(
+    self,
+    epoch_type: epoch.Type,
+    batch: batches.Data,
+    ctx: progress.ProgressContext = progress.NullContext,
+  ) -> batches.Results:
+    """Run a batch of data through the model.
+
+    This requires that batch data has 'x' and 'y' properties that return a list
+    of feature arrays and target arrays, respectively.
+    """
+
+    # We can only get the loss on training.
+    loss = None
+
+    with self.graph.as_default():
+      tf.compat.v1.keras.backend.set_session(self.session)
+
+      if epoch_type == epoch.Type.TRAIN:
+        loss = self.model.train_on_batch(batch.data.x, batch.data.y)
+
+      predictions = self.model.predict_on_batch(batch.data.x)
+
+    return batches.Results.Create(
+      targets=self.ReshapeTargets(batch.data.y[0]),
+      predictions=self.ReshapeTargets(predictions),
+      loss=self.ReshapeLoss(loss),
+    )
+
+  def ReshapeLoss(self, loss):
+    return loss[0]
+
+  def ReshapeTargets(self, targets):
+    return targets
+
+
+class GraphLstmBatch(NamedTuple):
+  """The data for an LSTM batch."""
+
+  # Shape (batch_size, padded_sequence_length, 1), dtype np.int32
+  encoded_sequences: np.array
+  # Shape (batch_size, graph_x_dimensionality), dtype np.int32
+  graph_x: np.array
+  # Shape (batch_size, graph_y_dimensionality), dtype np.float32
+  graph_y: np.array
+
+  @property
+  def x(self):
+    return [self.encoded_sequences, self.graph_x]
+
+  @property
+  def y(self):
+    return [self.graph_y, self.graph_y]
+
 
 class GraphLstm(LstmBase):
   """LSTM Model.
@@ -303,7 +353,7 @@ class GraphLstm(LstmBase):
       End-to-end Deep Learning of Optimization Heuristics. In PACT. IEEE.
   """
 
-  def CreateTensorFlowModel(self):
+  def CreateKerasModel(self) -> keras.models.Model:
     """Construct the tensorflow computation graph."""
     sequence_input = keras.Input(
       shape=(self.padded_sequence_length,), dtype="int32", name="sequence_in",
@@ -349,17 +399,19 @@ class GraphLstm(LstmBase):
       self.y_dimensionality, activation="sigmoid", name="dense_2",
     )(heuristic_model)
 
-    self.model = keras.Model(
+    model = keras.Model(
       inputs=[sequence_input, graph_x_input],
       outputs=[model_out, lang_model_out],
       name="lstm",
     )
-    self.model.compile(
+    model.compile(
       optimizer="adam",
       metrics=["accuracy"],
       loss=["categorical_crossentropy", "categorical_crossentropy"],
       loss_weights=[1.0, FLAGS.lang_model_loss_weight],
     )
+
+    return model
 
   def MakeBatch(
     self,
@@ -398,41 +450,8 @@ class GraphLstm(LstmBase):
       ),
     )
 
-  def RunBatch(
-    self,
-    epoch_type: epoch.Type,
-    batch: batches.Data,
-    ctx: progress.ProgressContext = progress.NullContext,
-  ) -> batches.Results:
-    """Run a batch.
-
-    Args:
-      epoch_type: The epoch type.
-      batch: The batch to process.
-      ctx: Logging context.
-
-    Returns:
-      Batch results.
-    """
-    batch_data: GraphLstmBatch = batch.data
-
-    x = [batch_data.encoded_sequences, batch_data.graph_x]
-    y = [batch_data.graph_y, batch_data.graph_y]
-
-    # We can only get the loss on training.
-    loss = None
-
-    with self.graph.as_default():
-      tf.compat.v1.keras.backend.set_session(self.session)
-
-      if epoch_type == epoch.Type.TRAIN:
-        loss, *_ = self.model.train_on_batch(x, y)
-
-      predictions, *_ = self.model.predict_on_batch(x)
-
-    return batches.Results.Create(
-      targets=batch_data.graph_y, predictions=predictions, loss=loss
-    )
+  def ReshapeLoss(self, loss):
+    return loss[0]
 
 
 class NodeLstmBatch(NamedTuple):
@@ -442,11 +461,19 @@ class NodeLstmBatch(NamedTuple):
   encoded_sequences: np.array
   # Shape (batch_size, padded_sequence_length, 1), dtype np.int32
   segment_ids: np.array
-  # Shape (batch_size, max_nodes_in_graph, 2), dtype np.int32
+  # Shape (batch_size, padded_nodes_sequence_length, 2), dtype np.int32
   selector_vectors: np.array
-  # Shape (batch_size, max_nodes_in_graph, node_y_dimensionality),
+  # Shape (batch_size, padded_nodes_sequence_length, node_y_dimensionality),
   # dtype np.float32
   node_y: np.array
+
+  @property
+  def x(self):
+    return [self.encoded_sequences, self.segment_ids, self.selector_vectors]
+
+  @property
+  def y(self):
+    return [self.node_y]
 
 
 class NodeLstm(LstmBase):
@@ -455,7 +482,7 @@ class NodeLstm(LstmBase):
   def __init__(
     self,
     *args,
-    max_nodes_in_graph: Optional[int] = None,
+    padded_nodes_sequence_length: Optional[int] = None,
     padded_sequence_length: Optional[int] = None,
     **kwargs,
   ):
@@ -465,9 +492,9 @@ class NodeLstm(LstmBase):
       padded_sequence_length or FLAGS.padded_sequence_length
     )
 
-    self.max_nodes_in_graph = min(
+    self.padded_nodes_sequence_length = min(
       self.padded_sequence_length,
-      max_nodes_in_graph or FLAGS.max_nodes_in_graph,
+      padded_nodes_sequence_length or FLAGS.padded_nodes_sequence_length,
     )
 
     super(NodeLstm, self).__init__(*args, **kwargs)
@@ -477,7 +504,7 @@ class NodeLstm(LstmBase):
         "OpenCL encoder is not supported for node-level " "classification"
       )
 
-  def CreateTensorFlowModel(self):
+  def CreateKerasModel(self) -> keras.models.Model:
     """Construct the tensorflow computation graph."""
     sequence_input = keras.Input(
       batch_shape=(self.batch_size, self.padded_sequence_length,),
@@ -508,18 +535,18 @@ class NodeLstm(LstmBase):
       segment_ids=segment_ids,
       batch_size=self.batch_size,
       max_sequence_length=self.padded_sequence_length,
-      max_output_sequence_length=self.max_nodes_in_graph,
+      max_output_sequence_length=self.padded_nodes_sequence_length,
     )
     # Because padded values in segment_ids have value, the segment sum emits a
-    # tensor of shape [B, max_nodes_in_graph + 1, 64] IFF something was padded
-    # and [B, max_nodes_in_graph, 64] otherwise. We want to discard the + 1
-    # guy because that is just summed padded tokens anyway.
+    # tensor of shape [B, padded_nodes_sequence_length + 1, 64] IFF something
+    # was padded and [B, padded_nodes_sequence_length, 64] otherwise. We want
+    # to discard the + 1 guy because that is just summed padded tokens anyway.
     segmented_input = utils.SliceToSizeLayer(
       segmented_input=segmented_input, selector_vector=selector_vector
     )
-    lang_model_input = keras.layers.Concatenate(axis=2)(
-      [segmented_input, selector_vector]
-    )
+    lang_model_input = keras.layers.Concatenate(
+      axis=2, name="segmented_inputs_and_selector_vectors"
+    )([segmented_input, selector_vector],)
 
     # Make the language model.
     lang_model = utils.LstmLayer(
@@ -538,15 +565,17 @@ class NodeLstm(LstmBase):
       name="node_out",
     )(lang_model)
 
-    self.model = keras.Model(
+    model = keras.Model(
       inputs=[sequence_input, segment_ids, selector_vector], outputs=[node_out],
     )
-    self.model.compile(
+    model.compile(
       optimizer="adam",
       metrics=["accuracy"],
       loss=["categorical_crossentropy"],
       loss_weights=[1.0],
     )
+
+    return model
 
   def MakeBatch(
     self,
@@ -598,7 +627,9 @@ class NodeLstm(LstmBase):
     )
 
     # Determine an out-of-range segment ID to pad the segment IDs to.
-    segment_id_padding_element = max(max(s) for s in segment_ids) + 1
+    segment_id_padding_element = (
+      max(max(s) if s.size else 0 for s in segment_ids) + 1
+    )
 
     segment_ids = keras.preprocessing.sequence.pad_sequences(
       segment_ids,
@@ -609,9 +640,14 @@ class NodeLstm(LstmBase):
       value=segment_id_padding_element,
     )
 
+    padded_nodes_sequence_length = min(
+      self.padded_nodes_sequence_length, max(len(s) for s in selector_vectors)
+    )
+
+    # Pad the selector vectors to the same shape as the segment IDs.)
     selector_vectors = keras.preprocessing.sequence.pad_sequences(
       selector_vectors,
-      maxlen=self.max_nodes_in_graph,
+      maxlen=padded_nodes_sequence_length,
       dtype="int32",
       padding="pre",
       truncating="post",
@@ -620,7 +656,7 @@ class NodeLstm(LstmBase):
 
     node_y = keras.preprocessing.sequence.pad_sequences(
       node_y,
-      maxlen=self.max_nodes_in_graph,
+      maxlen=padded_nodes_sequence_length,
       dtype="int32",
       padding="pre",
       truncating="post",
@@ -637,45 +673,9 @@ class NodeLstm(LstmBase):
       ),
     )
 
-  def RunBatch(
-    self,
-    epoch_type: epoch.Type,
-    batch: batches.Data,
-    ctx: progress.ProgressContext = progress.NullContext,
-  ) -> batches.Results:
-    """Run a batch.
-
-    Args:
-      epoch_type: The epoch type.
-      batch: The batch to process.
-      ctx: Logging context.
-
-    Returns:
-      Batch results.
-    """
-    batch_data: NodeLstmBatch = batch.data
-
-    x = [
-      batch_data.encoded_sequences,
-      batch_data.segment_ids,
-      batch_data.selector_vectors,
-    ]
-    y = [batch_data.node_y]
-
-    # We can only get the loss on training.
-    loss = None
-
-    if epoch_type == epoch.Type.TRAIN:
-      loss, lang_model_loss = self.model.train_on_batch(x, y)
-
-    predictions = self.model.predict_on_batch(x)
-
-    # TODO(github.com/ChrisCummins/ProGraML/issues/24): Reshape node_y and
-    # to predictions to match the actual graph shapes.
-
-    return batches.Results.Create(
-      targets=batch_data.node_y, predictions=predictions, loss=loss
-    )
+  def ReshapeTargets(self, targets):
+    # Stack the manually-batched targets list.
+    return np.vstack(targets)
 
 
 def main():
