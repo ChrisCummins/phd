@@ -1,4 +1,5 @@
 """Base class for implementing classifier models."""
+import copy
 from typing import Any
 from typing import Dict
 from typing import Iterable
@@ -247,9 +248,12 @@ class ClassifierBase(object):
           thread.graph_ids
         )
 
-    results = thread.results
+    # TODO(github.com/ChrisCummins/ProGraML/issues/38): Explicitly free the
+    # thread object to see if that is contributing to climbing memory usage.
+    results = copy.deepcopy(thread.results)
     if not results:
       raise OSError("Epoch produced no results. Did the model crash?")
+    del thread
 
     # Update the record of best results.
     if results > self.best_results[epoch_type].results:
