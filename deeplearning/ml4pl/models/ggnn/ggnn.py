@@ -57,10 +57,11 @@ app.DEFINE_float(
   "unroll_factor",
   0,
   "Determine the number of dynamic model unrolls to perform. If "
-  "--unroll_strategy=constant, this number of unrolls - each of size sum(layer_timesteps) are performed. "
-  "So one unroll adds sum(layer_timesteps) many steps to the network. If "
-  "--unroll_strategy=edge_counts, max_edge_count * --unroll_factor timesteps "
-  "are performed. (rounded up to the next multiple of sum(layer_timesteps))",
+  "--unroll_strategy=constant, this number of unrolls - each of size "
+  "sum(layer_timesteps) are performed. So one unroll adds sum(layer_timesteps) "
+  "many steps to the network. If --unroll_strategy=edge_counts, "
+  "max_edge_count * --unroll_factor timesteps are performed. (rounded up to "
+  "the next multiple of sum(layer_timesteps))",
 )
 # We assume that position_embeddings exist in every dataset.
 # the flag now only controls whether they are used or not.
@@ -68,11 +69,11 @@ app.DEFINE_float(
 app.DEFINE_string(
   "position_embeddings",
   "fancy",
-  "Whether to use position embeddings as signals for edge order."
-  "Options: initial, every, fancy, off"
-  "initial takes A (h + pos) at first timestep, every does the same at every timestep"
-  "fancy learns another weight matrix B, s.th. propagation is A h + B pos"
-  "We expect them to be part of the ds anyway, but you can toggle off their effect.",
+  "Whether to use position embeddings as signals for edge order. Options: "
+  "initial, every, fancy, off initial takes A (h + pos) at first timestep, "
+  "every does the same at every timestep fancy learns another weight matrix B, "
+  "s.th. propagation is A h + B pos. We expect them to be part of the ds "
+  "anyway, but you can toggle off their effect.",
 )
 
 app.DEFINE_boolean("use_edge_bias", False, "")
