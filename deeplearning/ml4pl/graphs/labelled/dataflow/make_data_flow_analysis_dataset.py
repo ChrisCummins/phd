@@ -208,7 +208,7 @@ def ProcessWorker(packed_args) -> AnnotationResult:
   with ctx.Profile(
     2,
     lambda t: (
-      f"[worker {worker_id} processed {len(program_graphs)} protos "
+      f"[worker {worker_id}] processed {len(program_graphs)} protos "
       f"({len(graph_tuples)} graphs, {humanize.Duration(t / len(program_graphs))} /proto)"
     ),
   ):
