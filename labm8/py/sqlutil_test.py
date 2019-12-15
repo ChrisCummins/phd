@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //labm8/py:sqlutil."""
+import os
 import pathlib
 import typing
 
@@ -80,6 +81,21 @@ def test_CreateEngine_sqlite_from_file_with_suffix(tempdir: pathlib.Path):
 
 def test_ResolveUrl_unmodified():
   assert sqlutil.ResolveUrl("sqlite:///tmp/foo.db") == "sqlite:///tmp/foo.db"
+
+
+def test_ResolveUrl_unexpanded_shell_variable():
+  if "FOO" in os.environ:
+    del os.environ["FOO"]
+  assert sqlutil.ResolveUrl("sqlite:///tmp/$FOO.db") == "sqlite:///tmp/$FOO.db"
+  assert (
+    sqlutil.ResolveUrl("sqlite:///tmp/${FOO}.db") == "sqlite:///tmp/${FOO}.db"
+  )
+
+
+def test_ResolveUrl_expanded_shell_variable():
+  os.environ["FOO"] = "abc"
+  assert sqlutil.ResolveUrl("sqlite:///tmp/$FOO.db") == "sqlite:///tmp/abc.db"
+  assert sqlutil.ResolveUrl("sqlite:///tmp/${FOO}.db") == "sqlite:///tmp/abc.db"
 
 
 def test_ResolveUrl_path_not_found(tempdir: pathlib.Path):
