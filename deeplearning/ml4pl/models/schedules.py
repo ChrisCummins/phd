@@ -36,17 +36,3 @@ class KeepDetailedBatches(enum.Enum):
   ALL = 1
   # Keep detailed batches only for the last epoch.
   LAST_EPOCH = 2
-
-
-class TestOn(enum.Enum):
-  """Determine when to run a model on the test set."""
-
-  # Never run on the test set.
-  NONE = 0
-  # Test at the end of every epoch.
-  EVERY = 1
-  # Test on validation improvement.
-  IMPROVEMENT = 2
-  # Test on validation improvement and the last epoch (whether or not it was an
-  # improvement).
-  IMPROVEMENT_AND_LAST = 3

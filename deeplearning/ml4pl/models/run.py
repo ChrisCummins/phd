@@ -46,11 +46,15 @@ app.DEFINE_enum(
   schedules.SaveOn.EVERY_EPOCH,
   "The type of checkpoints to save.",
 )
-app.DEFINE_enum(
+app.DEFINE_string(
   "test_on",
-  schedules.TestOn,
-  schedules.TestOn.IMPROVEMENT_AND_LAST,
-  "Determine when to run the test set.",
+  "improvement_and_last",
+  "Determine when to run the test set. Possible values: none (never run the "
+  "test set), every (test at the end of every epoch), improvement (test only "
+  "when validation accuracy improves), or improvent_and_last (test when "
+  "validation accuracy improves, and on the last epoch).",
+  validator=lambda s: s
+  in {"none", "every", "improvement", "improvement_and_last",},
 )
 app.DEFINE_boolean(
   "test_only",
@@ -193,7 +197,10 @@ class Train(progress.Progress):
 
   def Run(self):
     """Run the train/val/test loop."""
-    test_on = FLAGS.test_on()
+    test_on = FLAGS.test_on
+    if test_on not in {"none", "every", "improvement", "improvement_and_last"}:
+      raise app.UsageError("Unknown --test_on value")
+
     save_on = FLAGS.save_on()
 
     # Epoch loop.
@@ -216,14 +223,10 @@ class Train(progress.Progress):
       val_results, val_improved = self.RunEpoch(epoch.Type.VAL, batch_iterators)
 
       if val_improved and (
-        test_on == schedules.TestOn.IMPROVEMENT
-        or test_on == schedules.TestOn.IMPROVEMENT_AND_LAST
+        test_on == "improvement" or test_on == "improvement_and_last"
       ):
         self.RunEpoch(epoch.Type.TEST, batch_iterators)
-      elif (
-        test_on == schedules.TestOn.IMPROVEMENT_AND_LAST
-        and self.ctx.i == self.ctx.n - 1
-      ):
+      elif test_on == "improvement_and_last" and self.ctx.i == self.ctx.n - 1:
         self.RunEpoch(epoch.Type.TEST, batch_iterators)
 
       # Determine whether to make a checkpoint.
@@ -232,7 +235,7 @@ class Train(progress.Progress):
       ):
         self.model.SaveCheckpoint()
 
-      if test_on == schedules.TestOn.EVERY:
+      if test_on == "every":
         self.RunEpoch(epoch.Type.TEST, batch_iterators)
 
     # Record the final epoch.

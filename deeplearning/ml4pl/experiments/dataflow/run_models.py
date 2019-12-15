@@ -61,9 +61,7 @@ def Main():
   FLAGS.ir_db = flags_parsers.DatabaseFlag(
     ir_database.Database, f"{db_stem}_ir", must_exist=True
   )
-  FLAGS.test_on = flags_parsers.EnumFlag(
-    schedules.TestOn, schedules.TestOn.IMPROVEMENT_AND_LAST
-  )
+  FLAGS.test_on = "improvement_and_last"
   FLAGS.max_train_per_epoch = 5000
   FLAGS.max_val_per_epoch = 1000
 
