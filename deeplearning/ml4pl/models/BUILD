@@ -124,7 +124,7 @@ py_library(
 py_binary(
     name = "export_logs",
     srcs = ["export_logs.py"],
-    visibility = ["//visibility:public"],
+    visibility = ["//deeplearning/ml4pl:__subpackages__"],
     deps = [
         ":log_database",
         ":logger",
@@ -143,6 +143,7 @@ py_library(
     srcs = ["log_analysis.py"],
     visibility = ["//deeplearning/ml4pl:__subpackages__"],
     deps = [
+        ":export_logs",
         ":log_database",
         "//deeplearning/ml4pl:run_id",
         "//deeplearning/ml4pl/graphs/labelled:graph_database_reader",

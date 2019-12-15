@@ -1,4 +1,5 @@
 """A module for analyzing log databases."""
+import pathlib
 from typing import Dict
 from typing import Iterable
 from typing import List
@@ -8,22 +9,113 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 import sklearn.metrics
+import sqlalchemy as sql
 from matplotlib import pyplot as plt
+from matplotlib import ticker
 
 from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
+from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import epoch
+from deeplearning.ml4pl.models import export_logs
 from deeplearning.ml4pl.models import log_database
 from labm8.py import app
 from labm8.py import decorators
 from labm8.py import progress
+from labm8.py import sqlutil
+
+# export_logs module is required to pull in dependencies required to construct
+# summary tables.
+del export_logs
 
 FLAGS = app.FLAGS
 
+app.DEFINE_output_path(
+  "log_analysis_outdir",
+  None,
+  "When //deeplearning/ml4pl/models:log_analysis is executed as a script, this "
+  "determines the directory to write files to.",
+)
 
-class RunLogAnalyzer(object):
+
+class LogAnalyzer(object):
+  """Analyze the logs in a database."""
+
+  def __init__(
+    self,
+    log_db: log_database.Database,
+    run_ids: List[run_id_lib.RunId] = None,
+    ctx: progress.ProgressContext = progress.NullContext,
+  ):
+    self.log_db = log_db
+    self.run_ids = run_ids
+    self.ctx = ctx
+
+    # Check that the requested run exists in the database.
+    if not self.log_db.run_ids:
+      raise ValueError("Log database is empty")
+    for run_id in self.run_ids:
+      if str(run_id) not in self.log_db.run_ids:
+        raise ValueError(f"Run ID not found: {run_id}")
+
+  @decorators.memoized_property
+  def tables(self) -> Dict[str, pd.DataFrame]:
+    """Get the {parameters, epochs, runs} tables for the run."""
+    return {
+      name: df for name, df in self.log_db.GetTables(run_ids=self.run_ids)
+    }
+
+  def PlotEpochMetrics(
+    self, metric: str, epoch_types: List[str] = None, ax=None,
+  ) -> None:
+    """Plot a metric over epochs.
+
+    Args:
+      metric: The metric of interest.
+      epoch_types: The epoch types to plot. A list of {train,val,test} values.
+      ax: An axis to plot on.
+    """
+    # Set default argument values.
+    epoch_typenames = epoch_types or ["train", "val", "test"]
+    ax = ax or plt.gca()
+
+    # Read the epochs table.
+    df = self.tables["epochs"]
+
+    # Check that the requested metric exists.
+    if f"train_{metric}" not in df:
+      available_metrics = sorted(
+        c[len("train_") :] for c in df.columns.values if c.startswith("train_")
+      )
+      raise ValueError(
+        f"No such metric: {metric}. Available metrics: {available_metrics}"
+      )
+
+    # Create the metric plot for each run.
+    for run_id in set(df["run_id"].values):
+      for epoch_type in epoch_typenames:
+        metric_name = f"{epoch_type}_{metric}"
+        run_df = df[(df["run_id"] == run_id) & (df[metric_name].notnull())]
+        if len(run_df):
+          x = run_df["epoch_num"].values
+          y = run_df[metric_name].values
+          ax.plot(x, y, label=f"{run_id}:{epoch_type}")
+
+    # Configure the Y axis.
+    ax.set_ylabel(metric.capitalize())
+
+    # Configure the X axis.
+    ax.set_xlabel("Epoch")
+    # Force integer axis for epoch number.
+    ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+
+    # Force the legend.
+    plt.legend()
+
+
+class RunLogAnalyzer(LogAnalyzer):
   """Analyse the logs of a single run."""
 
   def __init__(
@@ -33,19 +125,10 @@ class RunLogAnalyzer(object):
     graph_db: Optional[graph_tuple_database.Database] = None,
     ctx: progress.ProgressContext = progress.NullContext,
   ):
-    self.log_db = log_db
-    self.run_id = run_id
-    self.ctx = ctx
+    super(RunLogAnalyzer, self).__init__(
+      log_db=log_db, run_ids=[run_id], ctx=ctx
+    )
     self._graph_db = graph_db
-
-    # Check that the requested run exists in the database.
-    with self.log_db.Session() as session:
-      if (
-        not session.query(log_database.RunId)
-        .filter(log_database.RunId.run_id == str(run_id))
-        .scalar()
-      ):
-        raise ValueError(f"Run not found: {self.run_id}")
 
   @decorators.memoized_property
   def graph_db(self) -> graph_tuple_database.Database:
@@ -60,7 +143,7 @@ class RunLogAnalyzer(object):
       ).filter(
         log_database.Parameter.type_num
         == log_database.ParameterType.FLAG.value,
-        log_database.Parameter.run_id == str(self.run_id),
+        log_database.Parameter.run_id == str(self.run_ids[0]),
         log_database.Parameter.name == "graph_db",
       ).scalar()
       if not graph_param:
@@ -70,13 +153,6 @@ class RunLogAnalyzer(object):
     return graph_tuple_database.Database(graph_db_url, must_exist=True)
 
   @decorators.memoized_property
-  def tables(self) -> Dict[str, pd.DataFrame]:
-    """Get the {parameters, epochs, runs} tables for the run."""
-    return {
-      name: df for name, df in self.log_db.GetTables(run_ids=[self.run_id])
-    }
-
-  @decorators.memoized_property
   def best_results(self) -> Dict[epoch.Type, epoch.BestResults]:
     """Get the best results dict.
 
@@ -84,7 +160,7 @@ class RunLogAnalyzer(object):
       A mapping from <epoch_type, epoch.BestResults> for the best accuracy on
       each of the epoch types.
     """
-    return self.log_db.GetBestResults(run_id=self.run_id)
+    return self.log_db.GetBestResults(run_id=self.run_ids[0])
 
   def GetBestEpochNum(self, metric="best accuracy") -> int:
     """Select the train/val/test epoch logs using the given metric.
@@ -114,7 +190,7 @@ class RunLogAnalyzer(object):
       accuracy = float(metric.split("%")[0]) / 100
       matching_rows = epochs[epochs["val_accuracy"] >= accuracy]
       if not len(matching_rows):
-        raise ValueError(f"No {self.run_id} epochs reached {metric}")
+        raise ValueError(f"No {self.run_ids[0]} epochs reached {metric}")
       # Select the first epoch when there are more than one matching rows.
       epoch_num = epochs.iloc[matching_rows.index[0]].epoch
     else:
@@ -268,33 +344,73 @@ def BuildConfusionMatrix(targets: np.array, predictions: np.array) -> np.array:
   return confusion_matrix
 
 
-def PlotRunMetrics(
-  log_db: log_database.Database,
-  metric: str,
-  epoch_types: List[str] = None,
-  run_ids: List[run_id_lib.RunId] = None,
-  ax=None,
-):
-  if metric not in {"loss", "accuracy", "precision", "recall", "f1"}:
-    raise app.UsageError(f"Unsupported metric: {metric}")
-  epoch_typenames = epoch_types or ["train", "val", "test"]
+class WriteGraphsToFile(progress.Progress):
+  """Write graphs in a graph database to pickled files.
 
-  epoch_types = [epoch.Type[name.upper()] for name in epoch_typenames]
+  This is for debugging.
+  """
 
-  ax = ax or plt.gca()
+  def __init__(self, outdir: pathlib.Path):
+    self.outdir = outdir
+    self.outdir.mkdir(parents=True, exist_ok=True)
 
-  for name, df in log_db.GetTables(run_ids=run_ids):
-    if name == "epochs":
-      break
-  else:
-    raise ValueError("Epochs table not found")
+    checkpoint_ref = checkpoints.CheckpointReference.FromString(FLAGS.run_id)
 
-  epochs = list(range(df["epoch_num"].min(), df["epoch_num"].max()))
+    self.analysis = RunLogAnalyzer(
+      log_db=FLAGS.log_db(), run_id=checkpoint_ref.run_id,
+    )
+    self.epoch_num = 0
 
-  for run_id in set(df["run_id"].values):
-    for epoch_type in epoch_typenames:
-      metric_name = f"{epoch_type}_{metric}"
-      run_df = df[(df["run_id"] == run_id) & (df[metric_name].notnull())]
-      x = run_df["epoch_num"].values
-      y = run_df[metric_name].values
-      ax.plot(x, y)
+    with self.analysis.log_db.Session() as session:
+      detailed_batch_graph_count = (
+        session.query(sql.func.sum(log_database.Batch.graph_count))
+        .filter(
+          log_database.Batch.run_id == str(checkpoint_ref.run_id),
+          log_database.Batch.epoch_num == self.epoch_num,
+        )
+        .join(log_database.BatchDetails)
+        .scalar()
+      )
+
+    super(WriteGraphsToFile, self).__init__(
+      "analyzer", i=0, n=detailed_batch_graph_count
+    )
+    self.analysis.ctx = self.ctx
+
+  def Run(self):
+    """Read and write the graphs."""
+    # GetInputOutputGraphs
+    with self.analysis.log_db.Session() as session:
+      query = (
+        session.query(log_database.Batch)
+        .options(sql.orm.joinedload(log_database.Batch.details))
+        .filter(
+          log_database.Batch.run_id == str(self.analysis.run_id),
+          log_database.Batch.epoch_num == self.epoch_num,
+        )
+        .join(log_database.BatchDetails)
+      )
+
+      for i, batches in enumerate(
+        sqlutil.OffsetLimitBatchedQuery(query, batch_size=512)
+      ):
+        for batch in batches.rows:
+          self.ctx.i += batch.graph_count
+          for input_graph, output_graph in self.analysis.GetInputOutputGraphs(
+            batch
+          ):
+            input_path = self.outdir / f"graph_tuple_{i:08}_input.pickle"
+            output_path = self.outdir / f"graph_tuple_{i:08}_output.pickle"
+            input_graph.ToFile(input_path)
+            output_graph.ToFile(output_path)
+
+
+def Main():
+  """Main entry point."""
+  if not FLAGS.log_analysis_outdir:
+    raise app.UsageError("--log_analysis_outdir must be set")
+  progress.Run(WriteGraphsToFile(FLAGS.log_analysis_outdir))
+
+
+if __name__ == "__main__":
+  app.Run(Main)

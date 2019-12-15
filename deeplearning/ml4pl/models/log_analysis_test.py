@@ -1,9 +1,12 @@
 """Unit tests for //deeplearning/ml4pl/models:log_analysis."""
 import random
+from typing import List
+from typing import NamedTuple
 
 import numpy as np
 import sqlalchemy as sql
 
+from deeplearning.ml4pl import run_id as run_id
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import log_analysis
 from deeplearning.ml4pl.models import log_database
@@ -56,6 +59,13 @@ def empty_log_db(request) -> log_database.Database:
   )
 
 
+class DatabaseAndRunIds(NamedTuple):
+  """A populated log database and the run IDs used to populate it."""
+
+  db: log_database.Database
+  run_ids: List[run_id.RunId]
+
+
 @test.Fixture(
   scope="session",
   params=testing_databases.GetDatabaseUrls(),
@@ -63,30 +73,52 @@ def empty_log_db(request) -> log_database.Database:
 )
 def populated_log_db(
   request, generator: random_log_database_generator.RandomLogDatabaseGenerator
-) -> log_database.Database:
+) -> DatabaseAndRunIds:
   """A test fixture which yields an empty log database."""
   with testing_databases.DatabaseContext(
     log_database.Database, request.param
   ) as db:
-    db._run_ids = generator.PopulateLogDatabase(db, run_count=10)
-    yield db
+    yield DatabaseAndRunIds(
+      db=db, run_ids=generator.PopulateLogDatabase(db, run_count=10)
+    )
 
 
 ###############################################################################
-# Tests.
+# LogAnalyzer Tests.
 ###############################################################################
+
+
+def test_LogAnalyzer_empty_db(empty_log_db: log_database.Database):
+  """Test that log analyzer works on an empty database."""
+  with test.Raises(ValueError):
+    log_analysis.LogAnalyzer(empty_log_db)
+
+
+###############################################################################
+# RunLogAnalyser Tests.
+###############################################################################
+
+
+def test_RunLogAnalyser_smoke_tests(populated_log_db: DatabaseAndRunIds):
+  """Black-box test that run log properties work."""
+  for run_id in populated_log_db.run_ids:
+    run = log_analysis.RunLogAnalyzer(populated_log_db.db, run_id)
+    assert run.graph_db
+    assert run.tables.keys() == {"parameters", "epochs", "runs", "tags"}
 
 
 def test_RunLogAnalyser_empty_db(empty_log_db: log_database.Database):
   """Test that cannot analyse non-existing run."""
   with test.Raises(ValueError):
-    log_analysis.RunLogAnalyzer(empty_log_db, "foo")
+    log_analysis.RunLogAnalyzer(
+      empty_log_db, run_id.RunId.GenerateUnique("foo")
+    )
 
 
-def test_RunLogAnalyser_smoke_tests(populated_log_db: log_database.Database):
+def test_RunLogAnalyser_smoke_tests(populated_log_db: DatabaseAndRunIds):
   """Black-box test that run log properties work."""
-  for run_id in populated_log_db._run_ids:
-    run = log_analysis.RunLogAnalyzer(populated_log_db, run_id)
+  for run_id in populated_log_db.run_ids:
+    run = log_analysis.RunLogAnalyzer(populated_log_db.db, run_id)
     assert run.graph_db
     assert run.tables.keys() == {"parameters", "epochs", "runs", "tags"}
 
@@ -104,11 +136,11 @@ def test_RunLogAnalyser_smoke_tests(populated_log_db: log_database.Database):
   ),
 )
 def test_RunLogAnalyser_best_epoch_num(
-  populated_log_db: log_database.Database, metric: str
+  populated_log_db: DatabaseAndRunIds, metric: str
 ):
   """Black-box test that run log properties work."""
-  for run_id in populated_log_db._run_ids:
-    run = log_analysis.RunLogAnalyzer(populated_log_db, run_id)
+  for run_id in populated_log_db.run_ids:
+    run = log_analysis.RunLogAnalyzer(populated_log_db.db, run_id)
     try:
       assert run.GetBestEpochNum(metric=metric)
     except ValueError as e:
@@ -116,19 +148,19 @@ def test_RunLogAnalyser_best_epoch_num(
       assert str(e) == f"No {run_id} epochs reached {metric}"
 
 
-def test_GetGraphsForBatch(populated_log_db: log_database.Database):
+def test_GetGraphsForBatch(populated_log_db: DatabaseAndRunIds):
   """Test reconstructing graphs from a detailed batch."""
   # Select a random run to analyze.
-  run_id = random.choice(populated_log_db._run_ids)
-  run = log_analysis.RunLogAnalyzer(populated_log_db, run_id)
+  run_id = random.choice(populated_log_db.run_ids)
+  run = log_analysis.RunLogAnalyzer(populated_log_db.db, run_id)
 
-  with populated_log_db.Session() as session:
+  with populated_log_db.db.Session() as session:
     # Select some random detailed batches to reconstruct the graphs of.
     detailed_batches = (
       session.query(log_database.Batch)
       .join(log_database.BatchDetails)
       .options(sql.orm.joinedload(log_database.Batch.details))
-      .order_by(populated_log_db.Random())
+      .order_by(populated_log_db.db.Random())
       .limit(50)
       .all()
     )
@@ -142,19 +174,19 @@ def test_GetGraphsForBatch(populated_log_db: log_database.Database):
     assert len(graphs) == len(set(batch.graph_ids))
 
 
-def test_GetInputOutputGraphs(populated_log_db: log_database.Database):
+def test_GetInputOutputGraphs(populated_log_db: DatabaseAndRunIds):
   """Test reconstructing graphs from a detailed batch."""
   # Select a random run to analyze.
-  run_id = random.choice(populated_log_db._run_ids)
-  run = log_analysis.RunLogAnalyzer(populated_log_db, run_id)
+  run_id = random.choice(populated_log_db.run_ids)
+  run = log_analysis.RunLogAnalyzer(populated_log_db.db, run_id)
 
-  with populated_log_db.Session() as session:
+  with populated_log_db.db.Session() as session:
     # Select some random detailed batches to reconstruct the graphs of.
     detailed_batches = (
       session.query(log_database.Batch)
       .join(log_database.BatchDetails)
       .options(sql.orm.joinedload(log_database.Batch.details))
-      .order_by(populated_log_db.Random())
+      .order_by(populated_log_db.db.Random())
       .limit(50)
       .all()
     )
