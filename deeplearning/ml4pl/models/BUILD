@@ -141,7 +141,7 @@ py_binary(
 py_library(
     name = "log_analysis",
     srcs = ["log_analysis.py"],
-    visibility = ["//visibility:public"],
+    visibility = ["//deeplearning/ml4pl:__subpackages__"],
     deps = [
         ":log_database",
         "//deeplearning/ml4pl:run_id",
@@ -151,6 +151,7 @@ py_library(
         "//labm8/py:app",
         "//labm8/py:decorators",
         "//labm8/py:progress",
+        "//third_party/py/matplotlib",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
         "//third_party/py/scikit_learn",

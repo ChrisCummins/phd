@@ -8,6 +8,7 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 import sklearn.metrics
+from matplotlib import pyplot as plt
 
 from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
@@ -265,3 +266,35 @@ def BuildConfusionMatrix(targets: np.array, predictions: np.array) -> np.array:
     confusion_matrix[target][prediction] += 1
 
   return confusion_matrix
+
+
+def PlotRunMetrics(
+  log_db: log_database.Database,
+  metric: str,
+  epoch_types: List[str] = None,
+  run_ids: List[run_id_lib.RunId] = None,
+  ax=None,
+):
+  if metric not in {"loss", "accuracy", "precision", "recall", "f1"}:
+    raise app.UsageError(f"Unsupported metric: {metric}")
+  epoch_typenames = epoch_types or ["train", "val", "test"]
+
+  epoch_types = [epoch.Type[name.upper()] for name in epoch_typenames]
+
+  ax = ax or plt.gca()
+
+  for name, df in log_db.GetTables(run_ids=run_ids):
+    if name == "epochs":
+      break
+  else:
+    raise ValueError("Epochs table not found")
+
+  epochs = list(range(df["epoch_num"].min(), df["epoch_num"].max()))
+
+  for run_id in set(df["run_id"].values):
+    for epoch_type in epoch_typenames:
+      metric_name = f"{epoch_type}_{metric}"
+      run_df = df[(df["run_id"] == run_id) & (df[metric_name].notnull())]
+      x = run_df["epoch_num"].values
+      y = run_df[metric_name].values
+      ax.plot(x, y)
