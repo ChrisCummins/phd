@@ -1,9 +1,12 @@
 """Unit tests for //deeplearning/ml4pl/graphs/labelled/dataflow/subexpressions."""
+import networkx as nx
+
 from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled.dataflow.subexpressions import (
   subexpressions,
 )
+from deeplearning.ml4pl.testing import random_networkx_generator
 from deeplearning.ml4pl.testing import random_programl_generator
 from labm8.py import test
 
@@ -15,6 +18,15 @@ FLAGS = test.FLAGS
   params=list(random_programl_generator.EnumerateProtoTestSet()),
 )
 def real_proto(request) -> programl_pb2.ProgramGraph:
+  """A test fixture which yields one of 100 "real" graphs."""
+  return request.param
+
+
+@test.Fixture(
+  scope="session",
+  params=list(random_networkx_generator.EnumerateGraphTestSet()),
+)
+def real_graph(request) -> nx.MultiDiGraph:
   """A test fixture which yields one of 100 "real" graphs."""
   return request.param
 
@@ -284,6 +296,35 @@ def test_GetExpressionSets_commutative_graph_labels(
     # Note we can't test for equality of 'x' because the root node is chosen
     # randomly.
     assert a.nodes[node]["y"] == b.nodes[node]["y"]
+
+
+def test_GetExpressionSets_statement_count(real_graph: nx.MultiDiGraph):
+  """Check that every statement node appears in the expression sets."""
+  expression_sets = subexpressions.GetExpressionSets(real_graph)
+  # Count the number of statements with at least one operand.
+  statements_with_operands_count = len(
+    [
+      n
+      for n, type_ in real_graph.nodes(data="type")
+      if type_ == programl_pb2.Node.STATEMENT
+      and any(
+        _
+        for _, _, flow in real_graph.in_edges(n, data="flow")
+        if flow == programl_pb2.Edge.DATA
+      )
+    ]
+  )
+  flattened_expression_sets = set().union(*expression_sets)
+  assert statements_with_operands_count == len(flattened_expression_sets)
+
+
+def test_GetExpressionSets_does_not_include_duplicates(
+  real_graph: nx.MultiDiGraph,
+):
+  """Check that every node appears in only one expression set."""
+  expression_sets = subexpressions.GetExpressionSets(real_graph)
+  flattened_expression_sets = set().union(*expression_sets)
+  assert len(flattened_expression_sets) == sum(len(s) for s in expression_sets)
 
 
 def test_MakeSubexpressionsGraphs_wiki_without_subexpressions(
