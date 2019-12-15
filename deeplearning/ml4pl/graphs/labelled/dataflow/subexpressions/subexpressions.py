@@ -27,6 +27,10 @@ def GetExpressionSets(g: nx.MultiDiGraph) -> List[Set[int]]:
 
   Traverse the full graph to and build a mapping from expressions to a list of
   nodes which evaluate this expression.
+
+  Returns:
+    A list of expression sets, where each expression set is a collection of
+    nodes that each evaluate the same expression.
   """
   # A map from expression to a list of nodes which evaluate this expression.
   expression_sets = collections.defaultdict(set)
@@ -97,14 +101,23 @@ class CommonSubexpressionAnnotator(
 
   def __init__(self, *args, **kwargs):
     self._expression_sets = None
+    self._root_nodes = None
     super(CommonSubexpressionAnnotator, self).__init__(*args, **kwargs)
 
   def IsValidRootNode(self, node: int, data) -> bool:
+    """Determine if the given node should be used as a root node.
+
+    For subexpressions, a valid root node is one which is a part of an
+    expression set of at least --expression_set_min_size expressions.
+    """
     del data
-    for expression_set in self.expression_sets:
-      if node in expression_set:
-        return len(expression_set) >= FLAGS.expression_set_min_size
-    return False
+    # Lazily evaluate the set of root nodes.
+    if self._root_nodes is None:
+      self._root_nodes = set()
+      for expression_set in self.expression_sets:
+        if len(expression_set) >= FLAGS.expression_set_min_size:
+          self._root_nodes = self._root_nodes.union(expression_set)
+    return node in self._root_nodes
 
   @property
   def expression_sets(self):
