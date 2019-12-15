@@ -1,15 +1,23 @@
 """This module defines an LSTM classifier."""
 import enum
 import io
+import os
 import pathlib
+import sys
 import tempfile
 from typing import Any
 from typing import Iterable
 from typing import List
 from typing import NamedTuple
 from typing import Optional
+# Quiet keras import, see https://stackoverflow.com/a/51567328
 
+stderr = sys.stderr
+sys.stderr = open(os.devnull, "w")
 import keras
+
+sys.stderr = stderr
+
 import numpy as np
 import tensorflow as tf
 

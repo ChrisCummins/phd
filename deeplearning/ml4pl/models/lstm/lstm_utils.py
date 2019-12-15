@@ -1,5 +1,14 @@
 """Utilities for LSTM models."""
+# Quiet keras import, see https://stackoverflow.com/a/51567328
+import os
+import sys
+
+stderr = sys.stderr
+sys.stderr = open(os.devnull, "w")
 import keras
+
+sys.stderr = stderr
+
 import tensorflow as tf
 
 from labm8.py import app
