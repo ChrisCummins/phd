@@ -222,12 +222,23 @@ def ProcessWorker(packed_args) -> AnnotationResult:
           n=FLAGS.n,
           timeout=FLAGS.annotator_timeout,
         )
-        for annotated_graph in annotated_graphs.graphs:
+
+        if annotated_graphs.graphs:
+          # Record the annotated analysis results.
+          for annotated_graph in annotated_graphs.graphs:
+            graph_tuples.append(
+              graph_tuple_database.GraphTuple.CreateFromNetworkX(
+                annotated_graph, ir_id=program_graph.ir_id
+              )
+            )
+        else:
+          # Analysis produced no outputs, so just record an empty graph.
           graph_tuples.append(
-            graph_tuple_database.GraphTuple.CreateFromNetworkX(
-              annotated_graph, ir_id=program_graph.ir_id
+            graph_tuple_database.GraphTuple.CreateEmpty(
+              ir_id=program_graph.ir_id
             )
           )
+
       except Exception as e:
         _, _, tb = sys.exc_info()
         tb = traceback.extract_tb(tb, 2)

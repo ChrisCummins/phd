@@ -56,3 +56,12 @@ class ErrorAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
     self, n: Optional[int] = None
   ) -> data_flow_graphs.NetworkxDataFlowGraphs:
     raise OSError("something went wrong!")
+
+
+class EmptyAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
+  """An analysis which produces no outputs."""
+
+  def MakeAnnotated(
+    self, n: int = 0
+  ) -> data_flow_graphs.NetworkxDataFlowGraphs:
+    return data_flow_graphs.NetworkxDataFlowGraphs([])

@@ -237,5 +237,41 @@ def test_timeout_analysis(
     )
 
 
+def test_empty_analysis(
+  proto_db: unlabelled_graph_database.Database,
+  graph_db: graph_tuple_database.Database,
+  order_by: str,
+  n: int,
+):
+  """Test that 'empty' graphs are produced when analysis returns no results."""
+  FLAGS.n = n
+  progress.Run(
+    make_data_flow_analysis_dataset.DatasetGenerator(
+      input_db=proto_db,
+      analysis="test_empty",
+      output_db=graph_db,
+      order_by=order_by,
+    )
+  )
+  with graph_db.Session() as session, proto_db.Session() as proto_session:
+    output_graph_count = session.query(
+      sql.func.count(graph_tuple_database.GraphTuple.id)
+    ).scalar()
+
+    input_graph_count = proto_session.query(
+      sql.func.count(unlabelled_graph_database.ProgramGraph.ir_id)
+    ).scalar()
+
+    assert output_graph_count == input_graph_count
+
+    # All graphs are empty.
+    assert (
+      session.query(
+        sql.func.sum(graph_tuple_database.GraphTuple.node_count)
+      ).scalar()
+      == 0
+    )
+
+
 if __name__ == "__main__":
   test.Main()

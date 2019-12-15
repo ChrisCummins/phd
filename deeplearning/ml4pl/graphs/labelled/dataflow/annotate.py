@@ -79,6 +79,7 @@ ANALYSES = {
   "test_flaky": test_annotators.FlakyAnnotator,
   "test_timeout": test_annotators.TimeoutAnnotator,
   "test_error": test_annotators.ErrorAnnotator,
+  "test_empty": test_annotators.EmptyAnnotator,
 }
 
 # A list of the available analyses. We filter out the test_xxx named annotators
