@@ -6,8 +6,11 @@ from labm8.py import app
 
 app.DEFINE_boolean(
   "cudnn_lstm",
-  False,
-  "If set, use CuDNNLSTM implementation. Else use default Keras implementation",
+  True,
+  "If set, use CuDNNLSTM implementation when a GPU is available. Else use "
+  "default Keras implementation. Note that the two implementations are "
+  "incompatible - a model saved using one LSTM type cannot be restored using "
+  "the other LSTM type.",
 )
 
 FLAGS = app.FLAGS
@@ -23,8 +26,13 @@ def SetAllowedGrowthOnKerasSession():
 
 
 def LstmLayer(*args, **kwargs):
-  """Construct an LSTM layer"""
-  if FLAGS.cudnn_lstm:
+  """Construct an LSTM layer.
+
+  If a GPU is available and --cudnn_lstm, this will use NVIDIA's fast CuDNNLSTM
+  implementation. Else it will use Keras' builtin LSTM, which is much slower but
+  works on CPU.
+  """
+  if FLAGS.cudnn_lstm and tf.compat.v1.test.is_gpu_available():
     return keras.layers.CuDNNLSTM(*args, **kwargs)
   else:
     return keras.layers.LSTM(*args, **kwargs, implementation=1)
