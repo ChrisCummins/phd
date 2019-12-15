@@ -78,8 +78,6 @@ py_library(
         "//labm8/py:progress",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
-        "//third_party/py/scikit_learn",
-        "//third_party/py/tqdm",
     ],
 )
 
