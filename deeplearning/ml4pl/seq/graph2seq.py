@@ -271,6 +271,12 @@ class StatementEncoderBase(EncoderBase):
   ) -> Tuple[np.array, np.array]:
     """Encode the given strings and return a flattened list of the encoded
     values and the segment IDs.
+
+    Args:
+      A list of zero or more strings.
+
+    Returns:
+      A pair of <encoded_sequences, statement_indices> arrays.
     """
     encoded_sequences = self.ir2seq_encoder.EncodeStrings(strings, ctx=ctx)
     statement_indices = []
@@ -279,8 +285,13 @@ class StatementEncoderBase(EncoderBase):
 
     if encoded_sequences:
       encoded_sequences = np.concatenate(encoded_sequences)
+    else:
+      encoded_sequences = np.array([], dtype=np.int32)
+
     if statement_indices:
       statement_indices = np.concatenate(statement_indices)
+    else:
+      statement_indices = np.array([], dtype=np.int32)
 
     return encoded_sequences, statement_indices
 
@@ -312,7 +323,7 @@ class StatementEncoder(StatementEncoderBase):
     )
 
     if segment_ids[-1] > len(graph.node):
-      raise ValueError(
+      ctx.Warning(
         f"Found max segment ID {segment_ids[-1]} in graph with "
         f"only {len(graph.node)} nodes"
       )
@@ -332,17 +343,19 @@ class IdentifierEncoder(StatementEncoderBase):
   ) -> EncodedSubsequences:
     """Serialize a graph to an encoded sequence of identifier statement groups.
     """
-    identifier_nodes, identifier_node_mask = [], []
-    for node in graph.node:
+    identifier_nodes: List[int] = []
+    identifier_node_mask: List[bool] = []
+
+    for i, node in enumerate(graph.node):
       if node.type == programl_pb2.Node.IDENTIFIER:
-        identifier_nodes.append(node)
+        identifier_nodes.append(i)
         identifier_node_mask.append(1)
       else:
         identifier_node_mask.append(0)
     identifier_node_mask = np.array(identifier_node_mask, dtype=np.int32)
 
     if not any(identifier_node_mask):
-      raise ValueError("Graph contains no identifier nodes")
+      ctx.Warning("Graph contains no identifier nodes")
 
     strings_to_encode = []
     for identifier in identifier_nodes:
@@ -354,8 +367,8 @@ class IdentifierEncoder(StatementEncoderBase):
       strings_to_encode, ctx=ctx
     )
 
-    if segment_ids[-1] > len(graph.node):
-      raise ValueError(
+    if segment_ids.size and segment_ids[-1] > len(graph.node):
+      ctx.Warning(
         f"Found max segment ID {segment_ids[-1]} in graph with "
         f"only {len(graph.node)} nodes"
       )
