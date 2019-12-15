@@ -3,6 +3,7 @@
 This defines the schedules for running training / validation / testing loops
 of a machine learning model.
 """
+import copy
 import warnings
 from typing import Dict
 from typing import List
@@ -195,6 +196,43 @@ class Train(progress.Progress):
     )
     self.logger.ctx = self.ctx
 
+  @memory_profiler.profile
+  def RunOneEpoch(self, test_on: str, save_on) -> None:
+    """Inner loop to run a single train/val/test epoch.
+    """
+    # Create the batch iterators ahead of time so that they can asynchronously
+    # start reading from the graph database.
+    batch_iterators = {
+      epoch_type: batch_iterator_lib.MakeBatchIterator(
+        model=self.model,
+        graph_db=self.graph_db,
+        splits=self.splits,
+        epoch_type=epoch_type,
+        ctx=self.ctx,
+      )
+      for epoch_type in [epoch.Type.TRAIN, epoch.Type.VAL, epoch.Type.TEST]
+    }
+
+    train_results, _ = self.RunEpoch(epoch.Type.TRAIN, batch_iterators)
+
+    val_results, val_improved = self.RunEpoch(epoch.Type.VAL, batch_iterators)
+
+    if val_improved and (
+      test_on == "improvement" or test_on == "improvement_and_last"
+    ):
+      self.RunEpoch(epoch.Type.TEST, batch_iterators)
+    elif test_on == "improvement_and_last" and self.ctx.i == self.ctx.n - 1:
+      self.RunEpoch(epoch.Type.TEST, batch_iterators)
+
+    # Determine whether to make a checkpoint.
+    if save_on == schedules.SaveOn.EVERY_EPOCH or (
+      save_on == schedules.SaveOn.VAL_IMPROVED and val_improved
+    ):
+      self.model.SaveCheckpoint()
+
+    if test_on == "every":
+      self.RunEpoch(epoch.Type.TEST, batch_iterators)
+
   def Run(self):
     """Run the train/val/test loop."""
     test_on = FLAGS.test_on
@@ -203,40 +241,8 @@ class Train(progress.Progress):
 
     save_on = FLAGS.save_on()
 
-    # Epoch loop.
     for self.ctx.i in range(self.ctx.i, self.ctx.n):
-      # Create the batch iterators ahead of time so that they can asynchronously
-      # start reading from the graph database.
-      batch_iterators = {
-        epoch_type: batch_iterator_lib.MakeBatchIterator(
-          model=self.model,
-          graph_db=self.graph_db,
-          splits=self.splits,
-          epoch_type=epoch_type,
-          ctx=self.ctx,
-        )
-        for epoch_type in [epoch.Type.TRAIN, epoch.Type.VAL, epoch.Type.TEST]
-      }
-
-      train_results, _ = self.RunEpoch(epoch.Type.TRAIN, batch_iterators)
-
-      val_results, val_improved = self.RunEpoch(epoch.Type.VAL, batch_iterators)
-
-      if val_improved and (
-        test_on == "improvement" or test_on == "improvement_and_last"
-      ):
-        self.RunEpoch(epoch.Type.TEST, batch_iterators)
-      elif test_on == "improvement_and_last" and self.ctx.i == self.ctx.n - 1:
-        self.RunEpoch(epoch.Type.TEST, batch_iterators)
-
-      # Determine whether to make a checkpoint.
-      if save_on == schedules.SaveOn.EVERY_EPOCH or (
-        save_on == schedules.SaveOn.VAL_IMPROVED and val_improved
-      ):
-        self.model.SaveCheckpoint()
-
-      if test_on == "every":
-        self.RunEpoch(epoch.Type.TEST, batch_iterators)
+      self.RunOneEpoch(test_on, save_on)
 
     # Record the final epoch.
     self.ctx.i += 1
@@ -321,6 +327,7 @@ def CreateModel(
   return model
 
 
+@memory_profiler.profile
 def RunOne(
   model_class,
   print_header: bool = True,
@@ -373,7 +380,9 @@ def RunOne(
     epochs.reset_index(inplace=True)
 
     # Select the row with the greatest validation accuracy.
-    best_epoch = epochs.loc[epochs["val_accuracy"].idxmax()]
+    # TODO(github.com/ChrisCummins/ProGraML/issues/38): Find the memory leak.
+    best_epoch = copy.deepcopy(epochs.loc[epochs["val_accuracy"].idxmax()])
+    del epochs
 
     if print_footer:
       PrintExperimentFooter(model, best_epoch)
@@ -522,12 +531,10 @@ def _RunFlagsActionsOnModelOrDir(model_class):
       return RunOne(model_class)
   except RunError as e:
     app.FatalWithoutStackTrace("%s", e)
+    sys.exit(1)
 
 
-memory_profiler_log = open("/tmp/memory_profiler.log", "w+")
-
-
-@memory_profiler.profile(stream=memory_profiler_log)
+@memory_profiler.profile
 def RunWithMemoryProfiler(func, *args, **kwargs):
   """Given the given argument with a memory profiler.
 
