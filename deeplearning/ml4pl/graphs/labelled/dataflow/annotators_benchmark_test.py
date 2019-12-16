@@ -12,7 +12,7 @@ MODULE_UNDER_TEST = None
 PYTEST_ARGS = ["--benchmark-warmup-iterations=2"]
 
 # Real programs to test over.
-PROTOS = list(random_programl_generator.EnumerateProtoTestSet(n=20))
+PROTOS = list(random_programl_generator.EnumerateTestSet(n=20))
 
 # The annotators to test.
 ANNOTATORS = {

@@ -1,7 +1,6 @@
 """Unit tests for //deeplearning/ml4pl/models/lstm."""
 import random
 import string
-from typing import Iterable
 from typing import List
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
@@ -137,13 +136,13 @@ def opencl_relpaths() -> List[str]:
 def node_y_db(
   request, opencl_relpaths: List[str], node_y_dimensionality: int,
 ) -> graph_tuple_database.Database:
-  """A test fixture which yields a graph database with 256 OpenCL IR entries."""
+  """A test fixture which yields a graph database with 100 real graphs."""
   with testing_databases.DatabaseContext(
     graph_tuple_database.Database, request.param
   ) as db:
-    PopulateOpenClGraphs(
+    random_graph_tuple_database_generator.PopulateWithTestSet(
       db,
-      opencl_relpaths,
+      len(opencl_relpaths),
       node_y_dimensionality=node_y_dimensionality,
       graph_x_dimensionality=0,
       graph_y_dimensionality=0,
@@ -330,7 +329,7 @@ def test_node_classifier_call(
   )
   model.Initialize()
 
-  batch_iterator = batch_iterator = batch_iterator_lib.MakeBatchIterator(
+  batch_iterator = batch_iterator_lib.MakeBatchIterator(
     model=model,
     graph_db=node_y_db,
     splits={epoch.Type.TRAIN: [0], epoch.Type.VAL: [1], epoch.Type.TEST: [2],},

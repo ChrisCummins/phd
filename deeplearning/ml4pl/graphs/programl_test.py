@@ -18,8 +18,7 @@ FLAGS = test.FLAGS
 
 
 @test.Fixture(
-  scope="function",
-  params=list(random_programl_generator.EnumerateProtoTestSet()),
+  scope="function", params=list(random_programl_generator.EnumerateTestSet()),
 )
 def random_100_proto(request) -> programl_pb2.ProgramGraph:
   """A test fixture which returns one of 100 "real" graph protos."""

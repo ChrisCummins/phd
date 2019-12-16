@@ -190,7 +190,7 @@ def CreateRandomProto(
   return proto
 
 
-def EnumerateProtoTestSet(
+def EnumerateTestSet(
   n: Optional[int] = None,
 ) -> Iterable[programl_pb2.ProgramGraph]:
   """Enumerate a test set of "real" program graphs."""

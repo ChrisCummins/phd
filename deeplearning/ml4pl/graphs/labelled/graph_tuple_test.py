@@ -281,8 +281,7 @@ def test_ToNetworkx_graph_y_set(graph: nx.MultiDiGraph):
 
 
 @test.Fixture(
-  scope="function",
-  params=list(random_networkx_generator.EnumerateGraphTestSet()),
+  scope="function", params=list(random_networkx_generator.EnumerateTestSet()),
 )
 def real_nx_graph(request) -> nx.MultiDiGraph:
   return request.param

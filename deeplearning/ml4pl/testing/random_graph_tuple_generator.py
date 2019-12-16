@@ -1,8 +1,10 @@
 """This module defines a generator for random graph tuples."""
 from typing import Iterable
+from typing import Optional
 
 from deeplearning.ml4pl.graphs.labelled import graph_tuple
 from deeplearning.ml4pl.testing import random_networkx_generator
+from deeplearning.ml4pl.testing import random_programl_generator
 from labm8.py import test
 
 FLAGS = test.FLAGS
@@ -49,7 +51,9 @@ def CreateRandomGraphTuple(
     return graph_tuples[0]
 
 
-def EnumerateGraphTupleTestSet() -> Iterable[graph_tuple.GraphTuple]:
+def EnumerateTestSet(
+  n: Optional[int] = None,
+) -> Iterable[graph_tuple.GraphTuple]:
   """Enumerate a test set of "real" graph tuples."""
-  for graph in random_networkx_generator.EnumerateGraphTestSet():
-    yield graph_tuple.GraphTuple.CreateFromNetworkX(graph)
+  for graph in random_programl_generator.EnumerateTestSet(n=n):
+    yield graph_tuple.GraphTuple.CreateFromProgramGraph(graph)

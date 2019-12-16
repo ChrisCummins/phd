@@ -34,6 +34,22 @@ def CreateRandomString(min_length: int = 1, max_length: int = 1024) -> str:
   )
 
 
+def SelectRandomGraphs(graph_db: graph_tuple_database.Database):
+  """Return [1, graph_db.graph_count] graphs in a random order."""
+  with graph_db.Session() as session:
+    # Load a random collection of graphs.
+    graphs = (
+      session.query(graph_tuple_database.GraphTuple)
+      .order_by(graph_db.Random())
+      .limit(random.randint(1, graph_db.graph_count))
+      .all()
+    )
+    # Sanity check that graphs are returned.
+    assert graphs
+
+  return graphs
+
+
 ###############################################################################
 # Fixtures.
 ###############################################################################
@@ -83,16 +99,9 @@ def populated_graph_db(
   with testing_databases.DatabaseContext(
     graph_tuple_database.Database, request.param
   ) as db:
-    rows = []
-    # Create random rows using OpenCL relpaths.
-    for i, relpath in enumerate(opencl_relpaths):
-      row = random_graph_tuple_database_generator.CreateRandomGraphTuple()
-      row.ir_id = i + 1
-      row.id = len(opencl_relpaths) - i
-      rows.append(row)
-
-    with db.Session(commit=True) as session:
-      session.add_all(rows)
+    random_graph_tuple_database_generator.PopulateWithTestSet(
+      db, len(opencl_relpaths)
+    )
 
     yield db
 
@@ -105,22 +114,13 @@ def populated_graph_db(
 def populated_proto_db(
   request, opencl_relpaths: Set[str]
 ) -> unlabelled_graph_database.Database:
-  """A test fixture which yields a graph database with 256 OpenCL IR entries."""
+  """A test fixture which yields a graph database with 256 real protos."""
   with testing_databases.DatabaseContext(
     unlabelled_graph_database.Database, request.param
   ) as db:
-    rows = []
-    # Create random rows using OpenCL relpaths.
-    for i, relpath in enumerate(opencl_relpaths):
-      row = (
-        random_unlabelled_graph_database_generator.CreateRandomProgramGraph()
-      )
-      row.ir_id = i + 1
-      row.id = len(opencl_relpaths) - i
-      rows.append(row)
-
-    with db.Session(commit=True) as session:
-      session.add_all(rows)
+    random_unlabelled_graph_database_generator.PopulateDatabaseWithTestSet(
+      db, len(opencl_relpaths)
+    )
 
     yield db
 
@@ -156,13 +156,13 @@ def populated_ir_db(request, opencl_relpaths: Set[str]) -> ir_database.Database:
 
 
 @test.Fixture(
-  scope="function",
+  scope="session",
   params=(ir2seq.LlvmEncoder, ir2seq.OpenClEncoder, ir2seq.Inst2VecEncoder),
 )
 def ir2seq_encoder(
   request, populated_ir_db: ir_database.Database
 ) -> ir2seq.EncoderBase:
-  """Test fixture an encoder with IR IDs in range [1,256]."""
+  """Test fixture which enumerates ir2seq encoders."""
   return request.param(populated_ir_db)
 
 
@@ -176,64 +176,57 @@ def cache_size(request) -> int:
   return request.param
 
 
+@test.Fixture(scope="function")
+def graph_encoder(
+  populated_graph_db: graph_tuple_database.Database,
+  ir2seq_encoder: ir2seq.EncoderBase,
+  cache_size: int,
+):
+  """A test fixture which enumerates statement encoders."""
+  return graph2seq.GraphEncoder(populated_graph_db, ir2seq_encoder, cache_size)
+
+
+@test.Fixture(scope="function")
+def statement_encoder(
+  populated_proto_db: unlabelled_graph_database.Database,
+  populated_graph_db: graph_tuple_database.Database,
+  cache_size: int,
+):
+  """A test fixture which enumerates statement encoders."""
+  return graph2seq.StatementEncoder(
+    populated_graph_db, populated_proto_db, cache_size
+  )
+
+
 ###############################################################################
 # Tests.
 ###############################################################################
 
 
-@decorators.loop_for(seconds=3)
+@decorators.loop_for(seconds=2, min_iteration_count=10)
 def test_fuzz_GraphEncoder(
-  ir2seq_encoder: ir2seq.EncoderBase,
+  graph_encoder: graph2seq.GraphEncoder,
   populated_graph_db: graph_tuple_database.Database,
-  cache_size: int,
 ):
-  """Fuzz the encoder."""
-  graph2seq_encoder = graph2seq.GraphEncoder(
-    populated_graph_db, ir2seq_encoder, cache_size
-  )
-
-  with graph2seq_encoder.graph_db.Session() as session:
-    # Load a random collection of graphs.
-    graphs = (
-      session.query(graph_tuple_database.GraphTuple)
-      .order_by(graph2seq_encoder.graph_db.Random())
-      .limit(random.randint(1, 200))
-      .all()
-    )
-    # Sanity check that graphs are returned.
-    assert graphs
-
-  encoded = graph2seq_encoder.Encode(graphs)
+  """Fuzz the graph-level encoder."""
+  graphs = SelectRandomGraphs(populated_graph_db)
+  encoded = graph_encoder.Encode(graphs)
 
   assert len(encoded) == len(graphs)
 
 
-@decorators.loop_for(seconds=3)
+@decorators.loop_for(seconds=2, min_iteration_count=10)
 def test_fuzz_StatementEncoder(
-  ir2seq_encoder: ir2seq.EncoderBase,
-  populated_proto_db: unlabelled_graph_database.Database,
+  statement_encoder: graph2seq.StatementEncoder,
   populated_graph_db: graph_tuple_database.Database,
-  cache_size: int,
 ):
-  """Fuzz the encoder."""
-  graph2seq_encoder = graph2seq.StatementEncoder(
-    populated_graph_db, populated_proto_db, ir2seq_encoder, cache_size
-  )
-
-  with graph2seq_encoder.graph_db.Session() as session:
-    # Load a random collection of graphs.
-    graphs = (
-      session.query(graph_tuple_database.GraphTuple)
-      .order_by(graph2seq_encoder.graph_db.Random())
-      .limit(random.randint(1, 200))
-      .all()
-    )
-    # Sanity check that graphs are returned.
-    assert graphs
-
-  encoded = graph2seq_encoder.Encode(graphs)
+  """Fuzz the statement-level encoder."""
+  graphs = SelectRandomGraphs(populated_graph_db)
+  encoded = statement_encoder.Encode(graphs)
 
   assert len(encoded) == len(graphs)
+  for seq, graph in zip(encoded, graphs):
+    assert all(n in list(range(graph.node_count)) for n in seq.node)
 
 
 if __name__ == "__main__":

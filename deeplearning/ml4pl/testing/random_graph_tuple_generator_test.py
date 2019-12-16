@@ -44,9 +44,9 @@ def test_CreateRandomGraphTuple(
   assert graph_tuple.graph_y_dimensionality == graph_y_dimensionality
 
 
-def test_EnumerateGraphTupleTestSet():
+def test_EnumerateTestSet():
   """Test the "real" protos."""
-  protos = list(random_graph_tuple_generator.EnumerateGraphTupleTestSet())
+  protos = list(random_graph_tuple_generator.EnumerateTestSet())
   assert len(protos) == 100
 
 

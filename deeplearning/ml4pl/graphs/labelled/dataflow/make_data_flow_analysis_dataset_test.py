@@ -45,9 +45,7 @@ def proto_db(request,) -> unlabelled_graph_database.Database.SessionType:
   with testing_databases.DatabaseContext(
     unlabelled_graph_database.Database, request.param
   ) as db:
-    random_unlabelled_graph_database_generator.PopulateDatabaseWithRealProtos(
-      db
-    )
+    random_unlabelled_graph_database_generator.PopulateDatabaseWithTestSet(db)
     yield db
 
 
@@ -66,7 +64,7 @@ def proto_db_10(request,) -> unlabelled_graph_database.Database.SessionType:
         [
           unlabelled_graph_database.ProgramGraph.Create(proto, ir_id=i + 1)
           for i, proto in enumerate(
-            list(random_programl_generator.EnumerateProtoTestSet())[:10]
+            list(random_programl_generator.EnumerateTestSet())[:10]
           )
         ]
       )

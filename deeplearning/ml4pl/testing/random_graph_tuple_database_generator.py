@@ -7,9 +7,12 @@ When executed as a script, this generates and populates a database of graphs:
         --graph_db='sqlite:////tmp/graphs.db'
 """
 import copy
+import itertools
 import random
 from typing import List
 from typing import NamedTuple
+
+import numpy as np
 
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.testing import generator_flags
@@ -102,6 +105,63 @@ def PopulateDatabaseWithRandomGraphTuples(
     session.add_all([copy.deepcopy(t) for t in rows])
 
   db.RefreshStats()
+
+  return DatabaseAndRows(db, rows)
+
+
+def PopulateWithTestSet(
+  db: graph_tuple_database.Database,
+  graph_count: int,
+  node_x_dimensionality: int = 2,
+  node_y_dimensionality: int = 0,
+  graph_x_dimensionality: int = 0,
+  graph_y_dimensionality: int = 0,
+  with_data_flow: bool = False,
+  split_count: int = 0,
+):
+  """Populate a database with "real" programs."""
+  rows = []
+  graph_tuples = itertools.islice(
+    itertools.cycle(
+      random_graph_tuple_generator.EnumerateTestSet(n=graph_count)
+    ),
+    graph_count,
+  )
+  for i, graph_tuple in enumerate(graph_tuples):
+    # Set the graph labels.
+    # TODO: Node and graph features.
+    node_y = (
+      np.random.rand(graph_tuple.node_count, node_y_dimensionality)
+      if node_y_dimensionality
+      else None
+    )
+    graph_y = (
+      np.random.rand(graph_tuple.graph_count, graph_y_dimensionality)
+      if graph_y_dimensionality
+      else None
+    )
+    if node_y or graph_y:
+      graph_tuple = graph_tuple.SetLabels(
+        node_y=node_y, graph_y=graph_y, copy=False
+      )
+
+    mapped = graph_tuple_database.GraphTuple.CreateFromGraphTuple(
+      graph_tuple,
+      ir_id=i + 1,
+      split=random.randint(0, split_count) if split_count else None,
+    )
+
+    if with_data_flow:
+      mapped.data_flow_steps = random.randint(1, 50)
+      mapped.data_flow_root_node = random.randint(0, mapped.node_count - 1)
+      mapped.data_flow_positive_node_count = random.randint(
+        1, mapped.node_count - 1
+      )
+
+    rows.append(mapped)
+
+  with db.Session(commit=True) as session:
+    session.add_all(rows)
 
   return DatabaseAndRows(db, rows)
 

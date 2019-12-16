@@ -16,8 +16,7 @@ FLAGS = test.FLAGS
 
 
 @test.Fixture(
-  scope="session",
-  params=list(random_programl_generator.EnumerateProtoTestSet()),
+  scope="session", params=list(random_programl_generator.EnumerateTestSet()),
 )
 def real_graph(request) -> programl_pb2.ProgramGraph:
   """A test fixture which yields one of 100 "real" graphs."""

@@ -7,9 +7,11 @@ When executed as a script, this generates and populates a database of graphs:
         --proto_db='sqlite:////tmp/protos.db'
 """
 import copy
+import itertools
 import random
 from typing import List
 from typing import NamedTuple
+from typing import Optional
 
 from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
 from deeplearning.ml4pl.testing import generator_flags
@@ -98,15 +100,20 @@ def PopulateDatabaseWithRandomProgramGraphs(
   return DatabaseAndRows(db, rows)
 
 
-def PopulateDatabaseWithRealProtos(db: unlabelled_graph_database.Database):
-  """Populate a database with 100 "real" programs."""
+def PopulateDatabaseWithTestSet(
+  db: unlabelled_graph_database.Database, graph_count: Optional[int] = None
+):
+  """Populate a database with "real" programs."""
+  inputs = itertools.islice(
+    itertools.cycle(random_programl_generator.EnumerateTestSet(n=graph_count)),
+    graph_count,
+  )
+
   with db.Session(commit=True) as session:
     session.add_all(
       [
         unlabelled_graph_database.ProgramGraph.Create(proto, ir_id=i + 1)
-        for i, proto in enumerate(
-          random_programl_generator.EnumerateProtoTestSet()
-        )
+        for i, proto in enumerate(inputs)
       ]
     )
   return db

@@ -45,9 +45,9 @@ def test_CreateRandomProto(
   assert len(proto.y) == graph_y_dimensionality
 
 
-def test_EnumerateProtoTestSet():
+def test_EnumerateTestSet():
   """Test the "real" protos."""
-  protos = list(random_programl_generator.EnumerateProtoTestSet())
+  protos = list(random_programl_generator.EnumerateTestSet())
   assert len(protos) == 100
 
 

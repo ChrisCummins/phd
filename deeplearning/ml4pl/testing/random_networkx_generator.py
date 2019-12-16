@@ -41,7 +41,7 @@ def CreateRandomGraph(
   return programl.ProgramGraphToNetworkX(proto)
 
 
-def EnumerateGraphTestSet(n: Optional[int] = None) -> Iterable[nx.MultiDiGraph]:
+def EnumerateTestSet(n: Optional[int] = None) -> Iterable[nx.MultiDiGraph]:
   """Enumerate a test set of "real" graphs."""
-  for proto in random_programl_generator.EnumerateProtoTestSet(n=n):
+  for proto in random_programl_generator.EnumerateTestSet(n=n):
     yield programl.ProgramGraphToNetworkX(proto)

@@ -15,8 +15,7 @@ FLAGS = test.FLAGS
 
 
 @test.Fixture(
-  scope="session",
-  params=list(random_programl_generator.EnumerateProtoTestSet()),
+  scope="session", params=list(random_programl_generator.EnumerateTestSet()),
 )
 def real_proto(request) -> programl_pb2.ProgramGraph:
   """A test fixture which enumerates one of 100 "real" protos."""
@@ -26,7 +25,7 @@ def real_proto(request) -> programl_pb2.ProgramGraph:
 @test.Fixture(scope="session")
 def one_proto() -> programl_pb2.ProgramGraph:
   """A test fixture which enumerates a single real proto."""
-  return next(random_programl_generator.EnumerateProtoTestSet())
+  return next(random_programl_generator.EnumerateTestSet())
 
 
 @test.Fixture(scope="session", params=list(programl.InputOutputFormat))
