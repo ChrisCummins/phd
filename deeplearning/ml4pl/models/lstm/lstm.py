@@ -692,10 +692,13 @@ class NodeLstm(LstmBase):
 
 def main():
   """Main entry point."""
-  if FLAGS.nodes:
-    run.Run(NodeLstm)
+  graph_db: graph_tuple_database.Database = FLAGS.graph_db()
+  if graph_db.node_y_dimensionality:
+    model_class = NodeLstm
   else:
-    run.Run(GraphLstm)
+    model_class = GraphLstm
+
+  run.Run(model_class, graph_db)
 
 
 if __name__ == "__main__":
