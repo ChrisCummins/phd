@@ -45,43 +45,55 @@ def logger(log_db: log_database.Database) -> logging.Logger:
     yield logger
 
 
-@test.Fixture(scope="session", params=(50,))
-def graph_count(request) -> int:
-  """A test fixture which enumerates graph counts."""
-  return request.param
-
-
-@test.Fixture(scope="session", params=(0, 2))
+@test.Fixture(
+  scope="session", params=(0, 2), namer=lambda x: "graph_x_dimensionality:{x}"
+)
 def graph_x_dimensionality(request) -> int:
   """A test fixture which enumerates graph feature dimensionalities."""
   return request.param
 
 
-@test.Fixture(scope="session", params=(2, 104))
+@test.Fixture(
+  scope="session",
+  params=(2, 104),
+  namer=lambda x: f"graph_y_dimensionality:{x}",
+)
 def graph_y_dimensionality(request) -> int:
   """A test fixture which enumerates graph label dimensionalities."""
   return request.param
 
 
-@test.Fixture(scope="session", params=(2, 3, 104))
+@test.Fixture(
+  scope="session", params=(2, 3), namer=lambda x: f"node_y_dimensionality:{x}"
+)
 def node_y_dimensionality(request) -> int:
   """A test fixture which enumerates graph label dimensionalities."""
   return request.param
 
 
-@test.Fixture(scope="session", params=list(epoch.Type))
+@test.Fixture(
+  scope="session", params=list(epoch.Type), namer=lambda x: x.name.lower()
+)
 def epoch_type(request) -> epoch.Type:
   """A test fixture which enumerates epoch types."""
   return request.param
 
 
-@test.Fixture(scope="session", params=(False, True))
+@test.Fixture(
+  scope="session",
+  params=(False, True),
+  namer=lambda x: f"log1p_graph_x:{str(x).lower()}",
+)
 def log1p_graph_x(request) -> bool:
   """Enumerate --log1p_graph_x values."""
   return request.param
 
 
-@test.Fixture(scope="session", params=list(ggnn_config.NodeTextEmbeddingType))
+@test.Fixture(
+  scope="session",
+  params=list(ggnn_config.NodeTextEmbeddingType),
+  namer=lambda x: x.name.lower(),
+)
 def node_text_embedding_type(request):
   return flags_parsers.EnumFlag(
     ggnn_config.NodeTextEmbeddingType, request.param
@@ -94,7 +106,7 @@ def node_text_embedding_type(request):
   namer=testing_databases.DatabaseUrlNamer("node_y_db"),
 )
 def node_y_graph_db(
-  request, graph_count: int, node_y_dimensionality: int,
+  request, node_y_dimensionality: int,
 ) -> graph_tuple_database.Database:
   """A test fixture which yields a graph database with 256 OpenCL IR entries."""
   with testing_databases.DatabaseContext(
@@ -102,7 +114,7 @@ def node_y_graph_db(
   ) as db:
     random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
       db,
-      graph_count,
+      graph_count=50,
       node_y_dimensionality=node_y_dimensionality,
       node_x_dimensionality=2,
       graph_y_dimensionality=0,
@@ -117,7 +129,7 @@ def node_y_graph_db(
   namer=testing_databases.DatabaseUrlNamer("graph_y_db"),
 )
 def graph_y_graph_db(
-  request, graph_count: int, graph_y_dimensionality: int,
+  request, graph_y_dimensionality: int,
 ) -> graph_tuple_database.Database:
   """A test fixture which yields a graph database with 256 OpenCL IR entries."""
   with testing_databases.DatabaseContext(
@@ -125,7 +137,7 @@ def graph_y_graph_db(
   ) as db:
     random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
       db,
-      graph_count,
+      graph_count=50,
       node_x_dimensionality=2,
       node_y_dimensionality=0,
       graph_x_dimensionality=2,
