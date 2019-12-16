@@ -129,10 +129,21 @@ def PopulateWithTestSet(
   )
   for i, graph_tuple in enumerate(graph_tuples):
     # Set the graph labels.
-    # TODO: Node and graph features.
+    node_x = (
+      np.random.randint(
+        low=0, high=2, size=(graph_tuple.node_count, node_x_dimensionality)
+      )
+      if node_x_dimensionality
+      else None
+    )
     node_y = (
       np.random.rand(graph_tuple.node_count, node_y_dimensionality)
       if node_y_dimensionality
+      else None
+    )
+    graph_x = (
+      np.random.randint(low=0, high=51, size=graph_x_dimensionality)
+      if graph_x_dimensionality
       else None
     )
     graph_y = (
@@ -140,10 +151,9 @@ def PopulateWithTestSet(
       if graph_y_dimensionality
       else None
     )
-    if node_y or graph_y:
-      graph_tuple = graph_tuple.SetLabels(
-        node_y=node_y, graph_y=graph_y, copy=False
-      )
+    graph_tuple = graph_tuple.SetFeaturesAndLabels(
+      node_x=node_x, node_y=node_y, graph_x=graph_x, graph_y=graph_y, copy=False
+    )
 
     mapped = graph_tuple_database.GraphTuple.CreateFromGraphTuple(
       graph_tuple,
