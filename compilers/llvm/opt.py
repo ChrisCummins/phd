@@ -521,7 +521,7 @@ def Exec(
   """Run LLVM's optimizer.
 
   Args:
-    args: A list of arguments to pass to binary.
+    args: A list of arguments to pass to the opt binary.
     stdin: Optional input to pass to binary. If universal_newlines is set, this
       should be a string. If not, it should be bytes.
     timeout_seconds: The number of seconds to allow opt to run for.
