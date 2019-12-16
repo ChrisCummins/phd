@@ -116,7 +116,7 @@ class LstmBase(classifier_base.ClassifierBase):
 
     # Create the sequence encoder.
     if not ir_db and not FLAGS.ir_db:
-      raise app.UsageError("--ir_db is required")
+      raise app.UsageError("--ir_db is required for node level models")
     self.ir2seq_encoder = ir2seq_encoder or FLAGS.ir2seq().ToEncoder(
       ir_db or FLAGS.ir_db()
     )
@@ -138,9 +138,10 @@ class LstmBase(classifier_base.ClassifierBase):
       and self.graph_db.node_x_dimensionality == 2
       and self.graph_db.graph_y_dimensionality == 0
     ):
-      # Node-wise classification with selector vector.
+      if not proto_db and not FLAGS.proto_db:
+        raise app.UsageError("--proto_db is required for node level models")
       self.encoder = graph2seq.StatementEncoder(
-        graph_db=self.graph_db, proto_db=proto_db,
+        graph_db=self.graph_db, proto_db=proto_db or FLAGS.proto_db(),
       )
     else:
       raise TypeError(f"Unsupported graph dimensionalities: {self.graph_db}")
