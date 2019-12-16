@@ -159,7 +159,9 @@ class Ggnn(classifier_base.ClassifierBase):
     """Create a mini-batch of data from an iterator of graphs.
 
     Returns:
-      A single batch of data for feeding into RunBatch().
+      A single batch of data for feeding into RunBatch(). A batch consists of a
+      list of graph IDs and a model-defined blob of data. If the list of graph
+      IDs is empty, the batch is discarded and not fed into RunBatch().
     """
     # TODO(github.com/ChrisCummins/ProGraML/issues/24): The new graph batcher
     # implementation is not well suited for reading the graph IDs, hence this
@@ -190,7 +192,7 @@ class Ggnn(classifier_base.ClassifierBase):
     try:
       disjoint_graph = next(batcher)
     except StopIteration:
-      # We have run out of graphs.
+      # We have run out of graphs, return an empty batch.
       return batches.Data(graph_ids=[], data=None)
 
     # Workaround for the fact that graph batcher may read one more graph than

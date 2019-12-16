@@ -128,13 +128,15 @@ class ClassifierBase(object):
   ) -> batches.Data:
     """Create a mini-batch of data from an iterator of graphs.
 
-    Implementatinos of this method must be thread safe. Multiple threads may
+    Implementations of this method must be thread safe. Multiple threads may
     concurrently call this method using different graph iterators. This is to
     amortize I/O costs when alternating between training / validation / testing
     datasets.
 
     Returns:
-      A single batch of data for feeding into RunBatch().
+      A single batch of data for feeding into RunBatch(). A batch consists of a
+      list of graph IDs and a model-defined blob of data. If the list of graph
+      IDs is empty, the batch is discarded and not fed into RunBatch().
     """
     raise NotImplementedError("abstract class")
 
@@ -298,6 +300,8 @@ class ClassifierBase(object):
         ),
       ):
         batch = self.MakeBatch(graphs)
+
+      # A batch with no graphs is considered "empty" and is not returned.
       if batch.graph_count:
         yield batch
       else:
