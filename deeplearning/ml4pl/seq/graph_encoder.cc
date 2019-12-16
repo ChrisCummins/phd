@@ -16,7 +16,7 @@ ProgramGraphSeq GraphEncoder::Encode(const ProgramGraph& graph) {
   for (const auto& node : SerializeStatements(graph)) {
     // Encode the text of the node.
     std::vector<int> encoded_node =
-        string_encoder_.Encode(graph.node(node).text());
+        string_encoder_.EncodeAndCache(graph.node(node).text());
     // Append the encoded node and segment IDs.
     for (const auto& x : encoded_node) {
       encoded->Add(x);

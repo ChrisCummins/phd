@@ -34,7 +34,8 @@ class CachedStringEncoder {
   // [0, vocabulary.size()], where vocabulary.size() represents an unknown
   // character. The length of the encoded array is in the range
   // [0, input.size()].
-  std::vector<int> Encode(const std::string& input);
+  std::vector<int> EncodeAndCache(const std::string& input);
+  std::vector<int> Encode(const std::string& input) const;
 
   // Determine if any of a set of strings starts with prefix.
   // This assumes that the prefix is not empty.
