@@ -172,7 +172,7 @@ class NodeEmbeddings(nn.Module):
     elif config.inst2vec_embeddings == 'zero':
       init = torch.zeros(config.vocab_size, config.emb_size)
       self.node_embs = nn.Embedding.from_pretrained(init, freeze=True)
-    elif config.inst2vec_embeddings == 'random_constant':
+    elif config.inst2vec_embeddings == 'constant_random':
       init = torch.rand(config.vocab_size, config.emb_size)
       self.node_embs = nn.Embedding.from_pretrained(init, freeze=True)
     elif config.inst2vec_embeddings == 'finetune':
