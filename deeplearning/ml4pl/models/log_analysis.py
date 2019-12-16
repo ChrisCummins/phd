@@ -243,7 +243,7 @@ class RunLogAnalyzer(LogAnalyzer):
       node_count = 0
       for graph in input_graphs:
         input_graph = graph.tuple
-        output_graph = input_graph.SetLabels(
+        output_graph = input_graph.SetFeaturesAndLabels(
           node_y=predictions[node_count : node_count + input_graph.node_count],
           copy=False,
         )
@@ -253,7 +253,7 @@ class RunLogAnalyzer(LogAnalyzer):
       # Graph-level predictions:
       for graph_count, graph in enumerate(input_graphs):
         input_graph = graph.tuple
-        output_graph = input_graph.SetLabels(
+        output_graph = input_graph.SetFeaturesAndLabels(
           graph_y=predictions[graph_count], copy=False
         )
         yield input_graph, output_graph

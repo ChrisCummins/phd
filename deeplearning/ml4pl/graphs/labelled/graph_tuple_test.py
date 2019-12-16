@@ -439,7 +439,7 @@ def test_FromGraphTuples_two_tuples(
 @decorators.loop_for(seconds=5)
 @test.Parametrize("dimensionalities", ((0, 2), (2, 0)))
 @test.Parametrize("copy", (False, True))
-def test_SetLabels(dimensionalities: Tuple[int, int], copy: bool):
+def test_SetFeaturesAndLabels(dimensionalities: Tuple[int, int], copy: bool):
   """Test new label setting."""
   node_y_dimensionality, graph_y_dimensionality = dimensionalities
   in_tuple = random_graph_tuple_generator.CreateRandomGraphTuple(
@@ -453,7 +453,7 @@ def test_SetLabels(dimensionalities: Tuple[int, int], copy: bool):
     in_tuple.node_count, in_tuple.node_y_dimensionality
   )
   new_graph_y = np.random.rand(in_tuple.graph_y_dimensionality)
-  out_tuple = in_tuple.SetLabels(
+  out_tuple = in_tuple.SetFeaturesAndLabels(
     node_y=np.copy(new_node_y), graph_y=np.copy(new_graph_y), copy=copy,
   )
 

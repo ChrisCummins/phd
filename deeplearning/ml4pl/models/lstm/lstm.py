@@ -10,6 +10,7 @@ from typing import Iterable
 from typing import List
 from typing import NamedTuple
 from typing import Optional
+
 # Quiet keras import, see https://stackoverflow.com/a/51567328
 
 stderr = sys.stderr
@@ -56,39 +57,8 @@ class Ir2SeqType(enum.Enum):
       raise NotImplementedError("unreachable")
 
 
-class NodeEncoder(enum.Enum):
-  STATEMENT = 1
-  IDENTIFIER = 2
-
-  def ToEncoder(
-    self,
-    graph_db: graph_tuple_database.Database,
-    proto_db: unlabelled_graph_database.Database,
-    ir2seq_encoder: ir2seq.EncoderBase,
-  ) -> graph2seq.EncoderBase:
-    """Create the graph2seq encoder."""
-    if self == NodeEncoder.STATEMENT:
-      return graph2seq.StatementEncoder(
-        graph_db=graph_db, proto_db=proto_db, ir2seq_encoder=ir2seq_encoder
-      )
-    elif self == NodeEncoder.IDENTIFIER:
-      return graph2seq.IdentifierEncoder(
-        graph_db=graph_db, proto_db=proto_db, ir2seq_encoder=ir2seq_encoder
-      )
-    else:
-      raise NotImplementedError("unreachable")
-
-
 app.DEFINE_enum(
   "ir2seq", Ir2SeqType, Ir2SeqType.LLVM, "The type of ir2seq encoder to use."
-)
-app.DEFINE_enum(
-  "nodes",
-  NodeEncoder,
-  # No default value because the presence of this flag is used to select
-  # between graph or node-level models.
-  None,
-  "The types of nodes segmentation to perform.",
 )
 app.DEFINE_integer(
   "lang_model_hidden_size",
@@ -169,20 +139,11 @@ class LstmBase(classifier_base.ClassifierBase):
       and self.graph_db.graph_y_dimensionality == 0
     ):
       # Node-wise classification with selector vector.
-      if not FLAGS.nodes:
-        raise app.UsageError(
-          "--nodes={statement,identifier} is required when running a "
-          "node-level classification task"
-        )
-      if not FLAGS.proto_db and not proto_db:
-        raise app.UsageError(
-          "--proto_db is required when running node-level classification"
-        )
-      self.encoder = FLAGS.nodes().ToEncoder(
-        self.graph_db, proto_db, self.ir2seq_encoder
+      self.encoder = graph2seq.StatementEncoder(
+        graph_db=self.graph_db, proto_db=proto_db,
       )
     else:
-      raise TypeError("Unsupported graph dimensionalities")
+      raise TypeError(f"Unsupported graph dimensionalities: {self.graph_db}")
 
     # Determine the size of padded sequences. Use the requested
     # padded_sequence_length, or the maximum encoded length if it is shorter.
@@ -319,6 +280,10 @@ class LstmBase(classifier_base.ClassifierBase):
         loss = self.model.train_on_batch(batch.data.x, batch.data.y)
 
       predictions = self.model.predict_on_batch(batch.data.x)
+
+    # TODO: Reshape the node-level predictions using node_indices so that
+    # we match the shape of the actual graphs, not just the nodes that
+    # we make predictions for.
 
     return batches.Results.Create(
       targets=self.ReshapeTargets(batch.data.y[0]),
@@ -478,6 +443,10 @@ class NodeLstmBatch(NamedTuple):
   # dtype np.float32
   node_y: np.array
 
+  # A list of indices into the graph nodes for the nodes that are encoded.
+  # Shape (batch_size, ?),
+  node_indices: List[np.array]
+
   @property
   def x(self):
     return [self.encoded_sequences, self.segment_ids, self.selector_vectors]
@@ -546,7 +515,7 @@ class NodeLstm(LstmBase):
       segment_ids=segment_ids,
       batch_size=self.batch_size,
       max_sequence_length=self.padded_sequence_length,
-      max_output_sequence_length=self.padded_nodes_sequence_length,
+      max_output_sequence_length=self.graph_db.node_count_max,
     )
     # Because padded values in segment_ids have value, the segment sum emits a
     # tensor of shape [B, padded_nodes_sequence_length + 1, 64] IFF something
@@ -590,12 +559,12 @@ class NodeLstm(LstmBase):
 
   def MakeBatch(
     self,
+    epoch_type: epoch.Type,
     graphs: Iterable[graph_tuple_database.GraphTuple],
     ctx: progress.ProgressContext = progress.NullContext,
   ) -> batches.Data:
     """Create a mini-batch of LSTM data."""
-    # Set the logging context for the encoder.
-    self.encoder.ir2seq_encoder.ctx = ctx
+    del epoch_type  # Unused.
 
     graphs = self.GetBatchOfGraphs(graphs)
     # For node classification we require all batches to be of batch_size.
@@ -614,18 +583,50 @@ class NodeLstm(LstmBase):
     selector_vectors: List[np.array] = []
     # A list of arrays of shape (node_mask_count, node_y_dimensionality)
     node_y: List[np.array] = []
+    node_indices: List[np.array] = []
 
-    for graph, encoded in zip(graphs, self.encoder.Encode(graphs, ctx=ctx)):
-      encoded_sequences.append(encoded.encoded_sequence)
-      segment_ids.append(encoded.segment_ids)
+    # Convert ProgramGraphSeq protos to arrays of numeric values.
+    for graph, seq in zip(graphs, self.encoder.Encode(graphs, ctx=ctx)):
+      # Skip empty graphs.
+      if not seq.encoded:
+        continue
+
+      encoded_sequences.append(np.array(seq.encoded, dtype=np.int32))
+
+      # Construct a list of segment IDs using the encoded node lengths,
+      # e.g. for encoded node lengths [2, 3, 1], produce segment IDs:
+      # [0, 0, 1, 1, 1, 2].
+      out_of_range_segment = self.padded_nodes_sequence_length - 1
+      segment_ids.append(
+        np.concatenate(
+          [
+            np.ones(encoded_node_length, dtype=np.int32)
+            * min(segment_id, out_of_range_segment)
+            for segment_id, encoded_node_length in enumerate(
+              seq.encoded_node_length
+            )
+          ]
+        )
+      )
+
+      # Get the list of graph node indices that produced the serialized encoded
+      # graph representation. We use this to construct predictions for the
+      # "full" graph through padding.
+      seq_node_indices = np.array(seq.node, dtype=np.int32)
+      node_indices.append(seq_node_indices)
+
+      # Sanity check that the node indices are in-range for this graph.
+      assert len(graph.tuple.node_x) >= max(seq_node_indices)
+
       # Use only the 'binary selector' feature and convert to an array of
       # 1 hot binary vectors.
-      node_selectors = graph.tuple.node_x[:, 1][encoded.node_mask]
+      node_selectors = graph.tuple.node_x[:, 1][seq_node_indices]
       node_selector_vectors = np.zeros((node_selectors.size, 2), dtype=np.int32)
       node_selector_vectors[np.arange(node_selectors.size), node_selectors] = 1
-
       selector_vectors.append(node_selector_vectors)
-      node_y.append(graph.tuple.node_y[encoded.node_mask])
+
+      # Select the node targets for only the active nodes.
+      node_y.append(graph.tuple.node_y[seq_node_indices])
 
     # Pad and truncate encoded sequences.
     encoded_sequences = keras.preprocessing.sequence.pad_sequences(
@@ -681,6 +682,7 @@ class NodeLstm(LstmBase):
         segment_ids=segment_ids,
         selector_vectors=selector_vectors,
         node_y=node_y,
+        node_indices=node_indices,
       ),
     )
 
