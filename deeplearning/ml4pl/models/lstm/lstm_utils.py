@@ -42,9 +42,9 @@ def LstmLayer(*args, **kwargs):
   works on CPU.
   """
   if FLAGS.cudnn_lstm and tf.compat.v1.test.is_gpu_available():
-    return keras.layers.CuDNNLSTM(*args, **kwargs)
+    return tf.compat.v1.keras.layers.CuDNNLSTM(*args, **kwargs)
   else:
-    return keras.layers.LSTM(*args, **kwargs, implementation=1)
+    return tf.compat.v1.keras.layers.LSTM(*args, **kwargs, implementation=1)
 
 
 def SegmentSumLayer(
@@ -53,7 +53,7 @@ def SegmentSumLayer(
   batch_size: int,
   max_sequence_length: int,
   max_output_sequence_length: int,
-) -> keras.layers.Lambda:
+) -> tf.compat.v1.keras.layers.Lambda:
   """Construct a layer which sum the encoded sequences by their segment IDs.
 
   Args:
@@ -86,10 +86,14 @@ def SegmentSumLayer(
 
     return tf.stack(segment_sums, axis=0)
 
-  return keras.layers.Lambda(SegmentSum)([encoded_sequences, segment_ids])
+  return tf.compat.v1.keras.layers.Lambda(SegmentSum)(
+    [encoded_sequences, segment_ids]
+  )
 
 
-def SliceToSizeLayer(segmented_input, selector_vector) -> keras.layers.Lambda:
+def SliceToSizeLayer(
+  segmented_input, selector_vector
+) -> tf.compat.v1.keras.layers.Lambda:
   """Slice the segmented_input shape to match the selector_vector
   dimensionality."""
 
@@ -100,4 +104,6 @@ def SliceToSizeLayer(segmented_input, selector_vector) -> keras.layers.Lambda:
     segmented_inputs = segmented_inputs[:, :max_number_nodes]
     return segmented_inputs
 
-  return keras.layers.Lambda(SliceToSize)([segmented_input, selector_vector])
+  return tf.compat.v1.keras.layers.Lambda(SliceToSize)(
+    [segmented_input, selector_vector]
+  )
