@@ -12,13 +12,14 @@ SMALL_NUMBER = 1e-8
 
 # optimizer Adam
 # FLAGS.learning_rate * self.placeholders["learning_rate_multiple"]
-#
-# clip gradients by norm
-# (tf.clip_by_norm(grad, FLAGS.clamp_gradient_norm), var)
 
 ###########################
 # Main Model
 ###########################
+
+def assert_no_nan(tensor_list):
+  for i, t in enumerate(tensor_list):
+    assert not torch.isnan(t).any(), f"{i}: {tensor_list}"
 
 
 class GGNNModel(nn.Module):
@@ -500,8 +501,8 @@ class AuxiliaryReadout(nn.Module):
 
     self.feed_forward = None
     if config.has_graph_labels:
+      self.batch_norm = nn.BatchNorm1d(config.num_classes + config.aux_in_len)
       self.feed_forward = nn.Sequential(
-        nn.BatchNorm1d(config.num_classes + config.aux_in_len),
         nn.Linear(
           config.num_classes + config.aux_in_len,
           config.aux_in_layer_size,
@@ -523,7 +524,12 @@ class AuxiliaryReadout(nn.Module):
 
     if self.log1p_graph_x:
       auxiliary_features.log1p_()
+    #TODO(https://github.com/ChrisCummins/ProGraML/issues/37): Remove this line on overflow fix!
+    assert_no_nan([auxiliary_features])
 
     aggregate_features = torch.cat((graph_features, auxiliary_features),
                      dim=1)
-    return self.feed_forward(aggregate_features), graph_features
+
+    normed_features = self.batch_norm(aggregate_features)
+    out = self.feed_forward(normed_features)
+    return out, graph_features

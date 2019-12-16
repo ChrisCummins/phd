@@ -25,6 +25,11 @@ from labm8.py import progress
 
 FLAGS = app.FLAGS
 
+app.DEFINE_boolean(
+  "cuda",
+  True,
+  "Use cuda if available? CPU-only mode otherwise."
+)
 
 app.DEFINE_list(
   "layer_timesteps",
@@ -64,6 +69,7 @@ app.DEFINE_float(
 # We assume that position_embeddings exist in every dataset.
 # the flag now only controls whether they are used or not.
 # This could be nice for ablating our model and also debugging with and without.
+
 app.DEFINE_boolean(
   "position_embeddings",
   True,
@@ -103,6 +109,26 @@ app.DEFINE_boolean(
   "If set, apply a log(x + 1) transformation to incoming graph-level features.",
 )
 
+####### DEBBUGING HELPERS ##########################
+DEBUG = False
+
+def assert_no_nan(tensor_list):
+  for i, t in enumerate(tensor_list):
+    assert not torch.isnan(t).any(), f"{i}: {tensor_list}"
+
+def nan_hook(self, inp, output):
+  """Checks return values of any forward() function for NaN"""
+  if not isinstance(output, tuple):
+      outputs = [output]
+  else:
+      outputs = output
+
+  for i, out in enumerate(outputs):
+      nan_mask = torch.isnan(out)
+      if nan_mask.any():
+          print("In", self.__class__.__name__)
+          raise RuntimeError(f"Found NAN in output {i} at indices: ", nan_mask.nonzero(), "where:", out[nan_mask.nonzero()[:, 0].unique(sorted=True)])
+##########################################
 
 class GgnnBatchData(NamedTuple):
   """The model-specific data generated for a batch."""
@@ -122,7 +148,7 @@ class Ggnn(classifier_base.ClassifierBase):
 
     # set some global config values
     self.dev = (
-      torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+      torch.device("cuda") if torch.cuda.is_available() and FLAGS.cuda else torch.device("cpu")
     )
     app.Log(
       1, "Using device %s with dtype %s", self.dev, torch.get_default_dtype()
@@ -143,6 +169,11 @@ class Ggnn(classifier_base.ClassifierBase):
       pretrained_embeddings=inst2vec_embeddings,
       test_only=FLAGS.test_only,
     )
+
+    if DEBUG:
+      for submodule in self.model.modules():
+        submodule.register_forward_hook(nan_hook)
+
     self.model.to(self.dev)
 
   def MakeBatch(
@@ -313,7 +344,10 @@ class Ggnn(classifier_base.ClassifierBase):
         disjoint_graph.disjoint_nodes_list
       ).to(self.dev, torch.long)
 
-      aux_in = torch.from_numpy(disjoint_graph.graph_x).to(
+
+      #TODO(https://github.com/ChrisCummins/ProGraML/issues/37): remove this line on overflow fix!
+      hotfixed_graph_x = np.abs(disjoint_graph.graph_x)
+      aux_in = torch.from_numpy(hotfixed_graph_x).to(
         self.dev, torch.get_default_dtype()
       )
 
