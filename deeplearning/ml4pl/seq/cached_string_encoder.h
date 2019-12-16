@@ -38,7 +38,7 @@ class CachedStringEncoder {
 
   // Determine if any of a set of strings starts with prefix.
   // This assumes that the prefix is not empty.
-  bool HasPrefix(const std::string& prefix);
+  bool HasPrefix(const std::string& prefix) const;
 
   // Retrieve the encoded value for an unknown token.
   int UnknownElement() const { return _unknown_element; }

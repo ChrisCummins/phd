@@ -3,14 +3,14 @@ import random
 import string
 from typing import Set
 
-import sqlalchemy as sql
-
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
+from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.graphs.labelled.devmap import make_devmap_dataset
 from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
 from deeplearning.ml4pl.ir import ir_database
 from deeplearning.ml4pl.seq import graph2seq
 from deeplearning.ml4pl.seq import ir2seq
+from deeplearning.ml4pl.testing import random_graph_tuple_database_generator
 from deeplearning.ml4pl.testing import (
   random_unlabelled_graph_database_generator,
 )
@@ -56,7 +56,7 @@ def ir_db(request) -> ir_database.Database:
   params=testing_databases.GetDatabaseUrls(),
   namer=testing_databases.DatabaseUrlNamer("graph_db"),
 )
-def graph_db(request) -> unlabelled_graph_database.Database:
+def proto_db(request) -> unlabelled_graph_database.Database:
   yield from testing_databases.YieldDatabase(
     unlabelled_graph_database.Database, request.param
   )
@@ -81,17 +81,43 @@ def populated_graph_db(
 ) -> unlabelled_graph_database.Database:
   """A test fixture which yields a graph database with 256 OpenCL IR entries."""
   with testing_databases.DatabaseContext(
+    graph_tuple_database.Database, request.param
+  ) as db:
+    rows = []
+    # Create random rows using OpenCL relpaths.
+    for i, relpath in enumerate(opencl_relpaths):
+      row = random_graph_tuple_database_generator.CreateRandomGraphTuple()
+      row.ir_id = i + 1
+      row.id = len(opencl_relpaths) - i
+      rows.append(row)
+
+    with db.Session(commit=True) as session:
+      session.add_all(rows)
+
+    yield db
+
+
+@test.Fixture(
+  scope="session",
+  params=testing_databases.GetDatabaseUrls(),
+  namer=testing_databases.DatabaseUrlNamer("proto_db"),
+)
+def populated_proto_db(
+  request, opencl_relpaths: Set[str]
+) -> unlabelled_graph_database.Database:
+  """A test fixture which yields a graph database with 256 OpenCL IR entries."""
+  with testing_databases.DatabaseContext(
     unlabelled_graph_database.Database, request.param
   ) as db:
     rows = []
     # Create random rows using OpenCL relpaths.
     for i, relpath in enumerate(opencl_relpaths):
-      graph_tuple = (
+      row = (
         random_unlabelled_graph_database_generator.CreateRandomProgramGraph()
       )
-      graph_tuple.ir_id = i + 1
-      graph_tuple.id = len(opencl_relpaths) - i
-      rows.append(graph_tuple)
+      row.ir_id = i + 1
+      row.id = len(opencl_relpaths) - i
+      rows.append(row)
 
     with db.Session(commit=True) as session:
       session.add_all(rows)
@@ -150,40 +176,55 @@ def cache_size(request) -> int:
   return request.param
 
 
-@test.Fixture(
-  scope="function",
-  params=(
-    graph2seq.GraphEncoder,
-    graph2seq.StatementEncoder,
-    graph2seq.IdentifierEncoder,
-  ),
-)
-def graph2seq_encoder(
-  ir2seq_encoder: ir2seq.EncoderBase,
-  populated_graph_db: unlabelled_graph_database.Database,
-  cache_size: int,
-) -> graph2seq.EncoderBase:
-  """Test fixture that returns a graph encoder."""
-  return graph2seq.GraphEncoder(
-    populated_graph_db, ir2seq_encoder, cache_size=cache_size
-  )
-
-
 ###############################################################################
 # Tests.
 ###############################################################################
 
 
-@decorators.loop_for(seconds=10)
-def test_fuzz_Encode(graph2seq_encoder: ir2seq.EncoderBase):
+@decorators.loop_for(seconds=3)
+def test_fuzz_GraphEncoder(
+  ir2seq_encoder: ir2seq.EncoderBase,
+  populated_graph_db: graph_tuple_database.Database,
+  cache_size: int,
+):
   """Fuzz the encoder."""
+  graph2seq_encoder = graph2seq.GraphEncoder(
+    populated_graph_db, ir2seq_encoder, cache_size
+  )
+
   with graph2seq_encoder.graph_db.Session() as session:
-    # Load a random collection of graphs. Note the joined load that is required
-    # by StatementEncoder and IdentifierEncoder.
+    # Load a random collection of graphs.
     graphs = (
-      session.query(unlabelled_graph_database.ProgramGraph)
+      session.query(graph_tuple_database.GraphTuple)
       .order_by(graph2seq_encoder.graph_db.Random())
-      .options(sql.orm.joinedload(unlabelled_graph_database.ProgramGraph.data))
+      .limit(random.randint(1, 200))
+      .all()
+    )
+    # Sanity check that graphs are returned.
+    assert graphs
+
+  encoded = graph2seq_encoder.Encode(graphs)
+
+  assert len(encoded) == len(graphs)
+
+
+@decorators.loop_for(seconds=3)
+def test_fuzz_StatementEncoder(
+  ir2seq_encoder: ir2seq.EncoderBase,
+  populated_proto_db: unlabelled_graph_database.Database,
+  populated_graph_db: graph_tuple_database.Database,
+  cache_size: int,
+):
+  """Fuzz the encoder."""
+  graph2seq_encoder = graph2seq.StatementEncoder(
+    populated_graph_db, populated_proto_db, ir2seq_encoder, cache_size
+  )
+
+  with graph2seq_encoder.graph_db.Session() as session:
+    # Load a random collection of graphs.
+    graphs = (
+      session.query(graph_tuple_database.GraphTuple)
+      .order_by(graph2seq_encoder.graph_db.Random())
       .limit(random.randint(1, 200))
       .all()
     )

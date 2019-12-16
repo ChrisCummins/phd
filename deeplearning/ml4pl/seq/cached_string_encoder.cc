@@ -1,7 +1,5 @@
 #include "deeplearning/ml4pl/seq/cached_string_encoder.h"
 
-#include "labm8/cpp/logging.h"
-
 namespace ml4pl {
 
 std::vector<int> CachedStringEncoder::Encode(const std::string& input) {
@@ -61,7 +59,7 @@ std::vector<int> CachedStringEncoder::Encode(const std::string& input) {
   return encoded;
 }
 
-bool CachedStringEncoder::HasPrefix(const std::string& prefix) {
+bool CachedStringEncoder::HasPrefix(const std::string& prefix) const {
   for (auto& token : _tokens) {
     if (token.rfind(prefix, 0) == 0) {
       return true;
