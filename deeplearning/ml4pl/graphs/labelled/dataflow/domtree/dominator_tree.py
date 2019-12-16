@@ -11,7 +11,7 @@ from labm8.py import app
 FLAGS = app.FLAGS
 
 
-# The real_y arrays for node reachability:
+# The node_y arrays for dominator trees:
 NOT_DOMINATED = [1, 0]
 DOMINATED = [0, 1]
 
@@ -131,5 +131,3 @@ class DominatorTreeAnnotator(data_flow_graphs.NetworkXDataFlowGraphAnnotator):
     g.graph["data_flow_root_node"] = root_node
     g.graph["data_flow_steps"] = self.data_flow_steps_by_function[function]
     g.graph["data_flow_positive_node_count"] = dominated_node_count
-
-    return g
