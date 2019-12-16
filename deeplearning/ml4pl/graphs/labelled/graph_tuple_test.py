@@ -314,7 +314,7 @@ def test_on_real_graph(real_nx_graph: nx.MultiDiGraph):
 # Disjoint graph tests:
 
 
-@decorators.loop_for(seconds=5)
+@decorators.loop_for(seconds=3)
 @test.Parametrize(
   "node_x_dimensionality", (1, 3), namer=lambda x: f"node_x_dimensionality:{x}"
 )
@@ -382,7 +382,7 @@ def test_FromGraphTuples_single_tuple(
     raise
 
 
-@decorators.loop_for(seconds=5)
+@decorators.loop_for(seconds=3)
 @test.Parametrize(
   "node_x_dimensionality", (1, 3), namer=lambda x: f"node_x_dimensionality:{x}"
 )
@@ -460,7 +460,7 @@ def test_FromGraphTuples_two_tuples(
     raise
 
 
-@decorators.loop_for(seconds=5)
+@decorators.loop_for(seconds=3)
 @test.Parametrize("dimensionalities", ((0, 2), (2, 0)))
 @test.Parametrize("copy", (False, True))
 def test_SetFeaturesAndLabels(dimensionalities: Tuple[int, int], copy: bool):
@@ -493,7 +493,7 @@ def test_SetFeaturesAndLabels(dimensionalities: Tuple[int, int], copy: bool):
 # Fuzzers:
 
 
-@decorators.loop_for(seconds=60)
+@decorators.loop_for(seconds=30)
 def test_fuzz_graph_tuple_networkx():
   """Fuzz graph tuples with randomly generated graphs."""
   node_x_dimensionality = random.randint(1, 3)
@@ -544,7 +544,7 @@ def test_fuzz_graph_tuple_networkx():
     raise
 
 
-@decorators.loop_for(seconds=60)
+@decorators.loop_for(seconds=30)
 def test_fuzz_disjoint_graph_tuples():
   """Fuzz graph tuples with randomly generated graphs."""
   disjoint_graph_count = random.randint(2, 10)
