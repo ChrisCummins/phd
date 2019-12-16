@@ -315,10 +315,22 @@ def test_on_real_graph(real_nx_graph: nx.MultiDiGraph):
 
 
 @decorators.loop_for(seconds=5)
-@test.Parametrize("node_x_dimensionality", (1, 3))
-@test.Parametrize("node_y_dimensionality", (0, 3))
-@test.Parametrize("graph_x_dimensionality", (0, 3))
-@test.Parametrize("graph_y_dimensionality", (0, 3))
+@test.Parametrize(
+  "node_x_dimensionality", (1, 3), namer=lambda x: f"node_x_dimensionality:{x}"
+)
+@test.Parametrize(
+  "node_y_dimensionality", (0, 3), namer=lambda x: f"node_y_dimensionality:{x}"
+)
+@test.Parametrize(
+  "graph_x_dimensionality",
+  (0, 3),
+  namer=lambda x: f"graph_x_dimensionality:{x}",
+)
+@test.Parametrize(
+  "graph_y_dimensionality",
+  (0, 3),
+  namer=lambda x: f"graph_y_dimensionality:{x}",
+)
 def test_FromGraphTuples_single_tuple(
   node_x_dimensionality: int,
   node_y_dimensionality: int,
@@ -371,10 +383,22 @@ def test_FromGraphTuples_single_tuple(
 
 
 @decorators.loop_for(seconds=5)
-@test.Parametrize("node_x_dimensionality", (1, 3))
-@test.Parametrize("node_y_dimensionality", (0, 3))
-@test.Parametrize("graph_x_dimensionality", (0, 3))
-@test.Parametrize("graph_y_dimensionality", (0, 3))
+@test.Parametrize(
+  "node_x_dimensionality", (1, 3), namer=lambda x: f"node_x_dimensionality:{x}"
+)
+@test.Parametrize(
+  "node_y_dimensionality", (0, 3), namer=lambda x: f"node_y_dimensionality:{x}"
+)
+@test.Parametrize(
+  "graph_x_dimensionality",
+  (0, 3),
+  namer=lambda x: f"graph_x_dimensionality:{x}",
+)
+@test.Parametrize(
+  "graph_y_dimensionality",
+  (0, 3),
+  namer=lambda x: f"graph_y_dimensionality:{x}",
+)
 def test_FromGraphTuples_two_tuples(
   node_x_dimensionality: int,
   node_y_dimensionality: int,
