@@ -44,16 +44,49 @@ class EncoderBase(object):
   def __init__(
     self,
     graph_db: graph_tuple_database.Database,
-    ir2seq_encoder: ir2seq.EncoderBase,
     cache_size: Optional[int] = None,
   ):
     self.graph_db = graph_db
-    self.ir2seq_encoder = ir2seq_encoder
 
     # Maintain a mapping from IR IDs to encoded sequences to amortize the
     # cost of encoding.
     cache_size = cache_size or FLAGS.graph2seq_cache_entries
     self.ir_id_to_encoded: Dict[int, np.array] = lru.LRU(cache_size)
+
+  def Encode(
+    self,
+    graphs: List[graph_tuple_database.GraphTuple],
+    ctx: progress.ProgressContext = progress.NullContext,
+  ) -> List[Union[np.array, graph2seq_pb2.ProgramGraphSeq]]:
+    """Translate a list of graph IDs to encoded sequences."""
+    raise NotImplementedError("abstract class")
+
+  @property
+  def max_encoded_length(self) -> int:
+    """Return an upper bound on the length of the encoded sequences."""
+    raise NotImplementedError("abstract class")
+
+  @property
+  def vocabulary_size(self) -> int:
+    """Get the size of the vocabulary, including the unknown-vocab element."""
+    raise NotImplementedError("abstract class")
+
+
+class GraphEncoder(EncoderBase):
+  """Encode a graph to a single encoded sequence.
+
+  Uses the original intermediate representation to produce the tokenized
+  sequence, entirely discarding the graph structure.
+  """
+
+  def __init__(
+    self,
+    graph_db: graph_tuple_database.Database,
+    ir2seq_encoder: ir2seq.EncoderBase,
+    cache_size: Optional[int] = None,
+  ):
+    super(GraphEncoder, self).__init__(graph_db, cache_size)
+    self.ir2seq_encoder = ir2seq_encoder
 
   @property
   def max_encoded_length(self) -> int:
@@ -64,22 +97,6 @@ class EncoderBase(object):
   def vocabulary_size(self) -> int:
     """Get the size of the vocabulary, including the unknown-vocab element."""
     return self.ir2seq_encoder.vocabulary_size
-
-  def Encode(
-    self,
-    graphs: List[graph_tuple_database.GraphTuple],
-    ctx: progress.ProgressContext = progress.NullContext,
-  ) -> List[Union[np.array, graph2seq_pb2.ProgramGraphSeq]]:
-    """Translate a list of graph IDs to encoded sequences."""
-    raise NotImplementedError("abstract class")
-
-
-class GraphEncoder(EncoderBase):
-  """Encode a graph to a single encoded sequence.
-
-  Uses the original intermediate representation to produce the tokenized
-  sequence, entirely discarding the graph structure.
-  """
 
   def Encode(
     self,
@@ -133,10 +150,9 @@ class StatementEncoder(EncoderBase):
     self,
     graph_db: graph_tuple_database.Database,
     proto_db: unlabelled_graph_database.Database,
-    ir2seq_encoder: ir2seq.EncoderBase,
     cache_size: Optional[int] = None,
   ):
-    super(StatementEncoder, self).__init__(graph_db, ir2seq_encoder, cache_size)
+    super(StatementEncoder, self).__init__(graph_db, cache_size)
     self.proto_db = proto_db
 
     with open(LLVM_VOCAB) as f:
@@ -238,6 +254,16 @@ class StatementEncoder(EncoderBase):
 
     return [self.ir_id_to_encoded[graph.ir_id] for graph in graphs]
 
+  @property
+  def max_encoded_length(self) -> int:
+    """Return an upper bound on the length of the encoded sequences."""
+    raise NotImplementedError("TODO")
+
+  @property
+  def vocabulary_size(self) -> int:
+    """Get the size of the vocabulary, including the unknown-vocab element."""
+    return len(self.vocabulary)
+
   def EncodeGraphs(
     self,
     graphs: List[programl_pb2.ProgramGraph],
@@ -255,14 +281,14 @@ class StatementEncoder(EncoderBase):
       3,
       lambda t: (
         f"Encoded {len(graphs)} graphs "
-        f"({humanize.DecimalPrefix(token_count / t, ' tokens/sec')}"
+        f"({humanize.DecimalPrefix(token_count / t, ' tokens/sec')})"
       ),
     ):
       message = graph2seq_pb2.GraphEncoderJob(
         vocabulary=self.vocabulary, graph=graphs,
       )
       pbutil.RunProcessMessageInPlace(
-        [str(GRAPH_ENCODER_WORKER)], message, timeout_seconds=3600
+        [str(GRAPH_ENCODER_WORKER)], message, timeout_seconds=60
       )
       encoded_graphs = [encoded for encoded in message.seq]
       token_count = sum(len(encoded.encoded) for encoded in encoded_graphs)
