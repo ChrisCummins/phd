@@ -1,5 +1,28 @@
 # This moduel defines sequence representations for programs.
 
+cc_library(
+    name = "cached_string_encoder",
+    srcs = ["cached_string_encoder.cc"],
+    hdrs = ["cached_string_encoder.h"],
+    deps = [
+        "//labm8/cpp:logging",
+        "//labm8/cpp:string",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
+    ],
+)
+
+cc_test(
+    name = "cached_string_encoder_test",
+    srcs = ["cached_string_encoder_test.cc"],
+    deps = [
+        ":cached_string_encoder",
+        "//labm8/cpp:string",
+        "//labm8/cpp:test",
+        "@com_google_absl//absl/container:flat_hash_map",
+    ],
+)
+
 py_library(
     name = "graph2seq",
     srcs = ["graph2seq.py"],
