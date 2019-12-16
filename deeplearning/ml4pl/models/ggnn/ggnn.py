@@ -66,12 +66,9 @@ app.DEFINE_float(
 # This could be nice for ablating our model and also debugging with and without.
 app.DEFINE_boolean(
   "position_embeddings",
-  "fancy",
-  "Whether to use position embeddings as signals for edge order. Options: "
-  "initial, every, fancy, off initial takes A (h + pos) at first timestep, "
-  "every does the same at every timestep fancy learns another weight matrix B, "
-  "s.th. propagation is A h + B pos. We expect them to be part of the ds "
-  "anyway, but you can toggle off their effect.",
+  True,
+  "Whether to use position embeddings as signals for edge order."
+  "We expect them to be part of the ds anyway, but you can toggle off their effect.",
 )
 
 app.DEFINE_boolean("use_edge_bias", False, "")
