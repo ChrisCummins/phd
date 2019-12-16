@@ -408,6 +408,22 @@ def test_ResilientAddManyAndCommit_conflicting_primary_key():
   assert failures[3].col == 1
 
 
+def test_QueryToString_inline_literal_int():
+  base = declarative.declarative_base()
+
+  class Table(base):
+    __tablename__ = "test"
+    col = sql.Column(sql.Integer, primary_key=1)
+
+  db = sqlutil.Database("sqlite://", base)
+  with db.Session() as session:
+    query = session.query(Table.col).filter(Table.col == 5)
+
+  assert sqlutil.QueryToString(query) == (
+    "SELECT test.col \nFROM test \nWHERE test.col = 5"
+  )
+
+
 Base = declarative.declarative_base()
 
 
