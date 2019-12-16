@@ -36,6 +36,7 @@ py_test(
 py_library(
     name = "batch_iterator",
     srcs = ["batch_iterator.py"],
+    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
     deps = [
         ":batch",
         ":classifier_base",
