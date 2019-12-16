@@ -42,7 +42,7 @@ class StratifiedGraphLabelKFold(object):
         graph_ids.append(graph.id)
         graph_y.append(np.argmax(graph.tuple.graph_y))
       graph_ids = np.array(graph_ids, dtype=np.int32)
-      graph_y = np.array(graph_y, dtype=np.int32)
+      graph_y = np.array(graph_y, dtype=np.int64)
 
     splitter = model_selection.StratifiedKFold(n_splits=self.k, shuffle=True)
     dataset_splits = splitter.split(graph_ids, graph_y)

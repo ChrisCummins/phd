@@ -173,8 +173,8 @@ def MakePolyhedralGraphs(
   del n
 
   # One-hot encoding
-  false = np.array([1, 0], np.int32)
-  true = np.array([0, 1], np.int32)
+  false = np.array([1, 0], np.int64)
+  true = np.array([0, 1], np.int64)
 
   # Canonicalize input graph (see http://polly.llvm.org/docs/Architecture.html)
   bytecode = BytecodeToPollyCanonicalized(bytecode)

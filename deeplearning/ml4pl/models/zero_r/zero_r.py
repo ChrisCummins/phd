@@ -34,7 +34,7 @@ class ZeroR(classifier_base.ClassifierBase):
   @property
   def y(self) -> np.array:
     """Return the prediction array."""
-    a = np.zeros(self.y_dimensionality, dtype=np.int32)
+    a = np.zeros(self.y_dimensionality, dtype=np.int64)
     a[np.argmax(self.class_counts)] = 1
     return a
 

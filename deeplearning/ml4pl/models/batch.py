@@ -148,7 +148,7 @@ class Results(NamedTuple):
 
     # NOTE(github.com/ChrisCummins/ProGraML/issues/22): This assumes that
     # labels use the values [0,...n).
-    labels = np.arange(y_dimensionality, dtype=np.int32)
+    labels = np.arange(y_dimensionality, dtype=np.int64)
 
     return cls(
       targets=targets,

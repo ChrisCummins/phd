@@ -34,7 +34,7 @@ def ReplaceOneHotNodeFeaturesWithEmbeddings(
       (1 if x[1] else 0) if isinstance(x, np.ndarray) else x
       for x in graph_tuple.node_x_indices
     ],
-    dtype=np.int32,
+    dtype=np.int64,
   )
 
   return graph_tuples.GraphTuple(

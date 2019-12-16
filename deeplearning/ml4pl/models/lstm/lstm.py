@@ -672,7 +672,7 @@ class NodeLstm(LstmBase):
       dtype="int32",
       padding="pre",
       truncating="post",
-      value=np.zeros(self.graph_db.node_y_dimensionality, dtype=np.int32),
+      value=np.zeros(self.graph_db.node_y_dimensionality, dtype=np.int64),
     )
 
     return batches.Data(

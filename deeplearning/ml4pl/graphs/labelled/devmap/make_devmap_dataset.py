@@ -41,9 +41,9 @@ def MakeGpuDataFrame(df: pd.DataFrame, gpu: str):
   ]
 
   df["y"] = [
-    np.array([0, 1], dtype=np.int32)
+    np.array([0, 1], dtype=np.int64)
     if r[f"runtime:{gpu}"] < r[f"runtime:{cpu}"]
-    else np.array([1, 0], dtype=np.int32)
+    else np.array([1, 0], dtype=np.int64)
     for _, r in df.iterrows()
   ]
 

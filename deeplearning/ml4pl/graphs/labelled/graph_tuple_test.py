@@ -96,7 +96,7 @@ def test_CreateFromNetworkX_node_x(graph: nx.MultiDiGraph):
   assert d.graph_x_dimensionality == 0
   assert d.graph_y_dimensionality == 0
 
-  assert d.node_x.dtype == np.int32
+  assert d.node_x.dtype == np.int64
   assert np.array_equal(
     d.node_x, np.array([(4, 0), (0, 0), (1, 0), (2, 1), (3, 0),])
   )
@@ -122,7 +122,7 @@ def test_CreateFromNetworkX_node_y(graph: nx.MultiDiGraph):
   assert d.graph_y_dimensionality == 0
 
   assert d.node_y.shape == (5, 3)
-  assert d.node_y.dtype == np.int32
+  assert d.node_y.dtype == np.int64
   assert np.array_equal(
     d.node_y, np.array([(4, 1, 0), (3, 1, 0), (2, 1, 0), (1, 1, 0), (0, 1, 0),])
   )
@@ -142,7 +142,7 @@ def test_CreateFromNetworkX_graph_x(graph: nx.MultiDiGraph):
   assert d.has_graph_x
   assert not d.has_graph_y
 
-  assert d.graph_x.dtype == np.int32
+  assert d.graph_x.dtype == np.int64
   assert np.array_equal(d.graph_x, np.array([0, 1, 2, 3]))
 
 
@@ -161,7 +161,7 @@ def test_CreateFromNetworkX_graph_y(graph: nx.MultiDiGraph):
   assert not d.has_graph_x
   assert d.has_graph_y
 
-  assert d.graph_y.dtype == np.int32
+  assert d.graph_y.dtype == np.int64
   assert np.array_equal(d.graph_y, np.array([0, 1, 2, 3]))
 
 

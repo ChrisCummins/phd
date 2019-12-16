@@ -145,11 +145,11 @@ def MakeAliasSetGraphs(
   for function, alias_set in function_alias_set_pairs:
     # Translate the must/may alias property into 3-class 1-hot labels.
     if alias_set.type == "may alias":
-      false = np.array([1, 0, 0], np.int32)
-      true = np.array([0, 1, 0], np.int32)
+      false = np.array([1, 0, 0], np.int64)
+      true = np.array([0, 1, 0], np.int64)
     elif alias_set.type == "must alias":
-      false = np.array([1, 0, 0], np.int32)
-      true = np.array([0, 0, 1], np.int32)
+      false = np.array([1, 0, 0], np.int64)
+      true = np.array([0, 0, 1], np.int64)
     else:
       raise ValueError(f"Unknown alias set type `{alias_set.type}`")
 
