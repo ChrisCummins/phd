@@ -275,6 +275,7 @@ class LstmBase(classifier_base.ClassifierBase):
 
       if epoch_type == epoch.Type.TRAIN:
         loss = self.model.train_on_batch(batch.data.x, batch.data.y)
+        loss = self.ReshapeLoss(loss)
 
       predictions = self.model.predict_on_batch(batch.data.x)
 
@@ -285,7 +286,7 @@ class LstmBase(classifier_base.ClassifierBase):
     return batches.Results.Create(
       targets=self.ReshapeTargets(batch.data.y[0]),
       predictions=self.ReshapeTargets(predictions),
-      loss=self.ReshapeLoss(loss),
+      loss=loss,
     )
 
   def ReshapeLoss(self, loss):
