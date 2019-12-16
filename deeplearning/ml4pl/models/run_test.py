@@ -107,10 +107,14 @@ class MockModel(classifier_base.ClassifierBase):
 
   def MakeBatch(
     self,
+    epoch_type: epoch.Type,
     graphs: Iterable[graph_tuple_database.GraphTuple],
     ctx: progress.ProgressContext = progress.NullContext,
   ) -> batches.Data:
     """Generate a fake batch of data."""
+    del epoch_type  # Unused.
+    del ctx  # Unused.
+
     graph_ids = []
     while len(graph_ids) < 100:
       try:

@@ -153,6 +153,7 @@ class Ggnn(classifier_base.ClassifierBase):
 
   def MakeBatch(
     self,
+    epoch_type: epoch.Type,
     graphs: Iterable[graph_tuple_database.GraphTuple],
     ctx: progress.ProgressContext = progress.NullContext,
   ) -> batches.Data:

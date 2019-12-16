@@ -40,10 +40,12 @@ class ZeroR(classifier_base.ClassifierBase):
 
   def MakeBatch(
     self,
+    epoch_type: epoch.Type,
     graphs: Iterable[graph_tuple_database.GraphTuple],
     ctx: progress.ProgressContext = progress.NullContext,
   ) -> batchs.Data:
-    del ctx
+    del epoch_type  # Unused.
+    del ctx  # Unused.
 
     batch_size = 0
     graph_ids = []

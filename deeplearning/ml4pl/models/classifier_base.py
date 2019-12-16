@@ -123,6 +123,7 @@ class ClassifierBase(object):
 
   def MakeBatch(
     self,
+    epoch_type: epoch.Type,
     graphs: Iterable[graph_tuple_database.GraphTuple],
     ctx: progress.ProgressContext = progress.NullContext,
   ) -> batches.Data:
@@ -284,7 +285,6 @@ class ClassifierBase(object):
 
     Args:
       epoch_type: The type of epoch that batches are being constructed for.
-        This is used only for logging printouts.
       graphs: The graphs to construct batches from.
       ctx: A logging context.
 
@@ -299,7 +299,7 @@ class ClassifierBase(object):
           f"{humanize.Plural(batch.graph_count, f'{epoch_type.name.lower()} graph')}"
         ),
       ):
-        batch = self.MakeBatch(graphs)
+        batch = self.MakeBatch(epoch_type, graphs)
 
       # A batch with no graphs is considered "empty" and is not returned.
       if batch.graph_count:

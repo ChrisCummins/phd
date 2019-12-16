@@ -208,7 +208,7 @@ class LstmBase(classifier_base.ClassifierBase):
       reader = graph_database_reader.BufferedGraphReader(
         self.graph_db, limit=warm_up_batch_size
       )
-      batch = self.MakeBatch(reader)
+      batch = self.MakeBatch(epoch.Type.TRAIN, reader)
       assert batch.graph_count == warm_up_batch_size
       self.RunBatch(epoch.Type.TRAIN, batch)
 
@@ -423,10 +423,13 @@ class GraphLstm(LstmBase):
 
   def MakeBatch(
     self,
+    epoch_type: epoch.Type,
     graph_iterator: Iterable[graph_tuple_database.GraphTuple],
     ctx: progress.ProgressContext = progress.NullContext,
   ) -> batches.Data:
     """Create a mini-batch of LSTM data."""
+    del epoch_type  # Unused.
+
     graphs = self.GetBatchOfGraphs(graph_iterator)
     if not graphs:
       return batches.Data(graph_ids=[], data=None)
