@@ -1,81 +1,59 @@
 """Module for labelling program graphs with data depedencies."""
 import collections
-import typing
 
 import networkx as nx
 
+from deeplearning.ml4pl.graphs import programl_pb2
+from deeplearning.ml4pl.graphs.labelled.dataflow import data_flow_graphs
 from labm8.py import app
-from labm8.py import decorators
 
 FLAGS = app.FLAGS
 
 
-@decorators.timeout(seconds=120)
-def AnnotateDataDependencies(
-  g: nx.MultiDiGraph,
-  root_node: str,
-  x_label: str = "x",
-  y_label: str = "y",
-  true: typing.Any = True,
-  false: typing.Any = False,
-) -> typing.Tuple[int, int]:
-  # Initialize all nodes as not dependent and not the root node, except the root
-  # node.
-  for node, data in g.nodes(data=True):
-    data[x_label] = [data[x_label], 0]
-    data[y_label] = false
-  g.nodes[root_node][x_label] = [g.nodes[root_node][x_label][0], 1]
-
-  # Breadth-first traversal to mark node dependencies.
-  data_flow_steps = 0
-  dependency_node_count = 0
-  visited = set()
-  q = collections.deque([(root_node, 1)])
-  while q:
-    next, data_flow_steps = q.popleft()
-    dependency_node_count += 1
-    visited.add(next)
-
-    # Mark the node as dependent.
-    g.nodes[next][y_label] = true
-
-    # Visit all data predecessors.
-    for pred, _, flow in g.in_edges(next, data="flow"):
-      if flow == "data" and pred not in visited:
-        q.append((pred, data_flow_steps + 1))
-
-  return dependency_node_count, data_flow_steps
+# The node_x arrays for node data dependencies:
+NOT_DEPENDENCY = [1, 0]
+DEPENDENCY = [0, 1]
 
 
-def MakeDataDependencyGraphs(
-  g: nx.MultiDiGraph, n: typing.Optional[int] = None, false=False, true=True,
-) -> typing.Iterable[nx.MultiDiGraph]:
-  """Produce up to `n` dependency graphs from the given unlabelled graph.
+class DataDependencyAnnotator(data_flow_graphs.NetworkXDataFlowGraphAnnotator):
+  """Annotate graphs with data dependencies.
 
-  Args:
-    g: The unlabelled input graph.
-    n: The maximum number of graphs to produce. Multiple graphs are produced by
-      selecting different root nodes for creating labels. If `n` is provided,
-      the number of graphs generated will be in the range
-      1 <= x <= min(num_statements, n). Else, the number of graphs will be equal
-      to num_statements (i.e. one graph for each statement in the input graph).
-    false: The value to set for binary false values on X and Y labels.
-    true: The value to set for binary true values on X and Y labels.
-
-  Returns:
-    A generator of annotated graphs, where each graph has 'x' and 'y' labels on
-    the statement nodes, and additionally 'dominated_node_count' and
-    'data_flow_max_steps_required' attributes.
+  Statement node A depends on statement B iff B produces data nodes that are
+  operands to A.
   """
-  # TODO:
-  root_statements = query.SelectRandomNStatements(g, n)
 
-  for root_node in root_statements[:n]:
-    labelled = g.copy()
-    (
-      labelled.dependency_node_count,
-      labelled.data_flow_max_steps_required,
-    ) = AnnotateDataDependencies(
-      labelled, root_node, false=false, true=true
-    )
-    yield labelled
+  def IsValidRootNode(self, node: int, data) -> bool:
+    """Data dependency is a statement-based analysis."""
+    return data["type"] == programl_pb2.Node.STATEMENT and data["function"]
+
+  def Annotate(self, g: nx.MultiDiGraph, root_node: int) -> None:
+    """Annotate all of the nodes that must be executed prior to the root node.
+    """
+    # Initialize all nodes as not dependent and not the root node, except the root
+    # node.
+    for node, data in g.nodes(data=True):
+      data["x"].append(data_flow_graphs.ROOT_NODE_NO)
+      data["y"] = NOT_DEPENDENCY
+    g.nodes[root_node]["x"][-1] = data_flow_graphs.ROOT_NODE_YES
+
+    # Breadth-first traversal to mark node dependencies.
+    data_flow_steps = 0
+    dependency_node_count = 0
+    visited = set()
+    q = collections.deque([(root_node, 1)])
+    while q:
+      next, data_flow_steps = q.popleft()
+      dependency_node_count += 1
+      visited.add(next)
+
+      # Mark the node as dependent.
+      g.nodes[next]["y"] = DEPENDENCY
+
+      # Visit all data predecessors.
+      for pred, _, flow in g.in_edges(next, data="flow"):
+        if flow == programl_pb2.Edge.DATA and pred not in visited:
+          q.append((pred, data_flow_steps + 1))
+
+    g.graph["data_flow_root_node"] = root_node
+    g.graph["data_flow_steps"] = data_flow_steps
+    g.graph["data_flow_positive_node_count"] = dependency_node_count
