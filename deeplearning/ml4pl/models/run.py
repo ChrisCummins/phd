@@ -4,6 +4,7 @@ This defines the schedules for running training / validation / testing loops
 of a machine learning model.
 """
 import copy
+import sys
 import warnings
 from typing import Dict
 from typing import List
@@ -331,11 +332,11 @@ def CreateModel(
 
 def RunOne(
   model_class,
+  graph_db: graph_tuple_database.Database,
   print_header: bool = True,
   print_footer: bool = True,
   ctx: progress.ProgressContext = progress.NullContext,
 ) -> pd.Series:
-  graph_db: graph_tuple_database.Database = FLAGS.graph_db()
   with logger_lib.Logger.FromFlags() as logger:
     logger.ctx = ctx
     model = CreateModel(model_class, graph_db, logger)
@@ -398,9 +399,7 @@ class KFoldCrossValidation(progress.Progress):
   graph database.
   """
 
-  def __init__(
-    self, model_class,
-  ):
+  def __init__(self, model_class, graph_db: graph_tuple_database.Database):
     """Constructor.
 
     Args:
@@ -410,7 +409,7 @@ class KFoldCrossValidation(progress.Progress):
       ValueError: If the database contains invalid splits.
     """
     self.model_class = model_class
-    self.graph_db: graph_tuple_database.Database = FLAGS.graph_db()
+    self.graph_db = graph_db
     self.results: Optional[pd.DataFrame] = []
     if not self.graph_db.splits:
       raise ValueError("Database contains no splits")
@@ -447,7 +446,12 @@ class KFoldCrossValidation(progress.Progress):
       print_header = False if i else True
 
       results.append(
-        RunOne(self.model_class, print_header=print_header, ctx=self.ctx,)
+        RunOne(
+          self.model_class,
+          self.graph_db,
+          print_header=print_header,
+          ctx=self.ctx,
+        )
       )
     self.ctx.i += 1
 
@@ -491,9 +495,11 @@ class KFoldCrossValidation(progress.Progress):
     self.results = df
 
 
-def RunKFold(model_class) -> pd.DataFrame:
+def RunKFold(
+  model_class, graph_db: graph_tuple_database.Database
+) -> pd.DataFrame:
   """Run k-fold cross-validation of the given model."""
-  kfold = KFoldCrossValidation(model_class)
+  kfold = KFoldCrossValidation(model_class, graph_db)
   progress.Run(kfold)
   if kfold.ctx.i != kfold.ctx.n:
     raise RunError(
@@ -508,7 +514,9 @@ def RunKFold(model_class) -> pd.DataFrame:
   return kfold.results
 
 
-def Run(model_class) -> Optional[Union[pd.Series, pd.DataFrame]]:
+def Run(
+  model_class, graph_db: Optional[graph_tuple_database.Database] = None
+) -> Optional[Union[pd.Series, pd.DataFrame]]:
   """Run the model with the requested flags actions.
 
   Args:
@@ -517,19 +525,20 @@ def Run(model_class) -> Optional[Union[pd.Series, pd.DataFrame]]:
   Returns:
     A DataFrame of k-fold results, or a single series of results.
   """
-  if not FLAGS.graph_db:
+  if not graph_db and not FLAGS.graph_db:
     raise app.UsageError("--graph_db is required")
+  graph_db: graph_tuple_database.Database = graph_db or FLAGS.graph_db()
 
   # NOTE(github.com/ChrisCummins/ProGraML/issues/13): F1 score computation
-  # warnings that it's undefined when there are missing instances from a class,
+  # warns that it iss undefined when there are missing instances from a class,
   # which is fine for our usage.
   warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
 
   try:
     if FLAGS.k_fold:
-      return RunKFold(model_class)
+      return RunKFold(model_class, graph_db)
     else:
-      return RunOne(model_class)
+      return RunOne(model_class, graph_db)
   except RunError as e:
     app.FatalWithoutStackTrace("%s", e)
     sys.exit(1)
