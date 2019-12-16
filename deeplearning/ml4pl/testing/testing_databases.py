@@ -32,6 +32,7 @@ import random
 from typing import Callable
 from typing import List
 
+from deeplearning.ml4pl import filesystem_paths
 from deeplearning.ml4pl import run_id
 from labm8.py import app
 from labm8.py import sqlutil
@@ -49,7 +50,7 @@ TEST_DB_FILES = [
 def GetDatabaseUrls() -> List[str]:
   """Enumerate a list of database URLs to use for tests.
 
-  The databases are machine-local unique, meaning that multiple fixtures can
+  The databases are user-local unique, meaning that multiple fixtures can
   each call this function to generate database URLs that do not conflict.
 
   Returns:
@@ -62,7 +63,9 @@ def GetDatabaseUrls() -> List[str]:
 
   # Always test with a file-backed SQLite database. Don't test with in-memory
   # SQLite database as these don't work with multi-threaded code.
-  db_urls = [f"sqlite:////tmp/ml4pl/test/db/{run_id_}.db"]
+  db_urls = [
+    f"sqlite:///{filesystem_paths.TemporaryFilePath(f'test/db/{run_id_}.db')}"
+  ]
 
   for path in TEST_DB_FILES:
     if path.is_file():

@@ -182,6 +182,7 @@ py_library(
     srcs = ["testing_databases.py"],
     visibility = ["//deeplearning/ml4pl:__subpackages__"],
     deps = [
+        "//deeplearning/ml4pl:filesystem_paths",
         "//deeplearning/ml4pl:run_id",
         "//labm8/py:app",
         "//labm8/py:sqlutil",
