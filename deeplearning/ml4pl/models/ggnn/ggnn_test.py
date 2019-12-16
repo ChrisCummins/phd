@@ -91,13 +91,11 @@ def log1p_graph_x(request) -> bool:
 
 @test.Fixture(
   scope="session",
-  params=list(ggnn_config.NodeTextEmbeddingType),
+  params=('zero', 'constant', 'constant_random', 'random', 'finetune'),
   namer=lambda x: x.name.lower(),
 )
 def node_text_embedding_type(request):
-  return flags_parsers.EnumFlag(
-    ggnn_config.NodeTextEmbeddingType, request.param
-  )
+  return request.param
 
 
 @test.Fixture(

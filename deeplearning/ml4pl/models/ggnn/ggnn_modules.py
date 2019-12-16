@@ -8,8 +8,7 @@ from deeplearning.ml4pl.models.ggnn import ggnn_config
 from labm8.py import app
 
 FLAGS = app.FLAGS
-SMALL_NUMBER = 1e-7
-
+SMALL_NUMBER = 1e-8
 
 # optimizer Adam
 # FLAGS.learning_rate * self.placeholders["learning_rate_multiple"]
@@ -38,7 +37,7 @@ class GGNNModel(nn.Module):
     self.loss = Loss(config)
     self.metrics = Metrics()
 
-    # not instantiating the optimizer should save ~67% of GPU memory, bc Adam
+    # not instantiating the optimizer should save 2 x #model_params of GPU memory, bc. Adam
     # carries two momentum params per trainable model parameter.
     if test_only:
       self.opt = None
@@ -50,33 +49,33 @@ class GGNNModel(nn.Module):
     return optim.AdamW(self.parameters(), lr=config.lr)  # NB: AdamW
 
   def forward(
-    self,
-    vocab_ids,
-    selector_ids,
-    labels,
-    edge_lists,
-    num_graphs=None,
-    graph_nodes_list=None,
-    aux_in=None,
+      self,
+      vocab_ids,
+      selector_ids,
+      labels,
+      edge_lists,
+      pos_lists,
+      num_graphs=None,
+      graph_nodes_list=None,
+      aux_in=None,
   ):
     raw_in = self.node_embeddings(vocab_ids, selector_ids)
     raw_out, raw_in = self.ggnn(
-      edge_lists, raw_in
+      edge_lists, raw_in, pos_lists
     )  # OBS! self.ggnn might change raw_in inplace, so use the two outputs
     # instead!
     prediction = self.nodewise_readout(raw_in, raw_out)
 
     if self.graphlevel_readout:
       prediction, graph_features = self.graphlevel_readout(
-        prediction, num_graphs, graph_nodes_list, aux_in
-      )
+        prediction, num_graphs, graph_nodes_list, aux_in)
     else:
       graph_features = None
 
     # accuracy, pred_targets, correct, targets
     metrics_tuple = self.metrics(prediction, labels)
 
-    outputs = (prediction,) + metrics_tuple + (graph_features,)
+    outputs = (prediction, ) + metrics_tuple + (graph_features, )
 
     return outputs
 
@@ -88,7 +87,6 @@ class GGNNModel(nn.Module):
 
 class Loss(nn.Module):
   """[Binary] Cross Entropy loss with weighted intermediate loss"""
-
   def __init__(self, config):
     super().__init__()
     self.config = config
@@ -106,8 +104,7 @@ class Loss(nn.Module):
     loss = self.loss(inputs[0], targets)
     if self.config.has_graph_labels:
       loss += self.config.intermediate_loss_weight * self.loss(
-        inputs[1], targets
-      )
+        inputs[1], targets)
     return loss
 
 
@@ -117,7 +114,6 @@ class Metrics(nn.Module):
   logits, labels
   Returns:
   (accuracy, pred_targets, correct_preds, targets)"""
-
   def __init__(self):
     super().__init__()
 
@@ -168,39 +164,23 @@ class NodeEmbeddings(nn.Module):
   def __init__(self, config, pretrained_embeddings=None):
     super().__init__()
 
-    if (
-      config.inst2vec_embeddings
-      == ggnn_config.NodeTextEmbeddingType.INST2VEC_CONSTANT
-    ):
-      app.Log(
-        1, "Using pre-trained inst2vec embeddings without further training",
-      )
+    if config.inst2vec_embeddings == 'constant':
+      app.Log(1, "Using pre-trained inst2vec embeddings frozen.")
       assert pretrained_embeddings is not None
       self.node_embs = nn.Embedding.from_pretrained(
-        pretrained_embeddings, freeze=True
-      )
-    elif (
-      config.inst2vec_embeddings
-      == ggnn_config.NodeTextEmbeddingType.ZERO_CONSTANT
-    ):
+        pretrained_embeddings, freeze=True)
+    elif config.inst2vec_embeddings == 'zero':
       init = torch.zeros(config.vocab_size, config.emb_size)
       self.node_embs = nn.Embedding.from_pretrained(init, freeze=True)
-    elif (
-      config.inst2vec_embeddings
-      == ggnn_config.NodeTextEmbeddingType.RANDOM_CONSTANT
-    ):
+    elif config.inst2vec_embeddings == 'random_constant':
       init = torch.rand(config.vocab_size, config.emb_size)
       self.node_embs = nn.Embedding.from_pretrained(init, freeze=True)
-    elif (
-      config.inst2vec_embeddings
-      == ggnn_config.NodeTextEmbeddingType.INST2VEC_FINETUNE
-    ):
+    elif config.inst2vec_embeddings == 'finetune':
       app.Log(1, "Fine-tuning inst2vec embeddings")
       assert pretrained_embeddings is not None
       self.node_embs = nn.Embedding.from_pretrained(
-        pretrained_embeddings, freeze=False
-      )
-    elif config.inst2vec_embeddings == ggnn_config.NodeTextEmbeddingType.RANDOM:
+        pretrained_embeddings, freeze=False)
+    elif config.inst2vec_embeddings == 'random':
       app.Log(1, "Initializing with random embeddings")
       self.node_embs = nn.Embedding(config.vocab_size, config.emb_size)
     else:
@@ -213,9 +193,8 @@ class NodeEmbeddings(nn.Module):
         [[0, 50.0], [50.0, 0]],
         dtype=torch.get_default_dtype(),
       )
-      self.selector_embs = nn.Embedding.from_pretrained(
-        selector_init, freeze=True
-      )
+      self.selector_embs = nn.Embedding.from_pretrained(selector_init,
+                                freeze=True)
     else:
       self.selector_embs = None
 
@@ -246,14 +225,12 @@ class GGNNProper(nn.Module):
     for i in range(len(self.layer_timesteps)):
       self.update.append(GGNNLayer(config))
 
-  def forward(self, edge_lists, node_states, position_embeddings=None):
-
+  def forward(self, edge_lists, node_states, pos_lists):
     # TODO(github.com/ChrisCummins/ProGraML/issues/27): This modifies the
     # arguments in-place.
 
     old_node_states = node_states.clone()
     # TODO(github.com/ChrisCummins/ProGraML/issues/30): position embeddings
-    assert position_embeddings is None, "Position Embs not implemented"
 
     if self.backward_edges:
       back_edge_lists = [x.flip([1]) for x in edge_lists]
@@ -261,7 +238,7 @@ class GGNNProper(nn.Module):
 
     for (layer_idx, num_timesteps) in enumerate(self.layer_timesteps):
       for t in range(num_timesteps):
-        messages = self.message[layer_idx](edge_lists, node_states)
+        messages = self.message[layer_idx](edge_lists, node_states, pos_lists)
         node_states = self.update[layer_idx](messages, node_states)
     return node_states, old_node_states
 
@@ -269,14 +246,11 @@ class GGNNProper(nn.Module):
 class MessagingLayer(nn.Module):
   """takes an edge_list (for a single edge type) and node_states <N, D+S> and
   returns incoming messages per node of shape <N, D+S>"""
-
   def __init__(self, config):
     super().__init__()
     self.forward_and_backward_edge_type_count = (
-      config.edge_type_count * 2
-      if config.backward_edges
-      else config.edge_type_count
-    )
+      config.edge_type_count *
+      2 if config.backward_edges else config.edge_type_count)
     self.msg_mean_aggregation = config.msg_mean_aggregation
     self.dim = config.hidden_size
 
@@ -289,24 +263,35 @@ class MessagingLayer(nn.Module):
       dropout=config.edge_weight_dropout,
     )
 
-  def forward(self, edge_lists, node_states):
+    self.pos_transform = None
+    if config.position_embeddings:
+      self.register_buffer('position_embs', PositionEmbeddings()(torch.arange(512, dtype=torch.get_default_dtype()), config.emb_size, dpad=config.selector_size))
+      self.pos_transform = LinearNet(
+        self.dim,
+        self.dim,
+        bias=config.use_edge_bias,
+        dropout=config.edge_weight_dropout,
+      )
+
+  def forward(self, edge_lists, node_states, pos_lists):
     """edge_lists: [<M_i, 2>, ...]"""
+
+    if self.pos_transform:
+      pos_gating = 2 * torch.sigmoid(self.pos_transform(self.position_embs))
+      
     # all edge types are handled in one matrix, but we
     # let propagated_states[i] be equal to the case with only edge_type i
-    propagated_states = (
-      self.transform(node_states)
-      .transpose(0, 1)
-      .view(self.forward_and_backward_edge_type_count, self.dim, -1)
-    )
+    propagated_states = (self.transform(node_states).transpose(0, 1).view(
+      self.forward_and_backward_edge_type_count, self.dim, -1))
 
     messages_by_targets = torch.zeros_like(node_states)
     if self.msg_mean_aggregation:
       device = node_states.device
-      bincount = torch.zeros(
-        node_states.size()[0], dtype=torch.long, device=device
-      )
+      bincount = torch.zeros(node_states.size()[0],
+                   dtype=torch.long,
+                   device=device)
 
-    for i, edge_list in enumerate(edge_lists):
+    for i, (edge_list, pos_list) in enumerate(zip(edge_lists, pos_lists)):
       edge_targets = edge_list[:, 1]
       edge_sources = edge_list[:, 0]
       # TODO(github.com/ChrisCummins/ProGraML/issues/27): transform all
@@ -318,19 +303,21 @@ class MessagingLayer(nn.Module):
       # position table can be multiplied before addition as well.
       # TODO(github.com/ChrisCummins/ProGraML/issues/30): with "fancy" mode,
       # anyway it's just another edge type
-      states_by_source = F.embedding(
-        edge_sources, propagated_states[i].transpose(0, 1)
-      )
-      messages_by_targets.index_add_(0, edge_targets, states_by_source)
+      messages_by_source = F.embedding(edge_sources, propagated_states[i].transpose(0, 1))
+      if self.pos_transform:
+        pos_by_source = F.embedding(pos_list, pos_gating)
+        messages_by_source.mul_(pos_by_source)
+
+      messages_by_targets.index_add_(0, edge_targets, messages_by_source)
+      
       if self.msg_mean_aggregation:
         bins = edge_targets.bincount(minlength=node_states.size()[0])
-
         bincount += bins
 
     if self.msg_mean_aggregation:
       divisor = bincount.float()
       divisor[bincount == 0] = 1.0  # avoid div by zero for lonely nodes
-      messages_by_targets /= divisor.unsqueeze_(1)
+      messages_by_targets /= (divisor.unsqueeze_(1) + SMALL_NUMBER)
     return messages_by_targets
 
 
@@ -341,18 +328,23 @@ class GGNNLayer(nn.Module):
     # TODO(github.com/ChrisCummins/ProGraML/issues/27): Maybe decouple hidden
     # GRU size: make hidden GRU size larger and EdgeTrafo size non-square
     # instead? Or implement stacking gru layers between message passing steps.
-    self.gru = nn.GRUCell(
-      input_size=config.hidden_size, hidden_size=config.hidden_size
-    )
+    self.gru = nn.GRUCell(input_size=config.hidden_size,
+                hidden_size=config.hidden_size)
 
   def forward(self, messages, node_states):
     if self.dropout > 0.0:
-      F.dropout_(messages, p=self.dropout, training=self.training, inplace=True)
+      F.dropout_(messages,
+             p=self.dropout,
+             training=self.training,
+             inplace=True)
 
     output = self.gru(messages, node_states)
 
     if self.dropout > 0.0:
-      F.dropout_(output, p=self.dropout, training=self.training, inplace=True)
+      F.dropout_(output,
+             p=self.dropout,
+             training=self.training,
+             inplace=True)
     return output
 
 
@@ -371,26 +363,43 @@ class GGNNLayer(nn.Module):
 #            initial_value=embeddings, trainable=False, dtype=tf.float32
 #        )
 #        return pos_emb
+
+
 class PositionEmbeddings(nn.Module):
   def __init__(self):
     super().__init__()
 
-  def forward(self, *args, **kwargs):
-    return args, kwargs
+  def forward(self, positions, demb, dpad: int = 0):
+    """Transformer-like sinusoidal positional embeddings.
+        Args:
+        position: 1d long Tensor of positions,
+        demb: int    size of embedding vector
+      """
+    inv_freq = 1 / (10000**(torch.arange(0.0, demb, 2.0) / demb))
 
-  def create_sinusoidal_embeddings(n_pos, dim, out):
-    import numpy as np
+    sinusoid_inp = torch.ger(positions, inv_freq)
+    pos_emb = torch.cat((torch.sin(sinusoid_inp), torch.cos(sinusoid_inp)),
+              dim=1)
 
-    position_enc = np.array(
-      [
-        [pos / np.power(10000, 2 * (j // 2) / dim) for j in range(dim)]
-        for pos in range(n_pos)
-      ]
-    )
-    out[:, 0::2] = torch.FloatTensor(np.sin(position_enc[:, 0::2]))
-    out[:, 1::2] = torch.FloatTensor(np.cos(position_enc[:, 1::2]))
-    out.detach_()
-    out.requires_grad = False
+    if dpad > 0:
+      in_length = positions.size()[0]
+      pad = torch.zeros((in_length, dpad))
+      pos_emb = torch.cat([pos_emb, pad], dim=1)
+      assert torch.all(pos_emb[:, -1] == torch.zeros(
+        in_length)), f"test failed. pos_emb: \n{pos_emb}"
+
+    return pos_emb
+
+  # def forward(self, positions, dim, out):
+  #     assert dim > 0, f'dim of position embs has to be > 0'
+  #     power = 2 * (positions / 2) / dim
+  #     position_enc = np.array(
+  #         [[pos / np.power(10000, 2 * (j // 2) / dim) for j in range(dim)]
+  #          for pos in range(n_pos)])
+  #     out[:, 0::2] = torch.FloatTensor(np.sin(position_enc[:, 0::2]))
+  #     out[:, 1::2] = torch.FloatTensor(np.cos(position_enc[:, 1::2]))
+  #     out.detach_()
+  #     out.requires_grad = False
 
 
 ########################################
@@ -400,14 +409,17 @@ class PositionEmbeddings(nn.Module):
 
 class NodewiseReadout(nn.Module):
   """aka GatedRegression"""
-
   def __init__(self, config):
     super().__init__()
     self.regression_gate = LinearNet(
-      2 * config.hidden_size, config.num_classes, dropout=config.output_dropout,
+      2 * config.hidden_size,
+      config.num_classes,
+      dropout=config.output_dropout,
     )
     self.regression_transform = LinearNet(
-      config.hidden_size, config.num_classes, dropout=config.output_dropout,
+      config.hidden_size,
+      config.num_classes,
+      dropout=config.output_dropout,
     )
 
   def forward(self, raw_node_in, raw_node_out):
@@ -433,7 +445,6 @@ class LinearNet(nn.Module):
   - Output: :math:`(N, *, H_{out})` where all but the last dimension
   are the same shape as the input and :math:`H_{out} = \text{out\_features}`.
   """
-
   def __init__(self, in_features, out_features, bias=True, dropout=0.0):
     super().__init__()
     self.dropout = dropout
@@ -465,7 +476,10 @@ class LinearNet(nn.Module):
 
   def extra_repr(self):
     return "in_features={}, out_features={}, bias={}, dropout={}".format(
-      self.in_features, self.out_features, self.bias is not None, self.dropout,
+      self.in_features,
+      self.out_features,
+      self.bias is not None,
+      self.dropout,
     )
 
 
@@ -489,24 +503,27 @@ class AuxiliaryReadout(nn.Module):
       self.feed_forward = nn.Sequential(
         nn.BatchNorm1d(config.num_classes + config.aux_in_len),
         nn.Linear(
-          config.num_classes + config.aux_in_len, config.aux_in_layer_size,
+          config.num_classes + config.aux_in_len,
+          config.aux_in_layer_size,
         ),
         nn.ReLU(),
         nn.Dropout(1 - config.output_dropout),
         nn.Linear(config.aux_in_layer_size, config.num_classes),
       )
 
-  def forward(
-    self, raw_node_out, num_graphs, graph_nodes_list, auxiliary_features
-  ):
+  def forward(self, raw_node_out, num_graphs, graph_nodes_list,
+        auxiliary_features):
     device = raw_node_out.device
-    graph_features = torch.zeros(num_graphs, self.num_classes, device=device)
-    graph_features.index_add_(
-      dim=0, index=graph_nodes_list, source=raw_node_out
-    )
+    graph_features = torch.zeros(num_graphs,
+                   self.num_classes,
+                   device=device)
+    graph_features.index_add_(dim=0,
+                  index=graph_nodes_list,
+                  source=raw_node_out)
 
     if self.log1p_graph_x:
       auxiliary_features.log1p_()
 
-    aggregate_features = torch.cat((graph_features, auxiliary_features), dim=1)
+    aggregate_features = torch.cat((graph_features, auxiliary_features),
+                     dim=1)
     return self.feed_forward(aggregate_features), graph_features

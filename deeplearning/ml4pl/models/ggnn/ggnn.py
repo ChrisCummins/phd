@@ -38,13 +38,11 @@ app.DEFINE_float("clamp_gradient_norm", 6.0, "Clip gradients to L-2 norm.")
 
 
 app.DEFINE_integer("hidden_size", 200, "The size of hidden layer(s).")
-app.DEFINE_enum(
+app.DEFINE_string(
   "inst2vec_embeddings",
-  ggnn_config.NodeTextEmbeddingType,
-  ggnn_config.NodeTextEmbeddingType.ZERO_CONSTANT,
-  "The type of per-node inst2vec embeddings to use.",
+  'random',
+  "The type of per-node inst2vec embeddings to use. One of {zero, constant, random, random_const, finetune}",
 )
-# TODO(github.com/ChrisCummins/ProGraML/issues/27): Use an enum.
 app.DEFINE_string(
   "unroll_strategy",
   "none",
@@ -66,7 +64,7 @@ app.DEFINE_float(
 # We assume that position_embeddings exist in every dataset.
 # the flag now only controls whether they are used or not.
 # This could be nice for ablating our model and also debugging with and without.
-app.DEFINE_string(
+app.DEFINE_boolean(
   "position_embeddings",
   "fancy",
   "Whether to use position embeddings as signals for edge order. Options: "
@@ -78,7 +76,6 @@ app.DEFINE_string(
 
 app.DEFINE_boolean("use_edge_bias", False, "")
 
-# TODO(github.com/ChrisCummins/ProGraML/issues/27): Unused flag.
 app.DEFINE_boolean(
   "msg_mean_aggregation",
   True,
@@ -302,16 +299,16 @@ class Ggnn(classifier_base.ClassifierBase):
         for x in disjoint_graph.adjacencies
       ]
 
-      # TODO(github.com/ChrisCummins/ProGraML/issues/30) still unused
       edge_positions = [
         torch.from_numpy(x).to(self.dev, torch.long)
         for x in disjoint_graph.edge_positions
       ]
 
-    model_inputs = (vocab_ids, selector_ids, labels, edge_lists)
+    model_inputs = (vocab_ids, selector_ids, labels, edge_lists, edge_positions)
 
     # maybe fetch more inputs.
     if disjoint_graph.has_graph_y:
+      assert disjoint_graph.disjoint_graph_count > 1, f"graph_count is {disjoint_graph.disjoint_graph_count}"
       num_graphs = torch.tensor(disjoint_graph.disjoint_graph_count).to(
         self.dev, torch.long
       )
@@ -365,13 +362,15 @@ class Ggnn(classifier_base.ClassifierBase):
     model_converged = False
     iteration_count = 1
 
+    loss_value = loss.item()
+    assert not np.isnan(loss_value), loss
     return batches.Results.Create(
       targets=cpu_labels,
       predictions=logits.detach().cpu().numpy(),
       model_converged=model_converged,
       learning_rate=learning_rate,
       iteration_count=iteration_count,
-      loss=loss.item(),
+      loss=loss_value,
     )
 
   def GetModelData(self) -> typing.Any:
