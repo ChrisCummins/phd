@@ -57,7 +57,7 @@ def db(request) -> graph_tuple_database.Database:
   )
 
 
-@test.Fixture(scope="function", params=(1, 1000, 5000))
+@test.Fixture(scope="function", params=(1, 100))
 def graph_count(request) -> int:
   """Test fixture to enumerate graph counts."""
   return request.param
