@@ -158,6 +158,7 @@ class StatementEncoder(EncoderBase):
     with open(LLVM_VOCAB) as f:
       data_to_load = json.load(f)
     self.vocabulary = data_to_load["vocab"]
+    self._max_encoded_length = data_to_load["max_encoded_length"]
 
   def Encode(
     self,
@@ -257,7 +258,7 @@ class StatementEncoder(EncoderBase):
   @property
   def max_encoded_length(self) -> int:
     """Return an upper bound on the length of the encoded sequences."""
-    raise NotImplementedError("TODO")
+    return self._max_encoded_length
 
   @property
   def vocabulary_size(self) -> int:
