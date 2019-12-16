@@ -215,5 +215,18 @@ def test_SerializeToStatementList():
   ]
 
 
+def test_FindCallSites_multiple_call_sites():
+  g = nx.MultiDiGraph()
+  g.add_node("call", type="statement", function="A", text="%2 = call i32 @B()")
+  g.add_node("foo", type="statement", function="A", text="")
+  g.add_node(
+    "call2", type="statement", function="A", text="%call = call i32 @B()"
+  )
+
+  call_sites = cdfg.FindCallSites(g, "A", "B")
+  assert len(call_sites) == 2
+  assert set(call_sites) == {"call", "call2"}
+
+
 if __name__ == "__main__":
   test.Main()

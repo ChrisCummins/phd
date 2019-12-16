@@ -4,7 +4,6 @@ import typing
 
 import networkx as nx
 
-from deeplearning.ml4pl.graphs import graph_query as query
 from labm8.py import app
 from labm8.py import decorators
 
@@ -68,6 +67,7 @@ def MakeDataDependencyGraphs(
     the statement nodes, and additionally 'dominated_node_count' and
     'data_flow_max_steps_required' attributes.
   """
+  # TODO:
   root_statements = query.SelectRandomNStatements(g, n)
 
   for root_node in root_statements[:n]:

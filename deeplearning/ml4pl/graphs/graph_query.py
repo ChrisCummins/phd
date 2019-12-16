@@ -8,6 +8,7 @@ import networkx as nx
 from deeplearning.ml4pl.graphs import graph_iterators as iterators
 from deeplearning.ncc.inst2vec import inst2vec_preprocess
 from labm8.py import app
+from labm8.py import humanize
 
 FLAGS = app.FLAGS
 
@@ -119,32 +120,6 @@ def GetCallStatementSuccessor(graph: nx.MultiDiGraph, call_site: str) -> str:
       f"`{call_site_successors}`"
     )
   return list(call_site_successors)[0]
-
-
-def GetCalledFunctionName(statement) -> typing.Optional[str]:
-  """Get the name of a function called in the statement."""
-  if "call " not in statement:
-    return None
-  # Try and resolve the call destination.
-  _, m_glob, _, _ = inst2vec_preprocess.get_identifiers_from_line(statement)
-  if not m_glob:
-    return None
-  return m_glob[0][1:]  # strip the leading '@' character
-
-
-def FindCallSites(graph, src, dst):
-  """Find the statements in `src` function that call `dst` function."""
-  call_sites = []
-  for node, data in iterators.StatementNodeIterator(graph):
-    if data["function"] != src:
-      continue
-    statement = data.get("original_text", data["text"])
-    called_function = GetCalledFunctionName(statement)
-    if not called_function:
-      continue
-    if called_function == dst:
-      call_sites.append(node)
-  return call_sites
 
 
 def _CountControlBackEdges(graph, root) -> int:

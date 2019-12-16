@@ -5,7 +5,7 @@ import typing
 
 import networkx as nx
 
-from deeplearning.ml4pl.graphs import graph_iterators as iterators
+from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ncc import rgx_utils as rgx
 from labm8.py import app
 
@@ -13,7 +13,9 @@ FLAGS = app.FLAGS
 
 
 def GetAllocationStatementForIdentifier(g: nx.Graph, identifier: str) -> str:
-  for node, data in iterators.StatementNodeIterator(g):
+  for node, data in g.nodes(data=True):
+    if data["type"] != programl_pb2.Node.STATEMENT:
+      continue
     if " = alloca " in data["text"]:
       allocated_identifier = data["text"].split(" =")[0]
       if allocated_identifier == identifier:

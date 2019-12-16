@@ -71,19 +71,6 @@ def test_StatementIsSuccessor_branched_control_path():
   assert query.StatementIsSuccessor(g, "b", "d")
 
 
-def test_FindCallSites_multiple_call_sites():
-  g = nx.MultiDiGraph()
-  g.add_node("call", type="statement", function="A", text="%2 = call i32 @B()")
-  g.add_node("foo", type="statement", function="A", text="")
-  g.add_node(
-    "call2", type="statement", function="A", text="%call = call i32 @B()"
-  )
-
-  call_sites = query.FindCallSites(g, "A", "B")
-  assert len(call_sites) == 2
-  assert set(call_sites) == {"call", "call2"}
-
-
 def test_GetStatementsForNode_node():
   """Test the nodes returned when root is a statementt."""
   g = nx.MultiDiGraph()

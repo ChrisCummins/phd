@@ -15,7 +15,7 @@ import numpy as np
 
 from compilers.llvm import opt_util
 from deeplearning.ml4pl.graphs import graph_iterators as iterators
-from deeplearning.ml4pl.graphs import graph_query as query
+from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 from deeplearning.ml4pl.graphs.unlabelled.cg import call_graph as cg
 from deeplearning.ncc import rgx_utils as rgx
@@ -35,7 +35,9 @@ EMBEDDINGS = bazelutil.DataPath(
 
 
 def GetAllocationStatementForIdentifier(g: nx.Graph, identifier: str) -> str:
-  for node, data in iterators.StatementNodeIterator(g):
+  for node, data in g.nodes(data=True):
+    if data["type"] != programl_pb2.Node.STATEMENT:
+      continue
     if " = alloca " in data["text"]:
       allocated_identifier = data["text"].split(" =")[0]
       if allocated_identifier == identifier:
@@ -181,7 +183,6 @@ def AddInterproceduralCallEdges(
   graph: nx.MultiDiGraph,
   call_multigraph: nx.MultiDiGraph,
   function_entry_exit_nodes: typing.Dict[str, typing.Tuple[str, str]],
-  get_call_site_successor: typing.Callable[[nx.MultiDiGraph, str], str],
 ) -> None:
   """Add "call" edges between procedures to match the call graph.
 
@@ -191,9 +192,6 @@ def AddInterproceduralCallEdges(
       from the same function.
     function_entry_exit_nodes: A mapping from function name to a tuple of entry
       and exit statements.
-    get_call_site_successor: A callback which takes as input a graph and a call
-      site statement within the graph, and returns the destination node for
-      calls from this site.
   """
   # Drop the parallel edges by converting the call graph back to a regular
   # directed graph. Iterating over the edges in this graph then provides the
@@ -206,7 +204,7 @@ def AddInterproceduralCallEdges(
     if src == "external node":
       continue
 
-    call_sites = query.FindCallSites(graph, src, dst)
+    call_sites = FindCallSites(graph, src, dst)
 
     if not call_sites:
       continue
@@ -225,10 +223,9 @@ def AddInterproceduralCallEdges(
         continue
       # Lookup the nodes to connect.
       call_entry, call_exit = function_entry_exit_nodes[dst]
-      call_site_successor = get_call_site_successor(graph, call_site)
       # Connect the nodes.
       graph.add_edge(call_site, call_entry, flow="call", position=0)
-      graph.add_edge(call_exit, call_site_successor, flow="call", position=0)
+      graph.add_edge(call_exit, call_site, flow="call", position=0)
 
 
 class ControlAndDataFlowGraphBuilder(object):
@@ -568,16 +565,8 @@ class ControlAndDataFlowGraphBuilder(object):
         "root", function_entry, flow="call", position=0
       )
 
-    if self.call_edge_returns_to_successor:
-      get_call_site_successor = query.GetCallStatementSuccessor
-    else:
-      get_call_site_successor = lambda g, n: n
-
     AddInterproceduralCallEdges(
-      interprocedural_graph,
-      call_graph,
-      function_entry_exit_nodes,
-      get_call_site_successor,
+      interprocedural_graph, call_graph, function_entry_exit_nodes,
     )
 
     return interprocedural_graph
@@ -672,3 +661,29 @@ def SerializeToStatementList(
         elif flow == "call":
           if dst not in visited_functions:
             functions.append(dst)
+
+
+def GetCalledFunctionName(statement) -> typing.Optional[str]:
+  """Get the name of a function called in the statement."""
+  if "call " not in statement:
+    return None
+  # Try and resolve the call destination.
+  _, m_glob, _, _ = inst2vec_preprocess.get_identifiers_from_line(statement)
+  if not m_glob:
+    return None
+  return m_glob[0][1:]  # strip the leading '@' character
+
+
+def FindCallSites(graph, src, dst):
+  """Find the statements in `src` function that call `dst` function."""
+  call_sites = []
+  for node, data in iterators.StatementNodeIterator(graph):
+    if data["function"] != src:
+      continue
+    statement = data.get("original_text", data["text"])
+    called_function = GetCalledFunctionName(statement)
+    if not called_function:
+      continue
+    if called_function == dst:
+      call_sites.append(node)
+  return call_sites
