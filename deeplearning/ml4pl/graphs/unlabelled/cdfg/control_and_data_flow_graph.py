@@ -14,7 +14,6 @@ import networkx as nx
 import numpy as np
 
 from compilers.llvm import opt_util
-from deeplearning.ml4pl.graphs import graph_iterators as iterators
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 from deeplearning.ml4pl.graphs.unlabelled.cg import call_graph as cg
@@ -299,12 +298,11 @@ class ControlAndDataFlowGraphBuilder(object):
     if not self.preprocess_text:
       return
 
-    for node, data in iterators.StatementNodeIterator(g):
-      if "text" not in data:
-        raise ValueError(
-          f"No `text` attribute for node `{node}` with attributes: {data}"
-        )
-    lines = [[data["text"]] for _, data in iterators.StatementNodeIterator(g)]
+    lines = [
+      [data["text"]]
+      for _, data in g.nodes(data=True)
+      if data["type"] == programl_pb2.Node.STATEMENT
+    ]
     preprocessed_lines, _ = inst2vec_preprocess.preprocess(lines)
     preprocessed_texts = [
       inst2vec_preprocess.PreprocessStatement(x[0] if len(x) else "")
@@ -336,9 +334,11 @@ class ControlAndDataFlowGraphBuilder(object):
     for node in nodes_to_remove:
       in_edges = g.in_edges(node)
       out_edges = g.out_edges(node)
+      # TODO(github.com/ChrisCummins/ProGraML/issues/2): Update.
       in_nodes = iterators.SuccessorNodes(
         g, node, ignored_nodes=nodes_to_remove, direction=lambda src, dst: src
       )
+      # TODO(github.com/ChrisCummins/ProGraML/issues/2): Update.
       out_nodes = iterators.SuccessorNodes(
         g, node, ignored_nodes=nodes_to_remove, direction=lambda src, dst: dst
       )
@@ -360,6 +360,7 @@ class ControlAndDataFlowGraphBuilder(object):
 
   def MaybeAddSingleEntryBlock(self, g: nx.MultiDiGraph) -> None:
     """Add a magic entry block."""
+    # TODO(github.com/ChrisCummins/ProGraML/issues/2): Update.
     entry_blocks = list(iterators.EntryBlockIterator(g))
     if not entry_blocks:
       raise ValueError("No entry blocks found in graph!")
@@ -383,6 +384,7 @@ class ControlAndDataFlowGraphBuilder(object):
     Args:
       g: The graph to add the exit block to.
     """
+    # TODO(github.com/ChrisCummins/ProGraML/issues/2): Update.
     exit_blocks = list(iterators.ExitBlockIterator(g))
     if not exit_blocks:
       raise ValueError("No exit blocks found in graph!")
@@ -400,6 +402,7 @@ class ControlAndDataFlowGraphBuilder(object):
       for node, data in exit_blocks:
         g.add_edge(node, exit_block, flow="control")
       # Add a dataflow edge out, if there is one.
+      # TODO(github.com/ChrisCummins/ProGraML/issues/2): Update.
       for src, dst, data in iterators.DataFlowEdgeIterator(g):
         if dst == node:
           g.add_edge(node, exit_block, flow="data")
@@ -419,6 +422,7 @@ class ControlAndDataFlowGraphBuilder(object):
     # iterating.
     edges_to_add: typing.List[typing.Tuple[str, str, str, int]] = []
 
+    # TODO(github.com/ChrisCummins/ProGraML/issues/2): Update.
     for statement, data in iterators.StatementNodeIterator(g):
       # TODO(github.com/ChrisCummins/ProGraML/issues/9): Separate !IDENTIFIER
       # and !IMMEDIATE uses.
@@ -618,9 +622,11 @@ def ToControlFlowGraph(g: nx.MultiDiGraph):
   # MultiDiGraph.
   cfg = nx.DiGraph()
 
+  # TODO(github.com/ChrisCummins/ProGraML/issues/2): Update.
   for node, data in iterators.StatementNodeIterator(g):
     cfg.add_node(node, **data)
 
+  # TODO(github.com/ChrisCummins/ProGraML/issues/2): Update.
   for src, dst, data in iterators.ControlFlowEdgeIterator(g):
     cfg.add_edge(src, dst, **data)
 
@@ -677,6 +683,7 @@ def GetCalledFunctionName(statement) -> typing.Optional[str]:
 def FindCallSites(graph, src, dst):
   """Find the statements in `src` function that call `dst` function."""
   call_sites = []
+  # TODO(github.com/ChrisCummins/ProGraML/issues/2): Update.
   for node, data in iterators.StatementNodeIterator(graph):
     if data["function"] != src:
       continue
