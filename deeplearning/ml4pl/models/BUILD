@@ -254,7 +254,6 @@ py_library(
         "//labm8/py:pdutil",
         "//labm8/py:prof",
         "//labm8/py:progress",
-        "//third_party/py/memory_profiler",
         "//third_party/py/pyfiglet",
     ],
 )

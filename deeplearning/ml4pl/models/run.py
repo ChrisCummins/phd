@@ -11,7 +11,6 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
-import memory_profiler
 import pandas as pd
 import pyfiglet
 from sklearn.exceptions import UndefinedMetricWarning
@@ -206,7 +205,6 @@ class Train(progress.Progress):
       ctx=self.ctx,
     )
 
-  @memory_profiler.profile
   def RunOneEpoch(self, test_on: str, save_on) -> None:
     """Inner loop to run a single train/val/test epoch.
     """
@@ -331,7 +329,6 @@ def CreateModel(
   return model
 
 
-@memory_profiler.profile
 def RunOne(
   model_class,
   print_header: bool = True,
@@ -511,7 +508,7 @@ def RunKFold(model_class) -> pd.DataFrame:
   return kfold.results
 
 
-def _RunFlagsActionsOnModelOrDir(model_class):
+def Run(model_class) -> Optional[Union[pd.Series, pd.DataFrame]]:
   """Run the model with the requested flags actions.
 
   Args:
@@ -536,20 +533,3 @@ def _RunFlagsActionsOnModelOrDir(model_class):
   except RunError as e:
     app.FatalWithoutStackTrace("%s", e)
     sys.exit(1)
-
-
-@memory_profiler.profile
-def RunWithMemoryProfiler(func, *args, **kwargs):
-  """Given the given argument with a memory profiler.
-
-  See: https://pypi.org/project/memory-profiler/
-  """
-  return func(*args, **kwargs)
-
-
-def Run(model_class) -> Optional[Union[pd.Series, pd.DataFrame]]:
-  """Run the model."""
-  if FLAGS.run_with_memory_profiler:
-    return RunWithMemoryProfiler(_RunFlagsActionsOnModelOrDir, model_class)
-  else:
-    return _RunFlagsActionsOnModelOrDir(model_class)
