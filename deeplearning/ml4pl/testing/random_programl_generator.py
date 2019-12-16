@@ -50,13 +50,6 @@ NETWORKX_GRAPHS_ARCHIVE = bazelutil.DataArchive(
 )
 
 
-def _CreateRandomList(
-  n: int, lower_value: int = 0, upper_value: int = 10
-) -> List[int]:
-  """Generate 'n' random ints in the range [lower_value, upper_value]."""
-  return [random.randint(lower_value, upper_value) for _ in range(n)]
-
-
 def CreateRandomProto(
   node_x_dimensionality: int = 1,
   node_y_dimensionality: int = 0,
@@ -131,9 +124,9 @@ def CreateRandomProto(
     # Add the node features and labels.
     # Limit node feature values in range [0,1] to play nicely with models with
     # hardcoded "binary selector" embeddings.
-    node.x[:] = _CreateRandomList(node_x_dimensionality, upper_value=1)
+    node.x[:] = np.random.randint(low=0, high=2, size=node_x_dimensionality)
     if node_y_dimensionality:
-      node.y[:] = _CreateRandomList(node_y_dimensionality)
+      node.y[:] = np.random.randint(low=0, high=100, size=node_y_dimensionality)
 
   # Create the functions.
   for i in range(0, function_count):
@@ -177,10 +170,10 @@ def CreateRandomProto(
         edge.position = random.randint(0, 4)
 
   if graph_x_dimensionality:
-    proto.x[:] = _CreateRandomList(graph_x_dimensionality)
+    proto.x[:] = np.random.randint(low=0, high=100, size=graph_x_dimensionality)
 
   if graph_y_dimensionality:
-    proto.y[:] = _CreateRandomList(graph_y_dimensionality)
+    proto.y[:] = np.random.randint(low=0, high=100, size=graph_y_dimensionality)
 
   if with_data_flow:
     proto.data_flow_steps = random.randint(1, 50)
