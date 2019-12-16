@@ -20,6 +20,9 @@ app.DEFINE_database(
   None,
   "If set, this is a database to copy the split column to.",
 )
+app.DEFINE_integer(
+  "seed", 0xCEC, "The random seed to use for splitting the dataset."
+)
 
 
 class StratifiedGraphLabelKFold(object):
@@ -44,7 +47,9 @@ class StratifiedGraphLabelKFold(object):
       graph_ids = np.array(graph_ids, dtype=np.int32)
       graph_y = np.array(graph_y, dtype=np.int64)
 
-    splitter = model_selection.StratifiedKFold(n_splits=self.k, shuffle=True)
+    splitter = model_selection.StratifiedKFold(
+      n_splits=self.k, shuffle=True, random_state=FLAGS.seed
+    )
     dataset_splits = splitter.split(graph_ids, graph_y)
 
     return [
