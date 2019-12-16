@@ -1,15 +1,18 @@
 """A gated graph neural network classifier."""
 import math
 import typing
+from typing import Callable
 from typing import Iterable
 from typing import List
 from typing import NamedTuple
+from typing import Optional
 
 import numpy as np
 import torch
 from torch import nn
 
 from deeplearning.ml4pl.graphs.labelled import graph_batcher
+from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import node_encoder
@@ -26,9 +29,7 @@ from labm8.py import progress
 FLAGS = app.FLAGS
 
 app.DEFINE_boolean(
-  "cuda",
-  True,
-  "Use cuda if available? CPU-only mode otherwise."
+  "cuda", True, "Use cuda if available? CPU-only mode otherwise."
 )
 
 app.DEFINE_list(
@@ -45,7 +46,7 @@ app.DEFINE_float("clamp_gradient_norm", 6.0, "Clip gradients to L-2 norm.")
 app.DEFINE_integer("hidden_size", 200, "The size of hidden layer(s).")
 app.DEFINE_string(
   "inst2vec_embeddings",
-  'random',
+  "random",
   "The type of per-node inst2vec embeddings to use. One of {zero, constant, random, random_const, finetune}",
 )
 app.DEFINE_string(
@@ -65,6 +66,14 @@ app.DEFINE_float(
   "many steps to the network. If --unroll_strategy=edge_counts, "
   "max_edge_count * --unroll_factor timesteps are performed. (rounded up to "
   "the next multiple of sum(layer_timesteps))",
+)
+app.DEFINE_boolean(
+  "limit_max_data_flow_steps_during_training",
+  True,
+  "If set, limit the size of dataflow-annotated graphs used to train and "
+  "validate models to only those with data_flow_steps <= sum(layer_timesteps). "
+  "This has no effect for graph databases with no dataflow annotations, or "
+  "for testing epochs.",
 )
 # We assume that position_embeddings exist in every dataset.
 # the flag now only controls whether they are used or not.
@@ -112,23 +121,33 @@ app.DEFINE_boolean(
 ####### DEBBUGING HELPERS ##########################
 DEBUG = False
 
+
 def assert_no_nan(tensor_list):
   for i, t in enumerate(tensor_list):
     assert not torch.isnan(t).any(), f"{i}: {tensor_list}"
 
+
 def nan_hook(self, inp, output):
   """Checks return values of any forward() function for NaN"""
   if not isinstance(output, tuple):
-      outputs = [output]
+    outputs = [output]
   else:
-      outputs = output
+    outputs = output
 
   for i, out in enumerate(outputs):
-      nan_mask = torch.isnan(out)
-      if nan_mask.any():
-          print("In", self.__class__.__name__)
-          raise RuntimeError(f"Found NAN in output {i} at indices: ", nan_mask.nonzero(), "where:", out[nan_mask.nonzero()[:, 0].unique(sorted=True)])
+    nan_mask = torch.isnan(out)
+    if nan_mask.any():
+      print("In", self.__class__.__name__)
+      raise RuntimeError(
+        f"Found NAN in output {i} at indices: ",
+        nan_mask.nonzero(),
+        "where:",
+        out[nan_mask.nonzero()[:, 0].unique(sorted=True)],
+      )
+
+
 ##########################################
+
 
 class GgnnBatchData(NamedTuple):
   """The model-specific data generated for a batch."""
@@ -148,7 +167,9 @@ class Ggnn(classifier_base.ClassifierBase):
 
     # set some global config values
     self.dev = (
-      torch.device("cuda") if torch.cuda.is_available() and FLAGS.cuda else torch.device("cpu")
+      torch.device("cuda")
+      if torch.cuda.is_available() and FLAGS.cuda
+      else torch.device("cpu")
     )
     app.Log(
       1, "Using device %s with dtype %s", self.dev, torch.get_default_dtype()
@@ -231,6 +252,49 @@ class Ggnn(classifier_base.ClassifierBase):
     return batches.Data(
       graph_ids=[graph.id for graph in graphs],
       data=GgnnBatchData(disjoint_graph=disjoint_graph, graphs=graphs),
+    )
+
+  def GraphReader(
+    self,
+    epoch_type: epoch.Type,
+    graph_db: graph_tuple_database.Database,
+    filters: Optional[List[Callable[[], bool]]] = None,
+    limit: Optional[int] = None,
+    ctx: progress.ProgressContext = progress.NullContext,
+  ) -> graph_database_reader.BufferedGraphReader:
+    """Construct a buffered graph reader.
+
+    Args:
+      epoch_type: The type of graph reader to return a graph reader for.
+      graph_db: The graph database to read graphs from.
+      filters: A list of filters to impose on the graph database reader.
+      limit: The maximum number of rows to read.
+      ctx: A logging context.
+
+    Returns:
+      A buffered graph reader instance.
+    """
+    filters = filters or []
+
+    # Only read graphs with data_flow_steps <= message_passing_step_count if
+    # --limit_max_data_flow_steps_during_training is set and we are not
+    # in a test epoch.
+    if (
+      FLAGS.limit_max_data_flow_steps_during_training
+      and self.graph_db.has_data_flow
+      and (epoch_type == epoch.Type.TRAIN or epoch_type == epoch.Type.VAL)
+    ):
+      filters.append(
+        lambda: graph_tuple_database.GraphTuple.data_flow_steps
+        <= self.message_passing_step_count
+      )
+
+    return super(Ggnn, self).GraphReader(
+      epoch_type=epoch_type,
+      graph_db=graph_db,
+      filters=filters,
+      limit=limit,
+      ctx=ctx,
     )
 
   @property
@@ -336,7 +400,9 @@ class Ggnn(classifier_base.ClassifierBase):
 
     # maybe fetch more inputs.
     if disjoint_graph.has_graph_y:
-      assert disjoint_graph.disjoint_graph_count > 1, f"graph_count is {disjoint_graph.disjoint_graph_count}"
+      assert (
+        disjoint_graph.disjoint_graph_count > 1
+      ), f"graph_count is {disjoint_graph.disjoint_graph_count}"
       num_graphs = torch.tensor(disjoint_graph.disjoint_graph_count).to(
         self.dev, torch.long
       )
@@ -344,8 +410,7 @@ class Ggnn(classifier_base.ClassifierBase):
         disjoint_graph.disjoint_nodes_list
       ).to(self.dev, torch.long)
 
-
-      #TODO(https://github.com/ChrisCummins/ProGraML/issues/37): remove this line on overflow fix!
+      # TODO(https://github.com/ChrisCummins/ProGraML/issues/37): remove this line on overflow fix!
       hotfixed_graph_x = np.abs(disjoint_graph.graph_x)
       aux_in = torch.from_numpy(hotfixed_graph_x).to(
         self.dev, torch.get_default_dtype()

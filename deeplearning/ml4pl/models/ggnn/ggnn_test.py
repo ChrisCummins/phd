@@ -91,7 +91,7 @@ def log1p_graph_x(request) -> bool:
 
 @test.Fixture(
   scope="session",
-  params=('zero', 'constant', 'constant_random', 'random', 'finetune'),
+  params=("zero", "constant", "constant_random", "random", "finetune"),
   namer=lambda x: f"inst2vec_embeddings:{str(x).lower()}",
 )
 def node_text_embedding_type(request):
@@ -187,14 +187,19 @@ def CheckResultsProperties(
   assert results.graph_count == graph_db.split_counts[epoch_type.value]
 
 
+@test.Parametrize("limit_max_data_flow_steps_during_training", (False, True))
 def test_node_classifier_call(
   epoch_type: epoch.Type,
   logger: logging.Logger,
   node_y_graph_db: graph_tuple_database.Database,
   node_text_embedding_type,
+  limit_max_data_flow_steps_during_training: bool,
 ):
   """Test running a node classifier."""
   FLAGS.inst2vec_embeddings = node_text_embedding_type
+  FLAGS.limit_max_data_flow_steps_during_training = (
+    limit_max_data_flow_steps_during_training
+  )
 
   run_id = run_id_lib.RunId.GenerateUnique(
     f"mock{random.randint(0, int(1e6)):06}"

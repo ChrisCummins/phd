@@ -8,6 +8,7 @@ py_binary(
         ":ggnn_config",
         ":ggnn_modules",
         "//deeplearning/ml4pl/graphs/labelled:graph_batcher",
+        "//deeplearning/ml4pl/graphs/labelled:graph_database_reader",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//deeplearning/ml4pl/graphs/unlabelled/llvm2graph:node_encoder",

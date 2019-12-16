@@ -201,9 +201,6 @@ class LstmBase(classifier_base.ClassifierBase):
     )
     return buf.getvalue()
 
-  def NeedsGraphTuples(self) -> bool:
-    return False
-
   @property
   def padded_vocabulary_size(self) -> int:
     return self.encoder.vocabulary_size + 1

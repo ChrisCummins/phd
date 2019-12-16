@@ -1,14 +1,17 @@
 """Base class for implementing classifier models."""
 import copy
 from typing import Any
+from typing import Callable
 from typing import Dict
 from typing import Iterable
+from typing import List
 from typing import Optional
 from typing import Set
 
 import pandas as pd
 
 from deeplearning.ml4pl import run_id as run_id_lib
+from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch as batches
 from deeplearning.ml4pl.models import checkpoints
@@ -47,7 +50,8 @@ class ClassifierBase(object):
   And may optionally wish to implement these additional methods:
     CreateModelData()  # initialize an untrained model.
     Summary()          # return a string model summary.
-    NeedsGraphTuples() # return whether MakeBatch() receives graph tuples.
+    GraphReader()      # return a buffered graph reader.
+    BatchIterator()    # return an iterator over batches.
   """
 
   def __init__(
@@ -190,9 +194,6 @@ class ClassifierBase(object):
     """Return a long summary string describing the model."""
     return type(self).__name__
 
-  def NeedsGraphTuples(self) -> bool:
-    return True
-
   #############################################################################
   # Automatic methods.
   #############################################################################
@@ -274,6 +275,36 @@ class ClassifierBase(object):
       self.best_results[epoch_type] = new_best
 
     return results
+
+  def GraphReader(
+    self,
+    epoch_type: epoch.Type,
+    graph_db: graph_tuple_database.Database,
+    filters: Optional[List[Callable[[], bool]]] = None,
+    limit: Optional[int] = None,
+    ctx: progress.ProgressContext = progress.NullContext,
+  ) -> graph_database_reader.BufferedGraphReader:
+    """Construct a buffered graph reader.
+
+    Args:
+      epoch_type: The type of graph reader to return a graph reader for.
+      graph_db: The graph database to read graphs from.
+      filters: A list of filters to impose on the graph database reader.
+      limit: The maximum number of rows to read.
+      ctx: A logging context.
+
+    Returns:
+      A buffered graph reader instance.
+    """
+    del epoch_type
+
+    return graph_database_reader.BufferedGraphReader.CreateFromFlags(
+      graph_db=graph_db,
+      filters=filters,
+      ctx=ctx,
+      limit=limit,
+      eager_graph_loading=True,
+    )
 
   def BatchIterator(
     self,

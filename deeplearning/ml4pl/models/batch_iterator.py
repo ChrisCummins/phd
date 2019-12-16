@@ -74,12 +74,12 @@ def MakeBatchIterator(
       splits_for_type
     )
 
-  graph_reader = graph_database_reader.BufferedGraphReader.CreateFromFlags(
+  graph_reader = model.GraphReader(
+    epoch_type=epoch_type,
     graph_db=graph_db,
     filters=[split_filter],
-    ctx=ctx,
     limit=limit,
-    eager_graph_loading=model.NeedsGraphTuples(),
+    ctx=ctx,
   )
 
   return batches.BatchIterator(
