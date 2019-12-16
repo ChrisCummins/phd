@@ -56,26 +56,10 @@ def test_fuzz_Lex(lexer: lexers.Lexer):
   texts_count = random.randint(1, 128)
   texts = [CreateRandomString() for _ in range(texts_count)]
 
-  initial_vocab_size = len(lexer.vocab)
-
-  encodeds = lexer.Lex(texts)
-  assert len(lexer.vocab) == initial_vocab_size
-  assert len(encodeds) == texts_count
-  for encoded in encodeds:
-    assert not np.where(encoded > initial_vocab_size + 1)[0].size
-
-
-@decorators.loop_for(seconds=30)
-def test_fuzz_LexAndUpdateVocab(lexer: lexers.Lexer):
-  """Fuzz the lexer."""
-  texts_count = random.randint(1, 128)
-  texts = [CreateRandomString() for _ in range(texts_count)]
-
-  initial_vocab_size = len(lexer.vocab)
-
-  encodeds = lexer.LexAndUpdateVocab(texts)
-  assert len(lexer.vocab) >= initial_vocab_size
-  assert len(encodeds) == texts_count
+  lexed = lexer.Lex(texts)
+  assert len(lexed) == texts_count
+  for encoded in lexed:
+    assert not np.where(encoded > lexer.vocabulary_size)[0].size
 
 
 if __name__ == "__main__":

@@ -181,14 +181,29 @@ py_test(
     ],
 )
 
+proto_library(
+    name = "ir2seq_pb",
+    srcs = ["ir2seq.proto"],
+)
+
+python_proto_library(
+    name = "ir2seq_pb_py",
+    deps = [":ir2seq_pb"],
+)
+
+cc_proto_library(
+    name = "ir2seq_pb_cc",
+    deps = [":ir2seq_pb"],
+)
+
 py_binary(
     name = "lexers",
     srcs = ["lexers.py"],
     data = [
-        "//deeplearning/clgen/corpuses/lexer:lexer_worker",
+        ":string_encoder_worker",
     ],
     deps = [
-        "//deeplearning/clgen/proto:clgen_pb_py",
+        ":ir2seq_pb_py",
         "//labm8/py:app",
         "//labm8/py:bazelutil",
         "//labm8/py:pbutil",
@@ -212,4 +227,14 @@ py_test(
 filegroup(
     name = "llvm_vocab",
     srcs = ["llvm_vocab.json"],
+)
+
+cc_binary(
+    name = "string_encoder_worker",
+    srcs = ["string_encoder_worker.cc"],
+    deps = [
+        ":cached_string_encoder",
+        ":ir2seq_pb_cc",
+        "//labm8/cpp:pbutil",
+    ],
 )

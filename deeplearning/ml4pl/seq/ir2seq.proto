@@ -1,0 +1,18 @@
+// Protocol buffer for string to sequence encoding.
+
+syntax = "proto2";
+
+package ml4pl;
+
+// An encoded string.
+message EncodedString {
+  repeated int32 encoded = 1;
+}
+
+// A StringEncoder job, containing a vocabulary, a list of strings to encode,
+// and the encoded results.
+message StringEncoderJob {
+  map<string, int32> vocabulary = 1;
+  repeated string string = 2;
+  repeated EncodedString seq = 3;
+}

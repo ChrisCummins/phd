@@ -8,7 +8,7 @@ from typing import Tuple
 
 import numpy as np
 
-from deeplearning.clgen.proto import internal_pb2
+from deeplearning.ml4pl.seq import ir2seq_pb2
 from labm8.py import app
 from labm8.py import bazelutil
 from labm8.py import humanize
@@ -24,9 +24,9 @@ app.DEFINE_integer(
 
 FLAGS = app.FLAGS
 
-# The native C++ lexer binary.
-LEXER_BINARY = bazelutil.DataPath(
-  "phd/deeplearning/clgen/corpuses/lexer/lexer_worker"
+# The native C++ string encoder binary.
+STRING_ENCODER_WORKER = bazelutil.DataPath(
+  "phd/deeplearning/ml4pl/seq/string_encoder_worker"
 )
 
 
@@ -270,78 +270,6 @@ class Lexer(object):
     """Get the size of the vocabulary."""
     return len(self.vocab)
 
-  def _Lex(self, texts: List[str]) -> Tuple[List[np.array], Dict[str, int]]:
-    """Run lexer on a list of texts.
-
-    Args:
-      texts: The strings to lex.
-      candidate_tokens: A list of candidate vocabulary words.
-      vocab: A mapping from <word, encoded> value.
-
-    Returns:
-      A list of lists of shape (len(texts), encoded_length), where each element
-      is an integer encoded token.
-    """
-    message = internal_pb2.LexerBatchJob(
-      input=[internal_pb2.LexerJob(string=text) for text in texts],
-      candidate_token=self.candidate_tokens,
-      vocabulary=self.vocab,
-    )
-    pbutil.RunProcessMessageInPlace(
-      [str(LEXER_BINARY)], message, timeout_seconds=3600
-    )
-    encoded = [np.array(j.token, dtype=np.int32) for j in message.input]
-    if len(encoded) != len(texts):
-      raise OSError(
-        f"Lexer returned {len(texts)} sequences for " f"{len(encoded)} inputs"
-      )
-
-    vocabulary_out = dict(message.vocabulary)
-    return encoded, vocabulary_out
-
-  def LexAndUpdateVocab(
-    self,
-    texts: List[str],
-    ctx: progress.ProgressContext = progress.NullContext,
-  ) -> List[np.array]:
-    """Encode the given texts using the vocabulary.
-
-    The vocabulary is lazily constructed. If a token is found that is not in the
-    vocabulary, it is added.
-
-    There is non-negligible overhead in calling this method. For the sake of
-    efficiency try to minimize the number of calls to this method.
-
-    Returns:
-      A list of encoded texts.
-    """
-    token_count = 0
-    with ctx.Profile(
-      3,
-      lambda t: f"Lexed {len(texts)} strings ({humanize.DecimalPrefix(token_count / t, ' tokens/sec')})",
-    ):
-      lexed = []
-      strings_to_lex = []
-      chunk_size = 0
-
-      for text in texts:
-        if chunk_size >= self.max_chunk_size:
-          chunk, self.vocab = self._Lex(strings_to_lex)
-          lexed += chunk
-          chunk_size = 0
-          strings_to_lex = []
-        strings_to_lex.append(text)
-        chunk_size += len(text)
-
-      if strings_to_lex:
-        chunk, self.vocab = self._Lex(strings_to_lex)
-        lexed += chunk
-
-      # Used in profiling callback.
-      token_count = sum([len(encoded) for encoded in lexed])
-
-    return lexed
-
   @staticmethod
   def ClampVocab(encoded: np.array, max_vocab_element: int):
     """Clamp values to the range [0, max_vocab_element + 1].
@@ -362,44 +290,38 @@ class Lexer(object):
     values.
 
     There is non-negligible overhead in calling this method. For the sake of
-    efficiency try to minimize the number of calls to this method.
+    efficiency try to minimize the number of calls.
 
     Args:
       texts: A list of strings to lex.
+      ctx: A logging context.
 
     Returns:
-      A list of encoded sequences, where each element in an encoded sequence is
-      in the range [0, max(vocab) + 1].
+      A list of lists of shape (len(texts), encoded_length), where each element
+      is an integer encoded token in the range [0, self.vocabulary_size].
     """
     token_count = 0
     with ctx.Profile(
       3,
-      lambda t: f"Lexed {len(texts)} strings ({humanize.DecimalPrefix(token_count / t, ' tokens/sec')})",
+      lambda t: (
+        f"Lexed {len(texts)} strings "
+        f"({humanize.DecimalPrefix(token_count / t, ' tokens/sec')})"
+      ),
     ):
-      max_vocab_element = len(self.vocab) - 1
-
-      lexed = []
-      strings_to_lex = []
-      chunk_size = 0
-
-      for text in texts:
-        if chunk_size >= self.max_chunk_size:
-          chunk, vocab = self._Lex(strings_to_lex)
-          if len(vocab) > len(self.vocab):
-            chunk = [self.ClampVocab(x, max_vocab_element) for x in chunk]
-          lexed += chunk
-          chunk_size = 0
-          strings_to_lex = []
-        strings_to_lex.append(text)
-        chunk_size += len(text)
-
-      if strings_to_lex:
-        chunk, vocab = self._Lex(strings_to_lex)
-        if len(vocab) > len(self.vocab):
-          chunk = [self.ClampVocab(x, max_vocab_element) for x in chunk]
-        lexed += chunk
+      message = ir2seq_pb2.StringEncoderJob(
+        string=texts, vocabulary=self.vocab,
+      )
+      pbutil.RunProcessMessageInPlace(
+        [str(STRING_ENCODER_WORKER)], message, timeout_seconds=60
+      )
 
       # Used in profiling callback.
-      token_count = sum([len(encoded) for encoded in lexed])
+      token_count = sum([len(seq.encoded) for seq in message.seq])
 
-    return lexed
+    encoded = [np.array(j.encoded, dtype=np.int32) for j in message.seq]
+    if len(encoded) != len(texts):
+      raise OSError(
+        f"Lexer returned {len(texts)} sequences for {len(encoded)} inputs"
+      )
+
+    return encoded
