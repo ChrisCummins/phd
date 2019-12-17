@@ -243,8 +243,7 @@ class Lexer(object):
   """A lexer."""
 
   def __init__(
-    self,
-    type: LexerType,
+    self, type: LexerType, vocabulary: Dict[str, int], max_encoded_length: int,
   ):
     self.candidate_tokens = {
       LexerType.LLVM: LLVM_TOKENS,
@@ -252,6 +251,7 @@ class Lexer(object):
     }[type]
 
     self.vocab = copy.deepcopy(vocabulary)
+    self.max_encoded_length = int
 
   @property
   def vocabulary_size(self) -> int:
@@ -297,7 +297,8 @@ class Lexer(object):
       ),
     ):
       message = ir2seq_pb2.StringEncoderJob(
-        string=texts, vocabulary=self.vocab,
+        string=[text[: self.max_encoded_length] for text in texts],
+        vocabulary=self.vocab,
       )
       pbutil.RunProcessMessageInPlace(
         [str(STRING_ENCODER_WORKER)], message, timeout_seconds=60

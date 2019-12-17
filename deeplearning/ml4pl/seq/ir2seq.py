@@ -70,7 +70,11 @@ class LlvmEncoder(EncoderBase):
     vocab = data_to_load["vocab"]
     self._max_encoded_length = data_to_load["max_encoded_length"]
 
-    self.lexer = lexers.Lexer(type=lexers.LexerType.LLVM, initial_vocab=vocab)
+    self.lexer = lexers.Lexer(
+      type=lexers.LexerType.LLVM,
+      initial_vocab=vocab,
+      max_encoded_length=self._max_encoded_length,
+    )
 
   def Encode(
     self, ids: List[int], ctx: progress.ProgressContext = progress.NullContext,
@@ -144,7 +148,9 @@ class OpenClEncoder(EncoderBase):
     super(OpenClEncoder, self).__init__(*args, **kwargs)
 
     # We start with an empty vocabulary and build it from inputs.
-    self.lexer = lexers.Lexer(type=lexers.LexerType.OPENCL, initial_vocab={})
+    self.lexer = lexers.Lexer(
+      type=lexers.LexerType.OPENCL, initial_vocab={}, max_encoded_length=100000
+    )
 
     # Map relpath -> src.
     df = make_devmap_dataset.MakeGpuDataFrame(
