@@ -249,6 +249,12 @@ class Ggnn(classifier_base.ClassifierBase):
     else:
       graphs = graph_iterator.graphs_read
 
+    # discard single graph batches in train epoch.
+    # We might as well do that in any ggnn application with graph-level labels
+    if len(graphs) <= 1 and epoch_type == epoch.Type.TRAIN \
+        and disjoint_graph.graph_y_dimensionality:
+      return batches.Data(graph_ids=[], data=None)
+
     return batches.Data(
       graph_ids=[graph.id for graph in graphs],
       data=GgnnBatchData(disjoint_graph=disjoint_graph, graphs=graphs),
