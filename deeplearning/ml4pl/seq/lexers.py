@@ -14,12 +14,6 @@ from labm8.py import humanize
 from labm8.py import pbutil
 from labm8.py import progress
 
-app.DEFINE_integer(
-  "lexer_chunk_size_mb",
-  32,
-  "The maximum number of megabytes of strings to feed into a single lexer "
-  "invocation.",
-)
 
 FLAGS = app.FLAGS
 
@@ -251,18 +245,13 @@ class Lexer(object):
   def __init__(
     self,
     type: LexerType,
-    initial_vocab: Dict[str, int],
-    max_chunk_size: Optional[int] = None,
   ):
     self.candidate_tokens = {
       LexerType.LLVM: LLVM_TOKENS,
       LexerType.OPENCL: OPENCL_TOKENS,
     }[type]
 
-    self.vocab = copy.deepcopy(initial_vocab)
-    self.max_chunk_size = max_chunk_size or (
-      FLAGS.lexer_chunk_size_mb * 1024 * 1024
-    )
+    self.vocab = copy.deepcopy(vocabulary)
 
   @property
   def vocabulary_size(self) -> int:
