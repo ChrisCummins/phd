@@ -57,7 +57,7 @@ class GraphLstmBatch(NamedTuple):
 
   # Shape (batch_size, padded_sequence_length, 1), dtype np.int32
   encoded_sequences: np.array
-  # Shape (batch_size, graph_x_dimensionality), dtype np.int32
+  # Shape (batch_size, graph_x_dimensionality), dtype np.int64
   graph_x: np.array
   # Shape (batch_size, graph_y_dimensionality), dtype np.float32
   graph_y: np.array
@@ -100,7 +100,7 @@ class GraphLstm(lstm_base.LstmBase):
     )
     graph_x_input = tf.compat.v1.keras.layers.Input(
       shape=(self.graph_db.graph_x_dimensionality,),
-      dtype="flaot32",
+      dtype="float32",
       name="graph_x",
     )
 
