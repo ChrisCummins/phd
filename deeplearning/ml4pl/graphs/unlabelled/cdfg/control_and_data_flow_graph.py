@@ -631,44 +631,6 @@ def ToControlFlowGraph(g: nx.MultiDiGraph):
     cfg.add_edge(src, dst, **data)
 
 
-def SerializeToStatementList(
-  g: nx.MultiDiGraph, root: str = "root"
-) -> typing.Iterable[str]:
-  visited_statements = set()
-  visited_functions = set()
-
-  # Maintain a list of functions to visit.
-  functions = [root]
-
-  while functions:
-    function_name = functions[-1]
-    functions.pop()
-
-    visited_functions.add(function_name)
-
-    stack = [function_name]
-
-    # yield f'define @{stack[0]}'
-
-    # Pre-order depth first graph traversal to emit the strings.
-    while stack:
-      node = stack[-1]
-      stack.pop()
-
-      if node in visited_statements:
-        continue
-
-      visited_statements.add(node)
-      yield node
-      for _, dst, flow in g.out_edges(node, data="flow", default="control"):
-        if flow == "control":
-          if dst not in visited_statements:
-            stack.append(dst)
-        elif flow == "call":
-          if dst not in visited_functions:
-            functions.append(dst)
-
-
 def GetCalledFunctionName(statement) -> typing.Optional[str]:
   """Get the name of a function called in the statement."""
   if "call " not in statement:

@@ -182,39 +182,6 @@ def test_ComposeGraphs_undefined():
   assert g.edges("root", "B")
 
 
-def test_SerializeToStatementList():
-  g = nx.MultiDiGraph()
-
-  g.add_node("root", type="magic")
-  g.add_node("A_0", type="statement")
-  g.add_node("A_1a", type="statement")
-  g.add_node("A_1b", type="statement")
-  g.add_node("A_2", type="statement")
-  g.add_node("B_0", type="statement")
-  g.add_node("B_1", type="statement")
-
-  g.add_edge("root", "A_0", flow="call")
-  g.add_edge("A_0", "A_1a", flow="control")
-  g.add_edge("A_0", "A_1b", flow="control")
-  g.add_edge("A_1a", "A_2", flow="control")
-  g.add_edge("A_1b", "A_2", flow="control")
-
-  g.add_edge("root", "B_0", flow="call")
-  g.add_edge("B_0", "B_1", flow="control")
-
-  statements = list(cdfg.SerializeToStatementList(g))
-
-  assert statements == [
-    "root",
-    "B_0",
-    "B_1",
-    "A_0",
-    "A_1b",
-    "A_2",
-    "A_1a",
-  ]
-
-
 def test_FindCallSites_multiple_call_sites():
   g = nx.MultiDiGraph()
   g.add_node("call", type="statement", function="A", text="%2 = call i32 @B()")
