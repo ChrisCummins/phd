@@ -147,9 +147,7 @@ def PopulateWithTestSet(
       else None
     )
     graph_y = (
-      np.random.rand(graph_tuple.graph_count, graph_y_dimensionality)
-      if graph_y_dimensionality
-      else None
+      np.random.rand(graph_y_dimensionality) if graph_y_dimensionality else None
     )
     graph_tuple = graph_tuple.SetFeaturesAndLabels(
       node_x=node_x, node_y=node_y, graph_x=graph_x, graph_y=graph_y, copy=False
