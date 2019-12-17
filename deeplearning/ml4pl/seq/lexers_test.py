@@ -18,8 +18,8 @@ def lexer_type(request) -> lexers.LexerType:
   return request.param
 
 
-@test.Fixture(scope="function", params=({}, {"abc": 0, "bcd": 1}))
-def initial_vocab(request) -> Dict[str, int]:
+@test.Fixture(scope="function", params=({"abc": 0, "bcd": 1}))
+def vocabulary(request) -> Dict[str, int]:
   """Test fixture for initial vocabs."""
   return request.param
 
@@ -33,13 +33,13 @@ def max_encoded_length(request) -> int:
 @test.Fixture(scope="function")
 def lexer(
   lexer_type: lexers.LexerType,
-  initial_vocab: Dict[str, int],
+  vocabulary: Dict[str, int],
   max_encoded_length: int,
 ) -> lexers.Lexer:
   """A test fixture which returns a lexer."""
   return lexers.Lexer(
     type=lexer_type,
-    initial_vocab=initial_vocab,
+    vocabulary=vocabulary,
     max_encoded_length=max_encoded_length,
   )
 

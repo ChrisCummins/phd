@@ -72,7 +72,7 @@ class LlvmEncoder(EncoderBase):
 
     self.lexer = lexers.Lexer(
       type=lexers.LexerType.LLVM,
-      initial_vocab=vocab,
+      vocabulary=vocab,
       max_encoded_length=self._max_encoded_length,
     )
 
@@ -149,7 +149,7 @@ class OpenClEncoder(EncoderBase):
 
     # We start with an empty vocabulary and build it from inputs.
     self.lexer = lexers.Lexer(
-      type=lexers.LexerType.OPENCL, initial_vocab={}, max_encoded_length=100000
+      type=lexers.LexerType.OPENCL, vocabulary={}, max_encoded_length=100000
     )
 
     # Map relpath -> src.
