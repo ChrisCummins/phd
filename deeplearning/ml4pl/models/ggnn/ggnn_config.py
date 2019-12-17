@@ -46,3 +46,7 @@ class GGNNConfig(object):
     self.log1p_graph_x = FLAGS.log1p_graph_x
 
     self.intermediate_loss_weight: float = FLAGS.intermediate_loss_weight
+    #########
+    self.unroll_strategy = FLAGS.unroll_strategy
+    self.test_layer_timesteps = FLAGS.test_layer_timesteps
+    self.max_timesteps = 1000

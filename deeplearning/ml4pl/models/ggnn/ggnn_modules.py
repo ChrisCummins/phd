@@ -59,10 +59,11 @@ class GGNNModel(nn.Module):
       num_graphs=None,
       graph_nodes_list=None,
       aux_in=None,
+      test_time_steps=None,
   ):
     raw_in = self.node_embeddings(vocab_ids, selector_ids)
     raw_out, raw_in = self.ggnn(
-      edge_lists, raw_in, pos_lists
+      edge_lists, raw_in, pos_lists, test_time_steps
     )  # OBS! self.ggnn might change raw_in inplace, so use the two outputs
     # instead!
     prediction = self.nodewise_readout(raw_in, raw_out)
@@ -218,6 +219,11 @@ class GGNNProper(nn.Module):
     self.backward_edges = config.backward_edges
     self.layer_timesteps = config.layer_timesteps
 
+    # eval time unrolling parameter
+    self.test_layer_timesteps = config.test_layer_timesteps
+    self.unroll_strategy = config.unroll_strategy
+    self.max_timesteps = config.max_timesteps
+
     self.message = nn.ModuleList()
     for i in range(len(self.layer_timesteps)):
       self.message.append(MessagingLayer(config))
@@ -226,18 +232,29 @@ class GGNNProper(nn.Module):
     for i in range(len(self.layer_timesteps)):
       self.update.append(GGNNLayer(config))
 
-  def forward(self, edge_lists, node_states, pos_lists):
-    # TODO(github.com/ChrisCummins/ProGraML/issues/27): This modifies the
-    # arguments in-place.
-
+  def forward(self, edge_lists, node_states, pos_lists, test_time_steps=None):
     old_node_states = node_states.clone()
-    # TODO(github.com/ChrisCummins/ProGraML/issues/30): position embeddings
+
+    # we allow for some fancy unrolling strategies.
+    # Currently only at eval time, but there is really no good reason for this.
+    if self.training or self.unroll_strategy == 'none':
+      layer_timesteps = self.layer_timesteps
+    elif self.unroll_strategy == 'constant':
+      layer_timesteps = self.test_layer_timesteps
+    elif self.unroll_strategy == 'edge_count':
+      assert test_time_steps is not None, f"You need to pass test_time_steps or not use unroll_strategy '{self.unroll_strategy}''"
+      layer_timesteps = [min(test_time_steps, self.max_timesteps)]
+    elif self.unroll_strategy == 'data_flow_max_steps':
+      assert test_time_steps is not None, f"You need to pass test_time_steps or not use unroll_strategy '{self.unroll_strategy}''"
+      layer_timesteps = [min(test_time_steps, self.max_timesteps)]
+    elif self.unroll_strategy == 'label_convergence':
+      raise NotImplementedError
 
     if self.backward_edges:
       back_edge_lists = [x.flip([1]) for x in edge_lists]
       edge_lists.extend(back_edge_lists)
 
-    for (layer_idx, num_timesteps) in enumerate(self.layer_timesteps):
+    for (layer_idx, num_timesteps) in enumerate(layer_timesteps):
       for t in range(num_timesteps):
         messages = self.message[layer_idx](edge_lists, node_states, pos_lists)
         node_states = self.update[layer_idx](messages, node_states)
@@ -347,23 +364,6 @@ class GGNNLayer(nn.Module):
              training=self.training,
              inplace=True)
     return output
-
-
-# position propagation matrices are treated like another edge type
-#                if FLAGS.position_embeddings == "fancy":
-#                    type_count_with_fancy = 1 + self.stats.edge_type_count
-#                else:
-#                    type_count_with_fancy = self.stats.edge_type_count
-
-#    def _GetPositionEmbeddingsAsTensorflowVariable(self) -> tf.Tensor:
-#        """It's probably a good memory/compute trade-off to have this additional embedding table instead of computing it on the fly."""
-#        embeddings = base_utils.pos_emb(
-#            positions=range(self.stats.max_edge_positions), demb=FLAGS.hidden_size - 2
-#        )  # hard coded
-#        pos_emb = tf.Variable(
-#            initial_value=embeddings, trainable=False, dtype=tf.float32
-#        )
-#        return pos_emb
 
 
 class PositionEmbeddings(nn.Module):
