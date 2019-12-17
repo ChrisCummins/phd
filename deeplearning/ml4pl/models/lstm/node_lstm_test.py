@@ -158,7 +158,7 @@ def test_classifier_call(
     proto_db=proto_db,
     batch_size=8,
     padded_sequence_length=100,
-    padded_nodes_sequence_length=50,
+    padded_node_sequence_length=50,
     run_id=run_id,
   )
   model.Initialize()

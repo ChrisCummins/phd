@@ -63,12 +63,29 @@ class GraphLstmBatch(NamedTuple):
   graph_y: np.array
 
   @property
-  def x(self):
+  def targets(self) -> np.array:
+    """Return the targets for predictions.
+    Shape (batch_size, graph_y_dimensionality)."""
+    return self.graph_y
+
+  @property
+  def x(self) -> List[np.array]:
+    """Return the model 'x' inputs."""
     return [self.encoded_sequences, self.graph_x]
 
   @property
-  def y(self):
+  def y(self) -> List[np.array]:
+    """Return the model 'y' inputs."""
     return [self.graph_y, self.graph_y]
+
+  @staticmethod
+  def GetPredictions(
+    model_output, ctx: progress.ProgressContext = progress.NullContext
+  ) -> np.array:
+    """Reshape the model outputs to an array of predictions of same shape as
+    targets."""
+    del ctx  # Unused.
+    return model_output
 
 
 class GraphLstm(lstm_base.LstmBase):
@@ -211,6 +228,3 @@ class GraphLstm(lstm_base.LstmBase):
         graph_y=np.vstack(graph_y),
       ),
     )
-
-  def ReshapeLoss(self, loss):
-    return loss[0]
