@@ -27,6 +27,12 @@ app.DEFINE_integer(
   "Use this flag to limit the maximum number of instances used in a single "
   "validation epoch.",
 )
+app.DEFINE_integer(
+  "batch_queue_size",
+  10,
+  "Tuning parameter. The maximum number of batches to generate before waiting "
+  "for the model to complete. Must be >= 1.",
+)
 
 
 def MakeBatchIterator(

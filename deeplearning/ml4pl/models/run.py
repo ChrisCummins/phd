@@ -81,12 +81,6 @@ app.DEFINE_list(
   "The name of the hold-out splits to be used for testing. All splits "
   "except --val_split and --test_split will be used for training.",
 )
-app.DEFINE_integer(
-  "batch_queue_size",
-  10,
-  "Tuning parameter. The maximum number of batches to generate before "
-  "waiting for the model to complete. Must be >= 1.",
-)
 app.DEFINE_boolean(
   "k_fold",
   False,
