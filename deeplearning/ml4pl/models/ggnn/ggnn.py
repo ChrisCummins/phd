@@ -414,9 +414,7 @@ class Ggnn(classifier_base.ClassifierBase):
         disjoint_graph.disjoint_nodes_list
       ).to(self.dev, torch.long)
 
-      # TODO(https://github.com/ChrisCummins/ProGraML/issues/37): remove this line on overflow fix!
-      hotfixed_graph_x = np.abs(disjoint_graph.graph_x)
-      aux_in = torch.from_numpy(hotfixed_graph_x).to(
+      aux_in = torch.from_numpy(disjoint_graph.graph_x).to(
         self.dev, torch.get_default_dtype()
       )
 

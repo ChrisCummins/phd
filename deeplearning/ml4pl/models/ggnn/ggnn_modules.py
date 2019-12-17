@@ -524,8 +524,6 @@ class AuxiliaryReadout(nn.Module):
 
     if self.log1p_graph_x:
       auxiliary_features.log1p_()
-    #TODO(https://github.com/ChrisCummins/ProGraML/issues/37): Remove this line on overflow fix!
-    assert_no_nan([auxiliary_features])
 
     aggregate_features = torch.cat((graph_features, auxiliary_features),
                      dim=1)
