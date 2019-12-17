@@ -58,7 +58,46 @@ class EncoderBase(object):
     graphs: List[graph_tuple_database.GraphTuple],
     ctx: progress.ProgressContext = progress.NullContext,
   ) -> List[Union[np.array, graph2seq_pb2.ProgramGraphSeq]]:
-    """Translate a list of graph IDs to encoded sequences."""
+    """Translate a list of graphs to encoded sequences."""
+    unique_ids = {graph.ir_id for graph in graphs}
+    id_to_encoded = {
+      ir_id: self.ir_id_to_encoded[ir_id]
+      for ir_id in unique_ids
+      if ir_id in self.ir_id_to_encoded
+    }
+
+    ctx.Log(
+      5,
+      "%.2f%% encoded graph cache hit rate",
+      (len(id_to_encoded) / len(unique_ids)) * 100,
+    )
+
+    if len(id_to_encoded) != len(unique_ids):
+      unknown_ir_ids = {
+        ir_id for ir_id in unique_ids if ir_id not in id_to_encoded
+      }
+
+      # Encode the unknown IRs.
+      sorted_ir_ids_to_encode = sorted(unknown_ir_ids)
+      sorted_encoded_sequences = self.EncodeIds(sorted_ir_ids_to_encode, ctx)
+
+      # Cache the recently encoded sequences. We must do this *after* fetching
+      # from the cache to prevent the cached items from being evicted.
+      for ir_id, encoded in zip(
+        sorted_ir_ids_to_encode, sorted_encoded_sequences
+      ):
+        id_to_encoded[ir_id] = encoded
+        self.ir_id_to_encoded[ir_id] = encoded
+
+    # Assemble the list of encoded graphs.
+    encoded = [id_to_encoded[graph.ir_id] for graph in graphs]
+
+    return encoded
+
+  def EncodeIds(
+    self, ir_ids: List[int], ctx: progress.ProgressContext
+  ) -> List[Union[np.array, graph2seq_pb2.ProgramGraphSeq]]:
+    """Encode a list of graph IDs and return the sequences in the same order."""
     raise NotImplementedError("abstract class")
 
   @property
@@ -98,10 +137,8 @@ class GraphEncoder(EncoderBase):
     """Get the size of the vocabulary, including the unknown-vocab element."""
     return self.ir2seq_encoder.vocabulary_size
 
-  def Encode(
-    self,
-    graphs: List[graph_tuple_database.GraphTuple],
-    ctx: progress.ProgressContext = progress.NullContext,
+  def EncodeIds(
+    self, ir_ids: List[int], ctx: progress.ProgressContext
   ) -> List[np.array]:
     """Return encoded sequences for the given graph IDs.
 
@@ -116,57 +153,14 @@ class GraphEncoder(EncoderBase):
     Returns:
       A list of encoded sequences.
     """
-    unknown_ir_ids = set(
-      graph.ir_id
-      for graph in graphs
-      if graph.ir_id not in self.ir_id_to_encoded
-    )
-    known_ir_ids = set(
-      graph.ir_id for graph in graphs if graph.ir_id not in unknown_ir_ids
-    )
-
-    ctx.Log(
-      5,
-      "%.2f%% encoded graph cache hit rate",
-      (len(known_ir_ids) / (len(known_ir_ids) + len(unknown_ir_ids))) * 100,
-    )
-
-    if unknown_ir_ids:
-      # Encode the unknown IRs.
-      sorted_ir_ids_to_encode = sorted(unknown_ir_ids)
-      sorted_encoded_sequences = self.ir2seq_encoder.Encode(
-        sorted_ir_ids_to_encode, ctx=ctx
-      )
-      id_to_encoded = {
-        ir_id: encoded_sequence[: self.max_encoded_length]
-        for ir_id, encoded_sequence in zip(
-          sorted_ir_ids_to_encode, sorted_encoded_sequences
-        )
-      }
-
-      # Add the entries from the cache.
-      for ir_id in known_ir_ids:
-        id_to_encoded[ir_id] = self.ir_id_to_encoded[ir_id]
-
-      # Assemble the list of encoded graphs.
-      encoded = [id_to_encoded[graph.ir_id] for graph in graphs]
-
-      # Cache the recently encoded sequences. We must do this *after* fetching
-      # from the cache to prevent the cached items from being evicted.
-      for ir_id in unknown_ir_ids:
-        self.ir_id_to_encoded[ir_id] = id_to_encoded[ir_id]
-
-      return encoded
-    else:
-      # Return all entries from the cache.
-      return [self.ir_id_to_encoded[graph.ir_id] for graph in graphs]
+    return self.ir2seq_encoder.Encode(ir_ids, ctx=ctx)
 
 
 class StatementEncoder(EncoderBase):
   """Encode graphs to per-node sub-sequences.
 
   This uses the graph structure to produce a tokenized sequence ordered by
-  depth first traversal, and allows mapping from graph nodes to sub-seqeuences
+  depth first traversal, and allows mapping from graph nodes to sub-sequences
   within the encoded output.
   """
 
@@ -191,10 +185,8 @@ class StatementEncoder(EncoderBase):
   def max_encoded_length(self) -> int:
     return self._max_encoded_length
 
-  def Encode(
-    self,
-    graphs: List[graph_tuple_database.GraphTuple],
-    ctx: progress.ProgressContext = progress.NullContext,
+  def EncodeIds(
+    self, ir_ids: List[int], ctx: progress.ProgressContext
   ) -> List[graph2seq_pb2.ProgramGraphSeq]:
     """Serialize a graph into an encoded sequence.
 
@@ -246,78 +238,34 @@ class StatementEncoder(EncoderBase):
       encoded sequences, subsequence groupings, and node_mask arrays which list
       the nodes which are selected from each graph.
     """
-    # Look for any graphs that are unknown.
-    graph_ids_to_encode: Set[int] = {
-      graph.ir_id
-      for graph in graphs
-      if graph.ir_id not in self.ir_id_to_encoded
-    }
-    known_ir_ids = set(
-      graph.ir_id for graph in graphs if graph.ir_id not in graph_ids_to_encode
-    )
+    # Fetch the protos for the graphs that we need to encode.
+    with self.proto_db.Session() as session:
+      protos_to_encode = [
+        row.proto
+        for row in session.query(unlabelled_graph_database.ProgramGraph)
+        .options(
+          sql.orm.joinedload(unlabelled_graph_database.ProgramGraph.data)
+        )
+        .filter(unlabelled_graph_database.ProgramGraph.ir_id.in_(ir_ids))
+        .order_by(unlabelled_graph_database.ProgramGraph.ir_id)
+      ]
+      if len(protos_to_encode) != len(ir_ids):
+        raise OSError(
+          f"Requested {len(ir_ids)} protos "
+          "from database but received "
+          f"{len(protos_to_encode)}"
+        )
 
-    ctx.Log(
-      5,
-      "%.2f%% encoded graph cache hit rate",
-      (len(known_ir_ids) / (len(known_ir_ids) + len(graph_ids_to_encode)))
-      * 100,
-    )
+    # Encode the unknown graphs.
+    encoded = self.EncodeGraphs(protos_to_encode, ctx=ctx)
 
-    if graph_ids_to_encode:
-      sorted_graph_ids_to_encode = sorted(graph_ids_to_encode)
+    # Squeeze the encoded representations down to the maximum lengths allowed.
+    for seq in encoded:
+      seq.encoded[:] = seq.encoded[: self.max_encoded_length]
+      seq.encoded_node_length[:] = seq.encoded_node_length[: self.max_nodes]
+      seq.node[:] = seq.node[: self.max_nodes]
 
-      # Fetch the protos for the graphs that we need to encode.
-      with self.proto_db.Session() as session:
-        sorted_protos_to_encode = [
-          row.proto
-          for row in session.query(unlabelled_graph_database.ProgramGraph)
-          .options(
-            sql.orm.joinedload(unlabelled_graph_database.ProgramGraph.data)
-          )
-          .filter(
-            unlabelled_graph_database.ProgramGraph.ir_id.in_(
-              graph_ids_to_encode
-            )
-          )
-          .order_by(unlabelled_graph_database.ProgramGraph.ir_id)
-        ]
-        if len(sorted_protos_to_encode) != len(sorted_graph_ids_to_encode):
-          raise OSError(
-            f"Requested {len(sorted_graph_ids_to_encode)} protos "
-            "from database but received "
-            f"{len(sorted_protos_to_encode)}"
-          )
-
-      # Encode the unknown graphs.
-      sorted_encoded = self.EncodeGraphs(sorted_protos_to_encode, ctx=ctx)
-
-      # Squeeze the encoded representations down to the maximum lengths allowed.
-      for seq in sorted_encoded:
-        seq.encoded[:] = seq.encoded[: self.max_encoded_length]
-        seq.encoded_node_length[:] = seq.encoded_node_length[: self.max_nodes]
-        seq.node[:] = seq.node[: self.max_nodes]
-
-      ir_id_to_encoded = {
-        ir_id: encoded
-        for ir_id, encoded in zip(sorted_graph_ids_to_encode, sorted_encoded)
-      }
-
-      # Add the entries from the cache.
-      for ir_id in known_ir_ids:
-        ir_id_to_encoded[ir_id] = self.ir_id_to_encoded[ir_id]
-
-      # Assemble the list of encoded graphs.
-      encoded = [ir_id_to_encoded[graph.ir_id] for graph in graphs]
-
-      # Cache the recently encoded sequences. We must do this *after* fetching
-      # from the cache to prevent the cached items from being evicted.
-      for ir_id in sorted_graph_ids_to_encode:
-        self.ir_id_to_encoded[ir_id] = ir_id_to_encoded[ir_id]
-
-      return encoded
-    else:
-      # Return all entries from the cache.
-      return [self.ir_id_to_encoded[graph.ir_id] for graph in graphs]
+    return encoded
 
   @property
   def vocabulary_size(self) -> int:
