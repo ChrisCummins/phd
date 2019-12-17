@@ -55,12 +55,17 @@ class LstmBase(classifier_base.ClassifierBase):
 
     # Determine the size of padded sequences. Use the requested
     # padded_sequence_length, or the maximum encoded length if it is shorter.
-    self.padded_sequence_length = min(
-      padded_sequence_length or FLAGS.padded_sequence_length,
-      self.encoder.max_encoded_length,
+    self.padded_sequence_length = (
+      padded_sequence_length or FLAGS.padded_sequence_length
     )
 
     self.encoder = graph2seq_encoder or self.GetEncoder()
+
+    # After instantiating the encoder, see if we can reduce the padded sequence
+    # length.
+    self.padded_sequence_length = min(
+      self.padded_sequence_length, self.encoder.max_encoded_length
+    )
 
     # Reset any previous Tensorflow session. This is required when running
     # consecutive LSTM models in the same process.
