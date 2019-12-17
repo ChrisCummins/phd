@@ -25,7 +25,7 @@ FLAGS = app.FLAGS
 
 app.DEFINE_integer(
   "graph2seq_cache_entries",
-  512000,
+  10000,
   "The number of ID -> encoded sequence entries to cache.",
 )
 
@@ -121,6 +121,15 @@ class GraphEncoder(EncoderBase):
       for graph in graphs
       if graph.ir_id not in self.ir_id_to_encoded
     )
+    known_ir_ids = set(
+      graph.ir_id for graph in graphs if graph.ir_id not in unknown_ir_ids
+    )
+
+    ctx.Log(
+      5,
+      "%.2f%% encoded graph cache hit rate",
+      (len(known_ir_ids) / (len(known_ir_ids) + len(unknown_ir_ids))) * 100,
+    )
 
     if unknown_ir_ids:
       # Encode the unknown IRs.
@@ -136,9 +145,6 @@ class GraphEncoder(EncoderBase):
       }
 
       # Add the entries from the cache.
-      known_ir_ids = set(
-        graph.ir_id for graph in graphs if graph.ir_id not in unknown_ir_ids
-      )
       for ir_id in known_ir_ids:
         id_to_encoded[ir_id] = self.ir_id_to_encoded[ir_id]
 
@@ -147,8 +153,8 @@ class GraphEncoder(EncoderBase):
 
       # Cache the recently encoded sequences. We must do this *after* fetching
       # from the cache to prevent the cached items from being evicted.
-      for ir_id, encoded_sequence in id_to_encoded.items():
-        self.ir_id_to_encoded[ir_id] = encoded_sequence
+      for ir_id in unknown_ir_ids:
+        self.ir_id_to_encoded[ir_id] = id_to_encoded[ir_id]
 
       return encoded
     else:
@@ -168,6 +174,8 @@ class StatementEncoder(EncoderBase):
     self,
     graph_db: graph_tuple_database.Database,
     proto_db: unlabelled_graph_database.Database,
+    max_encoded_length: int,
+    max_nodes: int,
     cache_size: Optional[int] = None,
   ):
     super(StatementEncoder, self).__init__(graph_db, cache_size)
@@ -176,7 +184,12 @@ class StatementEncoder(EncoderBase):
     with open(LLVM_VOCAB) as f:
       data_to_load = json.load(f)
     self.vocabulary = data_to_load["vocab"]
-    self._max_encoded_length = data_to_load["max_encoded_length"]
+    self._max_encoded_length = max_encoded_length
+    self.max_nodes = max_nodes
+
+  @property
+  def max_encoded_length(self) -> int:
+    return self._max_encoded_length
 
   def Encode(
     self,
@@ -239,6 +252,16 @@ class StatementEncoder(EncoderBase):
       for graph in graphs
       if graph.ir_id not in self.ir_id_to_encoded
     }
+    known_ir_ids = set(
+      graph.ir_id for graph in graphs if graph.ir_id not in graph_ids_to_encode
+    )
+
+    ctx.Log(
+      5,
+      "%.2f%% encoded graph cache hit rate",
+      (len(known_ir_ids) / (len(known_ir_ids) + len(graph_ids_to_encode)))
+      * 100,
+    )
 
     if graph_ids_to_encode:
       sorted_graph_ids_to_encode = sorted(graph_ids_to_encode)
@@ -267,17 +290,19 @@ class StatementEncoder(EncoderBase):
 
       # Encode the unknown graphs.
       sorted_encoded = self.EncodeGraphs(sorted_protos_to_encode, ctx=ctx)
+
+      # Squeeze the encoded representations down to the maximum lengths allowed.
+      for seq in sorted_encoded:
+        seq.encoded[:] = seq.encoded[: self.max_encoded_length]
+        seq.encoded_node_length[:] = seq.encoded_node_length[: self.max_nodes]
+        seq.node[:] = seq.node[: self.max_nodes]
+
       ir_id_to_encoded = {
         ir_id: encoded
         for ir_id, encoded in zip(sorted_graph_ids_to_encode, sorted_encoded)
       }
 
       # Add the entries from the cache.
-      known_ir_ids = set(
-        graph.ir_id
-        for graph in graphs
-        if graph.ir_id not in graph_ids_to_encode
-      )
       for ir_id in known_ir_ids:
         ir_id_to_encoded[ir_id] = self.ir_id_to_encoded[ir_id]
 
@@ -286,18 +311,13 @@ class StatementEncoder(EncoderBase):
 
       # Cache the recently encoded sequences. We must do this *after* fetching
       # from the cache to prevent the cached items from being evicted.
-      for ir_id, encoded_sequence in ir_id_to_encoded.items():
-        self.ir_id_to_encoded[ir_id] = encoded_sequence
+      for ir_id in sorted_graph_ids_to_encode:
+        self.ir_id_to_encoded[ir_id] = ir_id_to_encoded[ir_id]
 
       return encoded
     else:
       # Return all entries from the cache.
       return [self.ir_id_to_encoded[graph.ir_id] for graph in graphs]
-
-  @property
-  def max_encoded_length(self) -> int:
-    """Return an upper bound on the length of the encoded sequences."""
-    return self._max_encoded_length
 
   @property
   def vocabulary_size(self) -> int:

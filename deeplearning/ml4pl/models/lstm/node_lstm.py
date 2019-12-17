@@ -212,7 +212,10 @@ class NodeLstm(lstm_base.LstmBase):
         f"Unsupported graph dimensionalities: {self.graph_db}"
       )
     return graph2seq.StatementEncoder(
-      graph_db=self.graph_db, proto_db=self._proto_db
+      graph_db=self.graph_db,
+      proto_db=self._proto_db,
+      max_encoded_length=self.padded_sequence_length,
+      max_nodes=self.padded_node_sequence_length,
     )
 
   def MakeBatch(

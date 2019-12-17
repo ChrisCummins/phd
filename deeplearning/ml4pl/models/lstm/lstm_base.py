@@ -52,7 +52,6 @@ class LstmBase(classifier_base.ClassifierBase):
     super(LstmBase, self).__init__(*args, **kwargs)
 
     self.batch_size = batch_size or FLAGS.batch_size
-    self.encoder = graph2seq_encoder or self.GetEncoder()
 
     # Determine the size of padded sequences. Use the requested
     # padded_sequence_length, or the maximum encoded length if it is shorter.
@@ -60,6 +59,8 @@ class LstmBase(classifier_base.ClassifierBase):
       padded_sequence_length or FLAGS.padded_sequence_length,
       self.encoder.max_encoded_length,
     )
+
+    self.encoder = graph2seq_encoder or self.GetEncoder()
 
     # Reset any previous Tensorflow session. This is required when running
     # consecutive LSTM models in the same process.

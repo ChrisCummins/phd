@@ -168,8 +168,8 @@ def ir2seq_encoder(
 
 @test.Fixture(
   scope="session",
-  params=(None, 256),
-  names=("cache_size:default", "cache_size:256"),
+  params=(None, 30),
+  names=("cache_size:default", "cache_size:30"),
 )
 def cache_size(request) -> int:
   """A test fixture to enumerate cache sizes."""
@@ -194,7 +194,11 @@ def statement_encoder(
 ):
   """A test fixture which enumerates statement encoders."""
   return graph2seq.StatementEncoder(
-    populated_graph_db, populated_proto_db, cache_size
+    populated_graph_db,
+    populated_proto_db,
+    max_encoded_length=100,
+    max_nodes=50,
+    cache_size=cache_size,
   )
 
 
@@ -215,7 +219,7 @@ def test_fuzz_GraphEncoder(
   assert len(encoded) == len(graphs)
 
 
-@decorators.loop_for(seconds=2, min_iteration_count=10)
+@decorators.loop_for(seconds=3, min_iteration_count=10)
 def test_fuzz_StatementEncoder(
   statement_encoder: graph2seq.StatementEncoder,
   populated_graph_db: graph_tuple_database.Database,
@@ -226,7 +230,7 @@ def test_fuzz_StatementEncoder(
 
   assert len(encoded) == len(graphs)
   for seq, graph in zip(encoded, graphs):
-    assert all(n in list(range(graph.node_count)) for n in seq.node)
+    assert max(seq.node) < graph.node_count
 
 
 if __name__ == "__main__":
