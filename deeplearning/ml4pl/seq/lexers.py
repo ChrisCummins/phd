@@ -251,7 +251,7 @@ class Lexer(object):
     }[type]
 
     self.vocab = copy.deepcopy(vocabulary)
-    self.max_encoded_length = int
+    self.max_encoded_length = max_encoded_length
 
   @property
   def vocabulary_size(self) -> int:
