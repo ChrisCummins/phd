@@ -15,8 +15,11 @@ from labm8.py import progress
 
 FLAGS = app.FLAGS
 
-# For testing models, always use --strict_graph_segmentation.
-FLAGS.strict_graph_segmentation = True
+app.DEFINE_integer(
+  "zero_r_batch_size",
+  1000000,
+  "The number of graphs to process in a single batch.",
+)
 
 
 class ZeroR(classifier_base.ClassifierBase):
@@ -52,7 +55,7 @@ class ZeroR(classifier_base.ClassifierBase):
     targets = []
 
     # Limit batch size to 10 million elements.
-    while batch_size < 10000000:
+    while batch_size < FLAGS.zero_r_batch_size:
       # Read the next graph.
       try:
         graph = next(graphs)
