@@ -406,9 +406,7 @@ class Ggnn(classifier_base.ClassifierBase):
 
     # maybe fetch more inputs.
     if disjoint_graph.has_graph_y:
-      assert (
-        disjoint_graph.disjoint_graph_count > 1
-      ), f"graph_count is {disjoint_graph.disjoint_graph_count}"
+      assert (epoch_type != epoch.Type.TRAIN or disjoint_graph.disjoint_graph_count > 1), f"graph_count is {disjoint_graph.disjoint_graph_count}"
       num_graphs = torch.tensor(disjoint_graph.disjoint_graph_count).to(
         self.dev, torch.long
       )
