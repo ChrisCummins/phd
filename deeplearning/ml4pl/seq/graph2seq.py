@@ -128,14 +128,32 @@ class GraphEncoder(EncoderBase):
       sorted_encoded_sequences = self.ir2seq_encoder.Encode(
         sorted_ir_ids_to_encode, ctx=ctx
       )
+      id_to_encoded = {
+        ir_id: encoded_sequence[: self.max_encoded_length]
+        for ir_id, encoded_sequence in zip(
+          sorted_ir_ids_to_encode, sorted_encoded_sequences
+        )
+      }
 
-      # Cache the encoded unknown IRs.
-      for ir_id, encoded_sequence in zip(
-        sorted_ir_ids_to_encode, sorted_encoded_sequences
-      ):
+      # Add the entries from the cache.
+      known_ir_ids = set(
+        graph.ir_id for graph in graphs if graph.ir_id not in unknown_ir_ids
+      )
+      for ir_id in known_ir_ids:
+        id_to_encoded[ir_id] = self.ir_id_to_encoded[ir_id]
+
+      # Assemble the list of encoded graphs.
+      encoded = [id_to_encoded[graph.ir_id] for graph in graphs]
+
+      # Cache the recently encoded sequences. We must do this *after* fetching
+      # from the cache to prevent the cached items from being evicted.
+      for ir_id, encoded_sequence in id_to_encoded.items():
         self.ir_id_to_encoded[ir_id] = encoded_sequence
 
-    return [self.ir_id_to_encoded[graph.ir_id] for graph in graphs]
+      return encoded
+    else:
+      # Return all entries from the cache.
+      return [self.ir_id_to_encoded[graph.ir_id] for graph in graphs]
 
 
 class StatementEncoder(EncoderBase):
@@ -249,11 +267,32 @@ class StatementEncoder(EncoderBase):
 
       # Encode the unknown graphs.
       sorted_encoded = self.EncodeGraphs(sorted_protos_to_encode, ctx=ctx)
-      # Encode and cache the unknown graphs.
-      for ir_id, encoded in zip(sorted_graph_ids_to_encode, sorted_encoded):
-        self.ir_id_to_encoded[ir_id] = encoded
+      ir_id_to_encoded = {
+        ir_id: encoded
+        for ir_id, encoded in zip(sorted_graph_ids_to_encode, sorted_encoded)
+      }
 
-    return [self.ir_id_to_encoded[graph.ir_id] for graph in graphs]
+      # Add the entries from the cache.
+      known_ir_ids = set(
+        graph.ir_id
+        for graph in graphs
+        if graph.ir_id not in graph_ids_to_encode
+      )
+      for ir_id in known_ir_ids:
+        ir_id_to_encoded[ir_id] = self.ir_id_to_encoded[ir_id]
+
+      # Assemble the list of encoded graphs.
+      encoded = [ir_id_to_encoded[graph.ir_id] for graph in graphs]
+
+      # Cache the recently encoded sequences. We must do this *after* fetching
+      # from the cache to prevent the cached items from being evicted.
+      for ir_id, encoded_sequence in ir_id_to_encoded.items():
+        self.ir_id_to_encoded[ir_id] = encoded_sequence
+
+      return encoded
+    else:
+      # Return all entries from the cache.
+      return [self.ir_id_to_encoded[graph.ir_id] for graph in graphs]
 
   @property
   def max_encoded_length(self) -> int:
