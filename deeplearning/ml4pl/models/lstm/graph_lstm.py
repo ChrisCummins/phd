@@ -85,7 +85,7 @@ class GraphLstmBatch(NamedTuple):
     """Reshape the model outputs to an array of predictions of same shape as
     targets."""
     del ctx  # Unused.
-    return model_output
+    return model_output[0]
 
 
 class GraphLstm(lstm_base.LstmBase):

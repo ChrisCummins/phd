@@ -142,7 +142,6 @@ def graph_db(
 ###############################################################################
 
 
-@test.Parametrize("model_class", graph_lstm.GraphLstm)
 @test.XFail(
   reason="TODO(github.com/ChrisCummins/ProGraML/issues/24): Cannot use the given session to evaluate tensor: the tensor's graph is different from the session's graph"
 )
