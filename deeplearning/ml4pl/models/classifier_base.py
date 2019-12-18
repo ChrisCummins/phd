@@ -435,10 +435,14 @@ class EpochThread(progress.Progress):
         self.graph_ids.add(graph_id)
 
       # Check that at least one batch is produced.
+      # TODO(github.com/ChrisCummins/ProGraML/issues/43): Remove this check.
+      # The calling code determines whether the batch count is okay.
       if not i and not batch.graph_count:
         raise OSError("No batches generated!")
 
       # We have run out of graphs.
+      # TODO(github.com/ChrisCummins/ProGraML/issues/43): Don't use
+      # batch.graph_count to determine the last graph.
       if not batch.graph_count:
         break
 

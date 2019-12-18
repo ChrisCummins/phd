@@ -318,5 +318,62 @@ def test_call(
   # assert results.has_learning_rate == model.has_learning_rate
 
 
+def test_empty_batches_is_not_error(
+  graph_db: graph_tuple_database.Database, logger: logging.Logger,
+):
+  """Test that empty batches are ignored.
+
+  Regression test for <github.com/ChrisCummins/ProGraML/issues/43>. Empty batch
+  generation was determined to be the cause of flaky model crashes.
+  """
+
+  class FlakyBatchModel(MockModel):
+    """A mock model which returns ~50% empty batches."""
+
+    def __init__(self, *args, **kwargs):
+      super(FlakyBatchModel, self).__init__(*args, **kwargs)
+      self._batch_count = 0
+
+    def MakeBatch(
+      self,
+      epoch_type: epoch.Type,
+      graphs: Iterable[graph_tuple_database.GraphTuple],
+      ctx: progress.ProgressContext = progress.NullContext,
+    ) -> batches.Data:
+      if not self._batch_count:
+        # Always return an empty first batch.
+        return batches.Data(graph_ids=[], data=None)
+      elif self._batch_count == 1:
+        # Always return a real second batch (otherwise the epoch may end up with
+        # nothing but empty batches).
+        return super(FlakyBatchModel, self).MakeBatch(epoch_type, graphs, ctx)
+
+      # Return subsequent batches with 50% success rate.
+      self._batch_count += 1
+      if random.random() < 0.5:
+        return super(FlakyBatchModel, self).MakeBatch(epoch_type, graphs, ctx)
+      else:
+        return batches.Data(graph_ids=[], data=None)
+
+  run_id = run_id_lib.RunId.GenerateUnique(
+    f"mock{random.randint(0, int(1e6)):06}"
+  )
+
+  model = FlakyBatchModel(logger=logger, graph_db=graph_db, run_id=run_id,)
+
+  batch_iterator = batches.BatchIterator(
+    batches=model.BatchIterator(
+      epoch.Type.TRAIN, graph_database_reader.BufferedGraphReader(graph_db)
+    ),
+    graph_count=graph_db.graph_count,
+  )
+
+  model.Initialize()
+  results = model(
+    epoch_type=epoch.Type.TRAIN, batch_iterator=batch_iterator, logger=logger
+  )
+  assert results.batch_count >= 1
+
+
 if __name__ == "__main__":
   test.Main()
