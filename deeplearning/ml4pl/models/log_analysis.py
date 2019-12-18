@@ -69,7 +69,7 @@ class LogAnalyzer(object):
 
   def PlotEpochMetrics(
     self, metric: str, epoch_types: List[str] = None, ax=None,
-  ) -> None:
+  ) -> plt.axis:
     """Plot a metric over epochs.
 
     Args:
@@ -113,6 +113,8 @@ class LogAnalyzer(object):
 
     # Force the legend.
     plt.legend()
+
+    return ax
 
 
 class RunLogAnalyzer(LogAnalyzer):
