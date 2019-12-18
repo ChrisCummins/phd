@@ -24,8 +24,8 @@ FLAGS = app.FLAGS
 
 app.DEFINE_list(
   "dataset",
-  ["reachability", "domtree", "liveness"],
-  "The name of the dataset to evaluate. One of {amd,nvidia}.",
+  ["reachability", "domtree", "datadep", "liveness", "subexpressions"],
+  "The name of the dataset to evaluate.",
 )
 app.DEFINE_list(
   "model",
@@ -61,8 +61,9 @@ def Main():
     ir_database.Database, f"{db_stem}_ir", must_exist=True
   )
   FLAGS.test_on = "improvement_and_last"
-  FLAGS.max_train_per_epoch = 5000
-  FLAGS.max_val_per_epoch = 1000
+  FLAGS.max_train_per_epoch = 10000
+  FLAGS.max_val_per_epoch = 10000
+  FLAGS.detailed_batch_types = ["test"]
 
   for dataset in datasets:
     graph_db = graph_tuple_database.Database(
@@ -122,8 +123,10 @@ def Main():
       elif model == "ggnn":
         FLAGS.layer_timesteps = ["30"]
         FLAGS.graph_batch_node_count = 15000
-        FLAGS.graph_reader_order = "global_random"
+        FLAGS.max_node_count_limit_handler = "skip"
+        FLAGS.graph_reader_order = "batch_random"
         FLAGS.epoch_count = 300
+        FLAGS.stop_at = ["val_acc=.9999", "time=21600"]
         run.Run(ggnn.Ggnn)
       else:
         raise app.UsageError(f"Unknown model: {model}")
