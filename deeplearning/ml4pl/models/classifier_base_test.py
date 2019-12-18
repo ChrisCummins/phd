@@ -48,20 +48,23 @@ def logger(log_db: log_database.Database) -> logging.Logger:
 
 
 # Currently, only 2-dimension node features are supported.
-@test.Fixture(scope="session", params=(2,), namer=lambda x: f'node_x:{x}')
+@test.Fixture(scope="session", params=(2,), namer=lambda x: f"node_x:{x}")
 def node_x_dimensionality(request) -> int:
   """A test fixture which enumerates node feature dimensionalities."""
   return request.param
 
 
-@test.Fixture(scope="session", params=(0, 2), namer=lambda x: f'graph_x:{x}')
+@test.Fixture(scope="session", params=(0, 2), namer=lambda x: f"graph_x:{x}")
 def graph_x_dimensionality(request) -> int:
   """A test fixture which enumerates graph feature dimensionalities."""
   return request.param
 
 
-@test.Fixture(scope="session", params=((0, 2), (0, 3), (2, 0), (10, 0)),
-              namer=lambda x: f'graph_y:{x[0]}-node_y:{x[1]}')
+@test.Fixture(
+  scope="session",
+  params=((0, 2), (0, 3), (2, 0), (10, 0)),
+  namer=lambda x: f"graph_y:{x[0]}-node_y:{x[1]}",
+)
 def y_dimensionalities(request) -> Tuple[int, int]:
   """A test fixture which enumerates node and graph label dimensionalities.
 
