@@ -47,32 +47,21 @@ def logger(log_db: log_database.Database) -> logging.Logger:
     yield logger
 
 
-@test.Fixture(scope="session", params=(0, 3))
-def edge_position_max(request) -> int:
-  """A test fixture which enumerates edge positions."""
-  return request.param
-
-
-@test.Fixture(scope="session", params=(10, 100))
-def graph_count(request) -> int:
-  """A test fixture which enumerates graph counts."""
-  return request.param
-
-
 # Currently, only 2-dimension node features are supported.
-@test.Fixture(scope="session", params=(2,))
+@test.Fixture(scope="session", params=(2,), namer=lambda x: f'node_x:{x}')
 def node_x_dimensionality(request) -> int:
   """A test fixture which enumerates node feature dimensionalities."""
   return request.param
 
 
-@test.Fixture(scope="session", params=(0, 2))
+@test.Fixture(scope="session", params=(0, 2), namer=lambda x: f'graph_x:{x}')
 def graph_x_dimensionality(request) -> int:
   """A test fixture which enumerates graph feature dimensionalities."""
   return request.param
 
 
-@test.Fixture(scope="session", params=((0, 2), (0, 3), (2, 0), (10, 0)))
+@test.Fixture(scope="session", params=((0, 2), (0, 3), (2, 0), (10, 0)),
+              namer=lambda x: f'graph_y:{x[0]}-node_y:{x[1]}')
 def y_dimensionalities(request) -> Tuple[int, int]:
   """A test fixture which enumerates node and graph label dimensionalities.
 
@@ -85,12 +74,6 @@ def y_dimensionalities(request) -> Tuple[int, int]:
   return request.param
 
 
-@test.Fixture(scope="session", params=(True,))
-def with_data_flow(request) -> int:
-  """A test fixture which enumerates 'with dataflow' values."""
-  return request.param
-
-
 @test.Fixture(
   scope="session",
   params=testing_databases.GetDatabaseUrls(),
@@ -98,11 +81,9 @@ def with_data_flow(request) -> int:
 )
 def graph_db(
   request,
-  graph_count: int,
   node_x_dimensionality: int,
   graph_x_dimensionality: int,
   y_dimensionalities: Tuple[int, int],
-  with_data_flow: bool,
 ) -> graph_tuple_database.Database:
   """A test fixture which enumerates graph databases."""
   node_y_dimensionality, graph_y_dimensionality = y_dimensionalities
@@ -112,12 +93,12 @@ def graph_db(
   ) as db:
     random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
       db,
-      graph_count=graph_count,
+      graph_count=50,
       node_x_dimensionality=node_x_dimensionality,
       node_y_dimensionality=node_y_dimensionality,
       graph_x_dimensionality=graph_x_dimensionality,
       graph_y_dimensionality=graph_y_dimensionality,
-      with_data_flow=with_data_flow,
+      with_data_flow=True,
     )
     yield db
 
