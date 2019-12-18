@@ -141,7 +141,8 @@ class ClassifierBase(object):
     Returns:
       A single batch of data for feeding into RunBatch(). A batch consists of a
       list of graph IDs and a model-defined blob of data. If the list of graph
-      IDs is empty, the batch is discarded and not fed into RunBatch().
+      IDs is empty, the batch is discarded and not fed into RunBatch(). If the
+      end_of_batches flag is set, the batch data is not read.
     """
     raise NotImplementedError("abstract class")
 
@@ -332,11 +333,7 @@ class ClassifierBase(object):
       ):
         batch = self.MakeBatch(epoch_type, graphs)
 
-      # A batch with no graphs is considered "empty" and is not returned.
-      if batch.graph_count:
-        yield batch
-      else:
-        break
+      yield batch
 
   def Initialize(self) -> None:
     """Initialize an untrained model."""
@@ -430,21 +427,17 @@ class EpochThread(progress.Progress):
       self.batch_count += 1
       self.ctx.i += batch.graph_count
 
-      # Record the graph IDs.
+      # Record the unique graph IDs.
       for graph_id in batch.graph_ids:
         self.graph_ids.add(graph_id)
 
-      # Check that at least one batch is produced.
-      # TODO(github.com/ChrisCummins/ProGraML/issues/43): Remove this check.
-      # The calling code determines whether the batch count is okay.
-      if not i and not batch.graph_count:
-        raise OSError("No batches generated!")
-
-      # We have run out of graphs.
-      # TODO(github.com/ChrisCummins/ProGraML/issues/43): Don't use
-      # batch.graph_count to determine the last graph.
-      if not batch.graph_count:
+      # We have run out of batches.
+      if batch.end_of_batches:
         break
+
+      # Skip an empty batch.
+      if not batch.graph_count:
+        continue
 
       # Run the batch through the model.
       with self.ctx.Profile(

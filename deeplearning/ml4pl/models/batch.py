@@ -30,10 +30,23 @@ class Data(NamedTuple):
 
   graph_ids: List[int]
   data: Any
+  # A flag used to mark that this batch is the end of an iterable sequences of
+  # batches.
+  end_of_batches: bool = False
 
   @property
   def graph_count(self) -> int:
     return len(self.graph_ids)
+
+
+def EmptyBatch() -> Data:
+  """Construct an empty batch."""
+  return Data(graph_ids=[], data=None)
+
+
+def EndOfBatches() -> Data:
+  """Construct a 'end of batches' marker."""
+  return Data(graph_ids=[], data=None, end_of_batches=True)
 
 
 class BatchIterator(NamedTuple):

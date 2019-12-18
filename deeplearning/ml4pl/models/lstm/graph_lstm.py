@@ -200,7 +200,7 @@ class GraphLstm(lstm_base.LstmBase):
 
     graphs = self.GetBatchOfGraphs(graph_iterator)
     if not graphs:
-      return batches.Data(graph_ids=[], data=None)
+      return batches.EndOfBatches()
 
     # Encode the graphs in the batch.
     encoded_sequences: List[np.array] = self.encoder.Encode(graphs, ctx=ctx)

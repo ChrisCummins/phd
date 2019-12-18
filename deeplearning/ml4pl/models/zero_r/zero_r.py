@@ -61,6 +61,8 @@ class ZeroR(classifier_base.ClassifierBase):
         graph = next(graphs)
       except StopIteration:
         # We have run out of graphs.
+        if len(graph_ids) == 0:
+          return batchs.EndOfBatches()
         break
 
       # Add the graph data to the batch.

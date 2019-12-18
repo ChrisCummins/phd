@@ -232,7 +232,7 @@ class NodeLstm(lstm_base.LstmBase):
     # In the future we could work around this by padding an incomplete
     # batch with arrays of zeros.
     if not graphs or len(graphs) != self.batch_size:
-      return batches.Data(graph_ids=[], data=None)
+      return batches.EndOfBatches()
 
     # Encode the graphs in the batch.
 

@@ -139,13 +139,17 @@ class MockModel(classifier_base.ClassifierBase):
     del epoch_type  # Unused.
     del ctx  # Unused.
 
+    self.make_batch_count += 1
+
     graph_ids = []
     while len(graph_ids) < 100:
       try:
         graph_ids.append(next(graphs).id)
       except StopIteration:
+        if len(graph_ids) == 0:
+          return batches.EndOfBatches()
         break
-    self.make_batch_count += 1
+
     return batches.Data(graph_ids=graph_ids, data=123)
 
   def RunBatch(
@@ -340,20 +344,21 @@ def test_empty_batches_is_not_error(
       graphs: Iterable[graph_tuple_database.GraphTuple],
       ctx: progress.ProgressContext = progress.NullContext,
     ) -> batches.Data:
-      if not self._batch_count:
+      self._batch_count += 1
+
+      if self._batch_count == 1:
         # Always return an empty first batch.
-        return batches.Data(graph_ids=[], data=None)
-      elif self._batch_count == 1:
+        return batches.EmptyBatch()
+      elif self._batch_count == 2:
         # Always return a real second batch (otherwise the epoch may end up with
         # nothing but empty batches).
         return super(FlakyBatchModel, self).MakeBatch(epoch_type, graphs, ctx)
 
       # Return subsequent batches with 50% success rate.
-      self._batch_count += 1
       if random.random() < 0.5:
         return super(FlakyBatchModel, self).MakeBatch(epoch_type, graphs, ctx)
       else:
-        return batches.Data(graph_ids=[], data=None)
+        return batches.EmptyBatch()
 
   run_id = run_id_lib.RunId.GenerateUnique(
     f"mock{random.randint(0, int(1e6)):06}"

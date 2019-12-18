@@ -239,8 +239,8 @@ class Ggnn(classifier_base.ClassifierBase):
     try:
       disjoint_graph = next(batcher)
     except StopIteration:
-      # We have run out of graphs, return an empty batch.
-      return batches.Data(graph_ids=[], data=None)
+      # We have run out of graphs.
+      return batches.EndOfBatches()
 
     # Workaround for the fact that graph batcher may read one more graph than
     # actually gets included in the batch.
@@ -249,11 +249,12 @@ class Ggnn(classifier_base.ClassifierBase):
     else:
       graphs = graph_iterator.graphs_read
 
-    # discard single graph batches in train epoch.
-    # We might as well do that in any ggnn application with graph-level labels
-    if len(graphs) <= 1 and epoch_type == epoch.Type.TRAIN \
-        and disjoint_graph.graph_y_dimensionality:
-      return batches.Data(graph_ids=[], data=None)
+    # Discard single-graph batches during training when there are graph
+    # features. This is because we use batch normalization on incoming features,
+    # and batch normalization requires > 1 items to normalize.
+    if (len(graphs) <= 1 and epoch_type == epoch.Type.TRAIN and
+        disjoint_graph.graph_x_dimensionality):
+      return batches.EmptyBatch()
 
     return batches.Data(
       graph_ids=[graph.id for graph in graphs],
