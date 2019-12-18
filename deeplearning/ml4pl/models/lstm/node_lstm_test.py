@@ -24,6 +24,8 @@ FLAGS = test.FLAGS
 # For testing models, always use --strict_graph_segmentation.
 FLAGS.strict_graph_segmentation = True
 
+# No test coverage for hot code.
+MODULE_UNDER_TEST = None
 
 ###############################################################################
 # Fixtures.
