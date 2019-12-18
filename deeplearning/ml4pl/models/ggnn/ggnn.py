@@ -299,6 +299,22 @@ class Ggnn(classifier_base.ClassifierBase):
         <= self.message_passing_step_count
       )
 
+    # If we are batching my maximum node count and skipping graphs that are
+    # larger than this, we can apply that filter to the SQL query now, rather
+    # than reading the graphs and ignoring them later. This ensures that when
+    # --max_{train,val}_per_epoch is set, the number of graphs that get used
+    # matches the limit.
+    if (
+      FLAGS.graph_batch_node_count
+      and FLAGS.max_node_count_limit_handler == "skip"
+    ):
+      filters.append(
+        lambda: (
+          graph_tuple_database.GraphTuple.node_count
+          <= FLAGS.graph_batch_node_count
+        )
+      )
+
     return super(Ggnn, self).GraphReader(
       epoch_type=epoch_type,
       graph_db=graph_db,
