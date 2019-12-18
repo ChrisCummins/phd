@@ -28,6 +28,17 @@ from labm8.py import progress
 
 FLAGS = app.FLAGS
 
+app.DEFINE_float(
+  "label_conv_threshold",
+  0.995,
+  "convergence interval: fraction of labels that need to be stable",
+)
+app.DEFINE_integer(
+  "label_conv_stable_steps",
+  1,
+  "required number of consecutive steps within the convergence interval"
+)
+
 app.DEFINE_boolean(
   "cuda", True, "Use cuda if available? CPU-only mode otherwise."
 )
@@ -55,18 +66,16 @@ app.DEFINE_string(
   "The unroll strategy to use. One of: "
   "{none, constant, edge_count, data_flow_max_steps, label_convergence} "
   "constant: Unroll by a constant number of steps. The total number of steps is "
-  "(unroll_factor * message_passing_step_count).",
+  "defined in FLAGS.test_layer_timesteps",
 )
-app.DEFINE_float(
-  "unroll_factor",
-  0,
-  "Determine the number of dynamic model unrolls to perform. If "
-  "--unroll_strategy=constant, this number of unrolls - each of size "
-  "sum(layer_timesteps) are performed. So one unroll adds sum(layer_timesteps) "
-  "many steps to the network. If --unroll_strategy=edge_counts, "
-  "max_edge_count * --unroll_factor timesteps are performed. (rounded up to "
-  "the next multiple of sum(layer_timesteps))",
+
+app.DEFINE_list(
+  "test_layer_timesteps",
+  ["0"],
+  "Set when unroll_strategy is 'constant'. Assumes that the length <= len(layer_timesteps)."
+  "Unrolls the GGNN proper for a fixed number of timesteps during eval()."
 )
+
 app.DEFINE_boolean(
   "limit_max_data_flow_steps_during_training",
   True,
@@ -86,7 +95,7 @@ app.DEFINE_boolean(
   "We expect them to be part of the ds anyway, but you can toggle off their effect.",
 )
 
-app.DEFINE_boolean("use_edge_bias", False, "")
+app.DEFINE_boolean("use_edge_bias", True, "")
 
 app.DEFINE_boolean(
   "msg_mean_aggregation",
@@ -331,54 +340,30 @@ class Ggnn(classifier_base.ClassifierBase):
   def layer_timesteps(self) -> np.array:
     return np.array([int(x) for x in FLAGS.layer_timesteps])
 
-  # TODO(github.com/ChrisCummins/ProGraML/issues/27): Split this into a separate
-  # unroll_strategy.py module.
-  def GetUnrollFactor(
+  def get_unroll_steps(
     self,
     epoch_type: epoch.Type,
     batch: batches.Data,
     unroll_strategy: str,
-    unroll_factor: float,
   ) -> int:
-    """Determine the unroll factor from the --unroll_strategy and --unroll_factor
-  flags, and the batch log.
-  """
+    """Determine the unroll factor from the --unroll_strategy flag, and the batch log."""
     # Determine the unrolling strategy.
-    if unroll_strategy == "none" or epoch_type == epoch.Type.TRAIN:
-      # Perform no unrolling. The inputs are processed for a single run of
-      # message_passing_step_count. This is required during training to
-      # propagate gradients.
-      return 1
+    if unroll_strategy == "none":
+      # Perform no unrolling. The inputs are processed according to layer_timesteps
+      return 0
     elif unroll_strategy == "constant":
-      # Unroll by a constant number of steps. The total number of steps is
-      # (unroll_factor * message_passing_step_count).
-      return int(unroll_factor)
+      # Unroll by a constant number of steps according to test_layer_timesteps
+      return 0
     elif unroll_strategy == "data_flow_max_steps":
       max_data_flow_steps = max(
-        graph.data_flow_steps for graph in batch.data.disjoint_graphs
+        graph.data_flow_steps for graph in batch.data.graphs
       )
-      unroll_factor = math.ceil(
-        max_data_flow_steps / self.message_passing_step_count
-      )
-      app.Log(
-        2,
-        "Determined unroll factor %d from max data flow steps %d",
-        unroll_factor,
-        max_data_flow_steps,
-      )
-      return unroll_factor
+      app.Log(3, "Determined max data flow steps to be %d", max_data_flow_steps)
+      return max_data_flow_steps
     elif unroll_strategy == "edge_count":
       max_edge_count = max(graph.edge_count for graph in batch.data.graphs)
-      unroll_factor = math.ceil(
-        (max_edge_count * unroll_factor) / self.message_passing_step_count
-      )
-      app.Log(
-        2,
-        "Determined unroll factor %d from max edge count %d",
-        unroll_factor,
-        self.message_passing_step_count,
-      )
-      return unroll_factor
+      app.Log(3, "Determined max edge count to be %d", max_edge_count)
+      return max_edge_count
     elif unroll_strategy == "label_convergence":
       return 0
     else:
@@ -440,19 +425,33 @@ class Ggnn(classifier_base.ClassifierBase):
       aux_in = torch.from_numpy(disjoint_graph.graph_x).to(
         self.dev, torch.get_default_dtype()
       )
-
       model_inputs = model_inputs + (num_graphs, graph_nodes_list, aux_in,)
 
+    # maybe calculate manual timesteps
+    if epoch_type != epoch.Type.TRAIN and \
+          FLAGS.unroll_strategy in ['constant', 'edge_count', 'data_flow_max_steps', 'label_convergence']:
+      time_steps_cpu = np.array(self.get_unroll_steps(epoch_type, batch, FLAGS.unroll_strategy), dtype=np.int64)
+      time_steps_gpu = torch.from_numpy(time_steps_cpu).to(self.dev)
+    else: 
+      time_steps_cpu = 0
+      time_steps_gpu = None
+
+    # RUN MODEL FORWARD PASS
     # enter correct mode of model
-    if epoch_type == epoch.Type.TRAIN and not self.model.training:
-      self.model.train()
-    elif self.model.training:
-      self.model.eval()
-      self.model.opt.zero_grad()
+    if epoch_type == epoch.Type.TRAIN:
+      if not self.model.training:
+        self.model.train()
+      outputs = self.model(*model_inputs, test_time_steps=time_steps_gpu)
+    else: # not TRAIN
+      if self.model.training:
+        self.model.eval()
+        self.model.opt.zero_grad()
+      with torch.no_grad(): # don't trace computation graph!
+        outputs = self.model(*model_inputs, test_time_steps=time_steps_gpu)
 
-    outputs = self.model(*model_inputs)
 
-    logits, accuracy, logits, correct, targets, graph_features = outputs
+
+    logits, accuracy, logits, correct, targets, graph_features, *unroll_stats = outputs
 
     loss = self.model.loss((logits, graph_features), targets)
 
@@ -479,9 +478,8 @@ class Ggnn(classifier_base.ClassifierBase):
     # will change this value.
     learning_rate = self.model.config.lr
 
-    # TODO(github.com/ChrisCummins/ProGraML/issues/27): Set these.
-    model_converged = False
-    iteration_count = 1
+    model_converged = unroll_stats[1] if unroll_stats else False
+    iteration_count = unroll_stats[0] if unroll_stats else time_steps_cpu 
 
     loss_value = loss.item()
     assert not np.isnan(loss_value), loss
