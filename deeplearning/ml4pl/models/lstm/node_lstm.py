@@ -247,9 +247,15 @@ class NodeLstm(lstm_base.LstmBase):
     all_node_indices: List[np.array] = []
     targets: List[np.array] = []
 
+    try:
+      encoded_graphs = self.encoder.Encode(graphs, ctx=ctx)
+    except ValueError:
+      # Graph encoding fails,
+      return batches.Data(graphs=[], data=None)
+
     node_offset = 0
     # Convert ProgramGraphSeq protos to arrays of numeric values.
-    for graph, seq in zip(graphs, self.encoder.Encode(graphs, ctx=ctx)):
+    for graph, seq in zip(graphs, encoded_graphs):
       # Skip empty graphs.
       if not seq.encoded:
         continue
