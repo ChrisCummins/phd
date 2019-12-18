@@ -249,9 +249,15 @@ class NodeLstm(lstm_base.LstmBase):
 
     try:
       encoded_graphs = self.encoder.Encode(graphs, ctx=ctx)
-    except ValueError:
-      # Graph encoding fails,
-      return batches.Data(graphs=[], data=None)
+    except ValueError as e:
+      ctx.Error("%s", e)
+      # TODO(github.com/ChrisCummins/ProGraML/issues/38): to debug a possible
+      # error in the LSTM I have temporarily made the batch construction
+      # resilient to encoder errors by returning an empty batch.
+      # Graph encoding failed, so return an empty batch. This is probably
+      # not a good idea to keep, as it means the LSTM will silently skip
+      # data.
+      return batches.Data(graph_ids=[], data=None)
 
     node_offset = 0
     # Convert ProgramGraphSeq protos to arrays of numeric values.

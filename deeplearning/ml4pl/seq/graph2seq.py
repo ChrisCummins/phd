@@ -1,9 +1,9 @@
 """Module for conversion from unlabelled graphs to encoded sequences."""
 import json
+import subprocess
 from typing import Dict
 from typing import List
 from typing import Optional
-from typing import Set
 from typing import Union
 
 import lru
@@ -256,8 +256,14 @@ class StatementEncoder(EncoderBase):
           f"{len(protos_to_encode)}"
         )
 
-    # Encode the unknown graphs.
-    encoded = self.EncodeGraphs(protos_to_encode, ctx=ctx)
+    # Encode the unknown graphs. If the encoder fails, propagate the error as a
+    # ValueError with the IDs of the graphs that failed.
+    try:
+      encoded = self.EncodeGraphs(protos_to_encode, ctx=ctx)
+    except subprocess.CalledProcessError as e:
+      raise ValueError(
+        f"Graph encoder failed to encode IRs: {ir_ids} with error: {e}"
+      )
 
     # Squeeze the encoded representations down to the maximum lengths allowed.
     for seq in encoded:
@@ -284,6 +290,11 @@ class StatementEncoder(EncoderBase):
 
     Returns:
       A pair of <encoded_sequences, statement_indices> arrays.
+
+    Raises:
+      CalledProcessError: If the graph encoder fails.
+      ProtoWorkerTimeoutError: If the encoder fails to complete within 60
+        seconds.
     """
     with ctx.Profile(
       3,
