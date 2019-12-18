@@ -194,13 +194,15 @@ class MockModel(classifier_base.ClassifierBase):
     self.model_data = copy.deepcopy(data_to_load)
 
 
-@test.Fixture(scope="session", params=(False, True))
+@test.Fixture(
+  scope="session", params=(False, True), names=("no_loss", "with_loss")
+)
 def has_loss(request) -> bool:
   """A test fixture which enumerates losses."""
   return request.param
 
 
-@test.Fixture(scope="session", params=(False, True))
+@test.Fixture(scope="session", params=(False, True), names=("no_lr", "with_lr"))
 def has_learning_rate(request) -> bool:
   """A test fixture which enumerates learning rates."""
   return request.param
@@ -239,13 +241,15 @@ def batch_iterator(
   )
 
 
-@test.Fixture(scope="session", params=list(epoch.Type))
+@test.Fixture(
+  scope="session", params=list(epoch.Type), namer=lambda x: x.name.lower()
+)
 def epoch_type(request) -> epoch.Type:
   """A test fixture which enumerates epoch types."""
   return request.param
 
 
-@test.Fixture(scope="session", params=(0, 5))
+@test.Fixture(scope="session", params=(0, 5), namer=lambda x: f"epoch_num:{x}")
 def epoch_num(request) -> int:
   return request.param
 
