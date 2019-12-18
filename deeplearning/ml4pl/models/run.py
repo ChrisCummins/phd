@@ -49,13 +49,14 @@ app.DEFINE_enum(
 )
 app.DEFINE_string(
   "test_on",
-  "improvement_and_last",
+  "best",
   "Determine when to run the test set. Possible values: none (never run the "
   "test set), every (test at the end of every epoch), improvement (test only "
-  "when validation accuracy improves), or improvent_and_last (test when "
-  "validation accuracy improves, and on the last epoch).",
+  "when validation accuracy improves), improvent_and_last (test when "
+  "validation accuracy improves, and on the last epoch), or best (restore the "
+  "model with the best validation accuracy after training and test that).",
   validator=lambda s: s
-  in {"none", "every", "improvement", "improvement_and_last",},
+  in {"none", "every", "improvement", "improvement_and_last", "best"},
 )
 app.DEFINE_boolean(
   "test_only",
@@ -227,7 +228,8 @@ class Train(progress.Progress):
     if save_on == schedules.SaveOn.EVERY_EPOCH or (
       save_on == schedules.SaveOn.VAL_IMPROVED and val_improved
     ):
-      self.model.SaveCheckpoint()
+      checkpoint = self.model.SaveCheckpoint()
+      self.ctx.Log(2, "Saved checkpoint %s", checkpoint)
 
     if test_on == "every":
       self.RunEpoch(epoch.Type.TEST, test_batches)
@@ -235,8 +237,6 @@ class Train(progress.Progress):
   def Run(self):
     """Run the train/val/test loop."""
     test_on = FLAGS.test_on
-    if test_on not in {"none", "every", "improvement", "improvement_and_last"}:
-      raise app.UsageError("Unknown --test_on value")
 
     save_on = FLAGS.save_on()
 
@@ -245,6 +245,38 @@ class Train(progress.Progress):
 
     # Record the final epoch.
     self.ctx.i += 1
+
+    if FLAGS.test_on == "best":
+      # If training on the best results, restore the model to the state of the
+      # best epoch.
+
+      # Flush the logger before using the log database.
+      self.logger.Flush()
+
+      # Get the per-epoch summary table of model results.
+      tables = {
+        name: df
+        for name, df in self.logger.db.GetTables(run_ids=[self.model.run_id])
+      }
+      # Select the epoch with the best validation accuracy.
+      epochs = tables["epochs"][tables["epochs"]["val_accuracy"].notnull()]
+      if not len(epochs):
+        raise ValueError("No epochs found!")
+      best_epoch_idx = epochs["val_accuracy"].idxmax()
+      best_epoch = epochs.iloc[best_epoch_idx]
+
+      # Restore the model to the state at the best validation accuracy.
+      checkpoint = checkpoints.CheckpointReference(
+        run_id=self.model.run_id, epoch_num=best_epoch["epoch_num"]
+      )
+      self.ctx.Log(
+        1,
+        "Restoring model to best validation results at %s: %s",
+        checkpoint,
+        best_epoch,
+      )
+      self.model.RestoreFrom(checkpoint)
+      self.RunEpoch(epoch.Type.TEST, self.MakeBatchIterator(epoch.Type.TEST))
 
   def RunEpoch(
     self, epoch_type: epoch.Type, batch_iterator: batchs.BatchIterator,

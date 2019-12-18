@@ -10,6 +10,7 @@ from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch as batches
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import epoch
+from deeplearning.ml4pl.models import log_analysis
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models import run
 from deeplearning.ml4pl.testing import random_graph_tuple_database_generator
@@ -120,6 +121,8 @@ class MockModel(classifier_base.ClassifierBase):
       try:
         graph_ids.append(next(graphs).id)
       except StopIteration:
+        if not graph_ids:
+          return batches.EndOfBatches()
         break
     self.make_batch_count += 1
     return batches.Data(graph_ids=graph_ids, data=123)
@@ -178,12 +181,16 @@ class MockModel(classifier_base.ClassifierBase):
   (False, True),
   names=("memprof=false", "memprof=true"),
 )
+@test.Parametrize(
+  "test_on", ("best", "none", "every", "improvement", "improvement_and_last")
+)
 def test_Run_with_mock_module(
   disposable_log_db: log_database.Database,
   graph_db: graph_tuple_database.Database,
   epoch_count: int,
   k_fold: bool,
   run_with_memory_profiler: bool,
+  test_on: str,
 ):
   """Test the run.Run() method."""
   log_db = disposable_log_db
@@ -198,11 +205,33 @@ def test_Run_with_mock_module(
   FLAGS.epoch_count = epoch_count
   FLAGS.k_fold = k_fold
   FLAGS.run_with_memory_profiler = run_with_memory_profiler
+  FLAGS.test_on = test_on
 
   run.Run(MockModel)
 
   # Test that k-fold produces multiple runs.
   assert log_db.run_count == graph_db.split_count if k_fold else 1
+
+  run_ids = log_db.run_ids
+  for run_id in run_ids:
+    logs = log_analysis.RunLogAnalyzer(log_db=log_db, run_id=run_id)
+    epochs = logs.tables["epochs"]
+
+    # Check that we performed as many epochs as expected.
+    assert len(epochs) == epoch_count
+
+    test_count = len(epochs[epochs["test_accuracy"].notnull()])
+
+    # Test that the number of test epochs matches the expected amount depending
+    # on --test_on flag.
+    if test_on == "none":
+      assert test_count == 0
+    elif test_on == "best":
+      assert test_count == 1
+    elif test_on == "improvement":
+      assert test_count >= 1
+    elif test_on == "improvement_and_last":
+      assert test_count >= 1
 
 
 if __name__ == "__main__":

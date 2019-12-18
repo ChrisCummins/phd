@@ -34,7 +34,7 @@ import pandas as pd
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models import schedules
 from deeplearning.ml4pl.models.ggnn import ggnn_config
-from deeplearning.ml4pl.models.lstm.lstm import Ir2SeqType
+from deeplearning.ml4pl.models.lstm.graph_lstm import Ir2SeqType
 from labm8.py import app
 from labm8.py import google_sheets
 from labm8.py import pdutil

@@ -285,21 +285,31 @@ class Logger(object):
     """
     # A previous Save() call from this logger might still be buffered. Flush the
     # buffer before loading from the database.
-    self._writer.Flush()
+    self.Flush()
 
     with self.db.Session() as session:
       checkpoint_entry = (
         session.query(log_database.Checkpoint)
         .filter(
           log_database.Checkpoint.run_id == str(checkpoint_ref.run_id),
-          log_database.Checkpoint.epoch_num == checkpoint_ref.epoch_num,
+          log_database.Checkpoint.epoch_num == int(checkpoint_ref.epoch_num),
         )
         .options(sql.orm.joinedload(log_database.Checkpoint.data))
         .first()
       )
       # Check that the requested checkpoint exists.
       if not checkpoint_entry:
-        raise ValueError(f"Checkpoint not found: {checkpoint_ref}")
+        available_checkpoints = [
+          f"{checkpoint_ref.run_id}@{row.epoch_num}"
+          for row in session.query(log_database.Checkpoint.epoch_num)
+          .join(log_database.CheckpointModelData)
+          .filter(log_database.Checkpoint.run_id == str(checkpoint_ref.run_id))
+          .order_by(log_database.Checkpoint.epoch_num)
+        ]
+        raise ValueError(
+          f"Checkpoint not found: {checkpoint_ref}. "
+          f"Available checkpoints: {available_checkpoints}"
+        )
 
       checkpoint = checkpoints.Checkpoint(
         run_id=run_id_lib.RunId.FromString(checkpoint_entry.run_id),
@@ -313,7 +323,7 @@ class Logger(object):
     return checkpoint
 
   def GetParameters(self, run_id: run_id_lib.RunId) -> pd.DataFrame:
-    self._writer.Flush()
+    self.Flush()
     return self.db.GetRunParameters(run_id)
 
   def Session(self) -> log_database.Database.SessionType:
@@ -321,8 +331,12 @@ class Logger(object):
 
     This flushes the current write buffer before creating the session.
     """
-    self._writer.Flush()
+    self.Flush()
     return self._writer.db.Session()
+
+  def Flush(self) -> None:
+    """Flush the current write buffer and block until completion."""
+    self._writer.Flush()
 
   @classmethod
   def FromFlags(cls, ctx: progress.ProgressContext = progress.NullContext):

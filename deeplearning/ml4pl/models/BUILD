@@ -266,6 +266,7 @@ py_test(
         ":batch",
         ":classifier_base",
         ":epoch",
+        ":log_analysis",
         ":log_database",
         ":run",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
