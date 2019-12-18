@@ -87,6 +87,7 @@ def node_classification_graph_db(
       node_y_dimensionality=node_y_dimensionality,
       node_x_dimensionality=2,
       graph_y_dimensionality=0,
+      split_count=3,
     )
     yield db
 
@@ -110,6 +111,7 @@ def graph_classification_graph_db(
       node_y_dimensionality=0,
       graph_x_dimensionality=2,
       graph_y_dimensionality=graph_y_dimensionality,
+      split_count=3,
     )
     yield db
 
