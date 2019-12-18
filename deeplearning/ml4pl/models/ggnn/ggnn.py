@@ -252,8 +252,11 @@ class Ggnn(classifier_base.ClassifierBase):
     # Discard single-graph batches during training when there are graph
     # features. This is because we use batch normalization on incoming features,
     # and batch normalization requires > 1 items to normalize.
-    if (len(graphs) <= 1 and epoch_type == epoch.Type.TRAIN and
-        disjoint_graph.graph_x_dimensionality):
+    if (
+      len(graphs) <= 1
+      and epoch_type == epoch.Type.TRAIN
+      and disjoint_graph.graph_x_dimensionality
+    ):
       return batches.EmptyBatch()
 
     return batches.Data(
@@ -407,7 +410,10 @@ class Ggnn(classifier_base.ClassifierBase):
 
     # maybe fetch more inputs.
     if disjoint_graph.has_graph_y:
-      assert (epoch_type != epoch.Type.TRAIN or disjoint_graph.disjoint_graph_count > 1), f"graph_count is {disjoint_graph.disjoint_graph_count}"
+      assert (
+        epoch_type != epoch.Type.TRAIN
+        or disjoint_graph.disjoint_graph_count > 1
+      ), f"graph_count is {disjoint_graph.disjoint_graph_count}"
       num_graphs = torch.tensor(disjoint_graph.disjoint_graph_count).to(
         self.dev, torch.long
       )
