@@ -1,9 +1,9 @@
-"""Unit tests for //deeplearning/ml4pl/graphs/unlabelled/cfg:llvm_util."""
+"""Unit tests for //deeplearning/ml4pl/graphs/unlabelled/llvm2graph/cfg:llvm_util."""
 import pyparsing
 import pytest
 
 from compilers.llvm import opt
-from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
+from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import llvm_util
 from labm8.py import app
 from labm8.py import test
 

@@ -1,5 +1,6 @@
 """LLVM Call Graphs."""
 import typing
+from typing import List
 
 import networkx as nx
 import pydot
@@ -42,7 +43,7 @@ def CallGraphFromDotSource(dot_source: str) -> nx.MultiDiGraph:
   # node, is the name of a function.
   node_name_to_label = {}
 
-  nodes_to_delete = []
+  nodes_to_delete: List[str] = []
 
   for node, data in graph.nodes(data=True):
     if "label" not in data:
@@ -64,13 +65,11 @@ def CallGraphFromDotSource(dot_source: str) -> nx.MultiDiGraph:
   return graph
 
 
-def CallGraphToFunctionCallCounts(
-  call_graph: nx.MultiDiGraph,
-) -> typing.Dict[str, int]:
+def CallGraphToFunctionCallCounts(g: nx.MultiDiGraph,) -> typing.Dict[str, int]:
   """Build a table of call counts for each function.
 
   Args:
-    call_graph: A call graph, such as produced by LLVM's -dot-callgraph pass.
+    g: A call graph, such as produced by LLVM's -dot-callgraph pass.
       See CallGraphFromDotSource().
 
   Returns:
@@ -80,9 +79,9 @@ def CallGraphToFunctionCallCounts(
   """
   # Initialize the call count table with an entry for each function, except
   # the magic "external node" entry produced by LLVM's -dot-callgraph pass.
-  function_names = [n for n in call_graph.nodes if n != "external node"]
-  call_counts = {n: 0 for n in function_names}
-  for src, dst, _ in call_graph.edges:
-    if src != "external node":
-      call_counts[dst] += 1
-  return call_counts
+  function_names = [n for n in g.nodes if n != "external node"]
+  return {
+    # Use the indegree, subtracting one for the call from "external node".
+    n: g.in_degree(n) - 1
+    for n in function_names
+  }

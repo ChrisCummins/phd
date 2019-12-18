@@ -8,7 +8,9 @@ import pydot
 import pyparsing
 
 from compilers.llvm import opt_util
-from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph as cfg
+from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import (
+  control_flow_graph as cfg,
+)
 from labm8.py import app
 from labm8.py import humanize
 

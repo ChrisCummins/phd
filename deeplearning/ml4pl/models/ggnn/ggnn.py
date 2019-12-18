@@ -181,7 +181,7 @@ class Ggnn(classifier_base.ClassifierBase):
       has_graph_labels=self.graph_db.graph_y_dimensionality > 0,
     )
 
-    inst2vec_embeddings = node_encoder.GraphEncoder().embeddings_tables[0]
+    inst2vec_embeddings = node_encoder.GraphNodeEncoder().embeddings_tables[0]
     inst2vec_embeddings = torch.from_numpy(
       np.array(inst2vec_embeddings, dtype=np.float32)
     )

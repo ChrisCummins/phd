@@ -1,4 +1,4 @@
-# Data for graph regression tests.
+# Bytecode files regression tests of graph construction.
 
 filegroup(
     name = "bytecodes",

@@ -99,3 +99,29 @@ def GetLlvmStatementDefAndUses(
     tokens.append("".join(last_token))
 
   return destination.strip(), tokens
+
+
+def GetCalledFunctionName(statement) -> typing.Optional[str]:
+  """Get the name of a function called in the statement."""
+  if "call " not in statement:
+    return None
+  # Try and resolve the call destination.
+  _, m_glob, _, _ = inst2vec_preprocess.get_identifiers_from_line(statement)
+  if not m_glob:
+    return None
+  return m_glob[0][1:]  # strip the leading '@' character
+
+
+def FindCallSites(graph, source_function, destination_function):
+  """Find the statements in function that call another function."""
+  call_sites = []
+  for node, data in StatementNodeIterator(graph):
+    if data["function"] != source_function:
+      continue
+    statement = data.get("original_text", data["text"])
+    called_function = GetCalledFunctionName(statement)
+    if not called_function:
+      continue
+    if called_function == destination_function:
+      call_sites.append(node)
+  return call_sites

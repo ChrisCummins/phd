@@ -71,24 +71,6 @@ class ControlFlowGraph(nx.DiGraph):
   def __init__(self, name: str = "cfg"):
     super(ControlFlowGraph, self).__init__(name=name)
 
-  def ToSuccessorsString(self) -> str:
-    """Format graph as a sequence of node descendants lists."""
-    ret = []
-    nodes = sorted(self.nodes(data=True), key=lambda n: n[1]["name"])
-    for index, node in nodes:
-      descendants = [self.nodes[n]["name"] for n in nx.descendants(self, index)]
-      ret.append(f"{node['name']}: {' '.join(sorted(descendants))}")
-    return "\n".join(ret)
-
-  def ToNeighborsString(self) -> str:
-    """Format graph as a sequence of node neighbor lists."""
-    ret = []
-    nodes = sorted(self.nodes(data=True), key=lambda n: n[1]["name"])
-    for index, node in nodes:
-      descendants = [self.nodes[n]["name"] for n in nx.neighbors(self, index)]
-      ret.append(f"{node['name']}: {' '.join(sorted(descendants))}")
-    return "\n".join(ret)
-
   def ValidateControlFlowGraph(self, strict: bool = True) -> "ControlFlowGraph":
     """Determine if the graph is a valid control flow graph.
 
