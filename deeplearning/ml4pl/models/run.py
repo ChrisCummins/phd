@@ -271,9 +271,13 @@ class Train(progress.Progress):
       )
       self.ctx.Log(
         1,
-        "Restoring model to best validation results at %s: %s",
-        checkpoint,
-        best_epoch,
+        "Restoring model to best validation results at epoch %s "
+        "(val accuracy %.4f%%, precision %.3f, recall %.3f, f1 %.3f)",
+        best_epoch["epoch_num"],
+        best_epoch["val_accuracy"] * 100,
+        best_epoch["val_precision"],
+        best_epoch["val_recall"],
+        best_epoch["val_f1"],
       )
       self.model.RestoreFrom(checkpoint)
       self.RunEpoch(epoch.Type.TEST, self.MakeBatchIterator(epoch.Type.TEST))
