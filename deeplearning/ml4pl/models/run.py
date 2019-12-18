@@ -359,9 +359,14 @@ class TrainValTestLoop(progress.Progress):
     self, epoch_type: epoch.Type, batch_iterator: batchs.BatchIterator,
   ) -> Tuple[epoch.Results, int]:
     """Run an epoch of the given type."""
+    # Preemptively bump the epoch number if we are in a training epoch.
+    epoch_num = (
+      self.model.epoch_num + 1
+      if epoch_type == epoch.Type.TRAIN
+      else self.model.epoch_num
+    )
     epoch_name = (
-      f"{epoch_type.name.lower():>5} "
-      f"[{self.model.epoch_num:3d} / {self.ctx.n:3d}]"
+      f"{epoch_type.name.lower():>5} [{epoch_num:3d} / {self.ctx.n:3d}]"
     )
     return RunEpoch(
       epoch_name=epoch_name,
