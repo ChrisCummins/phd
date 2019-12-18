@@ -28,6 +28,17 @@ from labm8.py import progress
 
 FLAGS = app.FLAGS
 
+app.DEFINE_float(
+  "label_conv_threshold",
+  0.995,
+  "convergence interval: fraction of labels that need to be stable",
+)
+app.DEFINE_integer(
+  "label_conv_stable_steps",
+  1,
+  "required number of consecutive steps within the convergence interval"
+)
+
 app.DEFINE_boolean(
   "cuda", True, "Use cuda if available? CPU-only mode otherwise."
 )
@@ -417,7 +428,7 @@ class Ggnn(classifier_base.ClassifierBase):
 
 
 
-    logits, accuracy, logits, correct, targets, graph_features = outputs
+    logits, accuracy, logits, correct, targets, graph_features, *unroll_stats = outputs
 
     loss = self.model.loss((logits, graph_features), targets)
 
@@ -444,9 +455,8 @@ class Ggnn(classifier_base.ClassifierBase):
     # will change this value.
     learning_rate = self.model.config.lr
 
-    # TODO(github.com/ChrisCummins/ProGraML/issues/27): Set these.
-    model_converged = False
-    iteration_count = time_steps_cpu
+    model_converged = unroll_stats[1] if unroll_stats else False
+    iteration_count = unroll_stats[0] if unroll_stats else time_steps_cpu 
 
     loss_value = loss.item()
     assert not np.isnan(loss_value), loss

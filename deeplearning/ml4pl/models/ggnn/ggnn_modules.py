@@ -29,6 +29,9 @@ class GGNNModel(nn.Module):
     self.node_embeddings = NodeEmbeddings(config, pretrained_embeddings)
     self.ggnn = GGNNProper(config)
     self.nodewise_readout = NodewiseReadout(config)
+    # make readout available to label_convergence tests in GGNN Proper (at runtime)
+    if self.config.unroll_strategy == 'label_convergence':
+      self.ggnn.nodewise_readout = self.nodewise_readout
 
     self.graphlevel_readout = None
     if config.has_graph_labels:
@@ -62,7 +65,7 @@ class GGNNModel(nn.Module):
       test_time_steps=None,
   ):
     raw_in = self.node_embeddings(vocab_ids, selector_ids)
-    raw_out, raw_in = self.ggnn(
+    raw_out, raw_in, *unroll_stats = self.ggnn(
       edge_lists, raw_in, pos_lists, test_time_steps
     )  # OBS! self.ggnn might change raw_in inplace, so use the two outputs
     # instead!
@@ -77,7 +80,7 @@ class GGNNModel(nn.Module):
     # accuracy, pred_targets, correct, targets
     metrics_tuple = self.metrics(prediction, labels)
 
-    outputs = (prediction, ) + metrics_tuple + (graph_features, )
+    outputs = (prediction, ) + metrics_tuple + (graph_features, ) + tuple(unroll_stats)
 
     return outputs
 
@@ -223,6 +226,8 @@ class GGNNProper(nn.Module):
     self.test_layer_timesteps = config.test_layer_timesteps
     self.unroll_strategy = config.unroll_strategy
     self.max_timesteps = config.max_timesteps
+    self.label_conv_threshold = config.label_conv_threshold
+    self.label_conv_stable_steps = config.label_conv_stable_steps
 
     self.message = nn.ModuleList()
     for i in range(len(self.layer_timesteps)):
@@ -248,7 +253,8 @@ class GGNNProper(nn.Module):
       assert test_time_steps is not None, f"You need to pass test_time_steps or not use unroll_strategy '{self.unroll_strategy}''"
       layer_timesteps = [min(test_time_steps, self.max_timesteps)]
     elif self.unroll_strategy == 'label_convergence':
-      raise NotImplementedError
+      node_states, unroll_steps, converged = self.label_conv_forward(edge_lists, node_states, pos_lists, initial_node_states=old_node_states)
+      return node_states, old_node_states, unroll_steps, converged
 
     if self.backward_edges:
       back_edge_lists = [x.flip([1]) for x in edge_lists]
@@ -260,6 +266,45 @@ class GGNNProper(nn.Module):
         node_states = self.update[layer_idx](messages, node_states)
     return node_states, old_node_states
 
+  def label_conv_forward(self, edge_lists, node_states, pos_lists, initial_node_states):
+    assert len(self.layer_timesteps) == 1, f"Label convergence only supports one-layer GGNNs, but {len(self.layer_timesteps)} are configured in layer_timesteps: {self.layer_timesteps}"
+    assert self.nodewise_readout is not None
+
+    if self.backward_edges:
+      back_edge_lists = [x.flip([1]) for x in edge_lists]
+      edge_lists.extend(back_edge_lists)
+
+    stable_steps, i = 0, 0
+    old_tentative_labels = self.tentative_labels(initial_node_states, node_states)
+
+    while True:
+      messages = self.message[0](edge_lists, node_states, pos_lists)
+      node_states = self.update[0](messages, node_states)
+      new_tentative_labels = self.tentative_labels(initial_node_states, node_states)
+      i += 1
+
+      # return the new node states if their predictions match the old node states' predictions.
+      # It doesn't matter during testing since the predictions are the same anyway.
+      stability = (new_tentative_labels == old_tentative_labels).to(dtype=torch.get_default_dtype()).mean()
+      if stability >= self.label_conv_threshold:
+        stable_steps += 1
+
+      if stable_steps >= self.label_conv_stable_steps:
+        return node_states, i, True
+
+      if i >= self.max_timesteps: # maybe escape
+        return node_states, i, False
+
+      old_tentative_labels = new_tentative_labels
+
+    raise ValueError("Serious Design Error: Unreachable code!")
+
+  def tentative_labels(self, initial_node_states, node_states):
+    assert self.nodewise_readout is not None
+    logits = self.nodewise_readout(initial_node_states, node_states)
+    preds = F.softmax(logits, dim=1)
+    predicted_labels = torch.argmax(preds, dim=1)
+    return predicted_labels
 
 class MessagingLayer(nn.Module):
   """takes an edge_list (for a single edge type) and node_states <N, D+S> and
@@ -296,7 +341,7 @@ class MessagingLayer(nn.Module):
 
     if self.pos_transform:
       pos_gating = 2 * torch.sigmoid(self.pos_transform(self.position_embs))
-      
+
     # all edge types are handled in one matrix, but we
     # let propagated_states[i] be equal to the case with only edge_type i
     propagated_states = (self.transform(node_states).transpose(0, 1).view(
@@ -312,22 +357,15 @@ class MessagingLayer(nn.Module):
     for i, (edge_list, pos_list) in enumerate(zip(edge_lists, pos_lists)):
       edge_targets = edge_list[:, 1]
       edge_sources = edge_list[:, 0]
-      # TODO(github.com/ChrisCummins/ProGraML/issues/27): transform all
-      # node_states? maybe wasteful, maybe MUCH better than propagating them
-      # after the embedding lookup (except if graph is super sparse
-      # (per edge_type)).
-      # TODO(github.com/ChrisCummins/ProGraML/issues/30): with edge positions,
-      # we can do better by distribution rule: A (h + p) = Ah + Ap, so the
-      # position table can be multiplied before addition as well.
-      # TODO(github.com/ChrisCummins/ProGraML/issues/30): with "fancy" mode,
-      # anyway it's just another edge type
+
       messages_by_source = F.embedding(edge_sources, propagated_states[i].transpose(0, 1))
+
       if self.pos_transform:
         pos_by_source = F.embedding(pos_list, pos_gating)
         messages_by_source.mul_(pos_by_source)
 
       messages_by_targets.index_add_(0, edge_targets, messages_by_source)
-      
+
       if self.msg_mean_aggregation:
         bins = edge_targets.bincount(minlength=node_states.size()[0])
         bincount += bins
