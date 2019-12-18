@@ -287,7 +287,9 @@ class TrainValTestLoop(progress.Progress):
 
     if self.min_val_acc and val_results.accuracy >= self.min_val_acc:
       app.Log(
-        1, "Stopping after reaching validation accuracy %f", self.min_val_acc
+        1,
+        "Stopping after reaching validation accuracy %f%%",
+        val_results.accuracy * 100,
       )
       return True
 
