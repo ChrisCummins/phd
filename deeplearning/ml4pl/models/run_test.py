@@ -2,6 +2,7 @@
 import copy
 import random
 from typing import Iterable
+from typing import List
 from typing import Tuple
 
 import numpy as np
@@ -27,44 +28,19 @@ FLAGS = test.FLAGS
 ###############################################################################
 
 
-@test.Fixture(
-  scope="session",
-  params=((0, 2), (0, 3), (2, 0), (10, 0)),
-  names=("node_y=2", "node_y=3", "graph_y=2", "graph_y=10"),
-)
-def y_dimensionalities(request) -> Tuple[int, int]:
-  """A test fixture which enumerates node and graph label dimensionalities.
-
-  We are interested in testing the following setups:
-    * Binary node classification.
-    * Multi-class node classification.
-    * Binary graph classification.
-    * Multi-class graph classification.
-  """
-  return request.param
-
-
-@test.Fixture(
-  scope="session",
-  params=testing_databases.GetDatabaseUrls(),
-  namer=testing_databases.DatabaseUrlNamer("graph_db"),
-)
-def graph_db(
-  request, y_dimensionalities: Tuple[int, int],
-) -> graph_tuple_database.Database:
-  """A test fixture which enumerates session-level graph databases."""
-  node_y_dimensionality, graph_y_dimensionality = y_dimensionalities
-
+@test.Fixture(scope="session")
+def graph_db() -> graph_tuple_database.Database:
+  """A test fixture which creates a session-level graph database."""
   with testing_databases.DatabaseContext(
-    graph_tuple_database.Database, request.param
+    graph_tuple_database.Database, testing_databases.GetDatabaseUrls()[0]
   ) as db:
     random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
       db,
-      graph_count=100,
+      graph_count=20,
       node_x_dimensionality=2,
-      node_y_dimensionality=node_y_dimensionality,
+      node_y_dimensionality=0,
       graph_x_dimensionality=2,
-      graph_y_dimensionality=graph_y_dimensionality,
+      graph_y_dimensionality=2,
       with_data_flow=False,
       split_count=3,
     )
@@ -174,23 +150,31 @@ class MockModel(classifier_base.ClassifierBase):
 ###############################################################################
 
 
-@test.Parametrize("epoch_count", (1, 5), names=["1_epoch", "5_epochs"])
+@test.Parametrize("epoch_count", (1, 5), namer=lambda x: f"epoch_count={x}")
 @test.Parametrize("k_fold", (False, True), names=["one_run", "k_fold"])
 @test.Parametrize(
   "run_with_memory_profiler",
   (False, True),
-  names=("memprof=false", "memprof=true"),
+  names=("no_memprof", "with_memprof"),
 )
 @test.Parametrize(
-  "test_on", ("best", "none", "every", "improvement", "improvement_and_last")
+  "test_on",
+  ("best", "none", "every", "improvement", "improvement_and_last"),
+  namer=lambda x: f"test_on={x}",
 )
-def test_Run_with_mock_module(
+@test.Parametrize(
+  "stop_at",
+  (["val_acc=.6"], ["time=200"], ["patience=5"]),
+  namer=lambda x: f"stop_at={','.join(x)}",
+)
+def test_Run(
   disposable_log_db: log_database.Database,
   graph_db: graph_tuple_database.Database,
   epoch_count: int,
   k_fold: bool,
   run_with_memory_profiler: bool,
   test_on: str,
+  stop_at: List[str],
 ):
   """Test the run.Run() method."""
   log_db = disposable_log_db
@@ -206,6 +190,7 @@ def test_Run_with_mock_module(
   FLAGS.k_fold = k_fold
   FLAGS.run_with_memory_profiler = run_with_memory_profiler
   FLAGS.test_on = test_on
+  FLAGS.stop_at = stop_at
 
   run.Run(MockModel)
 
@@ -217,8 +202,9 @@ def test_Run_with_mock_module(
     logs = log_analysis.RunLogAnalyzer(log_db=log_db, run_id=run_id)
     epochs = logs.tables["epochs"]
 
-    # Check that we performed as many epochs as expected.
-    assert len(epochs) == epoch_count
+    # Check that we performed as many epochs as expected. We can't check the
+    # exact value because of --stop_at options.
+    assert 1 <= len(epochs) <= epoch_count
 
     test_count = len(epochs[epochs["test_accuracy"].notnull()])
 

@@ -5,6 +5,7 @@ of a machine learning model.
 """
 import copy
 import sys
+import time
 import warnings
 from typing import Dict
 from typing import List
@@ -64,11 +65,19 @@ app.DEFINE_boolean(
   "If this flag is set, only a single pass of the test set is ran.",
 )
 app.DEFINE_integer("epoch_count", 300, "The number of epochs to train for.")
-app.DEFINE_integer(
-  "patience",
-  300,
-  "The number of epochs to train for without any improvement in validation "
-  "accuracy before stopping.",
+app.DEFINE_list(
+  "stop_at",
+  [],
+  "Permit the train/val/test loop to terminate before epoch_count iterations "
+  "have completed. Valid options are: val_acc=<float> (stop if validation "
+  "accuracy reaches the given value in the range [0,1]), elapsed=<int> (stop "
+  "if the given number of seconds have elapsed, excluding the final test epoch "
+  "if --test_on=best is set), or patience=<int> (stop if <int> epochs have "
+  "been performed without an improvement in validation accuracy. Multiple "
+  "options can be combined in a comma-separated list, e.g. "
+  "--stop_at=val_acc=.9999,elapsed=21600,patience=10 meaning stop if "
+  "validation accuracy meets 99.99% or if 6 hours have elapsed or if 10 epochs "
+  "have been performed without an improvement in validation accuracy.",
 )
 app.DEFINE_list(
   "val_split",
@@ -167,7 +176,7 @@ def RunEpoch(
   return results, improved
 
 
-class Train(progress.Progress):
+class TrainValTestLoop(progress.Progress):
   """A training job. This implements train/val/test schedule."""
 
   def __init__(
@@ -177,11 +186,22 @@ class Train(progress.Progress):
     logger: logger_lib.Logger,
     splits: Dict[epoch.Type, List[int]],
   ):
+    """Constructor.
+
+    Args:
+      model: A model instance to run the train/val/test loop over.
+      graph_db: The graph database to read inputs from.
+      logger: A logger to write logs to.
+      splits: A mapping from epoch type to a list of splits for that epoch.
+
+    Raises:
+      UsageError: If any of the flag values are invalid.
+    """
     self.model = model
     self.graph_db = graph_db
     self.logger = logger
     self.splits = splits
-    super(Train, self).__init__(
+    super(TrainValTestLoop, self).__init__(
       str(self.model.run_id),
       i=self.model.epoch_num,
       n=FLAGS.epoch_count,
@@ -190,6 +210,28 @@ class Train(progress.Progress):
       leave=False,
     )
     self.logger.ctx = self.ctx
+
+    # Determine the conditions under which the model will exit early.
+    self.end_time = 0
+    self.min_val_acc = 0
+    self.patience = 0
+    for stop_at in FLAGS.stop_at:
+      try:
+        if stop_at == "epoch_count":
+          # epoch_count is always set.
+          pass
+        elif stop_at.startswith("time="):
+          # Stop after a maximum number of seconds.
+          max_seconds = int(stop_at[len("time=") :])
+          self.end_time = time.time() + max_seconds
+        elif stop_at.startswith("val_acc="):
+          self.min_val_acc = float(stop_at[len("val_acc=") :])
+        elif stop_at.startswith("patience="):
+          self.patience = int(stop_at[len("patience=") :])
+        else:
+          raise app.UsageError(f"Unknown --stop_at option: {stop_at}")
+      except ValueError:
+        raise app.UsageError(f"Failed to parse --stop_at option: {stop_at}")
 
   def MakeBatchIterator(self, epoch_type: epoch.Type) -> batchs.BatchIterator:
     """Construct a batch iterator."""
@@ -201,8 +243,9 @@ class Train(progress.Progress):
       ctx=self.ctx,
     )
 
-  def RunOneEpoch(self, test_on: str, save_on) -> None:
-    """Inner loop to run a single train/val/test epoch.
+  def RunOneEpoch(self, test_on: str, save_on) -> epoch.Results:
+    """Inner loop to run a single train/val/test epoch and return the
+    validation score.
     """
     # Create both training and validation batch iterators ahead of time to start
     # asynchronously constructing batches. The testing iterator must be produced
@@ -234,23 +277,53 @@ class Train(progress.Progress):
     if test_on == "every":
       self.RunEpoch(epoch.Type.TEST, test_batches)
 
+    return val_results
+
+  def ShouldExitEarly(self, val_results: epoch.Results) -> bool:
+    """Determine whether to stop early."""
+    if self.end_time and time.time() > self.end_time:
+      app.Log(1, "Stopping after reaching time limit")
+      return True
+
+    if self.min_val_acc and val_results.accuracy >= self.min_val_acc:
+      app.Log(
+        1, "Stopping after reaching validation accuracy %f", self.min_val_acc
+      )
+      return True
+
+    if self.patience and (
+      (self.ctx.i - self.model.best_results[epoch.Type.VAL].epoch_num)
+      >= self.patience
+    ):
+      app.Log(
+        1,
+        "Stopping after %s epochs without an improvement in "
+        "validation accuracy",
+        self.patience,
+      )
+      return True
+    return False
+
   def Run(self):
     """Run the train/val/test loop."""
     test_on = FLAGS.test_on
-
     save_on = FLAGS.save_on()
 
+    # Run the train/val/test loop.
     for self.ctx.i in range(self.ctx.i, self.ctx.n):
-      self.RunOneEpoch(test_on, save_on)
+      val_results = self.RunOneEpoch(test_on, save_on)
+      if self.ShouldExitEarly(val_results):
+        break
 
     # Record the final epoch.
-    self.ctx.i += 1
+    self.ctx.i = self.ctx.n
 
     if FLAGS.test_on == "best":
-      # If training on the best results, restore the model to the state of the
+      # If training on the best result, restore the model to the state of the
       # best epoch.
 
-      # Flush the logger before using the log database.
+      # Flush the logger before using the log database to make sure that all
+      # results have been written.
       self.logger.Flush()
 
       # Get the per-epoch summary table of model results.
@@ -391,7 +464,7 @@ def RunOne(
         logger=logger,
       )
     else:
-      train = Train(
+      train = TrainValTestLoop(
         model=model, graph_db=graph_db, logger=logger, splits=splits
       )
       progress.Run(train)
