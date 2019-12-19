@@ -150,7 +150,6 @@ class MockModel(classifier_base.ClassifierBase):
 ###############################################################################
 
 
-@test.Parametrize("epoch_count", (1, 5), namer=lambda x: f"epoch_count={x}")
 @test.Parametrize("k_fold", (False, True), names=["one_run", "k_fold"])
 @test.Parametrize(
   "run_with_memory_profiler",
@@ -170,7 +169,6 @@ class MockModel(classifier_base.ClassifierBase):
 def test_Run(
   disposable_log_db: log_database.Database,
   graph_db: graph_tuple_database.Database,
-  epoch_count: int,
   k_fold: bool,
   run_with_memory_profiler: bool,
   test_on: str,
@@ -186,7 +184,7 @@ def test_Run(
   FLAGS.log_db = flags_parsers.DatabaseFlag(
     log_database.Database, log_db.url, must_exist=True
   )
-  FLAGS.epoch_count = epoch_count
+  FLAGS.epoch_count = 3
   FLAGS.k_fold = k_fold
   FLAGS.run_with_memory_profiler = run_with_memory_profiler
   FLAGS.test_on = test_on
@@ -218,6 +216,42 @@ def test_Run(
       assert test_count >= 1
     elif test_on == "improvement_and_last":
       assert test_count >= 1
+
+
+@test.Parametrize("k_fold", (False, True), names=["one_run", "k_fold"])
+def test_Run_test_only(
+  disposable_log_db: log_database.Database,
+  graph_db: graph_tuple_database.Database,
+  k_fold: bool,
+):
+  """Test the run.Run() method."""
+  log_db = disposable_log_db
+
+  # Set the flags that determine the behaviour of Run().
+  FLAGS.graph_db = flags_parsers.DatabaseFlag(
+    graph_tuple_database.Database, graph_db.url, must_exist=True
+  )
+  FLAGS.log_db = flags_parsers.DatabaseFlag(
+    log_database.Database, log_db.url, must_exist=True
+  )
+  FLAGS.test_only = True
+  FLAGS.k_fold = k_fold
+
+  run.Run(MockModel)
+
+  # Test that k-fold produces multiple runs.
+  assert log_db.run_count == graph_db.split_count if k_fold else 1
+
+  run_ids = log_db.run_ids
+  for run_id in run_ids:
+    logs = log_analysis.RunLogAnalyzer(log_db=log_db, run_id=run_id)
+    epochs = logs.tables["epochs"]
+
+    # Check that we performed as many epochs as expected.
+    assert 1 == len(epochs)
+    test_count = len(epochs[epochs["test_accuracy"].notnull()])
+    # Check that we produced a test result.
+    assert test_count == 1
 
 
 if __name__ == "__main__":

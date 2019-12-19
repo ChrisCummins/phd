@@ -1138,8 +1138,9 @@ class Database(sqlutil.Database):
 
       for run_id in set(per_epoch_df["run_id"].values):
         run_df = per_epoch_df[per_epoch_df["run_id"] == run_id]
+
         for epoch_num in set(run_df["epoch_num"].values):
-          row = {"run_id": run_id, "epoch_num": epoch_num}
+          row = {"run_id": run_id, "epoch_num": epoch_num, "timestamp": None}
           for flag in extra_flag_names:
             row[flag] = extra_flags[flag].get(run_id)
 
@@ -1149,10 +1150,17 @@ class Database(sqlutil.Database):
               & (run_df["epoch_type"] == epoch_type)
             ]
 
-            if not i:
-              row["timestamp"] = min(epoch_df["timestamp"].values)
+            if not len(epoch_df):
+              continue
 
-            # Sanity check that we have exctly one epoch.
+            # Set the timestamp to the first recorded result.
+            timestamp = min(epoch_df["timestamp"].values)
+            if row["timestamp"]:
+              row["timestamp"] = min(row["timestamp"], timestamp)
+            else:
+              row["timestamp"] = timestamp
+
+            # Sanity check that we have selected exactly one epoch.
             if len(epoch_df) == 1:
               for column in epoch_type_columns:
                 row[f"{epoch_type.name.lower()}_{column}"] = epoch_df.iloc[0][

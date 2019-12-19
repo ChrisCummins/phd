@@ -165,9 +165,7 @@ def RunEpoch(
       f"{results.ToFormattedString(model.best_results[epoch_type].results)}"
     )
 
-  with prof.Profile(
-    lambda t: GetEpochLabel(results), print_to=logger.ctx.print
-  ):
+  with logger.ctx.Profile(2, lambda t: GetEpochLabel(results)):
     results = model(epoch_type, batch_iterator, logger)
 
   # Check if the model has improved.
@@ -260,9 +258,15 @@ class TrainValTestLoop(progress.Progress):
     train_results, _ = self.RunEpoch(epoch.Type.TRAIN, train_batches)
     val_results, val_improved = self.RunEpoch(epoch.Type.VAL, val_batches)
 
-    if val_improved and (
+    if test_on == "improvement" and self.ctx.i == 0:
+      # We always test on the first epoch when "improvement" is set, even if
+      # there wasn't an improvement. Otherwise, a model would never be tested
+      # if it never reaches > 0 accuracy
+      self.RunEpoch(epoch.Type.TEST, self.MakeBatchIterator(epoch.Type.TEST))
+    elif val_improved and (
       test_on == "improvement" or test_on == "improvement_and_last"
     ):
+      # Test on improvement.
       self.RunEpoch(epoch.Type.TEST, self.MakeBatchIterator(epoch.Type.TEST))
     elif test_on == "improvement_and_last" and self.ctx.i == self.ctx.n - 1:
       self.RunEpoch(epoch.Type.TEST, self.MakeBatchIterator(epoch.Type.TEST))
@@ -328,31 +332,12 @@ class TrainValTestLoop(progress.Progress):
       # results have been written.
       self.logger.Flush()
 
-      # Get the per-epoch summary table of model results.
-      tables = {
-        name: df
-        for name, df in self.logger.db.GetTables(run_ids=[self.model.run_id])
-      }
-      # Select the epoch with the best validation accuracy.
-      epochs = tables["epochs"][tables["epochs"]["val_accuracy"].notnull()]
-      if not len(epochs):
-        raise ValueError("No epochs found!")
-      best_epoch_idx = epochs["val_accuracy"].idxmax()
-      best_epoch = epochs.iloc[best_epoch_idx]
-
       # Restore the model to the state at the best validation accuracy.
       checkpoint = checkpoints.CheckpointReference(
-        run_id=self.model.run_id, epoch_num=best_epoch["epoch_num"]
+        run_id=self.model.run_id, epoch_num=None
       )
       self.ctx.Log(
-        1,
-        "Restoring model to best validation results at epoch %s "
-        "(val accuracy %.4f%%, precision %.3f, recall %.3f, f1 %.3f)",
-        best_epoch["epoch_num"],
-        best_epoch["val_accuracy"] * 100,
-        best_epoch["val_precision"],
-        best_epoch["val_recall"],
-        best_epoch["val_f1"],
+        1, "Restoring model to best validation results",
       )
       self.model.RestoreFrom(checkpoint)
       self.RunEpoch(epoch.Type.TEST, self.MakeBatchIterator(epoch.Type.TEST))
@@ -427,7 +412,7 @@ def CreateModel(
       print_to=lambda msg: app.Log(2, msg),
     ):
       checkpoint_ref = checkpoints.CheckpointReference.FromString(
-        FLAGS.restore_model
+        FLAGS.restore_model, logger.db
       )
       model.RestoreFrom(checkpoint_ref)
   else:
@@ -491,8 +476,12 @@ def RunOne(
 
     epochs.reset_index(inplace=True)
 
+    # When running --test_only on a model without any training, we will have
+    # no validation results to return, so just return the first run.
+    if len(epochs) == 1:
+      return epochs.iloc[0]
+
     # Select the row with the greatest validation accuracy.
-    # TODO(github.com/ChrisCummins/ProGraML/issues/38): Find the memory leak.
     best_epoch = copy.deepcopy(epochs.loc[epochs["val_accuracy"].idxmax()])
     del epochs
 
@@ -566,7 +555,7 @@ class KFoldCrossValidation(progress.Progress):
     self.ctx.i += 1
 
     # If we got no results then there was an error during model runs.
-    if not results:
+    if not results or not any(x is not None for x in results):
       return
 
     # Concatenate each of the run results into a dataframe.
