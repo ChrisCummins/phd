@@ -4,7 +4,6 @@ import torch.nn.functional as F
 from torch import nn
 from torch import optim
 
-from deeplearning.ml4pl.models.ggnn import ggnn_config
 from labm8.py import app
 
 FLAGS = app.FLAGS

@@ -12,6 +12,7 @@ from labm8.py import bazelutil
 from labm8.py import decorators
 from labm8.py import test
 
+
 FLAGS = test.FLAGS
 
 NETWORKX_GRAPHS_ARCHIVE = bazelutil.DataArchive(

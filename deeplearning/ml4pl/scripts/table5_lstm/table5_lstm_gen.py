@@ -1,7 +1,7 @@
 import hashlib
 import itertools
-import os
 from pathlib import Path
+
 
 template_header = """#!/bin/bash
 #SBATCH --job-name=T5LM{idx:03d}

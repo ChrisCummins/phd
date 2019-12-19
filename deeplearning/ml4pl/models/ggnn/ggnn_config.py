@@ -1,4 +1,3 @@
-import enum
 from typing import List
 
 from labm8.py import app

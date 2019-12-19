@@ -23,6 +23,7 @@ from labm8.py import ppar
 from labm8.py import progress
 from labm8.py import sqlutil
 
+
 app.DEFINE_integer(
   "annotator_timeout",
   180,

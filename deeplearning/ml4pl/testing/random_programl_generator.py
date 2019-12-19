@@ -12,7 +12,6 @@ and prints it to stdout. Example usage:
 import pickle
 import random
 from typing import Iterable
-from typing import List
 from typing import Optional
 from typing import Set
 from typing import Tuple

@@ -3,7 +3,6 @@ import copy
 import enum
 from typing import Dict
 from typing import List
-from typing import Optional
 
 import numpy as np
 

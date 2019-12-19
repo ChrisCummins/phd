@@ -3,7 +3,6 @@ import typing
 
 import networkx as nx
 import numpy as np
-import pytest
 
 from compilers.llvm import clang
 from compilers.llvm import opt

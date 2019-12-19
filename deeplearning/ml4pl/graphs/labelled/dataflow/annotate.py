@@ -26,8 +26,6 @@ and text format protocol buffers:
 import signal
 import subprocess
 import sys
-from typing import Callable
-from typing import Dict
 from typing import List
 from typing import Union
 
@@ -48,6 +46,7 @@ from deeplearning.ml4pl.graphs.labelled.dataflow.subexpressions import (
 from deeplearning.ml4pl.testing import test_annotators
 from labm8.py import app
 from labm8.py import bazelutil
+
 
 app.DEFINE_boolean(
   "list", False, "If true, list the available analyses and exit."

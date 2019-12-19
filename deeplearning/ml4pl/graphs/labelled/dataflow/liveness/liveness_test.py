@@ -1,6 +1,4 @@
 """Unit tests for //deeplearning/ml4pl/graphs/labelled/dataflow/liveness."""
-import networkx as nx
-
 from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled.dataflow.liveness import liveness

@@ -14,7 +14,6 @@ from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.ir import ir_database
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models import run
-from deeplearning.ml4pl.models import schedules
 from deeplearning.ml4pl.models.ggnn import ggnn
 from deeplearning.ml4pl.models.lstm import lstm
 from deeplearning.ml4pl.models.zero_r import zero_r

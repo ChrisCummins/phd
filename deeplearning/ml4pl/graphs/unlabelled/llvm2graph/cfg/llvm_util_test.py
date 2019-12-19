@@ -1,6 +1,5 @@
 """Unit tests for //deeplearning/ml4pl/graphs/unlabelled/llvm2graph/cfg:llvm_util."""
 import pyparsing
-import pytest
 
 from compilers.llvm import opt
 from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import llvm_util

@@ -1,5 +1,4 @@
 """A gated graph neural network classifier."""
-import math
 import typing
 from typing import Callable
 from typing import Iterable
@@ -20,7 +19,6 @@ from deeplearning.ml4pl.models import batch as batches
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import run
-from deeplearning.ml4pl.models.ggnn import ggnn_config
 from deeplearning.ml4pl.models.ggnn.ggnn_config import GGNNConfig
 from deeplearning.ml4pl.models.ggnn.ggnn_modules import GGNNModel
 from labm8.py import app

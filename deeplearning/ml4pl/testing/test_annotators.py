@@ -4,7 +4,6 @@ import time
 from typing import Optional
 
 from deeplearning.ml4pl.graphs import programl
-from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled.dataflow import data_flow_graphs
 from labm8.py import app
 

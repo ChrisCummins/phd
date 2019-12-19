@@ -9,11 +9,10 @@ from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models import logger as logging
 from deeplearning.ml4pl.models.ggnn import ggnn
-from deeplearning.ml4pl.models.ggnn import ggnn_config
 from deeplearning.ml4pl.testing import random_graph_tuple_database_generator
 from deeplearning.ml4pl.testing import testing_databases
 from labm8.py import test
-from labm8.py.internal import flags_parsers
+
 
 FLAGS = test.FLAGS
 

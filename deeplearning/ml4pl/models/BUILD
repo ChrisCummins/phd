@@ -41,7 +41,6 @@ py_library(
         ":batch",
         ":classifier_base",
         ":epoch",
-        "//deeplearning/ml4pl/graphs/labelled:graph_database_reader",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//labm8/py:app",
         "//labm8/py:ppar",

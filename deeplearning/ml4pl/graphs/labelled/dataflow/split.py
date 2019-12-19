@@ -1,11 +1,6 @@
 """Split a labelled graph database into {train,val,test} sets."""
-from typing import List
-
-import numpy as np
 import sqlalchemy as sql
-from sklearn import model_selection
 
-from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.ir import ir_database
 from deeplearning.ml4pl.ir import split as ir_split

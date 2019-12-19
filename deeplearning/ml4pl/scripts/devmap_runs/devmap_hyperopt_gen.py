@@ -1,6 +1,5 @@
 import hashlib
 import itertools
-import os
 from pathlib import Path
 
 

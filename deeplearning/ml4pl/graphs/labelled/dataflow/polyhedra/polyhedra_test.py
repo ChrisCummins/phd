@@ -3,15 +3,13 @@ import typing
 
 import networkx as nx
 import numpy as np
-import pytest
 
 from compilers.llvm import clang
 from compilers.llvm import opt
 from deeplearning.ml4pl.graphs.labelled.dataflow.polyhedra import polyhedra
-from labm8.py import app
 from labm8.py import test
 
-FLAGS = app.FLAGS
+FLAGS = test.FLAGS
 
 
 class InputPair(typing.NamedTuple):
