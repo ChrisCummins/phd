@@ -93,17 +93,11 @@ def opencl_relpaths() -> List[str]:
   return list(set(opencl_df.relpath.values))
 
 
-@test.Fixture(
-  scope="session",
-  params=testing_databases.GetDatabaseUrls(),
-  namer=testing_databases.DatabaseUrlNamer("proto_db"),
-)
-def proto_db(
-  request, opencl_relpaths: List[str]
-) -> unlabelled_graph_database.Database:
+@test.Fixture(scope="session")
+def proto_db(opencl_relpaths: List[str]) -> unlabelled_graph_database.Database:
   """A test fixture which yields a proto database with 256 OpenCL entries."""
   with testing_databases.DatabaseContext(
-    unlabelled_graph_database.Database, request.param
+    unlabelled_graph_database.Database, testing_databases.GetDatabaseUrls()[0]
   ) as db:
     random_unlabelled_graph_database_generator.PopulateDatabaseWithTestSet(
       db, len(opencl_relpaths)
@@ -112,17 +106,13 @@ def proto_db(
     yield db
 
 
-@test.Fixture(
-  scope="session",
-  params=testing_databases.GetDatabaseUrls(),
-  namer=testing_databases.DatabaseUrlNamer("graph_db"),
-)
+@test.Fixture(scope="session")
 def graph_db(
-  request, opencl_relpaths: List[str], node_y_dimensionality: int,
+  opencl_relpaths: List[str], node_y_dimensionality: int,
 ) -> graph_tuple_database.Database:
   """A test fixture which yields a graph database with 100 real graphs."""
   with testing_databases.DatabaseContext(
-    graph_tuple_database.Database, request.param
+    graph_tuple_database.Database, testing_databases.GetDatabaseUrls()[0]
   ) as db:
     random_graph_tuple_database_generator.PopulateWithTestSet(
       db,

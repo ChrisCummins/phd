@@ -104,15 +104,11 @@ def opencl_relpaths() -> List[str]:
   return list(set(opencl_df.relpath.values))
 
 
-@test.Fixture(
-  scope="session",
-  params=testing_databases.GetDatabaseUrls(),
-  namer=testing_databases.DatabaseUrlNamer("ir_db"),
-)
-def ir_db(request, opencl_relpaths: List[str]) -> ir_database.Database:
+@test.Fixture(scope="session")
+def ir_db(opencl_relpaths: List[str]) -> ir_database.Database:
   """A test fixture which yields an IR database with 256 OpenCL entries."""
   with testing_databases.DatabaseContext(
-    ir_database.Database, request.param
+    ir_database.Database, testing_databases.GetDatabaseUrls()[0]
   ) as db:
     rows = []
     # Create IRs using OpenCL relpaths.
@@ -134,17 +130,13 @@ def ir_db(request, opencl_relpaths: List[str]) -> ir_database.Database:
     yield db
 
 
-@test.Fixture(
-  scope="session",
-  params=testing_databases.GetDatabaseUrls(),
-  namer=testing_databases.DatabaseUrlNamer("graph_db"),
-)
+@test.Fixture(scope="session")
 def graph_db(
-  request, opencl_relpaths: List[str], graph_y_dimensionality: int,
+  opencl_relpaths: List[str], graph_y_dimensionality: int,
 ) -> graph_tuple_database.Database:
   """A test fixture which yields a graph database with 256 OpenCL IR entries."""
   with testing_databases.DatabaseContext(
-    graph_tuple_database.Database, request.param
+    graph_tuple_database.Database, testing_databases.GetDatabaseUrls()[0]
   ) as db:
     random_graph_tuple_database_generator.PopulateWithTestSet(
       db,
