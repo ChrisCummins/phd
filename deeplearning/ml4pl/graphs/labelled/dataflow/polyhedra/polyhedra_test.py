@@ -53,6 +53,7 @@ def CSourceToInput(source: str) -> str:
   return bytecode
 
 
+@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/22)")
 def test_MakePolyhedralGraphs_invalid_bytecode():
   graph = nx.MultiDiGraph()
   bytecode = "invalid bytecode!"
@@ -60,6 +61,7 @@ def test_MakePolyhedralGraphs_invalid_bytecode():
     list(polyhedra.MakePolyhedralGraphs(bytecode))
 
 
+@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/22)")
 def test_MakePolyhedralGraphs_basic_gemm():
   # Snippet adapted from Polybench 4.2, gemm.c
   bytecode = CSourceToInput(

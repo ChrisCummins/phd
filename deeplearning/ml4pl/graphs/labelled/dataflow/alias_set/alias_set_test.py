@@ -56,6 +56,7 @@ def CSourceToInputPair(source: str) -> InputPair:
   return InputPair(graph=graph, bytecode=bytecode)
 
 
+@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/22)")
 def test_MakeAliasSetGraphs_invalid_bytecode():
   graph = nx.MultiDiGraph()
   bytecode = "invalid bytecode!"
@@ -63,6 +64,7 @@ def test_MakeAliasSetGraphs_invalid_bytecode():
     list(alias_set.MakeAliasSetGraphs(graph, bytecode))
 
 
+@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/22)")
 def test_MakeAliasSetGraphs_may_alias_set():
   # https://llvm.org/docs/AliasAnalysis.html
   input_pair = CSourceToInputPair(
@@ -91,6 +93,7 @@ void A() {
       assert np.array_equal(data["y"], [1, 0, 0])
 
 
+@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/22)")
 def test_MakeAliasSetGraphs_multiple_functions():
   """Test alias """
   # https://llvm.org/docs/AliasAnalysis.html
