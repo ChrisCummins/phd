@@ -3,7 +3,6 @@ import copy
 import random
 from typing import Iterable
 from typing import List
-from typing import Tuple
 
 import numpy as np
 
