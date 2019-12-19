@@ -49,7 +49,7 @@ app.DEFINE_float(
 app.DEFINE_integer(
   "label_conv_stable_steps",
   1,
-  "required number of consecutive steps within the convergence interval"
+  "required number of consecutive steps within the convergence interval",
 )
 
 app.DEFINE_boolean(
@@ -86,7 +86,7 @@ app.DEFINE_list(
   "test_layer_timesteps",
   ["0"],
   "Set when unroll_strategy is 'constant'. Assumes that the length <= len(layer_timesteps)."
-  "Unrolls the GGNN proper for a fixed number of timesteps during eval()."
+  "Unrolls the GGNN proper for a fixed number of timesteps during eval().",
 )
 
 app.DEFINE_boolean(
@@ -354,10 +354,7 @@ class Ggnn(classifier_base.ClassifierBase):
     return np.array([int(x) for x in FLAGS.layer_timesteps])
 
   def get_unroll_steps(
-    self,
-    epoch_type: epoch.Type,
-    batch: batches.Data,
-    unroll_strategy: str,
+    self, epoch_type: epoch.Type, batch: batches.Data, unroll_strategy: str,
   ) -> int:
     """Determine the unroll factor from the --unroll_strategy flag, and the batch log."""
     # Determine the unrolling strategy.
@@ -441,11 +438,18 @@ class Ggnn(classifier_base.ClassifierBase):
       model_inputs = model_inputs + (num_graphs, graph_nodes_list, aux_in,)
 
     # maybe calculate manual timesteps
-    if epoch_type != epoch.Type.TRAIN and \
-          FLAGS.unroll_strategy in ['constant', 'edge_count', 'data_flow_max_steps', 'label_convergence']:
-      time_steps_cpu = np.array(self.get_unroll_steps(epoch_type, batch, FLAGS.unroll_strategy), dtype=np.int64)
+    if epoch_type != epoch.Type.TRAIN and FLAGS.unroll_strategy in [
+      "constant",
+      "edge_count",
+      "data_flow_max_steps",
+      "label_convergence",
+    ]:
+      time_steps_cpu = np.array(
+        self.get_unroll_steps(epoch_type, batch, FLAGS.unroll_strategy),
+        dtype=np.int64,
+      )
       time_steps_gpu = torch.from_numpy(time_steps_cpu).to(self.dev)
-    else: 
+    else:
       time_steps_cpu = 0
       time_steps_gpu = None
 
@@ -455,16 +459,22 @@ class Ggnn(classifier_base.ClassifierBase):
       if not self.model.training:
         self.model.train()
       outputs = self.model(*model_inputs, test_time_steps=time_steps_gpu)
-    else: # not TRAIN
+    else:  # not TRAIN
       if self.model.training:
         self.model.eval()
         self.model.opt.zero_grad()
-      with torch.no_grad(): # don't trace computation graph!
+      with torch.no_grad():  # don't trace computation graph!
         outputs = self.model(*model_inputs, test_time_steps=time_steps_gpu)
 
-
-
-    logits, accuracy, logits, correct, targets, graph_features, *unroll_stats = outputs
+    (
+      logits,
+      accuracy,
+      logits,
+      correct,
+      targets,
+      graph_features,
+      *unroll_stats,
+    ) = outputs
 
     loss = self.model.loss((logits, graph_features), targets)
 
@@ -492,7 +502,7 @@ class Ggnn(classifier_base.ClassifierBase):
     learning_rate = self.model.config.lr
 
     model_converged = unroll_stats[1] if unroll_stats else False
-    iteration_count = unroll_stats[0] if unroll_stats else time_steps_cpu 
+    iteration_count = unroll_stats[0] if unroll_stats else time_steps_cpu
 
     loss_value = loss.item()
     assert not np.isnan(loss_value), loss

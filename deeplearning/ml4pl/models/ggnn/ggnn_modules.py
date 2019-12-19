@@ -31,6 +31,7 @@ SMALL_NUMBER = 1e-8
 # Main Model
 ###########################
 
+
 def assert_no_nan(tensor_list):
   for i, t in enumerate(tensor_list):
     assert not torch.isnan(t).any(), f"{i}: {tensor_list}"
@@ -44,7 +45,7 @@ class GGNNModel(nn.Module):
     self.ggnn = GGNNProper(config)
     self.nodewise_readout = NodewiseReadout(config)
     # make readout available to label_convergence tests in GGNN Proper (at runtime)
-    if self.config.unroll_strategy == 'label_convergence':
+    if self.config.unroll_strategy == "label_convergence":
       self.ggnn.nodewise_readout = self.nodewise_readout
 
     self.graphlevel_readout = None
@@ -67,16 +68,16 @@ class GGNNModel(nn.Module):
     return optim.AdamW(self.parameters(), lr=config.lr)  # NB: AdamW
 
   def forward(
-      self,
-      vocab_ids,
-      selector_ids,
-      labels,
-      edge_lists,
-      pos_lists,
-      num_graphs=None,
-      graph_nodes_list=None,
-      aux_in=None,
-      test_time_steps=None,
+    self,
+    vocab_ids,
+    selector_ids,
+    labels,
+    edge_lists,
+    pos_lists,
+    num_graphs=None,
+    graph_nodes_list=None,
+    aux_in=None,
+    test_time_steps=None,
   ):
     raw_in = self.node_embeddings(vocab_ids, selector_ids)
     raw_out, raw_in, *unroll_stats = self.ggnn(
@@ -87,14 +88,17 @@ class GGNNModel(nn.Module):
 
     if self.graphlevel_readout:
       prediction, graph_features = self.graphlevel_readout(
-        prediction, num_graphs, graph_nodes_list, aux_in)
+        prediction, num_graphs, graph_nodes_list, aux_in
+      )
     else:
       graph_features = None
 
     # accuracy, pred_targets, correct, targets
     metrics_tuple = self.metrics(prediction, labels)
 
-    outputs = (prediction, ) + metrics_tuple + (graph_features, ) + tuple(unroll_stats)
+    outputs = (
+      (prediction,) + metrics_tuple + (graph_features,) + tuple(unroll_stats)
+    )
 
     return outputs
 
@@ -106,6 +110,7 @@ class GGNNModel(nn.Module):
 
 class Loss(nn.Module):
   """[Binary] Cross Entropy loss with weighted intermediate loss"""
+
   def __init__(self, config):
     super().__init__()
     self.config = config
@@ -123,7 +128,8 @@ class Loss(nn.Module):
     loss = self.loss(inputs[0], targets)
     if self.config.has_graph_labels:
       loss += self.config.intermediate_loss_weight * self.loss(
-        inputs[1], targets)
+        inputs[1], targets
+      )
     return loss
 
 
@@ -133,6 +139,7 @@ class Metrics(nn.Module):
   logits, labels
   Returns:
   (accuracy, pred_targets, correct_preds, targets)"""
+
   def __init__(self):
     super().__init__()
 
@@ -183,23 +190,25 @@ class NodeEmbeddings(nn.Module):
   def __init__(self, config, pretrained_embeddings=None):
     super().__init__()
 
-    if config.inst2vec_embeddings == 'constant':
+    if config.inst2vec_embeddings == "constant":
       app.Log(1, "Using pre-trained inst2vec embeddings frozen.")
       assert pretrained_embeddings is not None
       self.node_embs = nn.Embedding.from_pretrained(
-        pretrained_embeddings, freeze=True)
-    elif config.inst2vec_embeddings == 'zero':
+        pretrained_embeddings, freeze=True
+      )
+    elif config.inst2vec_embeddings == "zero":
       init = torch.zeros(config.vocab_size, config.emb_size)
       self.node_embs = nn.Embedding.from_pretrained(init, freeze=True)
-    elif config.inst2vec_embeddings == 'constant_random':
+    elif config.inst2vec_embeddings == "constant_random":
       init = torch.rand(config.vocab_size, config.emb_size)
       self.node_embs = nn.Embedding.from_pretrained(init, freeze=True)
-    elif config.inst2vec_embeddings == 'finetune':
+    elif config.inst2vec_embeddings == "finetune":
       app.Log(1, "Fine-tuning inst2vec embeddings")
       assert pretrained_embeddings is not None
       self.node_embs = nn.Embedding.from_pretrained(
-        pretrained_embeddings, freeze=False)
-    elif config.inst2vec_embeddings == 'random':
+        pretrained_embeddings, freeze=False
+      )
+    elif config.inst2vec_embeddings == "random":
       app.Log(1, "Initializing with random embeddings")
       self.node_embs = nn.Embedding(config.vocab_size, config.emb_size)
     else:
@@ -212,8 +221,9 @@ class NodeEmbeddings(nn.Module):
         [[0, 50.0], [50.0, 0]],
         dtype=torch.get_default_dtype(),
       )
-      self.selector_embs = nn.Embedding.from_pretrained(selector_init,
-                                freeze=True)
+      self.selector_embs = nn.Embedding.from_pretrained(
+        selector_init, freeze=True
+      )
     else:
       self.selector_embs = None
 
@@ -256,18 +266,24 @@ class GGNNProper(nn.Module):
 
     # we allow for some fancy unrolling strategies.
     # Currently only at eval time, but there is really no good reason for this.
-    if self.training or self.unroll_strategy == 'none':
+    if self.training or self.unroll_strategy == "none":
       layer_timesteps = self.layer_timesteps
-    elif self.unroll_strategy == 'constant':
+    elif self.unroll_strategy == "constant":
       layer_timesteps = self.test_layer_timesteps
-    elif self.unroll_strategy == 'edge_count':
-      assert test_time_steps is not None, f"You need to pass test_time_steps or not use unroll_strategy '{self.unroll_strategy}''"
+    elif self.unroll_strategy == "edge_count":
+      assert (
+        test_time_steps is not None
+      ), f"You need to pass test_time_steps or not use unroll_strategy '{self.unroll_strategy}''"
       layer_timesteps = [min(test_time_steps, self.max_timesteps)]
-    elif self.unroll_strategy == 'data_flow_max_steps':
-      assert test_time_steps is not None, f"You need to pass test_time_steps or not use unroll_strategy '{self.unroll_strategy}''"
+    elif self.unroll_strategy == "data_flow_max_steps":
+      assert (
+        test_time_steps is not None
+      ), f"You need to pass test_time_steps or not use unroll_strategy '{self.unroll_strategy}''"
       layer_timesteps = [min(test_time_steps, self.max_timesteps)]
-    elif self.unroll_strategy == 'label_convergence':
-      node_states, unroll_steps, converged = self.label_conv_forward(edge_lists, node_states, pos_lists, initial_node_states=old_node_states)
+    elif self.unroll_strategy == "label_convergence":
+      node_states, unroll_steps, converged = self.label_conv_forward(
+        edge_lists, node_states, pos_lists, initial_node_states=old_node_states
+      )
       return node_states, old_node_states, unroll_steps, converged
 
     if self.backward_edges:
@@ -280,8 +296,12 @@ class GGNNProper(nn.Module):
         node_states = self.update[layer_idx](messages, node_states)
     return node_states, old_node_states
 
-  def label_conv_forward(self, edge_lists, node_states, pos_lists, initial_node_states):
-    assert len(self.layer_timesteps) == 1, f"Label convergence only supports one-layer GGNNs, but {len(self.layer_timesteps)} are configured in layer_timesteps: {self.layer_timesteps}"
+  def label_conv_forward(
+    self, edge_lists, node_states, pos_lists, initial_node_states
+  ):
+    assert (
+      len(self.layer_timesteps) == 1
+    ), f"Label convergence only supports one-layer GGNNs, but {len(self.layer_timesteps)} are configured in layer_timesteps: {self.layer_timesteps}"
     assert self.nodewise_readout is not None
 
     if self.backward_edges:
@@ -289,24 +309,32 @@ class GGNNProper(nn.Module):
       edge_lists.extend(back_edge_lists)
 
     stable_steps, i = 0, 0
-    old_tentative_labels = self.tentative_labels(initial_node_states, node_states)
+    old_tentative_labels = self.tentative_labels(
+      initial_node_states, node_states
+    )
 
     while True:
       messages = self.message[0](edge_lists, node_states, pos_lists)
       node_states = self.update[0](messages, node_states)
-      new_tentative_labels = self.tentative_labels(initial_node_states, node_states)
+      new_tentative_labels = self.tentative_labels(
+        initial_node_states, node_states
+      )
       i += 1
 
       # return the new node states if their predictions match the old node states' predictions.
       # It doesn't matter during testing since the predictions are the same anyway.
-      stability = (new_tentative_labels == old_tentative_labels).to(dtype=torch.get_default_dtype()).mean()
+      stability = (
+        (new_tentative_labels == old_tentative_labels)
+        .to(dtype=torch.get_default_dtype())
+        .mean()
+      )
       if stability >= self.label_conv_threshold:
         stable_steps += 1
 
       if stable_steps >= self.label_conv_stable_steps:
         return node_states, i, True
 
-      if i >= self.max_timesteps: # maybe escape
+      if i >= self.max_timesteps:  # maybe escape
         return node_states, i, False
 
       old_tentative_labels = new_tentative_labels
@@ -320,14 +348,18 @@ class GGNNProper(nn.Module):
     predicted_labels = torch.argmax(preds, dim=1)
     return predicted_labels
 
+
 class MessagingLayer(nn.Module):
   """takes an edge_list (for a single edge type) and node_states <N, D+S> and
   returns incoming messages per node of shape <N, D+S>"""
+
   def __init__(self, config):
     super().__init__()
     self.forward_and_backward_edge_type_count = (
-      config.edge_type_count *
-      2 if config.backward_edges else config.edge_type_count)
+      config.edge_type_count * 2
+      if config.backward_edges
+      else config.edge_type_count
+    )
     self.msg_mean_aggregation = config.msg_mean_aggregation
     self.dim = config.hidden_size
 
@@ -342,7 +374,14 @@ class MessagingLayer(nn.Module):
 
     self.pos_transform = None
     if config.position_embeddings:
-      self.register_buffer('position_embs', PositionEmbeddings()(torch.arange(512, dtype=torch.get_default_dtype()), config.emb_size, dpad=config.selector_size))
+      self.register_buffer(
+        "position_embs",
+        PositionEmbeddings()(
+          torch.arange(512, dtype=torch.get_default_dtype()),
+          config.emb_size,
+          dpad=config.selector_size,
+        ),
+      )
       self.pos_transform = LinearNet(
         self.dim,
         self.dim,
@@ -358,21 +397,26 @@ class MessagingLayer(nn.Module):
 
     # all edge types are handled in one matrix, but we
     # let propagated_states[i] be equal to the case with only edge_type i
-    propagated_states = (self.transform(node_states).transpose(0, 1).view(
-      self.forward_and_backward_edge_type_count, self.dim, -1))
+    propagated_states = (
+      self.transform(node_states)
+      .transpose(0, 1)
+      .view(self.forward_and_backward_edge_type_count, self.dim, -1)
+    )
 
     messages_by_targets = torch.zeros_like(node_states)
     if self.msg_mean_aggregation:
       device = node_states.device
-      bincount = torch.zeros(node_states.size()[0],
-                   dtype=torch.long,
-                   device=device)
+      bincount = torch.zeros(
+        node_states.size()[0], dtype=torch.long, device=device
+      )
 
     for i, (edge_list, pos_list) in enumerate(zip(edge_lists, pos_lists)):
       edge_targets = edge_list[:, 1]
       edge_sources = edge_list[:, 0]
 
-      messages_by_source = F.embedding(edge_sources, propagated_states[i].transpose(0, 1))
+      messages_by_source = F.embedding(
+        edge_sources, propagated_states[i].transpose(0, 1)
+      )
 
       if self.pos_transform:
         pos_by_source = F.embedding(pos_list, pos_gating)
@@ -387,7 +431,7 @@ class MessagingLayer(nn.Module):
     if self.msg_mean_aggregation:
       divisor = bincount.float()
       divisor[bincount == 0] = 1.0  # avoid div by zero for lonely nodes
-      messages_by_targets /= (divisor.unsqueeze_(1) + SMALL_NUMBER)
+      messages_by_targets /= divisor.unsqueeze_(1) + SMALL_NUMBER
     return messages_by_targets
 
 
@@ -398,23 +442,18 @@ class GGNNLayer(nn.Module):
     # TODO(github.com/ChrisCummins/ProGraML/issues/27): Maybe decouple hidden
     # GRU size: make hidden GRU size larger and EdgeTrafo size non-square
     # instead? Or implement stacking gru layers between message passing steps.
-    self.gru = nn.GRUCell(input_size=config.hidden_size,
-                hidden_size=config.hidden_size)
+    self.gru = nn.GRUCell(
+      input_size=config.hidden_size, hidden_size=config.hidden_size
+    )
 
   def forward(self, messages, node_states):
     if self.dropout > 0.0:
-      F.dropout_(messages,
-             p=self.dropout,
-             training=self.training,
-             inplace=True)
+      F.dropout_(messages, p=self.dropout, training=self.training, inplace=True)
 
     output = self.gru(messages, node_states)
 
     if self.dropout > 0.0:
-      F.dropout_(output,
-             p=self.dropout,
-             training=self.training,
-             inplace=True)
+      F.dropout_(output, p=self.dropout, training=self.training, inplace=True)
     return output
 
 
@@ -428,18 +467,20 @@ class PositionEmbeddings(nn.Module):
         position: 1d long Tensor of positions,
         demb: int    size of embedding vector
       """
-    inv_freq = 1 / (10000**(torch.arange(0.0, demb, 2.0) / demb))
+    inv_freq = 1 / (10000 ** (torch.arange(0.0, demb, 2.0) / demb))
 
     sinusoid_inp = torch.ger(positions, inv_freq)
-    pos_emb = torch.cat((torch.sin(sinusoid_inp), torch.cos(sinusoid_inp)),
-              dim=1)
+    pos_emb = torch.cat(
+      (torch.sin(sinusoid_inp), torch.cos(sinusoid_inp)), dim=1
+    )
 
     if dpad > 0:
       in_length = positions.size()[0]
       pad = torch.zeros((in_length, dpad))
       pos_emb = torch.cat([pos_emb, pad], dim=1)
-      assert torch.all(pos_emb[:, -1] == torch.zeros(
-        in_length)), f"test failed. pos_emb: \n{pos_emb}"
+      assert torch.all(
+        pos_emb[:, -1] == torch.zeros(in_length)
+      ), f"test failed. pos_emb: \n{pos_emb}"
 
     return pos_emb
 
@@ -462,17 +503,14 @@ class PositionEmbeddings(nn.Module):
 
 class NodewiseReadout(nn.Module):
   """aka GatedRegression"""
+
   def __init__(self, config):
     super().__init__()
     self.regression_gate = LinearNet(
-      2 * config.hidden_size,
-      config.num_classes,
-      dropout=config.output_dropout,
+      2 * config.hidden_size, config.num_classes, dropout=config.output_dropout,
     )
     self.regression_transform = LinearNet(
-      config.hidden_size,
-      config.num_classes,
-      dropout=config.output_dropout,
+      config.hidden_size, config.num_classes, dropout=config.output_dropout,
     )
 
   def forward(self, raw_node_in, raw_node_out):
@@ -498,6 +536,7 @@ class LinearNet(nn.Module):
   - Output: :math:`(N, *, H_{out})` where all but the last dimension
   are the same shape as the input and :math:`H_{out} = \text{out\_features}`.
   """
+
   def __init__(self, in_features, out_features, bias=True, dropout=0.0):
     super().__init__()
     self.dropout = dropout
@@ -529,10 +568,7 @@ class LinearNet(nn.Module):
 
   def extra_repr(self):
     return "in_features={}, out_features={}, bias={}, dropout={}".format(
-      self.in_features,
-      self.out_features,
-      self.bias is not None,
-      self.dropout,
+      self.in_features, self.out_features, self.bias is not None, self.dropout,
     )
 
 
@@ -556,29 +592,26 @@ class AuxiliaryReadout(nn.Module):
       self.batch_norm = nn.BatchNorm1d(config.num_classes + config.aux_in_len)
       self.feed_forward = nn.Sequential(
         nn.Linear(
-          config.num_classes + config.aux_in_len,
-          config.aux_in_layer_size,
+          config.num_classes + config.aux_in_len, config.aux_in_layer_size,
         ),
         nn.ReLU(),
         nn.Dropout(1 - config.output_dropout),
         nn.Linear(config.aux_in_layer_size, config.num_classes),
       )
 
-  def forward(self, raw_node_out, num_graphs, graph_nodes_list,
-        auxiliary_features):
+  def forward(
+    self, raw_node_out, num_graphs, graph_nodes_list, auxiliary_features
+  ):
     device = raw_node_out.device
-    graph_features = torch.zeros(num_graphs,
-                   self.num_classes,
-                   device=device)
-    graph_features.index_add_(dim=0,
-                  index=graph_nodes_list,
-                  source=raw_node_out)
+    graph_features = torch.zeros(num_graphs, self.num_classes, device=device)
+    graph_features.index_add_(
+      dim=0, index=graph_nodes_list, source=raw_node_out
+    )
 
     if self.log1p_graph_x:
       auxiliary_features.log1p_()
 
-    aggregate_features = torch.cat((graph_features, auxiliary_features),
-                     dim=1)
+    aggregate_features = torch.cat((graph_features, auxiliary_features), dim=1)
 
     normed_features = self.batch_norm(aggregate_features)
     out = self.feed_forward(normed_features)

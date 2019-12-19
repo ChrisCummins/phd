@@ -22,10 +22,9 @@ FLAGS = app.FLAGS
 
 
 class GGNNConfig(object):
-  def __init__(self,
-         num_classes: int,
-         has_graph_labels: bool,
-         edge_type_count: int = 3):
+  def __init__(
+    self, num_classes: int, has_graph_labels: bool, edge_type_count: int = 3
+  ):
     self.lr: float = FLAGS.learning_rate
     self.clip_grad_norm: bool = FLAGS.clamp_gradient_norm  # use 6.0 as default! Set to 0.0 for no clipping.
 
@@ -41,9 +40,7 @@ class GGNNConfig(object):
     ###############
 
     self.edge_type_count: int = edge_type_count
-    self.layer_timesteps: List[int] = [
-      int(x) for x in FLAGS.layer_timesteps
-    ]
+    self.layer_timesteps: List[int] = [int(x) for x in FLAGS.layer_timesteps]
     self.use_edge_bias: bool = FLAGS.use_edge_bias
     self.msg_mean_aggregation: bool = FLAGS.msg_mean_aggregation
     self.backward_edges: bool = True
