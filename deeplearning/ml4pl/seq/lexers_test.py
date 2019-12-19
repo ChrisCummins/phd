@@ -18,7 +18,7 @@ def lexer_type(request) -> lexers.LexerType:
   return request.param
 
 
-@test.Fixture(scope="function", params=({"abc": 0, "bcd": 1}))
+@test.Fixture(scope="function", params=({"abc": 0, "bcd": 1},))
 def vocabulary(request) -> Dict[str, int]:
   """Test fixture for initial vocabs."""
   return request.param
