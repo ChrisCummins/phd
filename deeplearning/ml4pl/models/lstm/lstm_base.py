@@ -86,6 +86,12 @@ class LstmBase(classifier_base.ClassifierBase):
     # consecutive LSTM models in the same process.
     tf.keras.backend.clear_session()
 
+    # Set by Initialize() and LoadModelData().
+    self.session = None
+    self.graph = None
+
+  def CreateModelData(self) -> None:
+    """Initialize an LSTM model. This """
     # Create the Tensorflow session and graph for the model.
     self.session = utils.SetAllowedGrowthOnKerasSession()
     self.graph = tf.compat.v1.get_default_graph()
@@ -96,6 +102,26 @@ class LstmBase(classifier_base.ClassifierBase):
       tf.compat.v1.keras.backend.set_session(self.session)
       self.model = self.CreateKerasModel()
 
+    self.FinalizeKerasModel()
+
+  def FinalizeKerasModel(self) -> None:
+    """Finalize a newly instantiated keras model.
+
+    To enable thread-safe use of the Keras model we must ensure that the
+    computation graph is fully instantiated from the master thread before the
+    first call to RunBatch(). Keras lazily instantiates parts of the graph
+    which we can force by performing the necessary ops now:
+      * training ops: make sure those are created by running the training loop
+        on a small batch of data.
+      * save/restore ops: make sure those are created by running save_model()
+        and throwing away the generated file.
+
+    Once we have performed those actions, we can freeze the computation graph
+    to make explicit the fact that later operations are not permitted to modify
+    the graph.
+    """
+    with self.graph.as_default():
+      tf.compat.v1.keras.backend.set_session(self.session)
       # To enable thread-safe use of the Keras model we must ensure that
       # the computation graph is fully instantiated before the first call
       # to RunBatch(). Keras lazily instantiates parts of the graph (such as
@@ -179,8 +205,8 @@ class LstmBase(classifier_base.ClassifierBase):
         tf.compat.v1.keras.backend.set_session(self.session)
         self.model.save(path)
 
-      with open(path, "rb") as f:
-        model_data = f.read()
+        with open(path, "rb") as f:
+          model_data = f.read()
     return model_data
 
   def LoadModelData(self, data_to_load: Any) -> None:
@@ -191,9 +217,19 @@ class LstmBase(classifier_base.ClassifierBase):
       with open(path, "wb") as f:
         f.write(data_to_load)
 
-    with self.graph.as_default():
-      tf.compat.v1.keras.backend.set_session(self.session)
-      self.model = tf.keras.models.load_model(path)
+      # The default TF graph is finalized in Initialize(), so we must
+      # first reset the session and create a new graph.
+      if self.session:
+        self.session.close()
+      tf.compat.v1.reset_default_graph()
+      self.session = utils.SetAllowedGrowthOnKerasSession()
+      self.graph = tf.compat.v1.get_default_graph()
+
+      with self.graph.as_default():
+        tf.compat.v1.keras.backend.set_session(self.session)
+        self.model = tf.keras.models.load_model(path)
+
+    self.FinalizeKerasModel()
 
   def CreateKerasModel(self) -> tf.compat.v1.keras.Model:
     """Create the LSTM model."""
