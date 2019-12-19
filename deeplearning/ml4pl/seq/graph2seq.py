@@ -28,6 +28,11 @@ app.DEFINE_integer(
   10000,
   "The number of ID -> encoded sequence entries to cache.",
 )
+app.DEFINE_integer(
+  "graph_encoder_timeout",
+  120,
+  "The number of seconds to permit the graph encoder to run before terminating.",
+)
 
 GRAPH_ENCODER_WORKER = bazelutil.DataPath(
   "phd/deeplearning/ml4pl/seq/graph_encoder_worker"
@@ -307,7 +312,9 @@ class StatementEncoder(EncoderBase):
         vocabulary=self.vocabulary, graph=graphs,
       )
       pbutil.RunProcessMessageInPlace(
-        [str(GRAPH_ENCODER_WORKER)], message, timeout_seconds=60
+        [str(GRAPH_ENCODER_WORKER)],
+        message,
+        timeout_seconds=FLAGS.graph_encoder_timeout,
       )
       encoded_graphs = [encoded for encoded in message.seq]
       token_count = sum(len(encoded.encoded) for encoded in encoded_graphs)
