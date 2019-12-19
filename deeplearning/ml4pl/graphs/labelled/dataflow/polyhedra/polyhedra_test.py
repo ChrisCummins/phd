@@ -53,7 +53,6 @@ def CSourceToInput(source: str) -> str:
   return bytecode
 
 
-@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/22)")
 def test_MakePolyhedralGraphs_invalid_bytecode():
   graph = nx.MultiDiGraph()
   bytecode = "invalid bytecode!"

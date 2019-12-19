@@ -39,10 +39,12 @@ def test_OpenClDeviceMappingsDataset_cfgs_df_count(
   assert len(opencl_dataset.cfgs_df) >= 185
 
 
+@test.XFail(reason="github.com/ChrisCummins/ProGraML/issues/7")
 def test_OpenClDeviceMappingsDataset_cfgs_df_contains_valid_graphs(
   opencl_dataset: opencl.OpenClDeviceMappingsDataset,
 ):
   """Test that graph instances are valid."""
+  assert len(opencl_dataset.cfgs_df["cfg:graph"].values)
   for cfg in opencl_dataset.cfgs_df["cfg:graph"].values:
     assert cfg.ValidateControlFlowGraph(strict=False)
 

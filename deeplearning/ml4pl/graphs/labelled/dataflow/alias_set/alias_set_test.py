@@ -56,7 +56,6 @@ def CSourceToInputPair(source: str) -> InputPair:
   return InputPair(graph=graph, bytecode=bytecode)
 
 
-@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/22)")
 def test_MakeAliasSetGraphs_invalid_bytecode():
   graph = nx.MultiDiGraph()
   bytecode = "invalid bytecode!"
