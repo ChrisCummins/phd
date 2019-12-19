@@ -166,7 +166,11 @@ def main(argv):
     )
     if commits_behind_upstream:
       linters_lib.Print("⚠️  ", commits_behind_upstream, "commits behind")
+      linters_lib.Print("Rebasing on upstream...", end=" ")
       PullAndRebaseOrDie()
+      linters_lib.Print("ok  {:.3f}s".format(time.time() - task_start_time))
+      linters_lib.Print("[action] Re-run git commit.")
+      sys.exit(1)
     else:
       linters_lib.Print("ok  {:.3f}s".format(time.time() - task_start_time))
   else:
