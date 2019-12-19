@@ -202,7 +202,7 @@ def test_Run(
 
     # Check that we performed as many epochs as expected. We can't check the
     # exact value because of --stop_at options.
-    assert 1 <= len(epochs) <= epoch_count
+    assert 1 <= len(epochs) <= FLAGS.epoch_count
 
     test_count = len(epochs[epochs["test_accuracy"].notnull()])
 
