@@ -333,6 +333,10 @@ class ClassifierBase(object):
       ):
         batch = self.MakeBatch(epoch_type, graphs)
 
+      # We have reached the end of the inputs.
+      if batch.end_of_batches:
+        break
+
       yield batch
 
   def Initialize(self) -> None:
