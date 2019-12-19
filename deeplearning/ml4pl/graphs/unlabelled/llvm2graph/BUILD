@@ -16,6 +16,7 @@ py_library(
 py_library(
     name = "graph_builder",
     srcs = ["graph_builder.py"],
+    visibility = ["//deeplearning/ml4pl:__subpackages__"],
     deps = [
         ":call_graph",
         ":node_encoder",

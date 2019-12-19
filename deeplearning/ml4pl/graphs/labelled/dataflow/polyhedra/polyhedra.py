@@ -7,10 +7,8 @@ import pydot
 
 from compilers.llvm import opt
 from compilers.llvm import opt_util
-from deeplearning.ml4pl.graphs.unlabelled.cdfg import (
-  control_and_data_flow_graph as cdfg,
-)
-from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
+from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import graph_builder
+from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import llvm_util
 from labm8.py import app
 from labm8.py import decorators
 
@@ -91,7 +89,7 @@ def BytecodeToPollyCanonicalized(source: str) -> str:
 
 @decorators.timeout(seconds=60)
 def CreateCDFG(bytecode: str) -> nx.MultiDiGraph:
-  builder = cdfg.ControlAndDataFlowGraphBuilder()
+  builder = graph_builder.ProGraMLGraphBuilder()
   return builder.Build(bytecode)
 
 
@@ -199,7 +197,7 @@ def MakePolyhedralGraphs(
     graph_annotator = PolyhedralRegionAnnotator()
     dot = graph
     cfg = llvm_util.ControlFlowGraphFromDotSource(dot, tag_hook=graph_annotator)
-    builder = cdfg.ControlAndDataFlowGraphBuilder()
+    builder = graph_builder.ProGraMLGraphBuilder()
     annotated_cdfg = builder.BuildFromControlFlowGraph(cfg)
 
     steps = sum(

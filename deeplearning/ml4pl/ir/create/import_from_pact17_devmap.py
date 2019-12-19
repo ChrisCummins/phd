@@ -18,8 +18,10 @@ from datasets.opencl.device_mapping import (
 from deeplearning.clgen.preprocessors import opencl
 from deeplearning.ml4pl import ml4pl_pb2
 from deeplearning.ml4pl.bytecode import bytecode_database
-from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph as cfg
-from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
+from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import (
+  control_flow_graph as cfg,
+)
+from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import llvm_util
 from labm8.py import app
 from labm8.py import decorators
 

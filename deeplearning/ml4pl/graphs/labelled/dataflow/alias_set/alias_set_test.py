@@ -8,9 +8,7 @@ import pytest
 from compilers.llvm import clang
 from compilers.llvm import opt
 from deeplearning.ml4pl.graphs.labelled.dataflow.alias_set import alias_set
-from deeplearning.ml4pl.graphs.unlabelled.cdfg import (
-  control_and_data_flow_graph as cdfg,
-)
+from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import graph_builder
 from labm8.py import app
 from labm8.py import test
 
@@ -38,7 +36,7 @@ def CSourceToInputPair(source: str) -> InputPair:
   it is because graph construction or clang is broken.
   """
   bytecode = CSourceToBytecode(source)
-  builder = cdfg.ControlAndDataFlowGraphBuilder()
+  builder = graph_builder.ProGraMLGraphBuilder()
   graph = builder.Build(bytecode)
   return InputPair(graph=graph, bytecode=bytecode)
 

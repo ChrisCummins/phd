@@ -9,9 +9,7 @@ import typing
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import database_exporters
 from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.unlabelled.cdfg import (
-  control_and_data_flow_graph as cdfg,
-)
+from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import graph_builder
 from labm8.py import app
 from labm8.py import prof
 
@@ -54,7 +52,7 @@ def _ProcessInputs(
     )
   bytecode_db.Close()  # Don't leave the database connection lying around.
 
-  builder = cdfg.ControlAndDataFlowGraphBuilder()
+  builder = graph_builder.ProGraMLGraphBuilder()
 
   graph_metas = []
 

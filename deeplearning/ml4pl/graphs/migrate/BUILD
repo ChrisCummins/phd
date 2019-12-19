@@ -29,6 +29,7 @@
 #    ],
 #)
 
+# TODO(github.com/ChrisCummins/ProGraML/issues/2): Redundant after migration.
 py_binary(
     name = "networkx_to_protos",
     srcs = ["networkx_to_protos.py"],
@@ -43,21 +44,22 @@ py_binary(
     ],
 )
 
-py_test(
-    name = "networkx_to_protos_test",
-    srcs = ["networkx_to_protos_test.py"],
-    data = [
-        "//deeplearning/ml4pl/testing/data:100_unlabelled_networkx_graphs",
-    ],
-    deps = [
-        ":networkx_to_protos",
-        "//deeplearning/ml4pl/graphs/unlabelled/cdfg:random_cdfg_generator",
-        "//deeplearning/ml4pl/testing:testing_databases",
-        "//labm8/py:decorators",
-        "//labm8/py:test",
-        "//third_party/py/networkx",
-    ],
-)
+# TODO(github.com/ChrisCummins/ProGraML/issues/2): Redundant after migration.
+#py_test(
+#    name = "networkx_to_protos_test",
+#    srcs = ["networkx_to_protos_test.py"],
+#    data = [
+#        "//deeplearning/ml4pl/testing/data:100_unlabelled_networkx_graphs",
+#    ],
+#    deps = [
+#        ":networkx_to_protos",
+#        "//deeplearning/ml4pl/graphs/unlabelled/cdfg:random_cdfg_generator",
+#        "//deeplearning/ml4pl/testing:testing_databases",
+#        "//labm8/py:decorators",
+#        "//labm8/py:test",
+#        "//third_party/py/networkx",
+#    ],
+#)
 
 # TODO(github.com/ChrisCummins/ProGraML/issues/28): Fix me.
 #py_binary(

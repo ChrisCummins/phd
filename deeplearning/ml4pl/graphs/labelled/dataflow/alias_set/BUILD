@@ -17,7 +17,7 @@ py_test(
     deps = [
         ":alias_set",
         "//compilers/llvm:clang",
-        "//deeplearning/ml4pl/graphs/unlabelled/cdfg:control_and_data_flow_graph",
+        "//deeplearning/ml4pl/graphs/unlabelled/llvm2graph:graph_builder",
         "//labm8/py:test",
         "//third_party/py/networkx",
         "//third_party/py/pytest",

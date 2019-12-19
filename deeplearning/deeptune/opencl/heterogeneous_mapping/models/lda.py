@@ -27,7 +27,7 @@ from graph_nets.demos import models as gn_models
 from compilers.llvm import opt_util
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import ncc
-from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
+from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import llvm_util
 from deeplearning.ncc import inst2vec_pb2
 from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
