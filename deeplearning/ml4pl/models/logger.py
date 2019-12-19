@@ -273,9 +273,8 @@ class Logger(object):
     """Load model data.
 
     Args:
-      run_id: The run ID of the model data to load.
-      epoch_num: An optional epoch number to restore model data from. If None,
-        the most recent epoch is used.
+      checkpoint_ref: A checkpoint to load. If epoch_num is not set, the best
+        validation results are selected.
 
     Returns:
       A checkpoint instance.
@@ -288,11 +287,29 @@ class Logger(object):
     self.Flush()
 
     with self.db.Session() as session:
+      epoch_num = checkpoint_ref.epoch_num
+
+      # If no epoch number was provided, select the best epoch from the log
+      # database.
+      if epoch_num is None:
+        # Get the per-epoch summary table of model results.
+        tables = {
+          name: df
+          for name, df in self.db.GetTables(run_ids=[checkpoint_ref.run_id])
+        }
+        # Select the epoch with the best validation accuracy.
+        epochs = tables["epochs"][tables["epochs"]["val_accuracy"].notnull()]
+        if not len(epochs):
+          raise ValueError("No epochs found!")
+        best_epoch_idx = epochs["val_accuracy"].idxmax()
+        best_epoch = epochs.iloc[best_epoch_idx]
+        epoch_num = best_epoch["epoch_num"]
+
       checkpoint_entry = (
         session.query(log_database.Checkpoint)
         .filter(
           log_database.Checkpoint.run_id == str(checkpoint_ref.run_id),
-          log_database.Checkpoint.epoch_num == int(checkpoint_ref.epoch_num),
+          log_database.Checkpoint.epoch_num == int(epoch_num),
         )
         .options(sql.orm.joinedload(log_database.Checkpoint.data))
         .first()

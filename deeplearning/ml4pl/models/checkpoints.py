@@ -5,6 +5,7 @@ TODO: Detailed explanation of the file.
 from typing import Any
 from typing import Dict
 from typing import NamedTuple
+from typing import Optional
 
 from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.models import epoch
@@ -18,10 +19,13 @@ class CheckpointReference(NamedTuple):
   """Reference to a checkpoint."""
 
   run_id: run_id_lib.RunId
-  epoch_num: int
+  # If epoch_num is None, then load the best epoch.
+  epoch_num: Optional[int]
 
   def __repr__(self):
-    return f"{self.run_id}@{self.epoch_num}"
+    return (
+      f"{self.run_id}@{'best' if self.epoch_num is None else self.epoch_num}"
+    )
 
   @classmethod
   def FromString(cls, string: str) -> "CheckpointReference":
