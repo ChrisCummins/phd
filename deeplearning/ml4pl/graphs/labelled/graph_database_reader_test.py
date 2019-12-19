@@ -3,25 +3,13 @@ import copy
 import random
 from typing import List
 
-from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader as reader
-from deeplearning.ml4pl.graphs.labelled import graph_tuple
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
-from deeplearning.ml4pl.graphs.migrate import networkx_to_protos
-from deeplearning.ml4pl.graphs.unlabelled.cdfg import random_cdfg_generator
+from deeplearning.ml4pl.testing import random_graph_tuple_database_generator
 from deeplearning.ml4pl.testing import testing_databases
 from labm8.py import test
 
 FLAGS = test.FLAGS
-
-
-def CreateRandomGraphTuple(ir_id: int) -> graph_tuple_database.GraphTuple:
-  """Generate a random graph tuple."""
-  g = random_cdfg_generator.FastCreateRandom()
-  proto = networkx_to_protos.NetworkXGraphToProgramGraphProto(g)
-  g = programl.ProgramGraphToNetworkX(proto)
-  gt = graph_tuple.GraphTuple.CreateFromNetworkX(g)
-  return graph_tuple_database.GraphTuple.CreateFromGraphTuple(gt, ir_id=ir_id)
 
 
 @test.Fixture(
@@ -40,14 +28,17 @@ def empty_graph_db(request) -> graph_tuple_database.Database:
 def db_10000(
   empty_graph_db: graph_tuple_database.Database,
 ) -> graph_tuple_database.Database:
-  """Fixture which returns a database with 5000 + 2 graph tuples, where 2 of the
-  graph tuples are empty.
+  """Fixture which returns a database with 10000 + 2 graph tuples, where 2 of
+  the graph tuples are empty.
 
   For the current implementation of CreateRandomGraphTuple(), a database of
-  5000 graphs is ~14MB of data.
+  10000 graphs is ~14MB of data.
   """
   # Generate some random graph tuples.
-  graph_pool = [CreateRandomGraphTuple(0) for _ in range(128)]
+  graph_pool = [
+    random_graph_tuple_database_generator.CreateRandomGraphTuple()
+    for _ in range(128)
+  ]
 
   # Generate a full list of graphs by randomly selecting from the graph pool.
   random_graph_tuples: List[graph_tuple_database.GraphTuple] = [
