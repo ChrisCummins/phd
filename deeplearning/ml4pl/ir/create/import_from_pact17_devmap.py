@@ -31,24 +31,16 @@ from datasets.opencl.device_mapping import (
   opencl_device_mapping_dataset as ocl_dataset,
 )
 from deeplearning.clgen.preprocessors import opencl
-from deeplearning.ml4pl import ml4pl_pb2
-from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import (
   control_flow_graph as cfg,
 )
 from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import llvm_util
+from deeplearning.ml4pl.ir import ir_database
 from labm8.py import app
 from labm8.py import decorators
 
 
 FLAGS = app.FLAGS
-
-app.DEFINE_database(
-  "bytecode_db",
-  bytecode_database.Database,
-  None,
-  "Path of database to populate.",
-)
 
 
 def BytecodeFromOpenClString(
@@ -166,9 +158,7 @@ def CfgDfRowFromControlFlowGraph(
   }
 
 
-def ProcessOpenClProgramDfBytecode(
-  row: typing.Dict[str, str]
-) -> ml4pl_pb2.LlvmBytecode:
+def ProcessOpenClProgramDfBytecode(row: typing.Dict[str, str]):
   benchmark_suite_name = row["program:benchmark_suite_name"]
   benchmark_name = row["program:benchmark_name"]
   kernel_name = row["program:opencl_kernel_name"]
@@ -212,7 +202,7 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
   """
 
   def PopulateBytecodeTable(
-    self, db: bytecode_database.Database, commit_every: int = 1000
+    self, db: ir_database.Database, commit_every: int = 1000
   ):
     programs_df = self.programs_df.reset_index()
     bar = progressbar.ProgressBar()

@@ -14,9 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //deeplearning/ml4pl/datasets:opencl.py."""
-from deeplearning.ml4pl.bytecode.create import (
-  import_from_pact17_devmap as opencl,
-)
+from deeplearning.ml4pl.ir.create import import_from_pact17_devmap as opencl
 from labm8.py import app
 from labm8.py import test
 
