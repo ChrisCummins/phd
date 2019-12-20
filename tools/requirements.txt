@@ -7,7 +7,7 @@ appdirs==1.4.3
 appnope==0.1.0
 ascii_art==0.1.0
 astroid==1.6.1
-attrs==17.4.0
+attrs==17.4.0  # Dependency of pytest.
 autoenv==1.0.0
 backports-abc==0.5
 backports.functools-lru-cache==1.5
