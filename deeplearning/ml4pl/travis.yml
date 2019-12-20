@@ -13,63 +13,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-os:
-  - linux
-
-# Sudo is required to swap out GCC for GCC-5 on linux.
-sudo: required
-
-dist: trusty
-
-language:
-  - generic
-
-env:
-  global:
-    # ./configure script symlinks python3 to ~/.local/bin/python.
-    - PATH="$HOME/.local/bin:$PATH"
-    # Environment variables needed for zlib.
-    # See: https://github.com/pyenv/pyenv/issues/530
-    - PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/zlib/lib/pkgconfig"
-    - LDFLAGS="$LDFLAGS -L/usr/local/opt/zlib/lib"
-    - CPPFLAGS="$CPPFLAGS -I/usr/local/opt/zlib/include"
-
-addons:
-  apt:
-    sources:
-      - sourceline: 'ppa:jonathonf/python-3.6'
-      - sourceline: 'deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8'
-        key_url: 'https://storage.googleapis.com/bazel-apt/doc/apt-key.pub.gpg'
-      - ubuntu-toolchain-r-test
-    packages:
-      - python3-apt
-      - openjdk-8-jdk
-      - python
-      - python3.6
-      - python3.6-dev
-      - bazel
-      - gcc-5
-      - g++-5
+language: generic
 
 services:
-  - mysql
+  - docker
 
 install:
-  # Remove pyenv, since we use the system package managers to install python.
-  - rm -rf $(pyenv root)
-  # Swap out GCC for GCC-5 to enable support for --std=c++14.
-  # See: https://gist.github.com/cotsog/3ce84675af0d74438d91
-  - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-5 /usr/bin/gcc
-  - ./configure --noninteractive
-  # Symlink the system python2 in place so that we bypass the pyenv shim.
-  - ln -s /usr/bin/python2 $HOME/.local/bin
-
-before_script:
-  # Print version numbers for debugging.
-  - python2 --version
-  - python3 --version
-  - bazel version
-  - gcc --version
+  - docker pull chriscummins/phd_build:latest
+  - chmod -R 777 $TRAVIS_BUILD_DIR
 
 script:
-  ./tools/flaky_bazel.sh test --config=travis //deeplearning/ml4pl/...
+  - docker run -v$TRAVIS_BUILD_DIR:/phd chriscummins/phd_build:latest -c "./configure --noninteractive && ./tools/flaky_bazel.sh test --config=travis //deeplearning/ml4pl:run_id_test
