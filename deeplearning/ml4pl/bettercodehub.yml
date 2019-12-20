@@ -1,0 +1,10 @@
+# Configuration for Better Code analysis.
+# See https://bettercodehub.com/docs/configuration-manual
+exclude:
+- /compilers/*
+- /datasets/*
+- /labm8/*
+- /third_party/*
+- /tools/*
+# Set component depth to match //deeplearning/ml4pl/<component> structure.
+component_depth: 3
