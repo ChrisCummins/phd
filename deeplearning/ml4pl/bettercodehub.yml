@@ -3,6 +3,8 @@
 exclude:
 - /compilers/*
 - /datasets/*
+- /deeplearning/clgen/*
+- /deeplearning/ncc/*
 - /labm8/*
 - /third_party/*
 - /tools/*
