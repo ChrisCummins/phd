@@ -53,7 +53,7 @@ py_binary(
 # TODO(cec): Re-enable once CLgen cyclic symlinks is fixed.
 # py3_image(
 #     name = "clgen_image",
-#     base = "@base//image",
+#     base = "@phd_base//image",
 #     srcs = ["clgen.py"],
 #     deps = [":clgen"],
 #     main = "clgen.py",

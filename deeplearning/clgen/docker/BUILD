@@ -5,7 +5,7 @@ load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
 py3_image(
     name = "clgen",
     srcs = ["//deeplearning/clgen"],
-    base = "@base_java//image",
+    base = "@phd_base_java//image",
     visibility = ["//deeplearning/clgen/docker:__subpackages__"],
     deps = ["//deeplearning/clgen"],
 )
@@ -13,7 +13,7 @@ py3_image(
 py3_image(
     name = "clgen_preprocess",
     srcs = ["//deeplearning/clgen:preprocess"],
-    base = "@base_java//image",
+    base = "@phd_base_java//image",
     main = "preprocess.py",
     visibility = ["//deeplearning/clgen/docker:__subpackages__"],
     deps = ["//deeplearning/clgen:preprocess"],
@@ -61,7 +61,7 @@ py_test(
 py3_image(
     name = "export_pretrained_model_image",
     srcs = [":export_pretrained_model"],
-    base = "@base//image",
+    base = "@phd_base//image",
     main = "export_pretrained_model.py",
     deps = [
         ":export_pretrained_model",

@@ -12,7 +12,7 @@ py3_image(
     name = "basic_app_test_image",
     testonly = 1,
     srcs = ["basic_app_test.py"],
-    base = "@base_java//image",
+    base = "@phd_base_java//image",
     main = "basic_app_test.py",
     deps = [":basic_app_test"],
 )

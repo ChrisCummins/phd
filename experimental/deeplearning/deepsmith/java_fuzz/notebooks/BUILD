@@ -19,7 +19,7 @@ py_binary(
 py3_image(
     name = "notebooks_image",
     srcs = [":notebooks"],
-    base = "@base//image",
+    base = "@phd_base//image",
     main = "notebooks.py",
     deps = [
         ":notebooks",

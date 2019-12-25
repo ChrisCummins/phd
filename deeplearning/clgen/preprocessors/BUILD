@@ -311,7 +311,7 @@ py_test(
 # py3_image(
 #     name = "cxx_test_image",
 #     srcs = ["cxx_test.py"],
-#     base = "@base//image",
+#     base = "@phd_base//image",
 #     main = "cxx_test.py",
 #     deps = [
 #         ":cxx",

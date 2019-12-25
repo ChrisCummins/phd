@@ -25,7 +25,7 @@ py_binary(
 py3_image(
     name = "image",
     srcs = [":report_viewer"],
-    base = "@base//image",
+    base = "@phd_base//image",
     main = "report_viewer.py",
     deps = [
         ":report_viewer",

@@ -48,7 +48,7 @@ py_test(
 py3_image(
     name = "encode_java_corpus_image",
     srcs = ["encode_java_corpus.py"],
-    base = "@base_java//image",
+    base = "@phd_base_java//image",
     main = "encode_java_corpus.py",
     visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
     deps = [":encode_java_corpus"],
@@ -70,7 +70,7 @@ py_binary(
 py3_image(
     name = "export_java_corpus_image",
     srcs = ["export_java_corpus.py"],
-    base = "@base//image",
+    base = "@phd_base//image",
     main = "export_java_corpus.py",
     visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
     deps = [":export_java_corpus"],
@@ -128,7 +128,7 @@ py_binary(
 py3_image(
     name = "mask_contentfiles_image",
     srcs = ["mask_contentfiles.py"],
-    base = "@base//image",
+    base = "@phd_base//image",
     main = "mask_contentfiles.py",
     visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
     deps = [":mask_contentfiles"],
@@ -160,7 +160,7 @@ exports_repo(
 py3_image(
     name = "scrape_java_files_image",
     srcs = ["scrape_java_files.py"],
-    base = "@base//image",
+    base = "@phd_base//image",
     main = "scrape_java_files.py",
     visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
     deps = [":scrape_java_files"],
@@ -187,7 +187,7 @@ py_binary(
 py3_image(
     name = "preprocess_java_corpus_image",
     srcs = ["preprocess_java_corpus.py"],
-    base = "@base_java//image",
+    base = "@phd_base_java//image",
     main = "preprocess_java_corpus.py",
     visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
     deps = [":preprocess_java_corpus"],
@@ -234,7 +234,7 @@ py_binary(
 py3_image(
     name = "re_preprocess_java_methods_image",
     srcs = ["re_preprocess_java_methods.py"],
-    base = "@base_java//image",
+    base = "@phd_base_java//image",
     main = "re_preprocess_java_methods.py",
     visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
     deps = [":re_preprocess_java_methods"],
@@ -271,7 +271,7 @@ py_binary(
 py3_image(
     name = "sample_java_model_image",
     srcs = ["sample_java_model.py"],
-    base = "@base_java//image",
+    base = "@phd_base_java//image",
     main = "sample_java_model.py",
     visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
     deps = [":sample_java_model"],

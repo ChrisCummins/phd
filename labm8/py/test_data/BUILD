@@ -25,7 +25,7 @@ package(
 py3_image(
     name = "basic_app",
     srcs = ["basic_app.py"],
-    base = "@base//image",
+    base = "@phd_base//image",
     deps = ["//labm8/py:app"],
 )
 

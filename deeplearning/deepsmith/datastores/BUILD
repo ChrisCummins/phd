@@ -38,7 +38,7 @@ py_binary(
 py3_image(
     name = "datastore_image",
     srcs = ["datastore.py"],
-    base = "@base//image",
+    base = "@phd_base//image",
     main = "datastore.py",
     deps = [":datastore"],
 )

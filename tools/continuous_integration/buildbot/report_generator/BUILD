@@ -17,7 +17,7 @@ py_binary(
 py3_image(
     name = "image",
     srcs = ["report_generator.py"],
-    base = "@base//image",
+    base = "@phd_base//image",
     main = "report_generator.py",
     deps = [
         ":report_generator",

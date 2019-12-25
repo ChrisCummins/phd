@@ -71,7 +71,7 @@ py_test(
 py3_image(
     name = "cldrive_image",
     srcs = ["cldrive.py"],
-    base = "@base//image",
+    base = "@phd_base//image",
     main = "cldrive.py",
     deps = [":cldrive"],
 )
@@ -82,7 +82,7 @@ py3_image(
 # py3_image(
 #     name = "cldrive_test_image",
 #     srcs = ["cldrive_test.py"],
-#     base = "@base//image",
+#     base = "@phd_base//image",
 #     main = "cldrive_test.py",
 #     deps = [
 #         ":cldrive",

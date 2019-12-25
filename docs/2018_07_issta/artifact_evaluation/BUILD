@@ -84,7 +84,7 @@ py_binary(
 py3_image(
     name = "01_evaluate_generator_image",
     srcs = ["01_evaluate_generator.py"],
-    base = "@base//image",
+    base = "@phd_base//image",
     main = "01_evaluate_generator.py",
     deps = [":01_evaluate_generator"],
 )
@@ -101,7 +101,7 @@ container_push(
 py3_image(
     name = "02_evaluate_harness_image",
     srcs = ["02_evaluate_harness.py"],
-    base = "@base//image",
+    base = "@phd_base//image",
     main = "02_evaluate_harness.py",
     deps = [":02_evaluate_harness"],
 )
@@ -109,7 +109,7 @@ py3_image(
 py3_image(
     name = "03_evaluate_results_image",
     srcs = ["03_evaluate_results.py"],
-    base = "@base//image",
+    base = "@phd_base//image",
     main = "03_evaluate_results.py",
     deps = [":03_evaluate_results"],
 )

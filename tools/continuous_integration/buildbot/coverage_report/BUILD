@@ -16,7 +16,7 @@ py_binary(
 py3_image(
     name = "image",
     srcs = ["coverage_report.py"],
-    base = "@base//image",
+    base = "@phd_base//image",
     main = "coverage_report.py",
     deps = [
         ":coverage_report",

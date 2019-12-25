@@ -31,7 +31,7 @@ py_binary(
 py3_image(
     name = "opencl_fuzz_image",
     srcs = ["opencl_fuzz.py"],
-    base = "@base//image",
+    base = "@phd_base//image",
     main = "opencl_fuzz.py",
     deps = [":opencl_fuzz"],
 )
