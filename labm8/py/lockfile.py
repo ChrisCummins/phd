@@ -35,7 +35,7 @@ FLAGS = app.FLAGS
 app.DEFINE_float(
   "lockfile_block_seconds",
   10.0,
-  "The number of seconds to block for when waiting for a lock " "files.",
+  "The number of seconds to block for when waiting for a lock file.",
 )
 
 
@@ -165,7 +165,7 @@ class LockFile:
     """Acquire the lock.
 
     A lock can be claimed if any of these conditions are true:
-      1. The lock is unheld by anyone.
+      1. The lock is not held by anyone.
       2. The lock is held but the 'force' argument is set.
       3. The lock is held by the current process.
 
