@@ -34,6 +34,7 @@ docutils==0.14
 editdistance==0.3.1
 entrypoints==0.2.3
 enum34==1.1.6
+fasteners==0.15
 flaky==3.6.1
 Flask==1.0.2
 Flask-Compress==1.4.0
@@ -87,6 +88,7 @@ matplotlib==2.2.0rc1
 mccabe==0.6.1
 memory-profiler==0.55.0
 mistune==0.8.3
+monotonic==1.5  # Needed by fasteners.
 more-itertools==7.2.0  # Need by pytest.
 mysqlclient==1.4.2.post1
 nbconvert==5.3.1
