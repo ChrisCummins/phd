@@ -435,7 +435,7 @@ def AddInterproceduralCallEdges(
     if src == "external node":
       continue
 
-    call_sites = query.FindCallSites(graph, src, dst)
+    call_sites = llvm_statements.FindCallSites(graph, src, dst)
 
     if not call_sites:
       continue
