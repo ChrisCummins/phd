@@ -137,10 +137,6 @@ def test_load_restore_model_from_checkpoint_smoke_test(
   proto_db: unlabelled_graph_database.Database,
 ):
   """Test creating and restoring a model from checkpoint."""
-  run_id = run_id_lib.RunId.GenerateUnique(
-    f"mock{random.randint(0, int(1e6)):06}"
-  )
-
   # Create and initialize a model.
   model = node_lstm.NodeLstm(
     logger,
@@ -149,7 +145,6 @@ def test_load_restore_model_from_checkpoint_smoke_test(
     batch_size=32,
     padded_sequence_length=10,
     padded_node_sequence_length=10,
-    run_id=run_id,
   )
   model.Initialize()
 
@@ -200,10 +195,6 @@ def test_classifier_call(
   proto_db: unlabelled_graph_database.Database,
 ):
   """Test running a node classifier."""
-  run_id = run_id_lib.RunId.GenerateUnique(
-    f"mock{random.randint(0, int(1e6)):06}"
-  )
-
   model = node_lstm.NodeLstm(
     logger,
     graph_db,
@@ -211,7 +202,6 @@ def test_classifier_call(
     batch_size=32,
     padded_sequence_length=100,
     padded_node_sequence_length=50,
-    run_id=run_id,
   )
   model.Initialize()
 

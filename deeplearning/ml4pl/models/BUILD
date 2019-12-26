@@ -107,7 +107,6 @@ py_test(
         ":epoch",
         ":log_database",
         ":logger",
-        "//deeplearning/ml4pl:run_id",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//deeplearning/ml4pl/testing:random_graph_tuple_database_generator",
         "//deeplearning/ml4pl/testing:testing_databases",

@@ -21,7 +21,6 @@ from typing import Tuple
 
 import numpy as np
 
-from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch as batches
@@ -232,14 +231,9 @@ def model(
   has_learning_rate: bool,
 ) -> MockModel:
   """A test fixture which enumerates mock models."""
-  run_id = run_id_lib.RunId.GenerateUnique(
-    f"mock{random.randint(0, int(1e6)):06}"
-  )
-
   return MockModel(
     logger=logger,
     graph_db=graph_db,
-    run_id=run_id,
     has_loss=has_loss,
     has_learning_rate=has_learning_rate,
   )
@@ -380,11 +374,7 @@ def test_empty_batches_is_not_error(
       else:
         return batches.EmptyBatch()
 
-  run_id = run_id_lib.RunId.GenerateUnique(
-    f"mock{random.randint(0, int(1e6)):06}"
-  )
-
-  model = FlakyBatchModel(logger=logger, graph_db=graph_db, run_id=run_id,)
+  model = FlakyBatchModel(logger=logger, graph_db=graph_db)
 
   batch_iterator = batches.BatchIterator(
     batches=model.BatchIterator(

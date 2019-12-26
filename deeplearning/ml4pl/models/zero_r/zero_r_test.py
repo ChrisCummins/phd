@@ -142,12 +142,8 @@ def test_load_restore_model_from_checkpoint_smoke_test(
   node_classification_graph_db: graph_tuple_database.Database,
 ):
   """Test creating and restoring model from checkpoint."""
-  run_id = run_id_lib.RunId.GenerateUnique(
-    f"mock{random.randint(0, int(1e6)):06}"
-  )
-
   # Create and initialize an untrained model.
-  model = zero_r.ZeroR(logger, node_classification_graph_db, run_id=run_id)
+  model = zero_r.ZeroR(logger, node_classification_graph_db)
   model.Initialize()
 
   # Smoke test save and restore.
@@ -161,12 +157,8 @@ def test_node_classifier_call(
   logger: logging.Logger,
 ):
   """Test running a node classifier."""
-  run_id = run_id_lib.RunId.GenerateUnique(
-    f"mock{random.randint(0, int(1e6)):06}"
-  )
-
   # Create and initialize an untrained model.
-  model = zero_r.ZeroR(logger, node_classification_graph_db, run_id=run_id)
+  model = zero_r.ZeroR(logger, node_classification_graph_db)
   model.Initialize()
 
   # Run the model over some random graphs.
@@ -191,12 +183,8 @@ def test_graph_classifier_call(
   graph_classification_graph_db: graph_tuple_database.Database,
 ):
   """Test running a graph classifier."""
-  run_id = run_id_lib.RunId.GenerateUnique(
-    f"mock{random.randint(0, int(1e6)):06}"
-  )
-
   # Create and initialize an untrained model.
-  model = zero_r.ZeroR(logger, graph_classification_graph_db, run_id=run_id)
+  model = zero_r.ZeroR(logger, graph_classification_graph_db)
   model.Initialize()
 
   # Run the model over some random graphs.

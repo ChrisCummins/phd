@@ -19,7 +19,6 @@ import string
 from typing import List
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
-from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.graphs.labelled.devmap import make_devmap_dataset
 from deeplearning.ml4pl.ir import ir_database
@@ -161,18 +160,9 @@ def test_load_restore_model_from_checkpoint_smoke_test(
   ir_db: ir_database.Database,
 ):
   """Test creating and restoring model from checkpoint."""
-  run_id = run_id_lib.RunId.GenerateUnique(
-    f"mock{random.randint(0, int(1e6)):06}"
-  )
-
   # Create and initialize a model.
   model = graph_lstm.GraphLstm(
-    logger,
-    graph_db,
-    ir_db=ir_db,
-    batch_size=32,
-    padded_sequence_length=10,
-    run_id=run_id,
+    logger, graph_db, ir_db=ir_db, batch_size=32, padded_sequence_length=10,
   )
   model.Initialize()
 
@@ -218,17 +208,8 @@ def test_classifier_call(
   ir_db: ir_database.Database,
 ):
   """Test running a graph classifier."""
-  run_id = run_id_lib.RunId.GenerateUnique(
-    f"mock{random.randint(0, int(1e6)):06}"
-  )
-
   model = graph_lstm.GraphLstm(
-    logger,
-    graph_db,
-    ir_db=ir_db,
-    batch_size=8,
-    padded_sequence_length=100,
-    run_id=run_id,
+    logger, graph_db, ir_db=ir_db, batch_size=8, padded_sequence_length=100,
   )
   model.Initialize()
 

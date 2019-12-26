@@ -168,12 +168,8 @@ def test_load_restore_model_from_checkpoint_smoke_test(
   logger: logging.Logger, node_y_graph_db: graph_tuple_database.Database,
 ):
   """Test creating and restoring model from checkpoint."""
-  run_id = run_id_lib.RunId.GenerateUnique(
-    f"mock{random.randint(0, int(1e6)):06}"
-  )
-
   # Create and initialize an untrained model.
-  model = ggnn.Ggnn(logger, node_y_graph_db, run_id=run_id)
+  model = ggnn.Ggnn(logger, node_y_graph_db)
   model.Initialize()
 
   # Smoke test save and restore.
@@ -215,12 +211,8 @@ def test_node_classifier_call(
     limit_max_data_flow_steps_during_training
   )
 
-  run_id = run_id_lib.RunId.GenerateUnique(
-    f"mock{random.randint(0, int(1e6)):06}"
-  )
-
   # Create and initialize an untrained model.
-  model = ggnn.Ggnn(logger, node_y_graph_db, run_id=run_id)
+  model = ggnn.Ggnn(logger, node_y_graph_db)
   model.Initialize()
 
   # Run the model over some random graphs.
@@ -249,12 +241,8 @@ def test_graph_classifier_call(
   FLAGS.inst2vec_embeddings = node_text_embedding_type
   FLAGS.log1p_graph_x = log1p_graph_x
 
-  run_id = run_id_lib.RunId.GenerateUnique(
-    f"mock{random.randint(0, int(1e6)):06}"
-  )
-
   # Create and initialize an untrained model.
-  model = ggnn.Ggnn(logger, graph_y_graph_db, run_id=run_id)
+  model = ggnn.Ggnn(logger, graph_y_graph_db)
   model.Initialize()
 
   # Run the model over some random graphs.
