@@ -74,7 +74,6 @@ py_binary(
     srcs = ["llvm2graph.py"],
     deps = [
         ":graph_builder",
-        "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//labm8/py:app",
         "//labm8/py:pbutil",
     ],
