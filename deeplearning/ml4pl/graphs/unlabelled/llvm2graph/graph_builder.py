@@ -112,12 +112,18 @@ class ProGraMLGraphBuilder(object):
     # Copy the DiGraph to a MultiDiGraph, which is required for the parallel
     # control- and data-flow edges.
     #
-    # While doing this, prefix the node and edge names with thename of the
+    # While doing this, prefix the node and edge names with the name of the
     # graph so that multiple graphs from the same bytecode file can be composed.
     g = nx.MultiDiGraph()
     g.graph["name"] = ffg.name
     for node, data in ffg.nodes(data=True):
-      g.add_node(f"{g.name}_{node}", text=data["text"], name=data["name"])
+      g.add_node(
+        f"{g.name}_{node}",
+        text=data["text"],
+        name=data["name"],
+        type=programl_pb2.Node.STATEMENT,
+        function=g.name,
+      )
 
     for src, dst, data in ffg.edges(data=True):
       g.add_edge(
