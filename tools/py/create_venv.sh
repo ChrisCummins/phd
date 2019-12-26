@@ -4,7 +4,7 @@
 # Usage:
 #     $ ./tools/py/create_venv.sh
 set -eux
-DIR="$HOME/.cache/tools/py/venv/phd"
+DIR="$HOME/.cache/phd/tools/py/venv/phd"
 
 rm -rf "$DIR"
 mkdir -pv "$(dirname $DIR)"
