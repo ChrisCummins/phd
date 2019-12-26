@@ -35,6 +35,7 @@ py_library(
     visibility = ["//deeplearning/ml4pl:__subpackages__"],
     deps = [
         ":call_graph",
+        ":llvm_statements",
         ":node_encoder",
         "//compilers/llvm:opt_util",
         "//deeplearning/ml4pl/graphs:nx_utils",

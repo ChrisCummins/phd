@@ -27,6 +27,7 @@ from compilers.llvm import opt_util
 from deeplearning.ml4pl.graphs import nx_utils
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import call_graph as cg
+from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import llvm_statements
 from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import node_encoder
 from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import llvm_util
 from labm8.py import app
@@ -179,9 +180,7 @@ class ProGraMLGraphBuilder(object):
     for statement, data in nx_utils.StatementNodeIterator(g):
       # TODO(github.com/ChrisCummins/ProGraML/issues/9): Separate !IDENTIFIER
       # and !IMMEDIATE uses.
-      def_, uses = GetLlvmStatementDefAndUses(
-        data["text"], store_destination_is_def=self.store_destination_is_def
-      )
+      def_, uses = llvm_statements.GetLlvmStatementDefAndUses(data["text"])
       if def_:  # Data flow out edge.
         def_name = f"{prefix(def_)}_operand"
         edges_to_add.append(
