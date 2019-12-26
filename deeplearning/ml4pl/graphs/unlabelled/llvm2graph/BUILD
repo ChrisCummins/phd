@@ -16,6 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
+
 py_library(
     name = "call_graph",
     srcs = ["call_graph.py"],
@@ -74,10 +76,19 @@ py_binary(
     srcs = ["llvm2graph.py"],
     deps = [
         ":graph_builder",
+        "//deeplearning/ml4pl/graphs:programl",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//labm8/py:app",
         "//labm8/py:pbutil",
     ],
+)
+
+py3_image(
+    name = "llvm2graph_image",
+    srcs = ["llvm2graph.py"],
+    base = "@phd_base//image",
+    main = "llvm2graph.py",
+    deps = [":llvm2graph"],
 )
 
 py_library(

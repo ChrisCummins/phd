@@ -13,25 +13,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Construct a ProGraML graph from LLVM intermediate representation.
+"""Construct ProGraML graph representation from LLVM IR.
 
-This script reads an LLVM bytecode file from stdin and prints the program graph
+This program reads an LLVM bitcode file from stdin and prints the program graph
 protobuf representation to stdout.
 
-Example usage:
+Example Usage
+=============
 
-  Create a source file:
+Generate a C source file that can be used to derive an intermediate
+representation file:
 
     $ echo "int main() { return 5; }" > /tmp/foo.c
 
-  Create an LLVM intermediate representation:
+Create an LLVM intermediate representation:
 
-    $ bazel run //compilers/llvm:clang -- -- \
+    $ bazel run //compilers/llvm:clang -- -- \\
         /tmp/foo.c -emit-llvm -S -o /tmp/foo.ll
 
-  Generate a program graph proto from this IR:
+Generate a program graph proto from this IR:
 
-    $ bazel run //deeplearning/ml4pl/graphs/unlabelled/llvm2graph -- \
+    $ bazel run //deeplearning/ml4pl/graphs/unlabelled/llvm2graph -- \\
         < /tmp/foo.ll
 """
 import sys
