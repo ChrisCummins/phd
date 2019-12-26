@@ -51,6 +51,7 @@ py_test(
     srcs = ["graph_builder_test.py"],
     deps = [
         ":graph_builder",
+        "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//labm8/py:test",
         "//third_party/py/networkx",
     ],

@@ -17,6 +17,7 @@
 import networkx as nx
 
 from deeplearning.ml4pl.graphs import nx_utils
+from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import graph_builder
 from labm8.py import app
 from labm8.py import test
@@ -89,7 +90,7 @@ def test_every_statement_has_a_predecessor(simple_bytecode: str):
     if node in entry_blocks:
       continue
     for edge in graph.in_edges(node):
-      if graph.edges[edge[0], edge[1], 0]["flow"] == "control":
+      if graph.edges[edge[0], edge[1], 0]["flow"] == programl_pb2.Edge.CONTROL:
         break
     else:
       assert False, f"{node} has no control flow predecessor."
@@ -103,7 +104,7 @@ def test_every_edge_has_position(simple_bytecode: str):
   for src, dst, position in graph.edges(data="position"):
     assert isinstance(
       position, int
-    ), f'No position for edge {graph.nodes[src]["original_text"]} -> {graph.nodes[dst]["original_text"]}'
+    ), f'No position for edge {graph.nodes[src]["text"]} -> {graph.nodes[dst]["text"]}'
 
 
 @test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/2)")
