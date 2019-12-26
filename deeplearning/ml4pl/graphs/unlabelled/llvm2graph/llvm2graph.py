@@ -13,26 +13,50 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Construct a ProGraML graph from LLVM intermediate representation."""
+"""Construct a ProGraML graph from LLVM intermediate representation.
+
+This script reads an LLVM bytecode file from stdin and prints the program graph
+protobuf representation to stdout.
+
+Example usage:
+
+  Create a source file:
+
+    $ echo "int main() { return 5; }" > /tmp/foo.c
+
+  Create an LLVM intermediate representation:
+
+    $ bazel run //compilers/llvm:clang -- -- \
+        /tmp/foo.c -emit-llvm -S -o /tmp/foo.ll
+
+  Generate a program graph proto from this IR:
+
+    $ bazel run //deeplearning/ml4pl/graphs/unlabelled/llvm2graph -- \
+        < /tmp/foo.ll
+"""
+import sys
+
+from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import graph_builder
 from labm8.py import app
 
 FLAGS = app.FLAGS
 
+app.DEFINE_string(
+  "opt",
+  None,
+  "The path of the LLVM opt binary to use. If not provided, the default "
+  "project binary will be used.",
+)
 
-def main(argv):
+
+def Main():
   """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(" ".join(argv[1:])))
-
-  # TODO(github.com/ChrisCummins/ProGraML/issues/2): Implement!
-  bytecode = ""
-  opt = ""
-
+  bytecode = sys.stdin.read()
   builder = graph_builder.ProGraMLGraphBuilder()
-  graph_proto = builder.Build(bytecode, opt)
-  print(graph_proto)
+  g = builder.Build(bytecode, FLAGS.opt)
+  print(programl.NetworkXToProgramGraph(g))
 
 
 if __name__ == "__main__":
-  app.Run(main)
+  app.Run(Main)
