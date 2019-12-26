@@ -38,7 +38,7 @@ FLAGS = app.FLAGS
 
 class ProGraMLGraphBuilder(object):
   def __init__(
-    self, dataflow: bool = True, preprocess_text: bool = True,
+    self, dataflow: bool = True, preprocess_text: bool = True, opt=None,
   ):
     """Instantiate a Control and Data Flow Graph (CDFG) builder.
 
@@ -49,24 +49,24 @@ class ProGraMLGraphBuilder(object):
         flow edges flowing between the identifier nodes and statements.
       preprocess_text: If true, pre-process the text of statements to discard
         literals, normalise identifiers, etc.
+      opt: The path to LLVM `opt` binary to use to construct control-flow and
+        call graphs from. The default uses the opt binary packaged with
+        //compilers/llvm:opt.
     """
     self.dataflow = dataflow
     self.preprocess_text = preprocess_text
     self.node_encoder = node_encoder.GraphNodeEncoder()
+    self.opt = opt
 
   def Build(
     self,
     bytecode: str,
-    opt=None,
     tag_hook: typing.Optional[llvm_util.TagHook] = None,
   ) -> programl_pb2.ProgramGraph:
     """Construct a ProGraML from the given bytecode.
 
     Args:
       bytecode: The bytecode to construct the graph from.
-      opt: The path to LLVM `opt` binary to use to construct control-flow and
-        call graphs from. The default uses the opt binary packaged with
-        //compilers/llvm:opt.
       tag_hook: An optional object that can tag specific nodes in the graph
                 according to some logic.
 
@@ -78,7 +78,7 @@ class ProGraMLGraphBuilder(object):
       call_graph_dot,
       cfg_dots,
     ) = opt_util.DotCallGraphAndControlFlowGraphsFromBytecode(
-      bytecode, opt_path=opt
+      bytecode, opt_path=self.opt
     )
 
     # Then construct the call graph dot using opt.
