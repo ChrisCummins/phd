@@ -71,7 +71,7 @@ define i32 @A() #0 {
 
 @test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/2)")
 def test_that_root_node_is_connected_to_entry_points(simple_bytecode: str):
-  builder = graph_builder.ControlAndDataFlowGraphBuilder()
+  builder = graph_builder.ProGraMLGraphBuilder()
   graph = builder.Build(simple_bytecode)
   assert "root" in graph
   assert graph.in_degree("root") == 0
@@ -82,7 +82,7 @@ def test_that_root_node_is_connected_to_entry_points(simple_bytecode: str):
 @test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/2)")
 def test_every_statement_has_a_predecessor(simple_bytecode: str):
   """Test that every statement (except entry blocks) have control preds."""
-  builder = graph_builder.ControlAndDataFlowGraphBuilder()
+  builder = graph_builder.ProGraMLGraphBuilder()
   graph = builder.Build(simple_bytecode)
   entry_blocks = set([node for node, _ in nx_utils.EntryBlockIterator(graph)])
   for node, _ in nx_utils.StatementNodeIterator(graph):
@@ -98,7 +98,7 @@ def test_every_statement_has_a_predecessor(simple_bytecode: str):
 @test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/2)")
 def test_every_edge_has_position(simple_bytecode: str):
   """Test that every edge has a position encoding."""
-  builder = graph_builder.ControlAndDataFlowGraphBuilder()
+  builder = graph_builder.ProGraMLGraphBuilder()
   graph = builder.Build(simple_bytecode)
   for src, dst, position in graph.edges(data="position"):
     assert isinstance(
@@ -109,7 +109,7 @@ def test_every_edge_has_position(simple_bytecode: str):
 @test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/2)")
 def test_every_node_has_x(simple_bytecode: str):
   """Test that every edge has a position encoding."""
-  builder = graph_builder.ControlAndDataFlowGraphBuilder()
+  builder = graph_builder.ProGraMLGraphBuilder()
   graph = builder.Build(simple_bytecode)
   for node, x in graph.nodes(data="x"):
     assert isinstance(
@@ -168,7 +168,7 @@ def test_GetLlvmStatementDefAndUses():
 @test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/2)")
 def test_ComposeGraphs_undefined():
   """Test that function graph is inserted for call to undefined function."""
-  builder = graph_builder.ControlAndDataFlowGraphBuilder()
+  builder = graph_builder.ProGraMLGraphBuilder()
 
   A = nx.MultiDiGraph(name="A")
   A.entry_block = "A_entry"
