@@ -59,6 +59,7 @@ httplib2==0.14  # Needed by oauth2client
 humanize==0.5.1
 importlib-metadata==0.23  # Needed by pytest.
 idna==2.6  # Dependency of requests.
+ipaddress==1.0.23  # Dependency of urllib3
 ipdb==0.11
 ipykernel==4.8.2
 ipython-genutils==0.2.0
@@ -141,6 +142,7 @@ pybind11==2.4.2  # Implicit dependency of pyopencl.
 pyfiglet==0.8.post1
 pylint==1.8.2
 pyopencl==2018.2.5
+pyOpenSSL==19.1.0  # Implicit dependency of urllib3.
 pyparsing==2.2.0
 pytest-benchmark==3.2.2
 pytest-cov==2.8.1
