@@ -1,9 +1,8 @@
-#include "./tests.h"
-
+#include <algorithm>
 #include <ustl/vector>
 #include <vector>
 
-#include <algorithm>
+#include "./tests.h"
 
 TEST(std_vector, constructors) {
   std::vector<int> a(3);
@@ -856,3 +855,5 @@ TEST(ustl_vector_modifiers, swap_overload) {
   vector_equal(a, {4, 5});
   vector_equal(b, {1, 2, 3});
 }
+
+TEST_MAIN();

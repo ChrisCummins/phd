@@ -1,12 +1,10 @@
-#include "./tests.h"
-
 #include <unordered_map>
 #include <ustl/unordered_map>
-
 #include <ustl/vector>
+#include <utility>
 #include <vector>
 
-#include <utility>
+#include "./tests.h"
 
 // constructors:
 
@@ -224,3 +222,5 @@ TEST(ustl_unsorted_map_lookup, find) {
   ASSERT_EQ('a', (*l1.find(1)).second);
   ASSERT_EQ('b', (*l1.find(2)).second);
 }
+
+TEST_MAIN();

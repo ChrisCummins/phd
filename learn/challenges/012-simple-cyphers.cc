@@ -2,8 +2,6 @@
  * Write a program which accepts cyphertext from a Caesar shifted
  * plaintext input, and returns the most likely decrypted plaintext.
  */
-#include <phd/test>
-
 #include <array>
 #include <cmath>
 #include <functional>
@@ -11,6 +9,8 @@
 #include <limits>
 #include <numeric>
 #include <string>
+
+#include "labm8/cpp/test.h"
 
 // Data types:
 using char_freqs = std::array<double, 26>;
@@ -189,4 +189,4 @@ TEST(simple_cyphers, permutations) {
   ASSERT_EQ(sonnet, crack(caesar_shift(sonnet, 13)));
 }
 
-PHD_MAIN();
+TEST_MAIN();

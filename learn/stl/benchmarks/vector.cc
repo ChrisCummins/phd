@@ -1,7 +1,9 @@
-#include "./benchmarks.h"
+#include <stdlib.h>
 
 #include <ustl/vector>
 #include <vector>
+
+#include "labm8/cpp/test.h"
 
 static unsigned int seed = 0xCEC;
 
@@ -24,3 +26,5 @@ static void ustl_vector_push_back_int(benchmark::State& state) {
   }
 }
 BENCHMARK(ustl_vector_push_back_int);
+
+TEST_MAIN();

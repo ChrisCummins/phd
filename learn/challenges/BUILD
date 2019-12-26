@@ -39,11 +39,8 @@ cc_test(
     name = "010-inc-int-arr",
     size = "small",
     srcs = ["010-inc-int-arr.cc"],
-    copts = [
-        "-Ilib/phd/include",
-    ],
     deps = [
-        "//lib/phd:main",
+        "//labm8/cpp:test",
     ],
 )
 
@@ -62,11 +59,8 @@ cc_test(
     name = "012-simple-cyphers",
     size = "small",
     srcs = ["012-simple-cyphers.cc"],
-    copts = [
-        "-Ilib/phd/include",
-    ],
     deps = [
-        "//lib/phd:main",
+        "//labm8/cpp:test",
     ],
 )
 

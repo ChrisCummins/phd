@@ -1,10 +1,9 @@
-#include "./tests.h"
-
 #include <algorithm>
 #include <deque>
-
 #include <stack>
 #include <ustl/stack>
+
+#include "./tests.h"
 
 ///////////////////
 // Constructors: //
@@ -169,3 +168,5 @@ TEST(ustl_stack, relational_ops) {
   ASSERT_FALSE(s1 > s2);
   ASSERT_TRUE(s1 >= s2);
 }
+
+TEST_MAIN();

@@ -4,7 +4,7 @@
 #include <limits>
 #include <vector>
 
-#include <phd/test>
+#include "labm8/cpp/test.h"
 
 class Pixel {
  public:
@@ -86,8 +86,9 @@ TEST(Fractals, imgTest) {
     for (size_t x = 0; x < width; x++) {
       img[y][x] = Pixel{static_cast<Pixel::value_type>(
                             (x / static_cast<double>(width)) * 255),
-                        0, static_cast<Pixel::value_type>(
-                               (y / static_cast<double>(height)) * 255)};
+                        0,
+                        static_cast<Pixel::value_type>(
+                            (y / static_cast<double>(height)) * 255)};
     }
   }
 
@@ -134,4 +135,4 @@ TEST(Fractals, mandelbrot) {
   file.close();
 }
 
-PHD_MAIN();
+TEST_MAIN();

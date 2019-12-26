@@ -1,6 +1,6 @@
-#include "./tests.hpp"
-
 #include <lm/lm>
+
+#include "./tests.hpp"
 
 TEST(Lm, Vector) {
   lm::Vector<> v{1, 2, 3, 4, 5};
@@ -27,7 +27,4 @@ TEST(Lm, Matrix) {
   std::cout << m1;
 }
 
-int main(int argc, char **argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+TEST_MAIN();

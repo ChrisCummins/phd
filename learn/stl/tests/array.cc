@@ -1,7 +1,7 @@
-#include "./tests.h"
-
 #include <array>
 #include <ustl/array>
+
+#include "./tests.h"
 
 ///////////////
 // Iterators //
@@ -466,3 +466,5 @@ TEST(ustl_array, relational_ops) {
   ASSERT_TRUE(b > a);
   ASSERT_TRUE(b >= a);
 }
+
+TEST_MAIN();

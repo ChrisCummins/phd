@@ -5,7 +5,7 @@
 #ifndef LEARN_STL_INCLUDE_USTL_TESTS_H
 #define LEARN_STL_INCLUDE_USTL_TESTS_H
 
-#include <phd/test>
+#include "labm8/cpp/test.h"
 
 //
 // Helper functions & objects.

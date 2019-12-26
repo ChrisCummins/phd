@@ -1,12 +1,10 @@
-#include "./tests.h"
-
 #include <list>
 #include <ustl/list>
-
 #include <ustl/vector>
+#include <utility>
 #include <vector>
 
-#include <utility>
+#include "./tests.h"
 
 TEST(std_list, constructors) {
   // default:
@@ -144,15 +142,18 @@ TEST(ustl_list, front) {
 
 TEST(std_list, emplace_front) {
   std::list<std::pair<int, int>> l1{
-      std::pair<int, int>{1, 2}, std::pair<int, int>{2, 3},
+      std::pair<int, int>{1, 2},
+      std::pair<int, int>{2, 3},
       std::pair<int, int>{3, 4},
   };
 
   l1.emplace_front(0, 1);
 
   const std::list<std::pair<int, int>> l2{
-      std::pair<int, int>{0, 1}, std::pair<int, int>{1, 2},
-      std::pair<int, int>{2, 3}, std::pair<int, int>{3, 4},
+      std::pair<int, int>{0, 1},
+      std::pair<int, int>{1, 2},
+      std::pair<int, int>{2, 3},
+      std::pair<int, int>{3, 4},
   };
 
   ASSERT_TRUE(l1 == l2);
@@ -162,15 +163,18 @@ TEST(std_list, emplace_front) {
 
 TEST(ustl_list, emplace_front) {
   ustl::list<std::pair<int, int>> l1{
-      std::pair<int, int>{1, 2}, std::pair<int, int>{2, 3},
+      std::pair<int, int>{1, 2},
+      std::pair<int, int>{2, 3},
       std::pair<int, int>{3, 4},
   };
 
   l1.emplace_front(0, 1);
 
   const ustl::list<std::pair<int, int>> l2{
-      std::pair<int, int>{0, 1}, std::pair<int, int>{1, 2},
-      std::pair<int, int>{2, 3}, std::pair<int, int>{3, 4},
+      std::pair<int, int>{0, 1},
+      std::pair<int, int>{1, 2},
+      std::pair<int, int>{2, 3},
+      std::pair<int, int>{3, 4},
   };
 
   ASSERT_TRUE(l1 == l2);
@@ -212,15 +216,18 @@ TEST(ustl_list, pop_front) {
 
 TEST(std_list, emplace) {
   std::list<std::pair<int, int>> l1{
-      std::pair<int, int>{1, 2}, std::pair<int, int>{2, 3},
+      std::pair<int, int>{1, 2},
+      std::pair<int, int>{2, 3},
       std::pair<int, int>{3, 4},
   };
 
   l1.emplace(++l1.begin(), 0, 1);
 
   const std::list<std::pair<int, int>> l2{
-      std::pair<int, int>{1, 2}, std::pair<int, int>{0, 1},
-      std::pair<int, int>{2, 3}, std::pair<int, int>{3, 4},
+      std::pair<int, int>{1, 2},
+      std::pair<int, int>{0, 1},
+      std::pair<int, int>{2, 3},
+      std::pair<int, int>{3, 4},
   };
 
   ASSERT_TRUE(l1 == l2);
@@ -228,15 +235,18 @@ TEST(std_list, emplace) {
 
 TEST(ustl_list, emplace) {
   ustl::list<std::pair<int, int>> l1{
-      std::pair<int, int>{1, 2}, std::pair<int, int>{2, 3},
+      std::pair<int, int>{1, 2},
+      std::pair<int, int>{2, 3},
       std::pair<int, int>{3, 4},
   };
 
   l1.emplace(++l1.begin(), 0, 1);
 
   const ustl::list<std::pair<int, int>> l2{
-      std::pair<int, int>{1, 2}, std::pair<int, int>{0, 1},
-      std::pair<int, int>{2, 3}, std::pair<int, int>{3, 4},
+      std::pair<int, int>{1, 2},
+      std::pair<int, int>{0, 1},
+      std::pair<int, int>{2, 3},
+      std::pair<int, int>{3, 4},
   };
 
   ASSERT_TRUE(l1 == l2);
@@ -501,3 +511,5 @@ TEST(ustl_list, relational_ops) {
   ASSERT_TRUE(d >= a);
   ASSERT_TRUE(d > a);
 }
+
+TEST_MAIN();

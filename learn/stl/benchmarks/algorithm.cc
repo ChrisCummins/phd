@@ -1,13 +1,13 @@
-#include "./benchmarks.h"
+#include <stdlib.h>
 
 #include <algorithm>
-#include <ustl/algorithm>
-
 #include <array>
+#include <ustl/algorithm>
 #include <ustl/array>
-
 #include <ustl/vector>
 #include <vector>
+
+#include "labm8/cpp/test.h"
 
 static unsigned int seed = 0xCEC;
 
@@ -39,3 +39,5 @@ static void ustl_algorithm_sort_int(benchmark::State& state) {
   }
 }
 BENCHMARK(ustl_algorithm_sort_int)->Range(sort_size_min, sort_size_max);
+
+TEST_MAIN();

@@ -3,9 +3,8 @@
 #include <utility>
 #include <vector>
 
-#include <phd/phd>
-
 #include "./container.hpp"
+#include "labm8/cpp/test.h"
 
 namespace pat {
 
@@ -262,4 +261,4 @@ TEST(patterns, reduce1) {
   ASSERT_EQ(gs, b);
 }
 
-PHD_MAIN();
+TEST_MAIN();

@@ -1,7 +1,9 @@
-#include "./benchmarks.h"
+#include <stdlib.h>
 
 #include <forward_list>
 #include <ustl/forward_list>
+
+#include "labm8/cpp/test.h"
 
 static unsigned int seed = 0xCEC;
 
@@ -33,3 +35,5 @@ static void ustl_forward_list_sort_int(benchmark::State& state) {
   }
 }
 BENCHMARK(ustl_forward_list_sort_int)->Range(sort_size_min, sort_size_max);
+
+TEST_MAIN();

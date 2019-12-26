@@ -22,20 +22,14 @@ cc_test(
     name = "003-string-inc",
     size = "small",
     srcs = ["003-string-inc.cc"],
-    copts = [
-        "-Ilib/phd/include",
-    ],
-    deps = ["//lib/phd:main"],
+    deps = ["//labm8/cpp:test"],
 )
 
 cc_test(
     name = "004-fractal",
     size = "small",
     srcs = ["004-fractal.cc"],
-    copts = [
-        "-Ilib/phd/include",
-    ],
-    deps = ["//lib/phd:main"],
+    deps = ["//labm8/cpp:test"],
 )
 
 cc_binary(

@@ -1,7 +1,7 @@
-#include "./tests.h"
-
 #include <type_traits>
 #include <ustl/type_traits>
+
+#include "./tests.h"
 
 ////////////////////
 // Helper Classes //
@@ -362,3 +362,5 @@ TEST(ustl_type_traits, remove_extent) {
       ustl::is_same_v<int[10][15], ustl::remove_extent<int[5][10][15]>::type>,
       "error");
 }
+
+TEST_MAIN();

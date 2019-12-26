@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 
-#include <phd/test>
+#include "labm8/cpp/test.h"
 
 char* inc_int_str(char* str) {
   size_t len{0};
@@ -54,4 +54,4 @@ TEST(incr_int_arr, str) {
   ASSERT_STREQ("1000", inc_int_str(str6));
 }
 
-PHD_MAIN()
+TEST_MAIN();

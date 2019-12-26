@@ -1,9 +1,9 @@
 /*
  * Mixed based arithmetic.
  */
-#include <phd/test>
-
 #include <string>
+
+#include "labm8/cpp/test.h"
 
 enum ctype { digit = 0, az = 1, AZ = 2 };
 
@@ -68,10 +68,4 @@ TEST(Counter, increment) {
   ASSERT_EQ("gXrmc931", increment("gXrbk539", 278392));
 }
 
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  const auto ret = RUN_ALL_TESTS();
-  benchmark::Initialize(&argc, argv);
-  benchmark::RunSpecifiedBenchmarks();
-  return ret;
-}
+TEST_MAIN();

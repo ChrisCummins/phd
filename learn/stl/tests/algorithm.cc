@@ -1,13 +1,13 @@
-#include "./tests.h"
-
 #include <algorithm>
-#include <ustl/algorithm>
-
 #include <array>
+#include <ustl/algorithm>
 #include <ustl/array>
-
 #include <ustl/vector>
 #include <vector>
+
+#include "./tests.h"
+
+bool inverse_comp(const int &a, const int &b) { return a > b; }
 
 // all_of
 
@@ -688,3 +688,5 @@ TEST(ustl_algorithm, minmax) {
   ASSERT_EQ(1000, ustl::minmax({3, 4, 1, 10, 1000}, inverse_comp).first);
   ASSERT_EQ(1, ustl::minmax({3, 4, 1, 10, 1000}, inverse_comp).second);
 }
+
+TEST_MAIN();

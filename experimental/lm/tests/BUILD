@@ -1,17 +1,36 @@
 cc_test(
-    name = "main",
+    name = "lm",
     size = "small",
     srcs = [
         "lm.cc",
-        "meta-math.cc",
-        "tests.hpp",
     ],
     copts = [
         "-Iexperimental/lm/include",
-        "-Ilib/phd/include",
     ],
     deps = [
+        ":tests",
         "//experimental/lm:main",
-        "//lib/phd:main",
+        "//labm8/cpp:test",
     ],
+)
+
+cc_test(
+    name = "meta_math",
+    size = "small",
+    srcs = [
+        "meta-math.cc",
+    ],
+    copts = [
+        "-Iexperimental/lm/include",
+    ],
+    deps = [
+        ":tests",
+        "//experimental/lm:main",
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_library(
+    name = "tests",
+    hdrs = ["tests.hpp"],
 )
