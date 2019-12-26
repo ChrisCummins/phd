@@ -145,6 +145,7 @@ pyparsing==2.2.0
 pytest-benchmark==3.2.2
 pytest-cov==2.8.1
 pytest-mock==1.12.1
+pytest-shard==0.1.1
 pytest==5.3.1
 python-dateutil==2.6.1
 python-Levenshtein==0.12.0
