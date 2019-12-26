@@ -76,6 +76,12 @@ py_binary(
 )
 
 py_test(
+    name = "empty_test",
+    srcs = ["empty_test.py"],
+    deps = ["//labm8/py:test"],
+)
+
+py_test(
     name = "sharding_test",
     srcs = ["sharding_test.py"],
     shard_count = 10,
