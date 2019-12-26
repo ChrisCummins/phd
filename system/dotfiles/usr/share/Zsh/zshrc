@@ -516,13 +516,6 @@ fi
 unsetopt nullglob
 
 
-# Expand '...' into '../..'
-# TODO(2019-06-05): Temporarily disabling this feature because it has the
-# annoying habit of breaking my bazel '/...' paths.
-# autoload -Uz manydots-magic
-# manydots-magic
-
-
 # --------------------------------------------------------------------------
 # Paths.
 # --------------------------------------------------------------------------
