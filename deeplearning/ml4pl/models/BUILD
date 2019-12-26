@@ -100,7 +100,7 @@ py_test(
     name = "classifier_base_test",
     size = "enormous",
     srcs = ["classifier_base_test.py"],
-    shard_count = 4,
+    shard_count = 8,
     deps = [
         ":batch",
         ":classifier_base",
@@ -219,6 +219,7 @@ py_test(
     name = "log_database_test",
     size = "enormous",
     srcs = ["log_database_test.py"],
+    shard_count = 8,
     deps = [
         ":log_database",
         "//deeplearning/ml4pl/testing:random_log_database_generator",
@@ -279,6 +280,7 @@ py_test(
     name = "run_test",
     size = "enormous",
     srcs = ["run_test.py"],
+    shard_count = 8,
     deps = [
         ":batch",
         ":classifier_base",

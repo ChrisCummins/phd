@@ -34,8 +34,9 @@ py_binary(
 
 py_test(
     name = "zero_r_test",
+    size = "small",
     srcs = ["zero_r_test.py"],
-    shard_count = 4,
+    shard_count = 8,
     deps = [
         ":zero_r",
         "//deeplearning/ml4pl:run_id",

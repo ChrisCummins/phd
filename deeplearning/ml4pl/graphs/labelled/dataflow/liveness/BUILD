@@ -32,6 +32,7 @@ py_test(
     name = "liveness_test",
     size = "large",
     srcs = ["liveness_test.py"],
+    shard_count = 8,
     deps = [
         ":liveness",
         "//deeplearning/ml4pl/graphs:programl",

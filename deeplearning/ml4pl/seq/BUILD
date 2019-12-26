@@ -67,6 +67,7 @@ py_test(
     name = "graph2seq_test",
     size = "enormous",
     srcs = ["graph2seq_test.py"],
+    shard_count = 8,
     deps = [
         ":graph2seq",
         ":ir2seq",
@@ -185,6 +186,7 @@ py_test(
     name = "ir2seq_test",
     size = "enormous",
     srcs = ["ir2seq_test.py"],
+    shard_count = 8,
     deps = [
         ":ir2seq",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
@@ -232,6 +234,7 @@ py_test(
     name = "lexers_test",
     size = "enormous",
     srcs = ["lexers_test.py"],
+    shard_count = 8,
     deps = [
         ":lexers",
         "//labm8/py:decorators",

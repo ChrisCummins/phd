@@ -42,6 +42,7 @@ py_test(
     name = "make_devmap_dataset_test",
     size = "enormous",
     srcs = ["make_devmap_dataset_test.py"],
+    shard_count = 8,
     deps = [
         ":make_devmap_dataset",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",

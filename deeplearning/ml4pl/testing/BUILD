@@ -41,6 +41,7 @@ py_test(
     name = "random_graph_tuple_generator_test",
     size = "enormous",
     srcs = ["random_graph_tuple_generator_test.py"],
+    shard_count = 8,
     deps = [
         ":random_graph_tuple_generator",
         "//labm8/py:decorators",
@@ -65,6 +66,7 @@ py_test(
     name = "random_graph_tuple_database_generator_test",
     size = "enormous",
     srcs = ["random_graph_tuple_database_generator_test.py"],
+    shard_count = 8,
     deps = [
         ":random_graph_tuple_database_generator",
         ":testing_databases",
@@ -93,6 +95,7 @@ py_test(
     name = "random_log_database_generator_test",
     size = "enormous",
     srcs = ["random_log_database_generator_test.py"],
+    shard_count = 8,
     deps = [
         ":random_log_database_generator",
         ":testing_databases",
@@ -121,6 +124,7 @@ py_test(
     name = "random_networkx_generator_test",
     size = "enormous",
     srcs = ["random_networkx_generator_test.py"],
+    shard_count = 8,
     deps = [
         ":random_graph_tuple_generator",
         "//labm8/py:decorators",
@@ -172,6 +176,7 @@ py_test(
     name = "random_unlabelled_graph_database_generator_test",
     size = "enormous",
     srcs = ["random_unlabelled_graph_database_generator_test.py"],
+    shard_count = 8,
     deps = [
         ":random_unlabelled_graph_database_generator",
         ":testing_databases",
