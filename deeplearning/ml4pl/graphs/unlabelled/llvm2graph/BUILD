@@ -85,6 +85,7 @@ py_library(
     srcs = ["llvm_statements.py"],
     deps = [
         "//compilers/llvm:opt_util",
+        "//deeplearning/ml4pl/graphs:nx_utils",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//deeplearning/ml4pl/graphs/unlabelled/llvm2graph/cfg:llvm_util",
         "//deeplearning/ncc:rgx_utils",
