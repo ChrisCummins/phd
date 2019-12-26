@@ -100,6 +100,7 @@ py_test(
     name = "classifier_base_test",
     size = "enormous",
     srcs = ["classifier_base_test.py"],
+    shard_count = 4,
     deps = [
         ":batch",
         ":classifier_base",
@@ -178,6 +179,7 @@ py_test(
     name = "log_analysis_test",
     size = "enormous",
     srcs = ["log_analysis_test.py"],
+    shard_count = 8,
     deps = [
         ":log_analysis",
         ":log_database",

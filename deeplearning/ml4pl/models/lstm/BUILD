@@ -39,6 +39,7 @@ py_test(
     name = "graph_lstm_test",
     size = "enormous",
     srcs = ["graph_lstm_test.py"],
+    shard_count = 4,
     deps = [
         ":graph_lstm",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
@@ -123,6 +124,7 @@ py_test(
     name = "node_lstm_test",
     size = "enormous",
     srcs = ["node_lstm_test.py"],
+    shard_count = 4,
     deps = [
         ":node_lstm",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",

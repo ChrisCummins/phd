@@ -44,6 +44,7 @@ py_test(
     size = "enormous",
     timeout = "eternal",
     srcs = ["ggnn_test.py"],
+    shard_count = 4,
     deps = [
         ":ggnn",
         ":ggnn_config",
