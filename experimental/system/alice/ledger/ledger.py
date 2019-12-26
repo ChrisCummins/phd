@@ -115,10 +115,7 @@ class LedgerEntry(
         configure_id=self.configure_id,
         with_cuda=self.with_cuda,
         options=config_pb2.GlobalConfigOptions(
-          with_cuda=False,
-          update_git_submodules=False,
-          symlink_python=False,
-          install_git_hooks=False,
+          with_cuda=False, update_git_submodules=False, install_git_hooks=False,
         ),
         paths=config_pb2.GlobalConfigPaths(
           repo_root=self.repo_root, python="",
