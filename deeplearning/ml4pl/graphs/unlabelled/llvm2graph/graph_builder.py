@@ -25,6 +25,7 @@ import networkx as nx
 
 from compilers.llvm import opt_util
 from deeplearning.ml4pl.graphs import nx_utils
+from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import call_graph as cg
 from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import llvm_statements
@@ -92,7 +93,9 @@ class ProGraMLGraphBuilder(object):
     # Add data flow elements to control flow graphs.
     graphs = [self.CreateControlAndDataFlowUnion(cfg) for cfg in cfgs]
     # Finally, compose the per-function graphs into a whole-module graph.
-    return self.ComposeGraphs(graphs, call_graph)
+    g = self.ComposeGraphs(graphs, call_graph)
+
+    return programl.NetworkXToProgramGraph(g)
 
   def CreateControlAndDataFlowUnion(
     self, cfg: llvm_util.LlvmControlFlowGraph

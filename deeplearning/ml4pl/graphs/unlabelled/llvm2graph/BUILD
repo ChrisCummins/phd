@@ -39,6 +39,7 @@ py_library(
         ":node_encoder",
         "//compilers/llvm:opt_util",
         "//deeplearning/ml4pl/graphs:nx_utils",
+        "//deeplearning/ml4pl/graphs:programl",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//deeplearning/ml4pl/graphs/unlabelled/llvm2graph/cfg:llvm_util",
         "//labm8/py:app",
