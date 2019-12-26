@@ -34,40 +34,31 @@ def builder() -> graph_builder.ProGraMLGraphBuilder:
   return graph_builder.ProGraMLGraphBuilder()
 
 
-@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/2)")
 def test_105975(builder: graph_builder.ProGraMLGraphBuilder):
   """CFG has BBs without predecessors that need to be removed."""
   builder.Build(fs.Read(REGRESSION_TESTS / "105975.ll"))
 
 
-@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/2)")
-@test.Flaky(
-  max_runs=5,
-  expected_exception=TimeoutError,
-  reason="This is a large graph which may timeout on a loaded system.",
-)
 def test_115532(builder: graph_builder.ProGraMLGraphBuilder):
   """Number of callsites does not correlate with callgraph."""
   builder.Build(fs.Read(REGRESSION_TESTS / "115532.ll"))
 
 
-@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/2)")
 def test_4180(builder: graph_builder.ProGraMLGraphBuilder):
   """Graph takes more than 120 seconds to construct."""
-  builder.Build(fs.Read(REGRESSION_TESTS / "4180.ll"))
+  with test.Raises(TimeoutError):
+    builder.Build(fs.Read(REGRESSION_TESTS / "4180.ll"))
 
 
-@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/2)")
-# TODO(github.com/ChrisCummins/ProGraML/issues/11): Add support for functions
-# without exit blocks. They will have no call return edges.
-# @test.XFail(reason="Cannot currently handle no exit blocks")
+# Add support for functions without exit blocks. They will have no call return
+# edges.
+@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/11)")
 def test_560(builder: graph_builder.ProGraMLGraphBuilder):
   """Graph has no exit blocks."""
   builder.Build(fs.Read(REGRESSION_TESTS / "560.ll"))
 
 
-@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/2)")
-# @test.XFail(reason="opt exception")
+@test.XFail(reason="opt exception")
 def test_400531(builder: graph_builder.ProGraMLGraphBuilder):
   """Graph has no exit blocks."""
   builder.Build(fs.Read(REGRESSION_TESTS / "400531.ll"))

@@ -70,24 +70,21 @@ define i32 @A() #0 {
 """
 
 
-@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/2)")
 def test_that_root_node_is_connected_to_entry_points(simple_bytecode: str):
   builder = graph_builder.ProGraMLGraphBuilder()
   graph = builder.Build(simple_bytecode)
-  assert "root" in graph
-  assert graph.in_degree("root") == 0
-  assert len(graph.out_edges("root")) == 2
-  assert set(graph.neighbors("root")) == {"A_0", "B_0"}
+  assert graph.nodes[0]["text"] == "root"
+  assert graph.in_degree(0) == 0
+  assert len(graph.out_edges(0)) == 2
 
 
-@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/2)")
 def test_every_statement_has_a_predecessor(simple_bytecode: str):
   """Test that every statement (except entry blocks) have control preds."""
   builder = graph_builder.ProGraMLGraphBuilder()
   graph = builder.Build(simple_bytecode)
   entry_blocks = set([node for node, _ in nx_utils.EntryBlockIterator(graph)])
   for node, _ in nx_utils.StatementNodeIterator(graph):
-    if node in entry_blocks:
+    if not node or node in entry_blocks:
       continue
     for edge in graph.in_edges(node):
       if graph.edges[edge[0], edge[1], 0]["flow"] == programl_pb2.Edge.CONTROL:
@@ -96,7 +93,6 @@ def test_every_statement_has_a_predecessor(simple_bytecode: str):
       assert False, f"{node} has no control flow predecessor."
 
 
-@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/2)")
 def test_every_edge_has_position(simple_bytecode: str):
   """Test that every edge has a position encoding."""
   builder = graph_builder.ProGraMLGraphBuilder()
@@ -107,63 +103,14 @@ def test_every_edge_has_position(simple_bytecode: str):
     ), f'No position for edge {graph.nodes[src]["text"]} -> {graph.nodes[dst]["text"]}'
 
 
-@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/2)")
 def test_every_node_has_x(simple_bytecode: str):
   """Test that every edge has a position encoding."""
   builder = graph_builder.ProGraMLGraphBuilder()
   graph = builder.Build(simple_bytecode)
   for node, x in graph.nodes(data="x"):
     assert isinstance(
-      x, int
-    ), f'No x for node {graph.nodes[node]["original_text"]}'
-
-
-@test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/2)")
-def test_GetLlvmStatementDefAndUses():
-  statement = "%1 = alloca i32, align 4"
-  def_, uses = graph_builder.GetLlvmStatementDefAndUses(statement)
-  assert def_ == "%1"
-  assert not uses
-
-  statement = "store i32 0, i32* %1, align 4"
-  def_, uses = graph_builder.GetLlvmStatementDefAndUses(statement)
-  assert def_ == ""
-  assert uses == ["0", "%1"]
-
-  statement = "br label %3"
-  def_, uses = graph_builder.GetLlvmStatementDefAndUses(statement)
-  assert def_ == ""
-  assert uses == ["%3"]
-
-  statement = "store i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i8** %3, align 8"
-  def_, uses = graph_builder.GetLlvmStatementDefAndUses(statement)
-  assert def_ == ""
-  assert uses == ["@.str", "0", "0", "%3"]
-
-  statement = "%5 = load i32, i32* %2, align 4"
-  def_, uses = graph_builder.GetLlvmStatementDefAndUses(statement)
-  assert def_ == "%5"
-  assert uses == ["%2"]
-
-  statement = "%6 = icmp sgt i32 %5, 0"
-  def_, uses = graph_builder.GetLlvmStatementDefAndUses(statement)
-  assert def_ == "%6"
-  assert uses == ["%5", "0"]
-
-  statement = "br i1 %6, label %7, label %8"
-  def_, uses = graph_builder.GetLlvmStatementDefAndUses(statement)
-  assert def_ == ""
-  assert uses == ["%6", "%7", "%8"]
-
-  statement = "store float 0x40C80C0F60000000, float* %4, align 4"
-  def_, uses = graph_builder.GetLlvmStatementDefAndUses(statement)
-  assert def_ == ""
-  assert uses == ["0x40C80C0F60000000", "%4"]
-
-  statement = "%3 = alloca i8*, align 8"
-  def_, uses = graph_builder.GetLlvmStatementDefAndUses(statement)
-  assert def_ == "%3"
-  assert uses == []
+      x, list
+    ), f"Invalid x attribute for node {graph.nodes[node]}"
 
 
 @test.XFail(reason="TODO(github.com/ChrisCummins/ProGraML/issues/2)")

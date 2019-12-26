@@ -136,8 +136,7 @@ def FindCallSites(graph, source_function, destination_function):
   for node, data in nx_utils.StatementNodeIterator(graph):
     if data["function"] != source_function:
       continue
-    statement = data.get("original_text", data["text"])
-    called_function = GetCalledFunctionName(statement)
+    called_function = GetCalledFunctionName(data["text"])
     if not called_function:
       continue
     if called_function == destination_function:

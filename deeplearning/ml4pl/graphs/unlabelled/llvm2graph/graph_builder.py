@@ -18,14 +18,13 @@
 A ProGraML graph is a directed multigraph which is the union a control flow,
 data flow, and call graphs.
 """
-import copy
+import signal
 import typing
 
 import networkx as nx
 
 from compilers.llvm import opt_util
 from deeplearning.ml4pl.graphs import nx_utils
-from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import call_graph as cg
 from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import llvm_statements
@@ -63,17 +62,42 @@ class ProGraMLGraphBuilder(object):
     self,
     bytecode: str,
     tag_hook: typing.Optional[llvm_util.TagHook] = None,
-  ) -> programl_pb2.ProgramGraph:
+    timeout_seconds: int = 120,
+  ) -> nx.MultiDiGraph:
     """Construct a ProGraML from the given bytecode.
 
     Args:
       bytecode: The bytecode to construct the graph from.
       tag_hook: An optional object that can tag specific nodes in the graph
                 according to some logic.
+      timeout_seconds: The maximum number of seconds to run before terminating.
 
     Returns:
       A networkx graph.
     """
+
+    def _RaiseTimoutError(signum, frame):
+      del signum
+      del frame
+      raise TimeoutError(
+        f"Graph construction did not complete within {timeout_seconds} seconds"
+      )
+
+    # Register a function to raise a TimeoutError on the signal.
+    signal.signal(signal.SIGALRM, _RaiseTimoutError)
+    signal.alarm(timeout_seconds)
+
+    try:
+      return self._Build(bytecode, tag_hook)
+    except TimeoutError as e:
+      raise e
+    finally:
+      # Unregister the signal so it won't be triggered
+      # if the timeout is not reached.
+      signal.signal(signal.SIGALRM, signal.SIG_IGN)
+
+  def _Build(self, bytecode: str, tag_hook: llvm_util.TagHook):
+    """Private implementation of Build function."""
     # First construct the control flow graphs using opt.
     (
       call_graph_dot,
@@ -93,9 +117,7 @@ class ProGraMLGraphBuilder(object):
     # Add data flow elements to control flow graphs.
     graphs = [self.CreateControlAndDataFlowUnion(cfg) for cfg in cfgs]
     # Finally, compose the per-function graphs into a whole-module graph.
-    g = self.ComposeGraphs(graphs, call_graph)
-
-    return programl.NetworkXToProgramGraph(g)
+    return self.ComposeGraphs(graphs, call_graph)
 
   def CreateControlAndDataFlowUnion(
     self, cfg: llvm_util.LlvmControlFlowGraph
@@ -139,7 +161,9 @@ class ProGraMLGraphBuilder(object):
     # Record the graph entry block.
     g.graph["entry_block"] = f"{g.name}_{ffg.entry_block}"
 
-    self.MaybeAddDataFlowElements(g, ffg.tag_hook)
+    self.node_encoder.EncodeNodes(g)
+
+    self.AddDataFlowElements(g, ffg.tag_hook)
     # self.MaybePreprocessStatementText(g)
     self.MaybeAddSingleExitBlock(g)
     return g
@@ -154,26 +178,31 @@ class ProGraMLGraphBuilder(object):
     if not exit_blocks:
       raise ValueError("No exit blocks found in graph!")
 
-    if (
-      self.only_add_entry_and_exit_blocks_if_required and len(exit_blocks) == 1
-    ):
+    if len(exit_blocks) == 1:
       exit_block = exit_blocks[0][0]
     else:
       exit_block = f"{g.name}_exit"
       g.add_node(
-        exit_block, name=exit_block, type="magic", x=self.dictionary["!MAGIC"]
+        exit_block,
+        name=exit_block,
+        type=programl_pb2.Node.STATEMENT,
+        text="",
+        preprocessed_text="",
+        function=None,
+        x=[self.node_encoder.dictionary["!MAGIC"]],
+        y=[],
       )
       # Connect exit blocks.
       for node, data in exit_blocks:
-        g.add_edge(node, exit_block, flow="control")
+        g.add_edge(node, exit_block, flow=programl_pb2.Edge.CONTROL, position=0)
       # Add a dataflow edge out, if there is one.
       for src, dst, data in nx_utils.DataFlowEdgeIterator(g):
         if dst == node:
-          g.add_edge(node, exit_block, flow="data")
+          g.add_edge(node, exit_block, flow=programl_pb2.Edge.DATA, position=0)
           break
-    g.exit_block = exit_block
+    g.graph["exit_block"] = exit_block
 
-  def MaybeAddDataFlowElements(
+  def AddDataFlowElements(
     self, g: nx.MultiDiGraph, tag_hook: typing.Optional[llvm_util.TagHook]
   ) -> None:
     if self.dataflow == "none":
@@ -218,14 +247,17 @@ class ProGraMLGraphBuilder(object):
       original_node,
       dtype,
     ) in edges_to_add:
-      g.add_edge(src, dst, flow="data", position=position)
+      g.add_edge(src, dst, flow=programl_pb2.Edge.DATA, position=position)
       node = g.nodes[identifier]
+      # The node may have been implicitly created. Set its attributes now.
       # TODO(github.com/ChrisCummins/ProGraML/issues/9): Separate !IDENTIFIER
       # and !IMMEDIATE nodes.
-      node["type"] = "identifier"
+      node["type"] = programl_pb2.Node.IDENTIFIER
       node["name"] = name
       node["text"] = name
-      node["x"] = self.dictionary["!IDENTIFIER"]
+      node["preprocessed_text"] = "!IDENTIFIER"
+      node["x"] = [self.node_encoder.dictionary["!IDENTIFIER"]]
+      node["y"] = []
 
       if tag_hook is not None:
         other_attrs = tag_hook.OnIdentifier(original_node, node, dtype) or {}
@@ -233,10 +265,10 @@ class ProGraMLGraphBuilder(object):
           node[attrname] = attrval
 
   def DictionaryLookup(self, statement: str) -> int:
-    if statement in self.dictionary:
-      return self.dictionary[statement]
+    if statement in self.node_encoder.dictionary:
+      return self.node_encoder.dictionary[statement]
     else:
-      return self.dictionary["!UNK"]
+      return self.node_encoder.dictionary["!UNK"]
 
   def ComposeGraphs(
     self, function_graphs: typing.List[nx.DiGraph], call_graph: nx.MultiDiGraph,
@@ -265,12 +297,23 @@ class ProGraMLGraphBuilder(object):
 
     # Create the inter-procedural graph with a magic root node.
     interprocedural_graph = nx.MultiDiGraph()
+
+    # Add the unused graph-level attributes.
+    interprocedural_graph.graph["x"] = []
+    interprocedural_graph.graph["y"] = []
+
     interprocedural_graph.add_node(
-      "root", name="root", type="magic", x=self.dictionary["!MAGIC"]
+      0,
+      type=programl_pb2.Node.STATEMENT,
+      text="root",
+      preprocessed_text="",
+      function=None,
+      x=[self.node_encoder.dictionary["!MAGIC"]],
+      y=[],
     )
 
-    # Add each function to the interprocedural graph.
-    function_entry_exit_nodes: typing.Dict[str, typing.Tuple[str, str]] = {}
+    # Add each function to the inter-procedural graph.
+    function_entry_exit_nodes: typing.Dict[str, typing.Tuple[int, int]] = {}
 
     for _, dst in call_graph.out_edges("external node"):
       (
@@ -278,25 +321,20 @@ class ProGraMLGraphBuilder(object):
         function_entry,
         function_exit,
       ) = InsertFunctionGraph(
-        interprocedural_graph, dst, function_graph_map, self.dictionary
+        interprocedural_graph,
+        dst,
+        function_graph_map,
+        self.node_encoder.dictionary,
       )
       function_entry_exit_nodes[dst] = (function_entry, function_exit)
 
       # Connect the newly inserted function to the root node.
       interprocedural_graph.add_edge(
-        "root", function_entry, flow="call", position=0
+        0, function_entry, flow=programl_pb2.Edge.CALL, position=0
       )
 
-    if self.call_edge_returns_to_successor:
-      get_call_site_successor = query.GetCallStatementSuccessor
-    else:
-      get_call_site_successor = lambda g, n: n
-
     AddInterproceduralCallEdges(
-      interprocedural_graph,
-      call_graph,
-      function_entry_exit_nodes,
-      get_call_site_successor,
+      interprocedural_graph, call_graph, function_entry_exit_nodes,
     )
 
     return interprocedural_graph
@@ -344,11 +382,13 @@ def SerializeToStatementList(
 
       visited_statements.add(node)
       yield node
-      for _, dst, flow in g.out_edges(node, data="flow", default="control"):
-        if flow == "control":
+      for _, dst, flow in g.out_edges(
+        node, data="flow", default=programl_pb2.Edge.CONTROL
+      ):
+        if flow == programl_pb2.Edge.CONTROL:
           if dst not in visited_statements:
             stack.append(dst)
-        elif flow == "call":
+        elif flow == programl_pb2.Edge.CALL:
           if dst not in visited_functions:
             functions.append(dst)
 
@@ -365,30 +405,32 @@ def MakeUndefinedFunctionGraph(
   g = nx.MultiDiGraph()
 
   g.name = function_name
-  g.entry_block = f"{function_name}_entry"
-  g.exit_block = f"{function_name}_exit"
+  g.graph["entry_block"] = f"{function_name}_entry"
+  g.graph["exit_block"] = f"{function_name}_exit"
 
   g.add_node(
-    g.entry_block,
+    g.graph["entry_block"],
     type="statement",
     function=function_name,
-    text="!UNK",
-    original_text=g.entry_block,
-    x=dictionary["!UNK"],
+    preprocessed_text="!UNK",
+    text=g.graph["entry_block"],
+    x=[dictionary["!UNK"]],
+    y=[],
   )
   g.add_node(
-    g.exit_block,
+    g.graph["exit_block"],
     type="statement",
     function=function_name,
-    text="!UNK",
-    original_text=g.exit_block,
-    x=dictionary["!UNK"],
+    preprocessed_text="!UNK",
+    text=g.graph["exit_block"],
+    x=[dictionary["!UNK"]],
+    y=[],
   )
   g.add_edge(
-    g.entry_block,
-    g.exit_block,
+    g.graph["entry_block"],
+    g.graph["exit_block"],
     function=function_name,
-    flow="control",
+    flow=programl_pb2.Edge.CONTROL,
     position=0,
   )
 
@@ -404,18 +446,45 @@ def InsertFunctionGraph(
       function_name, dictionary
     )
 
-  function_graph = copy.deepcopy(function_graphs[function_name])
-  graph = nx.compose(graph, function_graph)
-  return graph, function_graph.entry_block, function_graph.exit_block
+  function_graph = function_graphs[function_name]
+
+  # Translate string node names to integer values.
+  node_map = {
+    x: i
+    for i, x in enumerate(function_graph.nodes, start=graph.number_of_nodes())
+  }
+
+  # Recreate the nodes.
+  for node, data in function_graph.nodes(data=True):
+    graph.add_node(
+      node_map[node],
+      function=function_name,
+      type=data["type"],
+      text=data["text"],
+      preprocessed_text=data["preprocessed_text"],
+      x=data["x"],
+      y=data["y"],
+    )
+
+  # Recreate the edges.
+  for src, dst, data in function_graph.edges(data=True):
+    graph.add_edge(
+      node_map[src], node_map[dst], position=data["position"], flow=data["flow"]
+    )
+
+  return (
+    graph,
+    node_map[function_graph.graph["entry_block"]],
+    node_map[function_graph.graph["exit_block"]],
+  )
 
 
 def AddInterproceduralCallEdges(
   graph: nx.MultiDiGraph,
   call_multigraph: nx.MultiDiGraph,
-  function_entry_exit_nodes: typing.Dict[str, typing.Tuple[str, str]],
-  get_call_site_successor: typing.Callable[[nx.MultiDiGraph, str], str],
+  function_entry_exit_nodes: typing.Dict[str, typing.Tuple[int, int]],
 ) -> None:
-  """Add "call" edges between procedures to match the call graph.
+  """Add call edges between procedures to match the call graph.
 
   Args:
     graph: The disconnected per-function graphs.
@@ -423,9 +492,6 @@ def AddInterproceduralCallEdges(
       from the same function.
     function_entry_exit_nodes: A mapping from function name to a tuple of entry
       and exit statements.
-    get_call_site_successor: A callback which takes as input a graph and a call
-      site statement within the graph, and returns the destination node for
-      calls from this site.
   """
   # Drop the parallel edges by converting the call graph back to a regular
   # directed graph. Iterating over the edges in this graph then provides the
@@ -457,7 +523,10 @@ def AddInterproceduralCallEdges(
         continue
       # Lookup the nodes to connect.
       call_entry, call_exit = function_entry_exit_nodes[dst]
-      call_site_successor = get_call_site_successor(graph, call_site)
       # Connect the nodes.
-      graph.add_edge(call_site, call_entry, flow="call", position=0)
-      graph.add_edge(call_exit, call_site_successor, flow="call", position=0)
+      graph.add_edge(
+        call_site, call_entry, flow=programl_pb2.Edge.CALL, position=0
+      )
+      graph.add_edge(
+        call_exit, call_site, flow=programl_pb2.Edge.CALL, position=0
+      )

@@ -39,7 +39,6 @@ py_library(
         ":node_encoder",
         "//compilers/llvm:opt_util",
         "//deeplearning/ml4pl/graphs:nx_utils",
-        "//deeplearning/ml4pl/graphs:programl",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//deeplearning/ml4pl/graphs/unlabelled/llvm2graph/cfg:llvm_util",
         "//labm8/py:app",
@@ -60,7 +59,7 @@ py_test(
 
 py_test(
     name = "graph_builder_regression_test",
-    size = "enormous",
+    timeout = "long",
     srcs = ["graph_builder_regression_test.py"],
     data = ["//deeplearning/ml4pl/testing/data/bytecode_regression_tests:bytecodes"],
     deps = [
@@ -75,6 +74,7 @@ py_binary(
     srcs = ["llvm2graph.py"],
     deps = [
         ":graph_builder",
+        "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//labm8/py:app",
         "//labm8/py:pbutil",
     ],
@@ -95,6 +95,16 @@ py_library(
         "//labm8/py:decorators",
         "//third_party/py/networkx",
         "//third_party/py/numpy",
+    ],
+)
+
+py_test(
+    name = "llvm_statements_test",
+    srcs = ["llvm_statements_test.py"],
+    deps = [
+        ":llvm_statements",
+        "//deeplearning/ml4pl/graphs:programl",
+        "//labm8/py:test",
     ],
 )
 
