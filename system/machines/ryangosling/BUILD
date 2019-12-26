@@ -31,3 +31,9 @@ sh_binary(
         "//system/machines:machine.par",
     ],
 )
+
+py_binary(
+    name = "samba_shares",
+    srcs = ["samba_shares.py"],
+    deps = ["//labm8/py:app"],
+)
