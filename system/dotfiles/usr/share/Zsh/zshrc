@@ -442,7 +442,7 @@ ra() {
 # If not, command 's' opens rsub.
 #
 s() {
-    if [[ -f /usr/local/bin/subl ]]; then
+    if [[ -f /bin/subl ]] || [[ -f /usr/local/bin/subl ]]; then
         # open locally
         subl $@
     else
