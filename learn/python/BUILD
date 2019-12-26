@@ -74,3 +74,12 @@ py_binary(
         "//third_party/py/ipdb",
     ],
 )
+
+py_test(
+    name = "sharding_test",
+    srcs = ["sharding_test.py"],
+    shard_count = 10,
+    deps = [
+        "//labm8/py:test",
+    ],
+)
