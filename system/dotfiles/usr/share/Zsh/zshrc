@@ -223,30 +223,6 @@ unalias rg
 # --------------------------------------------------------------------------
 
 
-# Portability wrapper around homebrew. On linux, we install homebrew as a
-# different user, and we must perform any homebrew commands as that user.
-brew() {
-    if [[ -f /usr/local/bin/brew ]]; then
-        /usr/local/bin/brew $@
-    elif [[ -f /home/linuxbrew/.linuxbrew/bin/brew ]]; then
-        echo "bash -c '/home/linuxbrew/.linuxbrew/bin/brew $@'" | xargs sudo -H -u linuxbrew
-    else
-        echo 'brew not installed!' >&2
-    fi
-}
-
-# Portability wrapper around pip. We use a homebrew installed pip, so must use
-# the same workaround as for the brew() function.
-pip() {
-    if [[ -f /usr/local/bin/brew ]]; then
-        /usr/local/bin/python3 -m pip $@
-    elif [[ -f /home/linuxbrew/.linuxbrew/bin/brew ]]; then
-        echo "bash -c '/home/linuxbrew/.linuxbrew/bin/python3 -m pip $@'" | xargs sudo -H -u linuxbrew
-    else
-        echo 'brew not installed!' >&2
-    fi
-}
-
 # For performing quick calculations.
 calc() {
     test -n "$1" || { echo "Usage: calc <expression>" >&2; return 1; }
@@ -601,8 +577,6 @@ path_dirs=( \
     ~/.gem/*/*/bin \
     ~/.gem/*/ruby/*/bin \
     ~/go/bin \
-    /home/linuxbrew/.linuxbrew/bin \
-    /home/linuxbrew/.linuxbrew/sbin \
     /Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin \
     /usr/local/opt/coreutils/libexec/gnubin \
     /usr/local/opt/findutils/libexec/gnubin \
@@ -636,14 +610,8 @@ manpath_dirs=( \
     /usr/local/opt/coreutils/libexec/gnuman \
     /usr/local/opt/gnu-sed/libexec/gnuman \
     /usr/local/opt/gnu-tar/libexec/gnuman \
-    /home/linuxbrew/.linuxbrew/share/man \
 )
 export MANPATH=$(build_path "${manpath_dirs[@]}")
-
-infopath_dirs=( \
-    /home/linuxbrew/.linuxbrew/share/info \
-)
-export INFOPATH=$(build_path "${infopath_dirs[@]}")
 
 
 # Enable pretty colors.
