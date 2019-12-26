@@ -18,8 +18,6 @@ py_binary(
         "//deeplearning/ml4pl/models:log_analysis",
         "//deeplearning/ml4pl/models:log_database",
         "//deeplearning/ml4pl/models/ggnn",
-        "//deeplearning/ml4pl/models/ggnn:ggnn_base",
-        "//deeplearning/ml4pl/models/ggnn:ggnn_utils",
         "//deeplearning/ncc/inst2vec:api",
         "//research/grewe_2013_cgo:feature_extractor",
     ],
