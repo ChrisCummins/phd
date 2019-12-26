@@ -85,7 +85,7 @@ def StripIdentifiersAndImmediates(stmt: str) -> str:
 
 
 def GetLlvmStatementDefAndUses(
-  statement: str, store_destination_is_def: bool = False
+  statement: str,
 ) -> typing.Tuple[str, typing.List[str]]:
   """Get the destination identifier for an LLVM statement (if any), and a list
   of operand identifiers (if any).
