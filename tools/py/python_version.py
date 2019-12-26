@@ -8,7 +8,9 @@
 #     3.7.5 (default, Nov 20 2019, 09:21:52)
 #     [GCC 9.2.1 20191008]
 #
+import struct
 import sys
 
 print(sys.executable)
 print(sys.version)
+print(struct.calcsize("P") * 8, "bit")
