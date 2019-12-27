@@ -493,30 +493,6 @@ else
 fi
 
 # --------------------------------------------------------------------------
-# External files.
-# --------------------------------------------------------------------------
-
-# autoenv cd script. https://github.com/kennethreitz/autoenv
-which activate.sh &>/dev/null && source $(which activate.sh)
-
-setopt nullglob
-
-# Custom zsh scripts
-if test -d ~/.zsh; then
-    for script in ~/.zsh/*.zsh; do
-        test -r "$script" && . "$script"
-    done
-
-    for script in ~/.zsh/private/*.zsh; do
-        test -r "$script" && . "$script"
-    done
-    unset script
-fi
-
-unsetopt nullglob
-
-
-# --------------------------------------------------------------------------
 # Paths.
 # --------------------------------------------------------------------------
 
@@ -626,3 +602,28 @@ fi
 [ -f /home/cec/.travis/travis.sh ] && source /home/cec/.travis/travis.sh
 # Add autojump, if available. <https://github.com/wting/autojump>
 [ -f /usr/local/etc/profile.d/autojump.sh ] && . /usr/local/etc/profile.d/autojump.sh
+
+# --------------------------------------------------------------------------
+# External files.
+# We do these last so that they can override the default settings such as
+# updating $PATH.
+# --------------------------------------------------------------------------
+
+# autoenv cd script. https://github.com/kennethreitz/autoenv
+which activate.sh &>/dev/null && source $(which activate.sh)
+
+setopt nullglob
+
+# Custom zsh scripts
+if test -d ~/.zsh; then
+    for script in ~/.zsh/*.zsh; do
+        test -r "$script" && . "$script"
+    done
+
+    for script in ~/.zsh/private/*.zsh; do
+        test -r "$script" && . "$script"
+    done
+    unset script
+fi
+
+unsetopt nullglob
