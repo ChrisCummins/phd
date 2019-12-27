@@ -23,11 +23,11 @@
 filegroup(
     name = "dictionary",
     srcs = ["inst2vec_augmented_dictionary.pickle"],
-    visibility = ["//deeplearning/ml4pl/graphs/unlabelled/llvm2graph:__subpackages__"],
+    visibility = ["//deeplearning/ml4pl/graphs/llvm2graph:__subpackages__"],
 )
 
 filegroup(
     name = "embeddings",
     srcs = ["inst2vec_augmented_embeddings.pickle"],
-    visibility = ["//deeplearning/ml4pl/graphs/unlabelled/llvm2graph:__subpackages__"],
+    visibility = ["//deeplearning/ml4pl/graphs/llvm2graph:__subpackages__"],
 )

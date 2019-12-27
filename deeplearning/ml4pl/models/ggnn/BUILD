@@ -27,7 +27,7 @@ py_binary(
         "//deeplearning/ml4pl/graphs/labelled:graph_database_reader",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
-        "//deeplearning/ml4pl/graphs/unlabelled/llvm2graph:node_encoder",
+        "//deeplearning/ml4pl/graphs/llvm2graph:node_encoder",
         "//deeplearning/ml4pl/models:batch",
         "//deeplearning/ml4pl/models:classifier_base",
         "//deeplearning/ml4pl/models:epoch",

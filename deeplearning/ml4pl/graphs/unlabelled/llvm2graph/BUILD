@@ -38,10 +38,10 @@ py_library(
     deps = [
         ":call_graph",
         ":llvm_statements",
-        ":node_encoder",
         "//compilers/llvm:opt_util",
         "//deeplearning/ml4pl/graphs:nx_utils",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
+        "//deeplearning/ml4pl/graphs/llvm2graph:node_encoder",
         "//deeplearning/ml4pl/graphs/unlabelled/llvm2graph/cfg:llvm_util",
         "//labm8/py:app",
         "//third_party/py/networkx",
@@ -115,34 +115,6 @@ py_test(
     srcs = ["llvm_statements_test.py"],
     deps = [
         ":llvm_statements",
-        "//deeplearning/ml4pl/graphs:programl",
-        "//labm8/py:test",
-    ],
-)
-
-py_library(
-    name = "node_encoder",
-    srcs = ["node_encoder.py"],
-    data = [
-        "//deeplearning/ml4pl/graphs/unlabelled/llvm2graph/node_embeddings:dictionary",
-        "//deeplearning/ml4pl/graphs/unlabelled/llvm2graph/node_embeddings:embeddings",
-    ],
-    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
-    deps = [
-        "//deeplearning/ml4pl/graphs:programl_pb_py",
-        "//deeplearning/ncc/inst2vec:inst2vec_preprocess",
-        "//labm8/py:app",
-        "//labm8/py:bazelutil",
-        "//labm8/py:decorators",
-        "//third_party/py/numpy",
-    ],
-)
-
-py_test(
-    name = "node_encoder_test",
-    srcs = ["node_encoder_test.py"],
-    deps = [
-        ":node_encoder",
         "//deeplearning/ml4pl/graphs:programl",
         "//labm8/py:test",
     ],

@@ -46,3 +46,10 @@ filegroup(
     srcs = ["100_unlabelled_networkx_graphs.db.tar.bz2"],
     visibility = ["//deeplearning/ml4pl:__subpackages__"],
 )
+
+filegroup(
+    name = "llvm_ir",
+    testonly = 1,
+    srcs = ["llvm_ir.tar.bz2"],
+    visibility = ["//deeplearning/ml4pl:__subpackages__"],
+)
