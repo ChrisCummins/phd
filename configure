@@ -135,7 +135,10 @@ def GuessCudaHome():
 
 def GuessIfCudaIsAvailable():
   """Guess if CUDA is available on the host."""
-  nvcc_path = os.path.join(GuessCudaHome(), 'bin/nvcc')
+  cuda_home = GuessCudaHome()
+  if not cuda_home:
+    return False
+  nvcc_path = os.path.join(cuda_home, 'bin/nvcc')
   is_available = os.path.isfile(nvcc_path)
   if is_available:
     logging.info("CUDA found at: '%s'.", nvcc_path)
