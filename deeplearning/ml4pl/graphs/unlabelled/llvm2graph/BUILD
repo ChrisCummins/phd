@@ -66,6 +66,7 @@ py_test(
     data = ["//deeplearning/ml4pl/testing/data/bytecode_regression_tests:bytecodes"],
     deps = [
         ":graph_builder",
+        "//deeplearning/ml4pl/graphs:programl",
         "//labm8/py:fs",
         "//labm8/py:test",
     ],
