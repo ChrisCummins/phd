@@ -410,7 +410,7 @@ def MakeUndefinedFunctionGraph(
 
   g.add_node(
     g.graph["entry_block"],
-    type="statement",
+    type=programl_pb2.Node.STATEMENT,
     function=function_name,
     preprocessed_text="!UNK",
     text=g.graph["entry_block"],
@@ -419,7 +419,7 @@ def MakeUndefinedFunctionGraph(
   )
   g.add_node(
     g.graph["exit_block"],
-    type="statement",
+    type=programl_pb2.Node.STATEMENT,
     function=function_name,
     preprocessed_text="!UNK",
     text=g.graph["exit_block"],
