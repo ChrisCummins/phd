@@ -24,7 +24,7 @@ py_library(
         ":utils",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//deeplearning/clgen/corpuses:atomizers",
-        "//third_party/py/pytest",
+        "//labm8/py:test",
     ],
 )
 
