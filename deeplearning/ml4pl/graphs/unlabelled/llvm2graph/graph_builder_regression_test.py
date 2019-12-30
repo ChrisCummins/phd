@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Test graph builder on bytecodes that were found to exposure bugs."""
+from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import graph_builder
 from labm8.py import bazelutil
 from labm8.py import fs
@@ -32,6 +33,12 @@ REGRESSION_TESTS = bazelutil.DataPath(
 def builder() -> graph_builder.ProGraMLGraphBuilder:
   """Test fixture that returns the graph builder for regression tests."""
   return graph_builder.ProGraMLGraphBuilder()
+
+
+def test_53(builder: graph_builder.ProGraMLGraphBuilder):
+  """github.com/ChrisCummins/ProGraML/issues/53"""
+  proto = builder.Build(fs.Read(REGRESSION_TESTS / "53.ll"))
+  programl.NetworkXToProgramGraph(proto)
 
 
 def test_105975(builder: graph_builder.ProGraMLGraphBuilder):
