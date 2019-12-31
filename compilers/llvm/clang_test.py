@@ -149,9 +149,9 @@ def test_ClangBisectMessageToInvocation_valid():
 )
 @test.LinuxTest()
 def test_GetOptPasses_O3_language_equivalence(optimization_level: str):
-  """Test that passes run are the same C/C++ at all optimisation levels."""
-  c_args = clang.GetOptPasses([opt], language="c")
-  cxx_args = clang.GetOptPasses([opt], language="c++")
+  """Test that C/C++ passes run are the same."""
+  c_args = clang.GetOptPasses([optimization_level], language="c")
+  cxx_args = clang.GetOptPasses([optimization_level], language="c++")
   assert c_args == cxx_args
 
 
