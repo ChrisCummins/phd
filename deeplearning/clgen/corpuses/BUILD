@@ -32,6 +32,7 @@ py_test(
     srcs = ["atomizers_test.py"],
     deps = [
         ":atomizers",
+        "//deeplearning/clgen:conftest",
         "//labm8/py:app",
         "//labm8/py:test",
     ],
@@ -108,6 +109,7 @@ py_test(
         ":atomizers",
         ":encoded",
         ":preprocessed",
+        "//deeplearning/clgen:conftest",
         "//deeplearning/clgen:errors",
         "//labm8/py:app",
         "//labm8/py:test",
