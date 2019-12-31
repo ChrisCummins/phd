@@ -167,6 +167,12 @@ TEST(CopyAndReplaceSubstr, NoOccurrences) {
   EXPECT_EQ(CopyAndReplaceSubstr("bcdebc", "a", "b"), "bcdebc");
 }
 
+TEST(TruncateWithEllipsis, EmptyString) {
+  string s;
+  TruncateWithEllipsis(s, 10);
+  EXPECT_EQ(s, "");
+}
+
 }  // namespace
 }  // namespace labm8
 
