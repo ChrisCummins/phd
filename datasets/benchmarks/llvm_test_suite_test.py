@@ -15,8 +15,6 @@
 import pathlib
 import tempfile
 
-import pytest
-
 from compilers.llvm import clang
 from datasets.benchmarks import llvm_test_suite
 from datasets.benchmarks.proto import benchmarks_pb2
