@@ -28,19 +28,19 @@ FLAGS = app.FLAGS
 MODULE_UNDER_TEST = "datasets.benchmarks"
 
 
-@test.Parametrize("benchmark", llvm_test_suite.BENCHMARKS)
-def test_benchmarks(benchmark: benchmarks_pb2.Benchmark):
+@test.Parametrize("llvm_benchmark", llvm_test_suite.BENCHMARKS)
+def test_benchmarks(llvm_benchmark: benchmarks_pb2.Benchmark):
   """Test attributes of protos."""
-  assert benchmark.name
-  assert pathlib.Path(benchmark.binary).is_file()
-  for path in benchmark.srcs:
+  assert llvm_benchmark.name
+  assert pathlib.Path(llvm_benchmark.binary).is_file()
+  for path in llvm_benchmark.srcs:
     assert pathlib.Path(path).is_file()
-  for path in benchmark.hdrs:
+  for path in llvm_benchmark.hdrs:
     assert pathlib.Path(path).is_file()
   # Compile the sources.
   with tempfile.TemporaryDirectory() as d:
     clang.Compile(
-      [pathlib.Path(x) for x in benchmark.srcs], pathlib.Path(d) / "exe"
+      [pathlib.Path(x) for x in llvm_benchmark.srcs], pathlib.Path(d) / "exe"
     )
     assert (pathlib.Path(d) / "exe").is_file()
 
