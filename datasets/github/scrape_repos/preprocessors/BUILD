@@ -15,15 +15,6 @@
 # limitations under the License.
 
 py_library(
-    name = "conftest",
-    testonly = 1,
-    srcs = ["conftest.py"],
-    deps = [
-        "//labm8/py:test",
-    ],
-)
-
-py_library(
     name = "extractors",
     srcs = ["extractors.py"],
     data = [
@@ -45,7 +36,6 @@ py_test(
     size = "small",
     srcs = ["extractors_test.py"],
     deps = [
-        ":conftest",
         ":extractors",
         "//labm8/py:app",
         "//labm8/py:test",
@@ -77,7 +67,6 @@ py_test(
     size = "small",
     srcs = ["inliners_test.py"],
     deps = [
-        ":conftest",
         ":inliners",
         "//labm8/py:app",
         "//labm8/py:test",
@@ -152,7 +141,6 @@ py_test(
     size = "small",
     srcs = ["preprocessors_test.py"],
     deps = [
-        ":conftest",
         ":preprocessors",
         ":public",
         "//labm8/py:app",
@@ -175,7 +163,6 @@ py_test(
     size = "small",
     srcs = ["public_test.py"],
     deps = [
-        ":conftest",
         ":public",
         "//labm8/py:app",
         "//labm8/py:test",
