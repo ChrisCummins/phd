@@ -19,11 +19,10 @@
 """Pytest fixtures for me.db tests."""
 import tempfile
 
-import pytest
-
 from datasets.me_db import me_db
 from labm8.py import app
 from labm8.py import bazelutil
+from labm8.py import test
 
 FLAGS = app.FLAGS
 app.DEFINE_string(

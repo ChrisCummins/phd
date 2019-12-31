@@ -25,6 +25,12 @@ py_library(
     testonly = 1,
     srcs = ["conftest.py"],
     data = ["//datasets/me_db/tests:test_inbox_files"],
+    deps = [
+        "//datasets/me_db",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:test",
+    ],
 )
 
 py_test(
