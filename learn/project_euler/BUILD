@@ -37,3 +37,11 @@ sh_binary(
     name = "017-number-letter-counts",
     srcs = ["017-number-letter-counts.py"],
 )
+
+cc_test(
+    name = "018_maximum_path_sum",
+    srcs = ["018_maximum_path_sum.cc"],
+    deps = [
+        "//labm8/cpp:logging",
+    ],
+)
