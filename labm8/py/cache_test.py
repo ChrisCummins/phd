@@ -42,7 +42,8 @@ def _TestCacheOps(_cache):
 
   # Lookup error
   assert "notakey" not in _cache
-  assert test.Raises(KeyError, _cache.__getitem__, "notakey")
+  with test.Raises(KeyError):
+    _cache["notakey"]
 
   # get() method
   assert 1 == _cache.get("foo")
@@ -62,13 +63,20 @@ def _TestCacheOps(_cache):
 def test_cache():
   # Test abstract interface.
   c = cache.Cache()
-  assert test.Raises(NotImplementedError, c.get, "foo")
-  assert test.Raises(NotImplementedError, c.clear)
-  assert test.Raises(NotImplementedError, c.items)
-  assert test.Raises(NotImplementedError, c.__getitem__, "foo")
-  assert test.Raises(NotImplementedError, c.__setitem__, "foo", 1)
-  assert test.Raises(NotImplementedError, c.__contains__, "foo")
-  assert test.Raises(NotImplementedError, c.__delitem__, "foo")
+  with test.Raises(NotImplementedError):
+    c.get("foo")
+  with test.Raises(NotImplementedError):
+    c.clear()
+  with test.Raises(NotImplementedError):
+    c.items()
+  with test.Raises(NotImplementedError):
+    c["foo"]
+  with test.Raises(NotImplementedError):
+    c["foo"] = 1
+  with test.Raises(NotImplementedError):
+    "foo" in c
+  with test.Raises(NotImplementedError):
+    del c["foo"]
 
 
 def test_TransientCache():
