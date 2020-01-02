@@ -1,12 +1,11 @@
 """Test fixtures for dynamic features tests."""
 import hashlib
 
-import pytest
-
 from experimental.deeplearning.clgen.closeness_to_grewe_features import (
   grewe_features_db,
 )
 from gpu.cldrive.legacy import env as cldrive_env
+from labm8.py import test
 
 
 def _StaticFeatures(origin: str, src: str) -> grewe_features_db.StaticFeatures:
