@@ -4,9 +4,9 @@
  * structure. The Node data structure contains two pointers to other
  * Nodes.
  */
-#include "./ctci.h"
-
 #include <array>
+
+#include "./ctci.h"
 
 class Node {
  public:
@@ -27,8 +27,12 @@ class Node {
 Node *deep_copy(Node *node) {
   auto *newNode = new Node(node->data);
 
-  if (node->left) newNode->left = deep_copy(node->left);
-  if (node->right) newNode->right = deep_copy(node->right);
+  if (node->left) {
+    newNode->left = deep_copy(node->left);
+  }
+  if (node->right) {
+    newNode->right = deep_copy(node->right);
+  }
 
   return newNode;
 }
@@ -63,10 +67,12 @@ TEST(TreeCopy, tests) {
     // Data does match.
     ASSERT_EQ(nodes[i]->data, newnodes[i]->data);
 
-    if (nodes[i]->left)
+    if (nodes[i]->left) {
       ASSERT_EQ(nodes[i]->left->data, newnodes[i]->left->data);
-    if (nodes[i]->right)
+    }
+    if (nodes[i]->right) {
       ASSERT_EQ(nodes[i]->right->data, newnodes[i]->right->data);
+    }
   }
 
   for (auto *n : nodes) delete n;
