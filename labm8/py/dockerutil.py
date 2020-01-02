@@ -166,7 +166,9 @@ class BazelPy3Image(object):
     subprocess.check_call(
       _Docker(["tag", self.image_name, tmp_name], timeout=60),
     )
-    subprocess.check_call(_Docker(["rmi", self.image_name], timeout=60))
+    subprocess.check_call(
+      _Docker(["rmi", "--force", self.image_name], timeout=60)
+    )
     yield DockerImageRunContext(tmp_name)
     # FIXME(cec): Using the --force flag here is almost certainly the wrong
     # thing, but I'm getting strange errors when trying to untag the image
