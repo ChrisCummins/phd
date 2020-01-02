@@ -13,9 +13,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains TODO: one line summary.
+"""This module defines classes for representing model checkpoints.
 
-TODO: Detailed explanation of the file.
+A checkpoint is a snapshot of a model's state at the end of training for a given
+epoch.
 """
 from typing import Any
 from typing import Dict
@@ -69,4 +70,9 @@ class Checkpoint(NamedTuple):
   model_data: Any
 
   def ToCheckpointReference(self) -> CheckpointReference:
+    """Return the checkpoint reference for a given checkpoint.
+
+    Use this when you want to keep a reference to a checkpoint, but don't need
+    to store the underlying model data, which may be large.
+    """
     return CheckpointReference(run_id=self.run_id, epoch_num=self.epoch_num)
