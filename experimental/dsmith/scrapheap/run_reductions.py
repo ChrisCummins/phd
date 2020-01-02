@@ -2,11 +2,11 @@
 from collections import namedtuple
 from typing import NewType
 
-import pyopencl as cl
 from dsmith.db import *
 from dsmith.lib import *
 
 from labm8.py import fs
+from third_party.py.pyopencl import pyopencl as cl
 
 # paths to clreduce library
 CLREDUCE_DIR = fs.abspath("..", "lib", "clreduce")

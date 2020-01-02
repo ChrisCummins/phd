@@ -603,7 +603,7 @@ class Platform(Base):
 
   def platform_id(self):
     """ return OpenCL platform index, or KeyError if platform not found """
-    import pyopencl as cl
+    from third_party.py.pyopencl import pyopencl as cl
 
     for i, platform in enumerate(cl.get_platforms()):
       if platform.get_info(cl.platform_info.NAME) == self.platform:
@@ -612,7 +612,7 @@ class Platform(Base):
 
   def device_id(self):
     """ return OpenCL device index, or KeyError if device not found """
-    import pyopencl as cl
+    from third_party.py.pyopencl import pyopencl as cl
 
     platform = cl.get_platforms()[self.platform_id()]
     ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, platform)])
@@ -700,7 +700,7 @@ class Platform(Base):
 
   @staticmethod
   def _get_ids(platform: str, device: str, driver: str) -> Tuple[int, int]:
-    import pyopencl as cl
+    from third_party.py.pyopencl import pyopencl as cl
 
     # match platform ID:
     for j, cl_platform in enumerate(cl.get_platforms()):
