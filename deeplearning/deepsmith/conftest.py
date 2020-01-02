@@ -62,7 +62,7 @@ _DATASTORE_TESTSET = _ReadTestDataStoreFiles()
 
 
 @test.Fixture(
-  ids=_DATASTORE_TESTSET.values.keys(),
+  names=_DATASTORE_TESTSET.values.keys(),
   params=_DATASTORE_TESTSET.values.values(),
   scope="function",
 )
@@ -78,7 +78,7 @@ def ds(request) -> datastore.DataStore:
 
 
 @test.Fixture(
-  ids=_DATASTORE_TESTSET.values.keys(),
+  names=_DATASTORE_TESTSET.values.keys(),
   params=_DATASTORE_TESTSET.values.values(),
   scope="function",
 )
