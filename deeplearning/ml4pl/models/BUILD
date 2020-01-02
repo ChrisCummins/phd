@@ -74,6 +74,16 @@ py_library(
     ],
 )
 
+py_test(
+    name = "checkpoints_test",
+    srcs = ["checkpoints_test.py"],
+    deps = [
+        ":checkpoints",
+        "//deeplearning/ml4pl:run_id",
+        "//labm8/py:test",
+    ],
+)
+
 py_library(
     name = "classifier_base",
     srcs = ["classifier_base.py"],
