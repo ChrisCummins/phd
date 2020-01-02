@@ -1,12 +1,10 @@
 #include "learn/daily/d181213_kruskal_spanning_tree.h"
 
-#include "labm8/cpp/logging.h"
+#include <boost/graph/depth_first_search.hpp>
+#include <set>
 
 #include "absl/container/flat_hash_map.h"
-
-#include <boost/graph/depth_first_search.hpp>
-
-#include <set>
+#include "labm8/cpp/logging.h"
 
 namespace labm8 {
 namespace learn {
@@ -107,10 +105,10 @@ std::pair<bool, boost::graph_traits<Graph>::edge_descriptor> FindEdge(
     int edge_target = boost::target(*i, graph);
 
     if (edge_source == source_index && edge_target == target_index) {
-      return std::make_tuple(true, *i);
+      return std::make_pair(true, *i);
     }
   }
-  return std::make_tuple(false, *end);
+  return std::make_pair(false, *end);
 }
 
 Graph KruskalMinimumSpanningTree(Graph* graph) {
