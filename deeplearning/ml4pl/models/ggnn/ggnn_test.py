@@ -172,13 +172,41 @@ def test_load_restore_model_from_checkpoint_smoke_test(
   logger: logging.Logger, node_y_graph_db: graph_tuple_database.Database,
 ):
   """Test creating and restoring model from checkpoint."""
-  # Create and initialize an untrained model.
+  # Create and initialize a model.
   model = ggnn.Ggnn(logger, node_y_graph_db)
   model.Initialize()
 
-  # Smoke test save and restore.
+  # Create a checkpoint from the model.
   checkpoint_ref = model.SaveCheckpoint()
+
+  # Reset the model state to the checkpoint.
   model.RestoreFrom(checkpoint_ref)
+
+  # Run a test epoch to make sure the restored model works.
+  batch_iterator = batch_iterator_lib.MakeBatchIterator(
+    model=model,
+    graph_db=node_y_graph_db,
+    splits={epoch.Type.TRAIN: [0], epoch.Type.VAL: [1], epoch.Type.TEST: [2],},
+    epoch_type=epoch.Type.TEST,
+  )
+  model(
+    epoch_type=epoch.Type.TEST, batch_iterator=batch_iterator, logger=logger,
+  )
+
+  # Create a new model instance and restore its state from the checkpoint.
+  new_model = ggnn.Ggnn(logger, node_y_graph_db,)
+  new_model.RestoreFrom(checkpoint_ref)
+
+  # Check that the new model works.
+  batch_iterator = batch_iterator_lib.MakeBatchIterator(
+    model=new_model,
+    graph_db=node_y_graph_db,
+    splits={epoch.Type.TRAIN: [0], epoch.Type.VAL: [1], epoch.Type.TEST: [2],},
+    epoch_type=epoch.Type.TEST,
+  )
+  new_model(
+    epoch_type=epoch.Type.TEST, batch_iterator=batch_iterator, logger=logger,
+  )
 
 
 def CheckResultsProperties(
