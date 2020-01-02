@@ -7,7 +7,7 @@ py_library(
     deps = [
         "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
         "//gpu/cldrive/legacy:env",
-        "//third_party/py/pytest",
+        "//labm8/py:test",
     ],
 )
 
