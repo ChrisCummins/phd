@@ -66,8 +66,8 @@ def graph_x_dimensionality(request) -> int:
 
 @test.Fixture(
   scope="session",
-  namer=lambda x: f"graph_y_dimensionality:{x}",
   params=(2, 104),
+  namer=lambda x: f"graph_y_dimensionality:{x}",
 )
 def graph_y_dimensionality(request) -> int:
   """A test fixture which enumerates graph label dimensionalities."""
