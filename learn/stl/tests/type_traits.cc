@@ -354,13 +354,13 @@ TEST(ustl_type_traits, remove_pointer) {
 //                 std::remove_extent<int[5][10][15]>::type>);
 // }
 
-TEST(ustl_type_traits, remove_extent) {
-  static_assert(ustl::is_same_v<int, ustl::remove_extent_t<int>>, "error");
-  static_assert(ustl::is_same_v<int, ustl::remove_extent_t<int[]>>, "error");
-  static_assert(ustl::is_same_v<int, ustl::remove_extent_t<int[10]>>, "error");
-  static_assert(
-      ustl::is_same_v<int[10][15], ustl::remove_extent<int[5][10][15]>::type>,
-      "error");
-}
+// TEST(ustl_type_traits, remove_extent) {
+//   static_assert(ustl::is_same_v<int, ustl::remove_extent_t<int>>, "error");
+//   static_assert(ustl::is_same_v<int, ustl::remove_extent_t<int[]>>, "error");
+//   static_assert(ustl::is_same_v<int, ustl::remove_extent_t<int[10]>>,
+//   "error"); static_assert(
+//       ustl::is_same_v<int[10][15],
+//       ustl::remove_extent<int[5][10][15]>::type>, "error");
+// }
 
 TEST_MAIN();
