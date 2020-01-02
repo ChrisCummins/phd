@@ -1,4 +1,15 @@
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <algorithm>
+#include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 #include <future>
 #include <iomanip>
 #include <iostream>
@@ -12,18 +23,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
 #include "third_party/boost/md5.hpp"
-
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 namespace fs = boost::filesystem;
 
@@ -48,7 +48,7 @@ class recursive_directory_iterator {
       : _stack({decltype(_stack)::value_type{std::move(root)}}),
         _base(*_stack.top()) {}
 
-  explicit recursive_directory_iterator(const decltype(_stack) & stack)
+  explicit recursive_directory_iterator(const decltype(_stack)& stack)
       : _stack(stack) {}
 
   auto& operator++() {
@@ -147,7 +147,7 @@ auto get_files_in_dir(const fs::path& root) {
   // Change to the root directory
   if (chdir(root.string().c_str())) throw std::runtime_error("chrdir()");
 
-  std::vector<const fs::path> files;
+  std::vector<fs::path> files;
   file::walk_files(".", [&files](const auto& path) { files.push_back(path); });
 
   // Return to working directory;
