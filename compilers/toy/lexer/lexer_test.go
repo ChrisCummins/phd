@@ -487,7 +487,7 @@ func TestLexAndTrue(t *testing.T) {
 	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
 	assert.Equal(token.Token{token.NumberToken, "1"}, next())
 	assert.Equal(token.Token{token.AndToken, "&&"}, next())
-	assert.Equal(token.Token{token.NegationTOken, "-"}, next())
+	assert.Equal(token.Token{token.NegationToken, "-"}, next())
 	assert.Equal(token.Token{token.NumberToken, "1"}, next())
 	assert.Equal(token.Token{token.SemicolonToken, ";"}, next())
 	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
