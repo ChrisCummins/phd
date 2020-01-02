@@ -15,9 +15,7 @@
 # limitations under the License.
 """Unit tests for //deeplearning/ml4pl/models/ggnn."""
 import math
-import random
 
-from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch_iterator as batch_iterator_lib
 from deeplearning.ml4pl.models import epoch
