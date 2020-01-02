@@ -73,19 +73,19 @@ class DatabaseObserver(gpgpu.BenchmarkRunObserver):
       )
       app.Log(1, "Looking up static features id for origin `%s`", origin)
       if origin in self.origin_to_features_id_map:
-        static_features_id - self.origin_to_features_id_map[origin]
+        static_features_id = self.origin_to_features_id_map[origin]
       else:
         static_features_id = (
           self.session.query(db.StaticFeatures.id)
           .filter(db.StaticFeatures.origin == origin)
           .one()
         )
-        origin_to_features_id_map[origin] = static_features_id
+        self.origin_to_features_id_map[origin] = static_features_id
 
       self.records.append(
         db.DynamicFeatures(
           driver=db.DynamicFeaturesDriver.LIBCECL,
-          static_features_id=self.origin_to_features_id_map[origin],
+          static_features_id=static_features_id,
           opencl_env=log.run.device.name,
           hostname=log.hostname,
           outcome="PASS",
