@@ -301,7 +301,8 @@ def test_cp():
 
 
 def test_cp_no_file():
-  assert test.Raises(IOError, fs.cp, "/not a real src", "/not/a/real dest")
+  with test.Raises(IOError):
+    fs.cp("/not a real src", "/not/a/real dest")
 
 
 def test_cp_dir():
@@ -523,29 +524,22 @@ def test_chdir_cwd():
   """Test that chdir() correctly changes the working directory."""
   with tempfile.TemporaryDirectory() as d:
     with fs.chdir(d):
-      # Bazel sandboxing only changes to directories within the sandbox, so
-      # there may be an unwanted prefix like /private that we can ignore.
       assert os.getcwd().endswith(d)
 
 
 def test_chdir_not_a_directory():
   """Test that FileNotFoundError is raised if requested path does not exist."""
-  with test.Raises(FileNotFoundError) as e_info:
+  with test.Raises(FileNotFoundError):
     with fs.chdir("/not/a/real/path"):
       pass
-  assert "No such file or directory: '/not/a/real/path'" in str(e_info)
 
 
 def test_chdir_file_argument():
   """Test that NotADirectoryError is raised if requested path is a file."""
   with tempfile.NamedTemporaryFile(prefix="labm8_") as f:
-    with test.Raises(NotADirectoryError) as e_info:
+    with test.Raises(NotADirectoryError):
       with fs.chdir(f.name):
         pass
-    # Bazel sandboxing only changes to directories within the sandbox, so there
-    # may be an unwanted prefix like /private that we can ignore.
-    assert f"Not a directory: '" in str(e_info)
-    assert f.name in str(e_info)
 
 
 def test_TemporaryFileWithContents_contents():
