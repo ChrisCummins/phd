@@ -50,8 +50,6 @@ bool contains_cycle(const list<T>* list) {
 }
 
 TEST(cycles, set) {
-  list<int> a, b, c;
-
   try {
     contains_cycle_set(static_cast<const list<int>*>(nullptr));
     FAIL();
@@ -72,8 +70,6 @@ TEST(cycles, set) {
 }
 
 TEST(cycles, pointers) {
-  list<int> a, b, c;
-
   try {
     contains_cycle(static_cast<const list<int>*>(nullptr));
     FAIL();
