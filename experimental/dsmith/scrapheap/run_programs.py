@@ -3,9 +3,10 @@ from argparse import ArgumentParser
 from itertools import product
 from subprocess import Popen
 
-import pyopencl as cl
 from dsmith import db
 from dsmith.db import *
+
+from third_party.py.pyopencl import pyopencl as cl
 
 
 def get_platform_name(platform_id):

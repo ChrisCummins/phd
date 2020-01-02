@@ -35,9 +35,9 @@ import time
 import typing
 
 import numpy as np
-import pyopencl as CL
 
 from labm8.py import app
+from third_party.py.pyopencl import pyopencl as CL
 
 FLAGS = app.FLAGS
 

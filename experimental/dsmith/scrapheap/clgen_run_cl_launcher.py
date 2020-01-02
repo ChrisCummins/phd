@@ -6,11 +6,12 @@ from tempfile import NamedTemporaryFile
 from typing import Tuple
 
 import progressbar
-import pyopencl as cl
 from dsmith import clsmith
 from dsmith import db
 from dsmith.db import *
 from dsmith.lib import *
+
+from third_party.py.pyopencl import pyopencl as cl
 
 
 def get_platform_name(platform_id):
