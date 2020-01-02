@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <openssl/md5.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,8 +23,6 @@
 #include <type_traits>
 #include <unordered_set>
 #include <vector>
-
-#include "third_party/boost/md5.hpp"
 
 namespace fs = boost::filesystem;
 
@@ -93,19 +92,17 @@ std::string md5sum(const fs::path& path) {
   }
 
   auto file_size = fs::file_size(path);
-  auto file_buffer = reinterpret_cast<unsigned char*>(
-      mmap(0, file_size, PROT_READ, MAP_SHARED, file_descript, 0));
-  close(file_descript);
+  auto file_buffer =
+      mmap(0, file_size, PROT_READ, MAP_SHARED, file_descript, 0);
+  unsigned char result[MD5_DIGEST_LENGTH];
 
-  boost::md5 md5(file_buffer, file_size);
+  file_buffer = mmap(0, file_size, PROT_READ, MAP_SHARED, file_descript, 0);
+  MD5((unsigned char*)file_buffer, file_size, result);
   munmap(file_buffer, file_size);
 
-  std::ostringstream os;
-  os << std::hex << std::setfill('0');
+  close(file_descript);
 
-  os << md5.digest().hex_str_value();
-
-  return os.str();
+  return std::string(reinterpret_cast<char*>(result));
 }
 
 //
