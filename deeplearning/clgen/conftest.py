@@ -18,16 +18,14 @@ import pathlib
 import tarfile
 import tempfile
 
-import pytest
-
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
-from labm8.py import app
 from labm8.py import pbutil
+from labm8.py import test
 
-FLAGS = app.FLAGS
+FLAGS = test.FLAGS
 
 
 @test.Fixture(scope="function")
