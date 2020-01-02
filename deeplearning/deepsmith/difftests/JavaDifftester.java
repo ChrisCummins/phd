@@ -36,7 +36,7 @@ public class JavaDifftester {
    *
    * @param methodSrc
    */
-  public void differentialTest(final String methodSrc) {
+  public static void differentialTest(final String methodSrc) {
     System.out.println(methodSrc);
   }
 
