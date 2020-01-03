@@ -64,6 +64,23 @@ app.DEFINE_enum(
   schedules.SaveOn.EVERY_EPOCH,
   "The type of checkpoints to save.",
 )
+
+
+def _TestOnFlagValidator(flag_value: str):
+  valid_values = [
+    "none",
+    "every",
+    "improvement",
+    "improvement_and_last",
+    "best",
+  ]
+  if flag_value not in valid_values:
+    raise app.UsageError(
+      f"Invalid --test_on value: {flag_value}, valid values: {valid_values}"
+    )
+  return True
+
+
 app.DEFINE_string(
   "test_on",
   "best",
@@ -72,8 +89,7 @@ app.DEFINE_string(
   "when validation accuracy improves), improvent_and_last (test when "
   "validation accuracy improves, and on the last epoch), or best (restore the "
   "model with the best validation accuracy after training and test that).",
-  validator=lambda s: s
-  in {"none", "every", "improvement", "improvement_and_last", "best"},
+  validator=_TestOnFlagValidator,
 )
 app.DEFINE_boolean(
   "test_only",
