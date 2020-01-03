@@ -444,7 +444,7 @@ def CreateModel(
       print_to=lambda msg: app.Log(2, msg),
     ):
       checkpoint_ref = checkpoints.CheckpointReference.FromString(
-        FLAGS.restore_model, logger.db
+        FLAGS.restore_model
       )
       model.RestoreFrom(checkpoint_ref)
   else:
