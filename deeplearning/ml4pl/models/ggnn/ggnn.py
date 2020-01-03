@@ -37,6 +37,7 @@ from deeplearning.ml4pl.models import run
 from deeplearning.ml4pl.models.ggnn.ggnn_config import GGNNConfig
 from deeplearning.ml4pl.models.ggnn.ggnn_modules import GGNNModel
 from labm8.py import app
+from labm8.py import gpu_scheduler
 from labm8.py import progress
 
 FLAGS = app.FLAGS
@@ -50,10 +51,6 @@ app.DEFINE_integer(
   "label_conv_stable_steps",
   1,
   "required number of consecutive steps within the convergence interval",
-)
-
-app.DEFINE_boolean(
-  "cuda", True, "Use cuda if available? CPU-only mode otherwise."
 )
 
 app.DEFINE_list(
@@ -188,9 +185,10 @@ class Ggnn(classifier_base.ClassifierBase):
     super(Ggnn, self).__init__(*args, **kwargs)
 
     # set some global config values
+
     self.dev = (
       torch.device("cuda")
-      if torch.cuda.is_available() and FLAGS.cuda
+      if gpu_scheduler.LockExclusiveProcessGpuAccess()
       else torch.device("cpu")
     )
     app.Log(
