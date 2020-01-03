@@ -281,9 +281,3 @@ filegroup(
     name = "shared_code_README",
     srcs = ["shared_code_README.md"],
 )
-
-py_binary(
-    name = "EXPORT",
-    srcs = ["EXPORT.py"],
-    deps = ["//tools/source_tree:export_source_tree"],
-)

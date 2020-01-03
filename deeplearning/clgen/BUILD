@@ -84,7 +84,7 @@ py_test(
     ],
     deps = [
         ":clgen",
-        "//deeplearning/clgen:conftest",
+        ":conftest",
         "//deeplearning/clgen/proto:clgen_pb_py",
         "//labm8/py:app",
         "//labm8/py:fs",
@@ -101,7 +101,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8/py:app",
         "//labm8/py:pbutil",
         "//labm8/py:test",
     ],

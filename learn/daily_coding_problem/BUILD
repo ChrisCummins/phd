@@ -38,6 +38,7 @@ cc_binary(
 cc_binary(
     name = "008",
     srcs = ["008.cc"],
+    linkopts = ["-lpthread"],
 )
 
 cc_binary(

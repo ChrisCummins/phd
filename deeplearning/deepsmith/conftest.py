@@ -22,12 +22,11 @@ https://docs.pytest.org/en/latest/fixture.html#conftest-py-sharing-fixture-funct
 """
 import pathlib
 
-import pytest
-
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import datastore_pb2
 from labm8.py import pbutil
+from labm8.py import test
 
 
 def _ReadTestDataStoreFiles() -> datastore_pb2.DataStoreTestSet:
@@ -63,7 +62,7 @@ _DATASTORE_TESTSET = _ReadTestDataStoreFiles()
 
 
 @test.Fixture(
-  ids=_DATASTORE_TESTSET.values.keys(),
+  names=_DATASTORE_TESTSET.values.keys(),
   params=_DATASTORE_TESTSET.values.values(),
   scope="function",
 )
@@ -79,7 +78,7 @@ def ds(request) -> datastore.DataStore:
 
 
 @test.Fixture(
-  ids=_DATASTORE_TESTSET.values.keys(),
+  names=_DATASTORE_TESTSET.values.keys(),
   params=_DATASTORE_TESTSET.values.values(),
   scope="function",
 )

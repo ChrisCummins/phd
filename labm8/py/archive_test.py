@@ -22,7 +22,7 @@ FLAGS = app.FLAGS
     (".tar.bz2", lambda f: tarfile.open(f, "w:bz2"), lambda a: a.add),
   ],
   # Parameter tuple names.
-  ids=["zip", "tar.bz2"],
+  names=["zip", "tar.bz2"],
 )
 def test_archive(request, tempdir: pathlib.Path) -> pathlib.Path:
   """Yield path to an archive containing a single 'a.txt' file."""

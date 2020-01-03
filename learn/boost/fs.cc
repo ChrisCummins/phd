@@ -1,4 +1,16 @@
+#include <fcntl.h>
+#include <openssl/md5.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <algorithm>
+#include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 #include <future>
 #include <iomanip>
 #include <iostream>
@@ -11,19 +23,6 @@
 #include <type_traits>
 #include <unordered_set>
 #include <vector>
-
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
-#include "third_party/boost/md5.hpp"
-
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 namespace fs = boost::filesystem;
 
@@ -48,7 +47,7 @@ class recursive_directory_iterator {
       : _stack({decltype(_stack)::value_type{std::move(root)}}),
         _base(*_stack.top()) {}
 
-  explicit recursive_directory_iterator(const decltype(_stack) & stack)
+  explicit recursive_directory_iterator(const decltype(_stack)& stack)
       : _stack(stack) {}
 
   auto& operator++() {
@@ -93,19 +92,17 @@ std::string md5sum(const fs::path& path) {
   }
 
   auto file_size = fs::file_size(path);
-  auto file_buffer = reinterpret_cast<unsigned char*>(
-      mmap(0, file_size, PROT_READ, MAP_SHARED, file_descript, 0));
-  close(file_descript);
+  auto file_buffer =
+      mmap(0, file_size, PROT_READ, MAP_SHARED, file_descript, 0);
+  unsigned char result[MD5_DIGEST_LENGTH];
 
-  boost::md5 md5(file_buffer, file_size);
+  file_buffer = mmap(0, file_size, PROT_READ, MAP_SHARED, file_descript, 0);
+  MD5((unsigned char*)file_buffer, file_size, result);
   munmap(file_buffer, file_size);
 
-  std::ostringstream os;
-  os << std::hex << std::setfill('0');
+  close(file_descript);
 
-  os << md5.digest().hex_str_value();
-
-  return os.str();
+  return std::string(reinterpret_cast<char*>(result));
 }
 
 //
@@ -147,7 +144,7 @@ auto get_files_in_dir(const fs::path& root) {
   // Change to the root directory
   if (chdir(root.string().c_str())) throw std::runtime_error("chrdir()");
 
-  std::vector<const fs::path> files;
+  std::vector<fs::path> files;
   file::walk_files(".", [&files](const auto& path) { files.push_back(path); });
 
   // Return to working directory;

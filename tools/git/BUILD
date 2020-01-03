@@ -11,6 +11,6 @@ filegroup(
         "post_commit.py",
         "post_rebase.py",
         "pre_commit.py",
-        "pre_push.py",
+        "pre_push.sh",
     ],
 )

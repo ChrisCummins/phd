@@ -1,1 +1,2 @@
 macos: brew cask install mactex
+linux: sudo apt install -y --no-install-recommends texlive-full

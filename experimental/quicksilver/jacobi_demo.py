@@ -62,12 +62,11 @@ Reference run:
 """
 import time
 
-import pyopencl as CL
-
 from datasets.benchmarks.jacobi_opencl import jacobi_opencl as jacobi
 from labm8.py import app
 from labm8.py import humanize
 from labm8.py import prof
+from third_party.py.pyopencl import pyopencl as CL
 
 FLAGS = app.FLAGS
 

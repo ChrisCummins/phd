@@ -226,6 +226,7 @@ py_test(
     data = [
         "//labm8/py/test_data:basic_app.tar",
     ],
+    shard_count = 3,
     visibility = ["//visibility:public"],
     deps = [
         ":dockerutil",
@@ -294,6 +295,28 @@ py_library(
         ":app",
         "//third_party/py/gspread",
         "//third_party/py/oauth2client",
+    ],
+)
+
+py_binary(
+    name = "gpu_scheduler",
+    srcs = ["gpu_scheduler.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":app",
+        ":humanize",
+        "//third_party/py/appdirs",
+        "//third_party/py/gputil",
+    ],
+)
+
+py_test(
+    name = "gpu_scheduler_test",
+    srcs = ["gpu_scheduler_test.py"],
+    deps = [
+        ":gpu_scheduler",
+        ":test",
+        "//third_party/py/fasteners",
     ],
 )
 
@@ -602,6 +625,7 @@ py_library(
 py_test(
     name = "progress_test",
     srcs = ["progress_test.py"],
+    shard_count = 4,
     deps = [
         ":progress",
         ":test",
@@ -726,6 +750,8 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":app",
+        ":fs",
+        "//third_party/py/jupyter",
         "//third_party/py/matplotlib",
     ],
 )

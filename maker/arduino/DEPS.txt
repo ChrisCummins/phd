@@ -1,4 +1,5 @@
 # For compiling arduino code:
-all: python -m pip install 'platformio==4.1.0'
+all: python3 -m pip install 'platformio==4.1.0'
+all: test -f /usr/local/bin/platformio || sudo ln -s $(which platformio) /usr/local/bin/platformio
 linux: # For arduino bazel rules:
 linux: sudo apt install -y --no-install-recommends zip

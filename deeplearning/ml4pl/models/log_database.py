@@ -576,7 +576,7 @@ class Database(sqlutil.Database):
     self,
     run_id: run_id_lib.RunId,
     session: Optional[sqlutil.Database.SessionType] = None,
-  ):
+  ) -> pd.DataFrame:
     """Return a table of parameters for the given run.
 
     Args:
@@ -585,6 +585,9 @@ class Database(sqlutil.Database):
 
     Returns:
       A dataframe with timestamp, name, value, type columns.
+
+    Raises:
+      ValueError: If the given run ID is not found.
     """
     with self.Session(session=session) as session:
       query = (

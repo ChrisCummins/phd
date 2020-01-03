@@ -3,8 +3,6 @@ import os
 import pathlib
 import tempfile
 
-import pytest
-
 from labm8.py import dockerutil
 from labm8.py import system
 from labm8.py import test

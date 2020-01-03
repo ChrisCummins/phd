@@ -15,7 +15,7 @@
 import pathlib
 import tempfile
 
-import pytest
+from labm8.py import test
 
 
 @test.Fixture(scope="function")

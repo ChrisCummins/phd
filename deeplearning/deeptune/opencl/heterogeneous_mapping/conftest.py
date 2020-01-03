@@ -14,11 +14,11 @@
 # along with DeepTune.  If not, see <https://www.gnu.org/licenses/>.
 """Test fixtures for heterogeneous mapping."""
 import pandas as pd
-import pytest
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
+from labm8.py import test
 
 
 @test.Fixture(scope="function")

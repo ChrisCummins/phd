@@ -1,4 +1,4 @@
-import pyopencl as cl
+from third_party.py.pyopencl import pyopencl as cl
 
 
 def get_devices():

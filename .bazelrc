@@ -1,21 +1,35 @@
 # See: https://bazel.build/versions/master/docs/bazel-user-manual.html#flag--compilation_mode
 
-build --cxxopt='-std=c++14'
-test --cxxopt='-std=c++14'
-
 # This flag is set by IntelliJ. Set it here so that alternating between command
 # line and IntelliJ invocations does not reset the analysis cache.
+build --runs_per_test=1
 test --runs_per_test=1
 
 build --workspace_status_command=tools/workspace_status.sh
 test --workspace_status_command=tools/workspace_status.sh
 
-# Build options:
-build --keep_going
+# Force python2 for bazel since io_bazel_rules_docker uses python2 code.
+build --host_force_python=PY2
+test --host_force_python=PY2
 
-# Test options:
-test --test_output=errors
+# This project uses C++14.
+build --cxxopt='-std=c++14'
+test --cxxopt='-std=c++14'
+
+# Promote unused variable warnings to errors.
+build --cxxopt='-Werror=unused-variable'
+test --cxxopt='-Werror=unused-variable'
+
+# Promote warnings about missing braces on if/else blocks to errors.
+build --cxxopt='-Werror=dangling-else'
+test --cxxopt='-Werror=dangling-else'
+
+# Default to continuing on error. Override using --keep_going=false.
+build --keep_going
 test --keep_going
+
+# Show test error output.
+test --test_output=errors
 
 # Address sanitizer
 # To use it: bazel build --config asan

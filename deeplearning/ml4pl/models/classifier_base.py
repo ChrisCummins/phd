@@ -34,6 +34,7 @@ from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import logger as logging
 from labm8.py import app
 from labm8.py import decorators
+from labm8.py import gpu_scheduler
 from labm8.py import humanize
 from labm8.py import progress
 
@@ -133,8 +134,16 @@ class ClassifierBase(object):
       epoch.Type.TEST: set(),
     }
 
+    # Get exclusive access to a GPU, if available. Do this before calling
+    # logger.OnStartRun() since this changes the environment variables.
+    self.gpu = gpu_scheduler.LockExclusiveProcessGpuAccess()
+
     # Register this model with the logger.
     self.logger.OnStartRun(self.run_id, self.graph_db)
+
+  def __del__(self):
+    if self.gpu:
+      gpu_scheduler.GetDefaultScheduler().ReleaseGpu(self.gpu)
 
   #############################################################################
   # Interface methods. Subclasses must implement these.

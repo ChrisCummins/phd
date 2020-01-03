@@ -74,6 +74,16 @@ py_library(
     ],
 )
 
+py_test(
+    name = "checkpoints_test",
+    srcs = ["checkpoints_test.py"],
+    deps = [
+        ":checkpoints",
+        "//deeplearning/ml4pl:run_id",
+        "//labm8/py:test",
+    ],
+)
+
 py_library(
     name = "classifier_base",
     srcs = ["classifier_base.py"],
@@ -89,6 +99,7 @@ py_library(
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//labm8/py:app",
         "//labm8/py:decorators",
+        "//labm8/py:gpu_scheduler",
         "//labm8/py:humanize",
         "//labm8/py:progress",
         "//third_party/py/numpy",
