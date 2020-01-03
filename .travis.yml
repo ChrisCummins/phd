@@ -9,3 +9,8 @@ install:
 
 script:
   - docker run -v$TRAVIS_BUILD_DIR:/phd chriscummins/phd_build:latest -c "./configure --noninteractive && ./tools/flaky_bazel.sh run --config=travis //tools:whoami"
+
+notifications:
+  email:
+    on_success: never
+    on_failure: change
