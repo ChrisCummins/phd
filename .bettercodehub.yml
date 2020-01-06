@@ -8,6 +8,8 @@ exclude:
   - /datasets/benchmarks/gpgpu/polybench-.*
   - /datasets/benchmarks/gpgpu/rodinia-.*
   - /datasets/benchmarks/gpgpu/shoc-.*
+  - /deeplearning/ncc/.*
+  - /gpu/libcecl/libcecl\.[ch]
   - /third_party/.*
 # Set component depth to match //<group>/<package>/<component> structure.
 component_depth: 3
