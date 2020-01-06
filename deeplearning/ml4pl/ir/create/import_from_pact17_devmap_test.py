@@ -27,7 +27,6 @@ def opencl_dataset() -> opencl.OpenClDeviceMappingsDataset:
   yield opencl.OpenClDeviceMappingsDataset()
 
 
-@test.XFail(reason="github.com/ChrisCummins/ProGraML/issues/7")
 def test_OpenClDeviceMappingsDataset_cfgs_df_count(
   opencl_dataset: opencl.OpenClDeviceMappingsDataset,
 ):
@@ -37,7 +36,6 @@ def test_OpenClDeviceMappingsDataset_cfgs_df_count(
   assert len(opencl_dataset.cfgs_df) >= 185
 
 
-@test.XFail(reason="github.com/ChrisCummins/ProGraML/issues/7")
 def test_OpenClDeviceMappingsDataset_cfgs_df_contains_valid_graphs(
   opencl_dataset: opencl.OpenClDeviceMappingsDataset,
 ):
