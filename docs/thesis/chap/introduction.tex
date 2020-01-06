@@ -78,6 +78,31 @@ This thesis presents machine learning-based techniques to simplify and accelerat
 \end{itemize}
 
 \newpage
+\section{Publications}
+
+This thesis is in part based on ideas and results which have been described in previous publications. The system for generating benchmarks which provides the basis of Chapter~\ref{chap:clgen} is described in:
+\begin{enumerate}
+	\item \emph{Cummins, C., Petoumenos, P., Zang, W., \& Leather, H. (2017). Synthesizing Benchmarks for Predictive Modeling. In CGO. IEEE.}~\cite{Cummins2017a}.
+\end{enumerate}
+
+\noindent
+Chapter~\ref{chap:deepsmith} describes an approach to compiler testing which was previously published in:
+\begin{enumerate}
+	\setcounter{enumi}{1}
+	\item \emph{Cummins, C., Petoumenos, P., Murray, A., \& Leather, H. (2018). Compiler Fuzzing through Deep Learning. In ISSTA.}~\cite{Cummins2017a}.
+	\item \emph{Cummins, C., Petoumenos, P., Murray, A., \& Leather, H. (2018). DeepSmith: Compiler Fuzzing through Deep Learning. In ACACES.~\cite{Cummins2018a}}
+\end{enumerate}
+
+\noindent
+The \emph{DeepTune} system proposed in Chapter~\ref{chap:deeptune} was first published in:
+\begin{enumerate}
+	\setcounter{enumi}{3}
+	\item \emph{Cummins, C., Petoumenos, P., Wang, Z., \& Leather, H. (2017). End-to-end Deep Learning of Optimization Heuristics. In PACT. IEEE.}~\cite{Cummins2017b}.
+\end{enumerate}
+
+The experimental results in this thesis are reproductions of those in the above publications. What differentiates this work from prior publications is the addition of background material (Chapter~\ref{chap:background}) and a literature review (Chapter~\ref{chap:related-work}) which offers a more comprehensive overview of the relevant fields, and includes references to new works that have been published after the above publications, including works based on those publications.
+
+
 \section{Structure}
 
 This thesis is organised as follows:
@@ -93,7 +118,6 @@ This thesis is organised as follows:
 \textbf{Chapter~\ref{chap:deeptune}} introduces a novel methodology for constructing optimising compiler heuristics without the need for code features. It presents two case studies of the technique: the first for learning a heterogeneous device mapping heuristic, the second for learning OpenCL thread coarsening.
 
 \textbf{Chapter~\ref{chap:conclusions}} summarises the overall findings of the thesis, provides a critical review, and outlines potential avenues for future research.
-
 
 \section{Summary}
 
