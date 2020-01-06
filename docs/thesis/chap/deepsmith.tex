@@ -45,7 +45,7 @@ The generative model needs to be trained on a \emph{seed corpus} of example prog
 
 This corpus, exceeding one million lines of code, is used as a representative sample of OpenCL code from which a generative model can be derived.
 
-As in Chapter~\ref{chap:clgen}, semantic-preserving transformations are employed to simplify the training programs. First, each source file is preprocessed to expand macros and remove conditional compilation and comments. Then, all user-declared identifiers are renamed using an arbitrary, but consistent pattern based on their order of declaration: $\{a,\allowbreak b,\allowbreak c,\allowbreak \ldots,\allowbreak aa,\allowbreak ab,\allowbreak ac,\allowbreak \ldots\}$ for variables and $\{A,\allowbreak B,\allowbreak C,\allowbreak \ldots,\allowbreak AA,\allowbreak AB,\allowbreak AC,\allowbreak \ldots\}$ for functions. This ensures a consistent naming convention, without modifying program behaviour. Finally, a uniform code style is enforced to ensure consistent use of braces, parentheses, and white space. These rewriting simplifications give more opportunities for the model to learn the structure and deeper aspects of the language and speed up the learning. On the other hand, some bugs in the preprocessor or front-end might no longer be discoverable. For the purpose of fuzzing OpenCL compilers, this was reasoned as an acceptable trade-off. For languages where the corpus may be many orders of magnitude larger, for example, C or Java, it may be possible to construct effective models without these modifications.
+As in Chapter~\ref{chap:clgen}, semantics-preserving transformations are employed to simplify the training programs. First, each source file is preprocessed to expand macros and remove conditional compilation and comments. Then, all user-declared identifiers are renamed using an arbitrary, but consistent pattern based on their order of declaration: $\{a,\allowbreak b,\allowbreak c,\allowbreak \ldots,\allowbreak aa,\allowbreak ab,\allowbreak ac,\allowbreak \ldots\}$ for variables and $\{A,\allowbreak B,\allowbreak C,\allowbreak \ldots,\allowbreak AA,\allowbreak AB,\allowbreak AC,\allowbreak \ldots\}$ for functions. This ensures a consistent naming convention, without modifying program behaviour. Finally, a uniform code style is enforced to ensure consistent use of braces, parentheses, and white space. These rewriting simplifications give more opportunities for the model to learn the structure and deeper aspects of the language and speed up the learning. On the other hand, some bugs in the preprocessor or front-end might no longer be discoverable. For the purpose of fuzzing OpenCL compilers, this was reasoned as an acceptable trade-off. For languages where the corpus may be many orders of magnitude larger, for example, C or Java, it may be possible to construct effective models without these modifications.
 
 
 \paragraph*{Encoder}
@@ -114,9 +114,9 @@ An \emph{anomalous build failure} (\abf) or \emph{anomalous runtime crash} (\arc
 
 \paragraph*{False Positives for Anomalous Runtime Behaviour}
 
-Generated programs may contain undefined or non-deterministic behaviour which will incorrectly be labelled as anomalous. CSmith circumvents this problem by performing complex analyses during generation so as to minimise the chance of producing programs with undefined behaviour. Although similar analyses could be created as filters for DeepSmith, a simpler approach is taken, filtering only the few types of non-deterministic behaviour that have been actually observed to happen in practice.
+Generated programs may contain undefined or non-deterministic behaviour which will incorrectly be labelled as anomalous. CSmith circumvents this problem by performing complex analyses during generation so as to minimise the chance of producing programs with undefined behaviour. Although similar analyses could be created as filters for DeepSmith, a simpler approach is taken, filtering only the few types of undefined and non-deterministic behaviour that have been actually observed to happen in practice.
 
-Data races, out-of-bounds and uninitialised accesses are filtered using GPUverify~\cite{Betts2012} and Oclgrind~\cite{Price2015}. Some compiler warnings provide a strong indication of non-deterministic behaviour (e.g. comparison between pointer and integer) -- these warnings are checked for and filtered accordingly.
+Data races, out-of-bounds and uninitialised accesses are filtered using GPUverify~\cite{Betts2012} and Oclgrind~\cite{Price2015}. Some compiler warnings provide a strong indication of undefined behaviour (e.g. comparison between pointer and integer) -- these warnings are checked for and filtered accordingly.
 
 Floating point operations in OpenCL are imprecise, so kernels can produce different output on different testbeds. For this reason, CSmith and CLSmith do not support floating point operations. DeepSmith permits floating point operations but since it cannot apply differential testing on the outputs, it can detect all results except for the \emph{anomalous wrong-output} results.
 
@@ -201,7 +201,7 @@ The use of undeclared identifiers is a core error diagnostic which one would exp
 \input{lst/crash-compilers}
 \begin{figure}
   \centering %
-  \subfloat[Testbeds $10\pm$ assertion \emph{Uncorrected typos!} during semantic analysis.]{%
+  \subfloat[Testbeds $10\pm$ assertion ``\emph{Uncorrected typos!}'' during semantic analysis.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindUncorrectedTypos}}}%
     \label{lst:oclgrind-uncorrected-typos}
   }\\%
@@ -265,7 +265,7 @@ Parser development is a mature and well-understood practice. Still, parser error
 
 \subsubsection{Compiler Hangs}
 
-As expected, some compile-time defects are optimisation sensitive. Testbed $1+$ hangs on large loop bounds, shown in Figure~\ref{lst:nvidia-opt-loop-hang}. All commercial Intel compilers  tested hang during optimisation of non-terminating loops (Figure~\ref{lst:intel-inf-loop}).
+As expected, some compile-time defects are optimisation sensitive. Testbed $1+$ hangs on large loop bounds, shown in Figure~\ref{lst:nvidia-opt-loop-hang}. All of the Intel compilers tested hang during optimisation of non-terminating loops (Figure~\ref{lst:intel-inf-loop}).
 
 Testbeds $7\pm$ loop indefinitely during compilation of the simple OpenCL kernel in Figure~\ref{lst:xeon-phi-spin}.
 
@@ -282,7 +282,7 @@ On Testbeds~$3\pm$, the statement \texttt{int n = mad24(a, (32), get\_global\_si
 \input{lst/miscompiled}
 \begin{figure}
   \centering %
-  \subfloat[Testbeds $4+$, $6+$ incorrectly optimise the \texttt{if} statement, causing the conditional branch to execute (it shouldn't). This pattern of integer comparison to thread ID is widely used.]{%
+  \subfloat[Testbeds $4+$, $6+$ incorrectly optimise the \texttt{if} statement, causing the conditional branch to execute (when it shouldn't). This pattern of integer comparison to thread ID is widely used.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSizetIntUnreduced}}}%
     \label{lst:intel-size_t-int-unreduced}
   }\\%
@@ -314,7 +314,7 @@ On Testbeds~$3\pm$, the statement \texttt{int n = mad24(a, (32), get\_global\_si
 
 \subsection{Runtime Defects}
 
-Prior work on compiler test case generation has focused on extensive stress-testing of compiler middle-ends to uncover miscompilations~\cite{Chen2014a}. CSmith, and by extension, CLSmith, specifically targets this class of bugs. Grammar-based enumeration is highly effective at this task, yet is bounded by the expressiveness of the grammar. Here, examples are provided of bugs which cannot currently be discovered by CLSmith.
+Prior work on compiler test case generation has focused on extensive stress-testing of compiler middle-ends to uncover miscompilations~\cite{Chen2014a}. CSmith, and by extension, CLSmith, specifically targets this class of bugs. Grammar-based enumeration is highly effective at this task, yet is bounded by the expressiveness of the grammar. Here, examples are provided of bugs found by DeepSmith which cannot currently be discovered by CLSmith.
 
 
 \subsubsection{Thread-dependent Flow Control}
@@ -463,7 +463,7 @@ Over the course of testing, a combined $3.4 \times 10^8$ lines of CLSmith code w
 
 The Clang front-end to LLVM supports OpenCL, and is commonly used in OpenCL drivers. This, in turn, causes Clang-related defects to potentially affect multiple compilers, for example, the one in Figure~\ref{lst:almost-everything-crash}. To evaluate the impact of Clang, debug+assert builds of every LLVM release in the past 24 months were used to process 75,000 DeepSmith kernels through the Clang front-end (this includes the lexer, parser, and type checker, but not code generation).
 
-Figure~\ref{fig:clang-clash-rate} shows that the crash rate of the Clang front-end is, for the most part, steadily decreasing over time. The number of failing compiler crashes decreased tenfold between 3.6.2 and 5.0.0. Table~\ref{tab:clang-crash-rate} shows the 7 distinct assertions triggered during this experiment. Assertion 1 (\emph{Uncorrected typos!}) is raised on all compiler versions --- see Figure~\ref{lst:oclgrind-uncorrected-typos} for an example. The overall rate at which the assertion is triggered has decreased markedly, although there are slight increases between some releases. Notably, the current development trunk has the second lowest crash rate but is joint first in terms of the number of unique assertions. Assertions 3 (\emph{Addr == 0 || hasTargetSpecificAddressSpace()}) and 4 (\emph{isScalarType()}) were triggered by some kernels in the development trunk but not under any prior release.
+Figure~\ref{fig:clang-clash-rate} shows that the number of crashes observed in the Clang front-end is, for the most part, steadily decreasing over time. The number of failing compiler crashes decreased tenfold between 3.6.2 and 5.0.0. Table~\ref{tab:clang-crash-rate} shows the 7 distinct assertions triggered during this experiment. Assertion 1 (\emph{Uncorrected typos!}) is raised on all compiler versions --- see Figure~\ref{lst:oclgrind-uncorrected-typos} for an example. The overall rate at which the assertion is triggered has decreased markedly, although there are slight increases between some releases. Notably, the current development trunk has the second lowest crash rate but is joint first in terms of the number of unique assertions. Assertions 3 (\emph{Addr == 0 || hasTargetSpecificAddressSpace()}) and 4 (\emph{isScalarType()}) were triggered by some kernels in the development trunk but not under any prior release.
 
 \newpage
 Bug reports have been submitted for each of the three assertions triggered in the development trunk, as well as for two distinct unreachables.
@@ -472,7 +472,7 @@ Bug reports have been submitted for each of the three assertions triggered in th
   \centering %
   \includegraphics[width=.85\columnwidth]{img/clang-crashes}%
   \caption[Crash rate of the Clang front-end]{%
-    Crash rate of the Clang front-end of every LLVM release in the past 24 months compiling 75k DeepSmith kernels.%
+    The crash rate of the Clang front-end of every LLVM release in the past 24 months compiling 75k DeepSmith kernels, plotted with a logarithmic scale.%
   }%
   \label{fig:clang-clash-rate}
 \end{figure}
@@ -499,7 +499,7 @@ A large portion of the DeepSmith architecture is language-agnostic, requiring on
 
 \subsubsection{Testing Methodology}
 
-The same methodology was applied to train the program generator as for OpenCL. A corpus of Solidity contracts was assembled from GitHub, recursively inlining imported modules where possible. The same tokeniser was used as for OpenCL, only changing the list of language keywords and builtins. Code style was enforced using clang-format. The model is trained in the same manner as OpenCL. No modification to either the language model or generator code was required. A simple compile-only test harness is used to drive the generated Solidity contracts.
+The same methodology was applied to train the program generator as for OpenCL. A corpus of 1.74M Solidity contracts was assembled from GitHub, recursively inlining imported modules where possible. The same tokeniser was used as for OpenCL, only changing the list of language keywords and builtins. Code style was enforced using clang-format. The model is trained in the same manner as OpenCL. No modification to either the language model or generator code was required. A simple compile-only test harness is used to drive the generated Solidity contracts.
 
 
 \subsubsection{Initial Results}
