@@ -35,6 +35,7 @@ py_binary(
 py_test(
     name = "zero_r_test",
     size = "small",
+    timeout = "long",
     srcs = ["zero_r_test.py"],
     shard_count = 8,
     deps = [
