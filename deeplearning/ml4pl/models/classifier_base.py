@@ -95,7 +95,7 @@ class ClassifierBase(object):
       not graph_db.node_y_dimensionality and not graph_db.graph_y_dimensionality
     ):
       raise NotImplementedError(
-        "Neither node or graph labels are set. What am I to do?"
+        "Neither node ory" " graph labels are set. What am I to do?"
       )
     if graph_db.node_y_dimensionality and graph_db.graph_y_dimensionality:
       raise NotImplementedError(

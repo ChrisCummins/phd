@@ -49,7 +49,6 @@ py_test(
     deps = [
         ":ggnn",
         ":ggnn_config",
-        "//deeplearning/ml4pl:run_id",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//deeplearning/ml4pl/models:batch_iterator",
         "//deeplearning/ml4pl/models:epoch",

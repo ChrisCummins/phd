@@ -64,6 +64,23 @@ app.DEFINE_enum(
   schedules.SaveOn.EVERY_EPOCH,
   "The type of checkpoints to save.",
 )
+
+
+def _TestOnFlagValidator(flag_value: str):
+  valid_values = [
+    "none",
+    "every",
+    "improvement",
+    "improvement_and_last",
+    "best",
+  ]
+  if flag_value not in valid_values:
+    raise app.UsageError(
+      f"Invalid --test_on value: {flag_value}, valid values: {valid_values}"
+    )
+  return True
+
+
 app.DEFINE_string(
   "test_on",
   "best",
@@ -72,8 +89,7 @@ app.DEFINE_string(
   "when validation accuracy improves), improvent_and_last (test when "
   "validation accuracy improves, and on the last epoch), or best (restore the "
   "model with the best validation accuracy after training and test that).",
-  validator=lambda s: s
-  in {"none", "every", "improvement", "improvement_and_last", "best"},
+  validator=_TestOnFlagValidator,
 )
 app.DEFINE_boolean(
   "test_only",
@@ -86,12 +102,12 @@ app.DEFINE_list(
   [],
   "Permit the train/val/test loop to terminate before epoch_count iterations "
   "have completed. Valid options are: val_acc=<float> (stop if validation "
-  "accuracy reaches the given value in the range [0,1]), elapsed=<int> (stop "
+  "accuracy reaches the given value in the range [0,1]), time=<int> (stop "
   "if the given number of seconds have elapsed, excluding the final test epoch "
   "if --test_on=best is set), or patience=<int> (stop if <int> epochs have "
   "been performed without an improvement in validation accuracy. Multiple "
   "options can be combined in a comma-separated list, e.g. "
-  "--stop_at=val_acc=.9999,elapsed=21600,patience=10 meaning stop if "
+  "--stop_at=val_acc=.9999,time=21600,patience=10 meaning stop if "
   "validation accuracy meets 99.99% or if 6 hours have elapsed or if 10 epochs "
   "have been performed without an improvement in validation accuracy.",
 )

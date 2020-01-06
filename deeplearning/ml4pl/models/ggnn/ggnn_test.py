@@ -18,7 +18,6 @@ import math
 import os
 import random
 
-from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch_iterator as batch_iterator_lib
 from deeplearning.ml4pl.models import epoch
@@ -34,10 +33,6 @@ FLAGS = test.FLAGS
 
 # For testing models, always use --strict_graph_segmentation.
 FLAGS.strict_graph_segmentation = True
-
-# Disable the GPU for sharded tests.
-# TODO(github.com/ChrisCummins/ProGraML/issues/54): Use scheduler to get GPU access.
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 ###############################################################################
 # Fixtures.
