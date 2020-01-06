@@ -142,7 +142,9 @@ class ClassifierBase(object):
     self.logger.OnStartRun(self.run_id, self.graph_db)
 
   def __del__(self):
-    if self.gpu:
+    # Defensively check for gpu attribute since __del__ is called even if
+    # __init__ throws an error and does not complete.
+    if hasattr(self, "gpu") and self.gpu:
       gpu_scheduler.GetDefaultScheduler().ReleaseGpu(self.gpu)
 
   #############################################################################
