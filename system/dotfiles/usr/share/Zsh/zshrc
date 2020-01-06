@@ -544,6 +544,7 @@ path_dirs=( \
     ~/.local/bin \
     ~/.gem/*/*/bin \
     ~/.gem/*/ruby/*/bin \
+    ~/.local/opt/go/bin \
     ~/go/bin \
     /Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin \
     /usr/local/opt/coreutils/libexec/gnubin \
