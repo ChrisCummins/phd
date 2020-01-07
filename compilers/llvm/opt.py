@@ -32,7 +32,6 @@ import typing
 from compilers.llvm import llvm
 from labm8.py import app
 from labm8.py import bazelutil
-from labm8.py import system
 
 FLAGS = app.FLAGS
 
@@ -42,10 +41,8 @@ app.DEFINE_integer(
   "The maximum number of seconds to allow process to run.",
 )
 
-_LLVM_REPO = "llvm_linux" if system.is_linux() else "llvm_mac"
-
 # Path to opt binary.
-OPT = bazelutil.DataPath(f"{_LLVM_REPO}/bin/opt")
+OPT = bazelutil.DataPath("phd/third_party/llvm/opt")
 
 # The list of LLVM opt transformation passes.
 # See: https://llvm.org/docs/Passes.html#transform-passes

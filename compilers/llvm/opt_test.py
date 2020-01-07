@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //compilers/llvm/opt.py."""
-import pytest
-
 from compilers.llvm import opt
 from labm8.py import app
 from labm8.py import test

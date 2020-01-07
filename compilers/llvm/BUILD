@@ -30,20 +30,12 @@ py_binary(
 py_binary(
     name = "clang",
     srcs = ["clang.py"],
-    data = select({
-        "//:darwin": [
-            "@llvm_mac//:clang",
-        ],
-        "//conditions:default": [
-            "@llvm_linux//:clang",
-        ],
-    }),
+    data = ["//third_party/llvm:clang"],
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
         "//labm8/py:app",
         "//labm8/py:bazelutil",
-        "//labm8/py:system",
     ],
 )
 
@@ -64,20 +56,12 @@ py_test(
 py_binary(
     name = "clang_format",
     srcs = ["clang_format.py"],
-    data = select({
-        "//:darwin": [
-            "@llvm_mac//:clang-format",
-        ],
-        "//conditions:default": [
-            "@llvm_linux//:clang-format",
-        ],
-    }),
+    data = ["//third_party/llvm:clang-format"],
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
         "//labm8/py:app",
         "//labm8/py:bazelutil",
-        "//labm8/py:system",
     ],
 )
 
@@ -95,40 +79,24 @@ py_test(
 py_binary(
     name = "llvm_as",
     srcs = ["llvm_as.py"],
-    data = select({
-        "//:darwin": [
-            "@llvm_mac//:llvm-as",
-        ],
-        "//conditions:default": [
-            "@llvm_linux//:llvm-as",
-        ],
-    }),
+    data = ["//third_party/llvm:llvm-as"],
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
         "//labm8/py:app",
         "//labm8/py:bazelutil",
-        "//labm8/py:system",
     ],
 )
 
 py_binary(
     name = "llvm_dis",
     srcs = ["llvm_dis.py"],
-    data = select({
-        "//:darwin": [
-            "@llvm_mac//:llvm-dis",
-        ],
-        "//conditions:default": [
-            "@llvm_linux//:llvm-dis",
-        ],
-    }),
+    data = ["//third_party/llvm:llvm-dis"],
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
         "//labm8/py:app",
         "//labm8/py:bazelutil",
-        "//labm8/py:system",
     ],
 )
 
@@ -145,20 +113,12 @@ py_test(
 py_binary(
     name = "llvm_link",
     srcs = ["llvm_link.py"],
-    data = select({
-        "//:darwin": [
-            "@llvm_mac//:llvm-link",
-        ],
-        "//conditions:default": [
-            "@llvm_linux//:llvm-link",
-        ],
-    }),
+    data = ["//third_party/llvm:llvm-link"],
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
         "//labm8/py:app",
         "//labm8/py:bazelutil",
-        "//labm8/py:system",
     ],
 )
 
@@ -186,20 +146,12 @@ py_library(
 py_binary(
     name = "opt",
     srcs = ["opt.py"],
-    data = select({
-        "//:darwin": [
-            "@llvm_mac//:opt",
-        ],
-        "//conditions:default": [
-            "@llvm_linux//:opt",
-        ],
-    }),
+    data = ["//third_party/llvm:opt"],
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
         "//labm8/py:app",
         "//labm8/py:bazelutil",
-        "//labm8/py:system",
     ],
 )
 

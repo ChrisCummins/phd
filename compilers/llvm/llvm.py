@@ -33,12 +33,22 @@ class LlvmError(EnvironmentError):
     self.command = command
 
   def __repr__(self):
-    if self.msg:
-      return str(self.msg)
-    elif self.stderr:
-      return str(self.stderr)
+    if self.command:
+      msg = f"{' '.join(self.command)} ->"
     else:
-      return type(self).__name__
+      msg = ""
+
+    if self.returncode:
+      msg = f"{msg} [returncode={self.returncode}]"
+
+    if self.msg:
+      msg = f"{msg} {self.msg}"
+    elif self.stderr:
+      msg = f"{msg} {self.msg}"
+    else:
+      msg = f"{msg} {type(self).__name__}"
+
+    return msg
 
   def __str__(self):
     return repr(self)

@@ -1,0 +1,18 @@
+#!/usr/bin/env bats
+
+source labm8/sh/test.sh
+
+CLANG=$(DataPath phd/third_party/llvm/clang)
+
+@test "help" {
+  $CLANG --help
+}
+
+@test "create LLVM module" {
+  # Read a C program from stdin and print LLVM module to stdout.
+  cat <<EOF | $CLANG -xc - -o - -emit-llvm -S
+int main() {
+  return 5;
+}
+EOF
+}
