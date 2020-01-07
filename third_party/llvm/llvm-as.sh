@@ -22,4 +22,7 @@ if [[ -n $(DataPath llvm_mac/bin/llvm-as) ]]; then
   $(DataPath llvm_mac/bin/llvm-as) $@
 elif [[ -n $(DataPath llvm_linux/bin/llvm-as) ]]; then
   $(DataPath llvm_linux/bin/llvm-as) $@
+else
+  echo "llvm-as not found!" >&2
+  exit 1
 fi

@@ -22,5 +22,8 @@ if [[ -n $(DataPath llvm_mac/bin/llvm-link) ]]; then
   $(DataPath llvm_mac/bin/llvm-link) $@
 elif [[ -n $(DataPath llvm_linux/bin/llvm-link) ]]; then
   $(DataPath llvm_linux/bin/llvm-link) $@
+else
+  echo "llvm-link not found!" >&2
+  exit 1
 fi
 

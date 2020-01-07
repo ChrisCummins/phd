@@ -22,4 +22,7 @@ if [[ -n $(DataPath llvm_mac/bin/clang-format) ]]; then
   $(DataPath llvm_mac/bin/clang-format) $@
 elif [[ -n $(DataPath llvm_linux/bin/clang-format) ]]; then
   $(DataPath llvm_linux/bin/clang-format) $@
+else
+  echo "clang-format not found!" >&2
+  exit 1
 fi

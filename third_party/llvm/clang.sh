@@ -22,4 +22,7 @@ if [[ -n $(DataPath llvm_mac/bin/clang) ]]; then
   $(DataPath llvm_mac/bin/clang) $@
 elif [[ -n $(DataPath llvm_linux/bin/clang) ]]; then
   $(DataPath llvm_linux/bin/clang) $@
+else
+  echo "clang not found!" >&2
+  exit 1
 fi

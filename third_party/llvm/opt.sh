@@ -22,4 +22,7 @@ if [[ -n $(DataPath llvm_mac/bin/opt) ]]; then
   $(DataPath llvm_mac/bin/opt) $@
 elif [[ -n $(DataPath llvm_linux/bin/opt) ]]; then
   $(DataPath llvm_linux/bin/opt) $@
+else
+  echo "opt not found!" >&2
+  exit 1
 fi
