@@ -124,14 +124,14 @@ def test_rewrite_compile_link_execute_clinfo(
   )
 
 
+@test.XFail(reason="Oclgrind environment is broken")
 def test_rewrite_compile_link_execute(tempdir: pathlib.Path, hello_src: str):
   """Test end-to-end libcecl pipeline."""
   log = _RewriteCompileLinkExecute(
     tempdir, hello_src, lang="c++", extra_cflags=["-std=c++11"]
   )
 
-  print(log.stdout)
-  print(log.stderr)
+  print(log)
 
   # Check values in log.
   assert log.ms_since_unix_epoch

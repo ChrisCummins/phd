@@ -19,7 +19,7 @@ filegroup(
     srcs = ["hello.cc"],
 )
 
-cc_binary(
+cc_test(
     name = "hello",
     srcs = [":hello_sources"],
     linkopts = [
