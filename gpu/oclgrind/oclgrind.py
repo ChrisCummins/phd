@@ -34,7 +34,8 @@ from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 
-OCLGRIND_PATH = bazelutil.DataPath("phd/third_party/oclgrind")
+OCLGRIND_PATH = bazelutil.DataPath("phd/third_party/oclgrind/oclgrind")
+
 # The clinfo description of the local Oclgrind binary.
 CLINFO_DESCRIPTION = clinfo_pb2.OpenClDevice(
   name="Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2",

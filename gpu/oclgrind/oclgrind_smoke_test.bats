@@ -4,7 +4,7 @@
 #
 source labm8/sh/test.sh
 
-OCLGRIND="$(DataPath phd/third_party/oclgrind)"
+OCLGRIND="$(DataPath phd/third_party/oclgrind/oclgrind)"
 
 @test "run clinfo" {
   run "$OCLGRIND" "$(DataPath phd/gpu/clinfo/clinfo)"
