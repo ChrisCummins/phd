@@ -61,11 +61,11 @@ def test_find_workspace_rootpath():
 
 def test_GetRelpath(tempdir: pathlib.Path):
   w = workspace.Workspace.Create(tempdir)
-  assert w.GetRelpath(f"{tempdir}/b/c") == "//c"
-  assert w.GetRelpath(f"{tempdir}/b/c/d") == "//c/d"
+  assert w.GetRelpath(f"{tempdir}/b/c") == "//b/c"
+  assert w.GetRelpath(f"{tempdir}/b/c/d") == "//b/c/d"
 
   # This is a strange test.
-  assert w.GetRelpath(tempdir) == "/"
+  assert w.GetRelpath(str(tempdir)) == "/"
 
 
 if __name__ == "__main__":
