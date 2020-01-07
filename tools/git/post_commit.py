@@ -29,6 +29,10 @@ else:
   linters_lib = imp.load_source("linters_lib", LINTERS_LIB)
 
 
+# Set to True to push to remote immediately after commit.
+PUSH_AFTER_COMMIT = False
+
+
 def GitPushOrDie(branch_name, remote_name):
   """Push from current head to remote branch."""
   linters_lib.ExecOrDie(["git", "push", remote_name, branch_name])
@@ -44,7 +48,7 @@ def main(argv):
   branch_name = linters_lib.GetGitBranchOrDie()
   remote_name = linters_lib.GetGitRemoteOrDie(branch_name)
 
-  if remote_name:
+  if PUSH_AFTER_COMMIT and remote_name:
     task_start_time = time.time()
     linters_lib.Print("Pushing", branch_name, "to", remote_name, "...", end=" ")
     GitPushOrDie(branch_name, remote_name)
