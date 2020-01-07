@@ -1,5 +1,5 @@
 # Smoke test for cldrive.
-load("@rules_bats//:bats.bzl", "bats_test")
+load("@com_github_chriscummins_rules_bats//:bats.bzl", "bats_test")
 
 bats_test(
     name = "smoke_test",

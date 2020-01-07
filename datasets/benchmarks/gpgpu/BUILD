@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_bats//:bats.bzl", "bats_test")
+load("@com_github_chriscummins_rules_bats//:bats.bzl", "bats_test")
 load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
 filegroup(
