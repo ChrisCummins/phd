@@ -18,10 +18,9 @@
 py_binary(
     name = "oclgrind",
     srcs = ["oclgrind.py"],
-    data = select({
-        "//:darwin": ["@oclgrind_mac//:oclgrind"],
-        "//conditions:default": ["@oclgrind_linux//:oclgrind"],
-    }),
+    data = [
+        "//third_party:oclgrind",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//gpu/clinfo/proto:clinfo_pb_py",
@@ -40,5 +39,14 @@ py_test(
         "//labm8/py:app",
         "//labm8/py:bazelutil",
         "//labm8/py:test",
+    ],
+)
+
+sh_test(
+    name = "oclgrind_smoke_test",
+    srcs = ["oclgrind_smoke_test.sh"],
+    data = [
+        "//gpu/clinfo",
+        "//third_party:oclgrind",
     ],
 )
