@@ -4,6 +4,9 @@
 #
 source labm8/sh/test.sh
 
+OCLGRIND="$(DataPath phd/third_party/oclgrind/oclgrind)"
+CLDRIVE="$(DataPath phd/gpu/cldrive/cldrive)"
+
 setup() {
   cat << EOF > "$BATS_TMPDIR/kernel.cl"
 kernel void A(global int* a) {
@@ -13,23 +16,23 @@ EOF
 }
 
 @test "fail with unknown arg" {
-  run gpu/oclgrind/oclgrind -- gpu/cldrive/cldrive --unknown_arg
+  run "$OCLGRIND" "$CLDRIVE" --unknown_arg
   [ "$status" -eq 1 ]
 }
 
 @test "run clinfo" {
-  run gpu/oclgrind/oclgrind -- gpu/cldrive/cldrive --clinfo
+  run "$OCLGRIND" "$CLDRIVE" --clinfo
   [ "$status" -eq 0 ]
 }
 
 @test "run with CSV output" {
-  run gpu/oclgrind/oclgrind -- gpu/cldrive/cldrive \
+  run "$OCLGRIND" "$CLDRIVE" \
     --srcs="$BATS_TMPDIR/kernel.cl" \
     --num_runs=5
 }
 
 @test "run with protobuf output" {
-  run gpu/oclgrind/oclgrind -- gpu/cldrive/cldrive \
+  run "$OCLGRIND" "$CLDRIVE" \
     --srcs="$BATS_TMPDIR/kernel.cl" \
     --num_runs=5 \
     --output_format=pbtxt

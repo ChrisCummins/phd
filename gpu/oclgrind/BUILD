@@ -21,7 +21,7 @@ py_binary(
     name = "oclgrind",
     srcs = ["oclgrind.py"],
     data = [
-        "//third_party:oclgrind",
+        "//third_party/oclgrind",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -51,6 +51,6 @@ bats_test(
         "//gpu/clinfo",
         "//gpu/oclgrind/test/data:oclgrind_working",
         "//labm8/sh:test",
-        "//third_party:oclgrind",
+        "//third_party/oclgrind",
     ],
 )

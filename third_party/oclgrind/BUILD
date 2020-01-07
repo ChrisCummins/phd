@@ -10,6 +10,7 @@ sh_binary(
         "//conditions:default": ["@oclgrind_linux//:oclgrind"],
     }),
     visibility = ["//visibility:public"],
+    deps = ["//labm8/sh:app"],
 )
 
 bats_test(
