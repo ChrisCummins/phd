@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@com_github_chriscummins_rules_bats//:bats.bzl", "bats_test")
+
 py_binary(
     name = "oclgrind",
     srcs = ["oclgrind.py"],
@@ -42,11 +44,13 @@ py_test(
     ],
 )
 
-sh_test(
+bats_test(
     name = "oclgrind_smoke_test",
-    srcs = ["oclgrind_smoke_test.sh"],
+    srcs = ["oclgrind_smoke_test.bats"],
     data = [
         "//gpu/clinfo",
+        "//gpu/oclgrind/test/data:oclgrind_working",
+        "//labm8/sh:test",
         "//third_party:oclgrind",
     ],
 )
