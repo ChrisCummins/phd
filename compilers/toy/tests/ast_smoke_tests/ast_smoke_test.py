@@ -26,10 +26,18 @@ assert fs.isexe(_PRINT_AST)
 MODULE_UNDER_TEST = None  # Disable coverage.
 
 
-def PrintAST(path: pathlib.Path):
+def PrintAST(path: pathlib.Path) -> bool:
   """Run lexer on path. Raises an exception is the lexer fails."""
   app.Log(1, "Printing AST of %s:\n%s", path, fs.read(path))
-  subprocess.check_call([str(_PRINT_AST), "-logtostderr", "-v=2", str(path)])
+  process = subprocess.Popen(
+    [str(_PRINT_AST), "-logtostderr", "-v=2", str(path)]
+  )
+  process.communicate()
+  testpass = process.returncode == 0
+  test.Log(
+    "Returncode: %s (%s)", process.returncode, "PASS" if testpass else "FAIL"
+  )
+  return testpass
 
 
 def TestStage(stage: int):
@@ -46,14 +54,15 @@ def TestStage(stage: int):
   for test_file in valid_files:
     if pathlib.Path(test_file).name.startswith("skip_on_failure"):
       continue
-    PrintAST(test_file)
+    testpass = PrintAST(test_file)
+    if FLAGS.xfail:
+      assert not testpass
+    else:
+      assert testpass
 
   for test_file in invalid_files:
-    try:
-      PrintAST(test_file)
-      assert False  # PrintAST did not raise exception!
-    except subprocess.CalledProcessError:
-      pass
+    # --xfail does not affect the expected outcome of failing tests.
+    assert not PrintAST(test_file)
 
 
 def test_stage():

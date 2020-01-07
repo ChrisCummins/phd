@@ -65,6 +65,7 @@ py_test(
     args = [
         "--stage",
         "5",
+        "--xfail",
     ],
     main = "ast_smoke_test.py",
     deps = [":ast_smoke_test"],
@@ -76,6 +77,7 @@ py_test(
     args = [
         "--stage",
         "6",
+        "--xfail",
     ],
     main = "ast_smoke_test.py",
     deps = [":ast_smoke_test"],
@@ -87,6 +89,7 @@ py_test(
     args = [
         "--stage",
         "7",
+        "--xfail",
     ],
     main = "ast_smoke_test.py",
     deps = [":ast_smoke_test"],
@@ -98,6 +101,7 @@ py_test(
     args = [
         "--stage",
         "8",
+        "--xfail",
     ],
     main = "ast_smoke_test.py",
     deps = [":ast_smoke_test"],
@@ -109,6 +113,7 @@ py_test(
     args = [
         "--stage",
         "9",
+        "--xfail",
     ],
     main = "ast_smoke_test.py",
     deps = [":ast_smoke_test"],
@@ -120,6 +125,7 @@ py_test(
     args = [
         "--stage",
         "10",
+        "--xfail",
     ],
     main = "ast_smoke_test.py",
     deps = [":ast_smoke_test"],
