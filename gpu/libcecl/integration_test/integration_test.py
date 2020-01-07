@@ -18,8 +18,6 @@ import pathlib
 import re
 import subprocess
 
-import pytest
-
 from gpu.cldrive.legacy import env as cldrive_env
 from gpu.libcecl import libcecl_compile
 from gpu.libcecl import libcecl_rewriter
@@ -72,7 +70,7 @@ def _RewriteCompileLinkExecute(
     f.write(libcecl_src)
   extra_cflags = extra_cflags or []
   subprocess.check_call(
-    ["clang++", "-x", lang, str(src_path), "-c", "-o", str(objectfile_path)]
+    ["c++", "-x", lang, str(src_path), "-c", "-o", str(objectfile_path)]
     + cflags
     + extra_cflags
   )
@@ -82,9 +80,7 @@ def _RewriteCompileLinkExecute(
   bin_path = outdir / "a.out"
   extra_ldflags = extra_ldflags or []
   subprocess.check_call(
-    ["clang++", "-o", str(bin_path), str(objectfile_path)]
-    + ldflags
-    + extra_ldflags
+    ["c++", "-o", str(bin_path), str(objectfile_path)] + ldflags + extra_ldflags
   )
   assert bin_path.is_file()
 
