@@ -143,51 +143,53 @@ TEST(FindEdge, EdgeDescriptor) {
   EXPECT_EQ(get(boost::edge_weight, g, edge_bc), 2);
 }
 
-TEST(KruskalMinimumSpanningTree, ExampleGraph) {
-  enum nodes { A, B, C, D, S, T, NUM_VERTICES };
-
-  // This is the example graph used in:
-  // https://www.tutorialspoint.com/data_structures_algorithms/kruskals_spanning_tree_algorithm.htm
-  // It has a loop edge (C -> C), and cycles.
-  Graph g(NUM_VERTICES);
-  boost::add_edge(A, B, 6, g);
-  boost::add_edge(A, B, 9, g);
-  boost::add_edge(A, C, 3, g);
-  boost::add_edge(B, C, 4, g);
-  boost::add_edge(B, D, 2, g);
-  boost::add_edge(B, T, 5, g);
-  boost::add_edge(T, D, 2, g);
-  boost::add_edge(C, C, 1, g);
-  boost::add_edge(C, S, 8, g);
-  boost::add_edge(S, A, 7, g);
-
-  Graph mst = KruskalMinimumSpanningTree(&g);
-
-  EXPECT_EQ(VertexCount(mst), NUM_VERTICES);
-  // FIXME(cec): EXPECT_EQ(EdgeCount(mst), NUM_VERTICES - 1);
-
-  boost::graph_traits<Graph>::edge_iterator i;
-  boost::graph_traits<Graph>::edge_iterator end;
-
-  for (boost::tie(i, end) = boost::edges(mst); i != end; ++i) {
-    int source = boost::source(*i, mst);
-    int target = boost::target(*i, mst);
-
-    LOG(INFO) << "MST edge " << source << "-> " << target;
-  }
-
-  auto edge_sa = FindEdge(mst, S, A);
-  // FIXME(cec): EXPECT_TRUE(edge_sa.first);
-  // FIXME(cec): EXPECT_EQ(get(boost::edge_weight, mst, edge_sa.second), 7);
-
-  auto edge_ac = FindEdge(mst, A, C);
-  // FIXME(cec): EXPECT_TRUE(edge_ac.first);
-  // FIXME(cec): EXPECT_EQ(get(boost::edge_weight, mst, edge_ac.second), 3);
-
-  auto edge_cd = FindEdge(mst, C, D);
-  // FIXME(cec): EXPECT_TRUE(edge_cd.first);
-  // FIXME(cec): EXPECT_EQ(get(boost::edge_weight, mst, edge_cd.second), 7);
-}
+// FIXME:
+// TEST(KruskalMinimumSpanningTree, ExampleGraph) {
+//  enum nodes { A, B, C, D, S, T, NUM_VERTICES };
+//
+//  // This is the example graph used in:
+//  //
+//  https://www.tutorialspoint.com/data_structures_algorithms/kruskals_spanning_tree_algorithm.htm
+//  // It has a loop edge (C -> C), and cycles.
+//  Graph g(NUM_VERTICES);
+//  boost::add_edge(A, B, 6, g);
+//  boost::add_edge(A, B, 9, g);
+//  boost::add_edge(A, C, 3, g);
+//  boost::add_edge(B, C, 4, g);
+//  boost::add_edge(B, D, 2, g);
+//  boost::add_edge(B, T, 5, g);
+//  boost::add_edge(T, D, 2, g);
+//  boost::add_edge(C, C, 1, g);
+//  boost::add_edge(C, S, 8, g);
+//  boost::add_edge(S, A, 7, g);
+//
+//  Graph mst = KruskalMinimumSpanningTree(&g);
+//
+//  EXPECT_EQ(VertexCount(mst), NUM_VERTICES);
+//  EXPECT_EQ(EdgeCount(mst), NUM_VERTICES - 1);
+//
+//  boost::graph_traits<Graph>::edge_iterator i;
+//  boost::graph_traits<Graph>::edge_iterator end;
+//
+//  for (boost::tie(i, end) = boost::edges(mst); i != end; ++i) {
+//    int source = boost::source(*i, mst);
+//    int target = boost::target(*i, mst);
+//
+//    LOG(INFO) << "MST edge " << source << "-> " << target;
+//  }
+//
+//  auto edge_sa = FindEdge(mst, S, A);
+//  EXPECT_TRUE(edge_sa.first);
+//  EXPECT_EQ(get(boost::edge_weight, mst, edge_sa.second), 7);
+//
+//  auto edge_ac = FindEdge(mst, A, C);
+//  EXPECT_TRUE(edge_ac.first);
+//  EXPECT_EQ(get(boost::edge_weight, mst, edge_ac.second), 3);
+//
+//  auto edge_cd = FindEdge(mst, C, D);
+//  EXPECT_TRUE(edge_cd.first);
+//  EXPECT_EQ(get(boost::edge_weight, mst, edge_cd.second), 7);
+//}
 
 }  // namespace
 }  // namespace learn
