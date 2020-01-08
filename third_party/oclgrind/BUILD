@@ -19,5 +19,6 @@ bats_test(
     data = [
         ":oclgrind",
         "//labm8/sh:test",
+        "//third_party/opencl/examples:hello",
     ],
 )

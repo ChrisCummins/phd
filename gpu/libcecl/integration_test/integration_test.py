@@ -32,7 +32,7 @@ FLAGS = app.FLAGS
 MODULE_UNDER_TEST = "gpu"
 
 _CLINFO = bazelutil.DataPath("phd/third_party/clinfo/clinfo.c")
-_HELLO = bazelutil.DataPath("phd/gpu/libcecl/integration_test/hello.cc")
+_HELLO = bazelutil.DataPath("phd/third_party/opencl/examples/hello.cc")
 
 
 @test.Fixture(scope="function")
@@ -101,6 +101,8 @@ def test_rewrite_compile_link_execute_clinfo(
     extra_ldflags=["-lm", "-lstdc++"],
     extra_exec_args=["--raw"],
   )
+
+  print(log)
 
   assert log.ms_since_unix_epoch
   assert log.returncode == 0

@@ -14,37 +14,13 @@
 # You should have received a copy of the GNU General Public License
 # along with libcecl.  If not, see <https://www.gnu.org/licenses/>.
 
-filegroup(
-    name = "hello_sources",
-    srcs = ["hello.cc"],
-)
-
-cc_test(
-    name = "hello",
-    srcs = [":hello_sources"],
-    linkopts = [
-        "-ldl",
-        "-lpthread",
-    ] + select({
-        "//:darwin": ["-framework OpenCL"],
-        "//conditions:default": [],
-    }),
-    linkstatic = False,  # Needed for oclgrind support.
-    deps = [
-        "//third_party/opencl",
-    ] + select({
-        "//:darwin": [],
-        "//conditions:default": ["@libopencl//:libOpenCL"],
-    }),
-)
-
 py_test(
     name = "integration_test",
     srcs = ["integration_test.py"],
     data = [
-        ":hello_sources",
         "//gpu/libcecl:libcecl.so",
         "//third_party/clinfo:clinfo_c_src",
+        "//third_party/opencl/examples:hello_sources",
     ],
     deps = [
         "//compilers/llvm:clang",
