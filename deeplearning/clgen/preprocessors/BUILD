@@ -23,20 +23,18 @@ py_library(
     data = select({
         "//:darwin": [
             "@libcxx_mac//:headers",
-            "@llvm_mac//:clang",
         ],
         "//conditions:default": [
             "@libcxx_linux//:headers",
-            "@llvm_linux//:clang",
         ],
     }),
     deps = [
         ":public",
         "//compilers/llvm",
+        "//compilers/llvm:clang",
         "//compilers/llvm:clang_format",
         "//deeplearning/clgen:errors",
         "//labm8/py:app",
-        "//labm8/py:bazelutil",
     ],
 )
 

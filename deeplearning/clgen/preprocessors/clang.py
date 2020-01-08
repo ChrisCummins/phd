@@ -22,21 +22,17 @@ for an example.
 import json
 import re
 import subprocess
-import sys
 import tempfile
 import typing
 
+from compilers.llvm import clang
 from compilers.llvm import clang_format
 from compilers.llvm import llvm
 from deeplearning.clgen import errors
 from labm8.py import app
-from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 
-_LLVM_REPO = "llvm_mac" if sys.platform == "darwin" else "llvm_linux"
-# Path to clang binary.
-CLANG = bazelutil.DataPath(f"{_LLVM_REPO}/bin/clang")
 # The marker used to mark stdin from clang pre-processor output.
 CLANG_STDIN_MARKER = re.compile(r'# \d+ "<stdin>" 2')
 # Options to pass to clang-format.
@@ -108,7 +104,7 @@ def Preprocess(
     "timeout",
     "-s9",
     str(timeout_seconds),
-    str(CLANG),
+    str(clang.CLANG),
     "-E",
     "-c",
     "-",
@@ -162,7 +158,7 @@ def CompileLlvmBytecode(
     f.write(src)
     f.flush()
     cmd = (
-      ["timeout", "-s9", str(timeout_seconds), str(CLANG), f.name]
+      ["timeout", "-s9", str(timeout_seconds), str(clang.CLANG), f.name]
       + builtin_cflags
       + cflags
     )
