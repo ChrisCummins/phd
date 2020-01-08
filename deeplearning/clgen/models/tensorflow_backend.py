@@ -29,6 +29,7 @@ from deeplearning.clgen.models import backends
 from deeplearning.clgen.models import data_generators
 from deeplearning.clgen.proto import model_pb2
 from labm8.py import app
+from labm8.py import gpu_scheduler
 from labm8.py import humanize
 
 FLAGS = app.FLAGS
@@ -113,6 +114,9 @@ class TensorFlowBackend(backends.BackendBase):
     Returns:
       The imported TensorFlow module.
     """
+    # Lock exclusive access to a GPU, if present.
+    gpu_scheduler.LockExclusiveProcessGpuAccess()
+
     start_time = time.time()
 
     # Quiet tensorflow.

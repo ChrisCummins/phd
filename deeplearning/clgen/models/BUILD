@@ -200,6 +200,7 @@ py_library(
         "//deeplearning/clgen/proto:clgen_pb_py",
         "//labm8/py:app",
         "//labm8/py:crypto",
+        "//labm8/py:gpu_scheduler",
         "//labm8/py:humanize",
         "//labm8/py:labdate",
         "//labm8/py:logutil",
