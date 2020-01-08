@@ -19,9 +19,9 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null || \
 
 set -e
 if [[ -n $(DataPath llvm_mac/bin/opt) ]]; then
-  $(DataPath llvm_mac/bin/opt) $@
+  $(DataPath llvm_mac/bin/opt) "$@"
 elif [[ -n $(DataPath llvm_linux/bin/opt) ]]; then
-  $(DataPath llvm_linux/bin/opt) $@
+  $(DataPath llvm_linux/bin/opt) "$@"
 else
   echo "opt not found!" >&2
   exit 1

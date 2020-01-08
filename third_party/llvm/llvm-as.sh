@@ -19,9 +19,9 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null || \
 
 set -e
 if [[ -n $(DataPath llvm_mac/bin/llvm-as) ]]; then
-  $(DataPath llvm_mac/bin/llvm-as) $@
+  $(DataPath llvm_mac/bin/llvm-as) "$@"
 elif [[ -n $(DataPath llvm_linux/bin/llvm-as) ]]; then
-  $(DataPath llvm_linux/bin/llvm-as) $@
+  $(DataPath llvm_linux/bin/llvm-as) "$@"
 else
   echo "llvm-as not found!" >&2
   exit 1

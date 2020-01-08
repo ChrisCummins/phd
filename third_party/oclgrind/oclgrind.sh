@@ -19,9 +19,9 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null || \
 
 set -e
 if [[ -n $(DataPath oclgrind_linux/bin/oclgrind) ]]; then
-  $(DataPath oclgrind_linux/bin/oclgrind) $@
+  $(DataPath oclgrind_linux/bin/oclgrind) "$@"
 elif [[ -n $(DataPath oclgrind_mac/bin/oclgrind) ]]; then
-  $(DataPath oclgrind_mac/bin/oclgrind) $@
+  $(DataPath oclgrind_mac/bin/oclgrind) "$@"
 else
   echo "oclgrind not found!" >&2
   exit 1

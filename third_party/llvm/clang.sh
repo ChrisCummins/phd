@@ -19,9 +19,9 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null || \
 
 set -e
 if [[ -n $(DataPath llvm_mac/bin/clang) ]]; then
-  $(DataPath llvm_mac/bin/clang) $@
+  $(DataPath llvm_mac/bin/clang) "$@"
 elif [[ -n $(DataPath llvm_linux/bin/clang) ]]; then
-  $(DataPath llvm_linux/bin/clang) $@
+  $(DataPath llvm_linux/bin/clang) "$@"
 else
   echo "clang not found!" >&2
   exit 1

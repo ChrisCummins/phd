@@ -19,9 +19,9 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null || \
 
 set -e
 if [[ -n $(DataPath git_sizer_linux/git-sizer) ]]; then
-  $(DataPath git_sizer_linux/git-sizer) $@
+  $(DataPath git_sizer_linux/git-sizer) "$@"
 elif [[ -n $(DataPath git_sizer_max/git-sizer) ]]; then
-  $(DataPath git_sizer_max/git-sizer) $@
+  $(DataPath git_sizer_max/git-sizer) "$@"
 else
   echo "git-sizer not found!" >&2
   exit 1

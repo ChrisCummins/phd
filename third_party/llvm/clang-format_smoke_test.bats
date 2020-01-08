@@ -8,3 +8,7 @@ BIN=$(DataPath phd/third_party/llvm/clang-format)
   $BIN --help
 }
 
+@test "read stdin" {
+  echo "hello" | $BIN
+  false
+}
