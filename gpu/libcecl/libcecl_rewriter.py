@@ -112,11 +112,8 @@ def GetFilesToRewriteFromPath(
   return (path for path in _EnumerateFiles() if FileShouldBeRewritten(path))
 
 
-def main(argv):
+def main():
   """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(" ".join(argv[1:])))
-
   for path in FLAGS.opencl_rewrite_paths:
     for path in GetFilesToRewriteFromPath(pathlib.Path(path)):
       app.Log(1, "%s", path)
@@ -128,4 +125,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-  app.RunWithArgs(main)
+  app.Run(main)
