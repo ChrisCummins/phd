@@ -1,5 +1,6 @@
 """A flask server which renders test results."""
 import os
+import sys
 import threading
 
 import flask
@@ -15,6 +16,10 @@ from labm8.py import bazelutil
 from labm8.py import humanize
 
 FLAGS = app.FLAGS
+
+# Disable flask banner on load.
+_cli = sys.modules["flask.cli"]
+_cli.show_server_banner = lambda *x: None
 
 app.DEFINE_integer(
   "clgen_dashboard_port",
