@@ -13,8 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //research/cummins_2017_cgo:opencl_kernel_driver."""
-import pytest
-
 from gpu.cldrive.legacy import env as cldrive_env
 from labm8.py import app
 from labm8.py import test
