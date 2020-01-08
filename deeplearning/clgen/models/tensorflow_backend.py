@@ -468,6 +468,7 @@ class TensorFlowBackend(backends.BackendBase):
 
         logger.EpochEndCallback(epoch_num, loss)
         # If we have a sampler that we can use at the end of epochs, then
+        # break now to run the test sampler.
         # This is confusing logic! Consider a refactor to simplify things.
         if test_sampler:
           break
@@ -476,7 +477,7 @@ class TensorFlowBackend(backends.BackendBase):
 
     if test_sampler and FLAGS.clgen_per_epoch_test_samples > 0:
       self._EndOfEpochTestSample(corpus, test_sampler, step, epoch_num)
-      self.Train(corpus, test_sampler)
+      self.Train(corpus, test_sampler=test_sampler)
 
   def _EndOfEpochTestSample(
     self, corpus, sampler: samplers.Sampler, step: int, epoch_num: int
@@ -495,26 +496,23 @@ class TensorFlowBackend(backends.BackendBase):
     samples, stats = [], []
     for i in range(FLAGS.clgen_per_epoch_test_samples):
       done = np.zeros(1, dtype=np.bool)
-      while not done[0]:
-        start_time = time.time()
-        sample_in_progress = sampler.tokenized_start_text.copy()
-        indices = self.SampleNextIndices(sampler, done)
+      start_time = time.time()
+      sample_in_progress = sampler.tokenized_start_text.copy()
 
+      while not done[0]:
+        indices = self.SampleNextIndices(sampler, done)
         # Iterate over all samples in batch to determine whether they're
         # done.
         for index in indices[0]:
           sample_in_progress.append(atomizer.decoder[index])
-          if not sampler.SampleIsComplete(sample_in_progress):
-            continue
-
-          stats.append(
-            (len(sample_in_progress), int((time.time() - start_time) * 1000))
-          )
-          sample = "".join(sample_in_progress)
-          samples.append(sample)
-          app.Log(1, "End-of-epoch sample %d:\n%s", i + 1, sample)
-          done[0] = True
-          break
+          if sampler.SampleIsComplete(sample_in_progress):
+            stats.append(
+              (len(sample_in_progress), int((time.time() - start_time) * 1000))
+            )
+            sample = "".join(sample_in_progress)
+            samples.append(sample)
+            done[0] = True
+            break
 
     # Write samples to file.
     with self.dashboard_db.Session(commit=True) as dbs:
