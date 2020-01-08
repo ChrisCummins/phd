@@ -177,6 +177,9 @@ def test_PushLocalToRemote_timestamp_files_created(
   assert (pathlib.Path(m.local_path) / "TIME.txt").is_file()
   assert (pathlib.Path(m.remote_path) / "TIME.txt").is_file()
 
+  assert m.local_timestamp != datetime.datetime.fromtimestamp(0)
+  assert m.remote_timestamp != datetime.datetime.fromtimestamp(0)
+
 
 def test_PullFromRemoteToLocal_timestamp_files_created(
   test_host: machine_spec_pb2.Host,
