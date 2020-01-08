@@ -84,7 +84,7 @@ def LibCeclCompileAndLinkFlags(
 
 
 def LibCeclExecutableEnvironmentVariables() -> typing.Dict[str, str]:
-  """Return environemnt variables which must be used when executing libcecl
+  """Return the environment variables which must be used when executing libcecl
   binaries.
   """
   return {
