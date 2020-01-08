@@ -1,5 +1,5 @@
 # Augment the standard base environment with Java.
-FROM chriscummins/phd_base:2019.08.06
+FROM chriscummins/phd_base:2020.01.08
 LABEL maintainer="Chris Cummins <chrisc.101@gmail.com>"
 
 # Switch back to root user to do the installation admin.
