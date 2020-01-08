@@ -126,7 +126,7 @@ def test_rewrite_compile_link_execute_clinfo(
   )
 
 
-@test.XFail(reason="Oclgrind environment is broken")
+@test.XFail(reason="FIXME(github.com/ChrisCummins/phd/issues/69)")
 def test_rewrite_compile_link_execute(tempdir: pathlib.Path, hello_src: str):
   """Test end-to-end libcecl pipeline."""
   log = _RewriteCompileLinkExecute(
