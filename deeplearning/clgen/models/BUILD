@@ -214,6 +214,7 @@ py_test(
     name = "tensorflow_backend_test",
     timeout = "long",
     srcs = ["tensorflow_backend_test.py"],
+    shard_count = 8,
     deps = [
         ":models",
         ":tensorflow_backend",
