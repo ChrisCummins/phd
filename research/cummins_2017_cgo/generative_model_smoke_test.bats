@@ -36,18 +36,16 @@ EOF
 }
 
 @test "generate_model smoke test" {
-  true
-  # FIXME: Model freezes during switch to sampling.
-  #  "$BIN" \
-  #      --clgen_working_dir="$TEST_TMPDIR/working_dir" \
-  #      --clgen_corpus_dir="$TEST_TMPDIR/corpus" \
-  #      --clgen_layer_size=8 \
-  #      --clgen_sample_sequence_length=32 \
-  #      --clgen_training_sequence_length=4 \
-  #      --clgen_training_batch_size=4 \
-  #      --clgen_max_sample_length=64 \
-  #      --clgen_num_epochs=2 \
-  #      --clgen_min_sample_count=5 \
-  #      --clgen_preprocessor=deeplearning.clgen.preprocessors.opencl:Compile \
-  #      2>&1 | tee "$TEST_TMPDIR/log.txt"
+  "$BIN" \
+      --clgen_working_dir="$TEST_TMPDIR/working_dir" \
+      --clgen_corpus_dir="$TEST_TMPDIR/corpus" \
+      --clgen_layer_size=8 \
+      --clgen_sample_sequence_length=32 \
+      --clgen_training_sequence_length=4 \
+      --clgen_training_batch_size=4 \
+      --clgen_max_sample_length=64 \
+      --clgen_num_epochs=2 \
+      --clgen_min_sample_count=5 \
+      --clgen_preprocessor=deeplearning.clgen.preprocessors.opencl:Compile \
+      2>&1 | tee "$TEST_TMPDIR/log.txt"
 }
