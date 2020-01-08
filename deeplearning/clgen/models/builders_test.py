@@ -23,6 +23,8 @@ from labm8.py import test
 
 FLAGS = app.FLAGS
 
+pytest_plugins = ["deeplearning.clgen.tests.fixtures"]
+
 # AssertIsBuildable() tests.
 
 

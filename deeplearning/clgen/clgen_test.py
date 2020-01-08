@@ -17,8 +17,6 @@ import os
 import pathlib
 import tempfile
 
-import pytest
-
 from deeplearning.clgen import clgen
 from deeplearning.clgen import errors
 from deeplearning.clgen.proto import clgen_pb2
@@ -27,6 +25,8 @@ from labm8.py import pbutil
 from labm8.py import test
 
 FLAGS = app.FLAGS
+
+pytest_plugins = ["deeplearning.clgen.tests.fixtures"]
 
 # Instance tests.
 

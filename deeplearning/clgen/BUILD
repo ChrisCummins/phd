@@ -84,24 +84,12 @@ py_test(
     ],
     deps = [
         ":clgen",
-        ":conftest",
         "//deeplearning/clgen/proto:clgen_pb_py",
+        "//deeplearning/clgen/tests:fixtures",
         "//labm8/py:app",
         "//labm8/py:fs",
         "//labm8/py:pbutil",
         "//labm8/py:tar",
-        "//labm8/py:test",
-    ],
-)
-
-py_library(
-    name = "conftest",
-    testonly = True,
-    srcs = ["conftest.py"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8/py:pbutil",
         "//labm8/py:test",
     ],
 )
@@ -207,9 +195,9 @@ py_test(
     name = "samplers_test",
     srcs = ["samplers_test.py"],
     deps = [
-        ":conftest",
         ":errors",
         ":samplers",
+        "//deeplearning/clgen/tests:fixtures",
         "//labm8/py:app",
         "//labm8/py:test",
     ],

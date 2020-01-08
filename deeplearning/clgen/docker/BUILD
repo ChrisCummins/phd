@@ -50,8 +50,8 @@ py_test(
     deps = [
         ":export_pretrained_model",
         "//deeplearning/clgen",
-        "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:clgen_pb_py",
+        "//deeplearning/clgen/tests:fixtures",
         "//labm8/py:app",
         "//labm8/py:test",
         "//third_party/py/pytest",

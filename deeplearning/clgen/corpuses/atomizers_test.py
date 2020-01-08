@@ -16,14 +16,14 @@
 import pathlib
 import tempfile
 
-import pytest
-
 import deeplearning.clgen.errors
 from deeplearning.clgen.corpuses import atomizers
 from labm8.py import app
 from labm8.py import test
 
 FLAGS = app.FLAGS
+
+pytest_plugins = ["deeplearning.clgen.tests.fixtures"]
 
 # The set of multichar tokens for the OpenCL programming language.
 OPENCL_ATOMS = set(

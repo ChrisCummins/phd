@@ -48,8 +48,8 @@ py_test(
     srcs = ["builders_test.py"],
     deps = [
         ":builders",
-        "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:clgen_pb_py",
+        "//deeplearning/clgen/tests:fixtures",
         "//labm8/py:app",
         "//labm8/py:test",
     ],
@@ -72,8 +72,8 @@ py_test(
     srcs = ["data_generators_test.py"],
     deps = [
         ":data_generators",
-        "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:clgen_pb_py",
+        "//deeplearning/clgen/tests:fixtures",
         "//labm8/py:app",
         "//labm8/py:test",
     ],
@@ -108,9 +108,9 @@ py_test(
     deps = [
         ":keras_backend",
         ":models",
-        "//deeplearning/clgen:conftest",
         "//deeplearning/clgen:sample_observers",
         "//deeplearning/clgen/proto:clgen_pb_py",
+        "//deeplearning/clgen/tests:fixtures",
         "//labm8/py:app",
         "//labm8/py:crypto",
         "//labm8/py:fs",
@@ -173,8 +173,8 @@ py_test(
     srcs = ["models_test.py"],
     deps = [
         ":models",
-        "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:clgen_pb_py",
+        "//deeplearning/clgen/tests:fixtures",
         "//labm8/py:app",
         "//labm8/py:crypto",
         "//labm8/py:fs",
@@ -217,8 +217,8 @@ py_test(
     deps = [
         ":models",
         ":tensorflow_backend",
-        "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:clgen_pb_py",
+        "//deeplearning/clgen/tests:fixtures",
         "//labm8/py:app",
         "//labm8/py:crypto",
         "//labm8/py:fs",

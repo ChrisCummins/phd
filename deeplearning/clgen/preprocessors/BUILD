@@ -546,8 +546,8 @@ py_test(
     deps = [
         ":preprocessors",
         ":public",
-        "//deeplearning/clgen:conftest",
         "//deeplearning/clgen:errors",
+        "//deeplearning/clgen/tests:fixtures",
         "//labm8/py:app",
         "//labm8/py:fs",
         "//labm8/py:test",

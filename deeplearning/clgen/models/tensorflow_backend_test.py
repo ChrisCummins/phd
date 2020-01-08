@@ -15,7 +15,6 @@
 """Unit tests for //deeplearning/clgen/models/tensorflow_backend.py."""
 import checksumdir
 import numpy as np
-import pytest
 
 from deeplearning.clgen import sample_observers
 from deeplearning.clgen.models import models
@@ -27,6 +26,8 @@ from labm8.py import pbutil
 from labm8.py import test
 
 FLAGS = app.FLAGS
+
+pytest_plugins = ["deeplearning.clgen.tests.fixtures"]
 
 
 class MockSampler(object):

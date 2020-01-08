@@ -94,7 +94,7 @@ def test_GetPreprocessFunction_mock_preprocessor():
   f = preprocessors.GetPreprocessorFunction(
     "deeplearning.clgen.preprocessors.preprocessors_test:MockPreprocessor"
   )
-  assert f == MockPreprocessor
+  assert f.__name__ == "MockPreprocessor"
 
 
 def test_GetPreprocessorFunction_absolute_path(tempdir: pathlib.Path):

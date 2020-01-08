@@ -17,7 +17,6 @@ import pathlib
 import tempfile
 
 import numpy as np
-import pytest
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
@@ -27,6 +26,8 @@ from labm8.py import app
 from labm8.py import test
 
 FLAGS = app.FLAGS
+
+pytest_plugins = ["deeplearning.clgen.tests.fixtures"]
 
 
 @test.Fixture(scope="function")
