@@ -2,10 +2,10 @@
 import pathlib
 
 import git
-import pytest
 
 from labm8.py import app
 from labm8.py import fs
+from labm8.py import test
 
 FLAGS = app.FLAGS
 
@@ -16,7 +16,7 @@ def repo_with_history(tempdir: pathlib.Path) -> git.Repo:
   repo = git.Repo.init(tempdir)
   repo_dir = pathlib.Path(repo.working_tree_dir)
 
-  # Creat the first commit with three files.
+  # Create the first commit with three files.
   readme = fs.Write(repo_dir / "README.txt", "Hello, world!\n".encode("utf-8"))
   (repo_dir / "src").mkdir()
   main = fs.Write(
