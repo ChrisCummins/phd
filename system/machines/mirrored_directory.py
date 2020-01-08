@@ -87,7 +87,7 @@ class MirroredDirectory(object):
       return datetime.datetime.fromtimestamp(
         int(
           self._Ssh(
-            f'cat "{os.path.join(self.remote_path, self.timestamp_relpath)}"'
+            f'cat "{os.path.join(self.remote_path, self.timestamp_relpath)}" 2>/dev/null'
           )
         )
         / 1e6
