@@ -27,12 +27,15 @@ py_binary(
 py_test(
     name = "01_evaluate_generator_test",
     srcs = ["01_evaluate_generator_test.py"],
-    deps = [
+    data = [
+        # Data attribute because we exec it as a binary.
         ":01_evaluate_generator",
+    ],
+    deps = [
         "//deeplearning/clgen:conftest",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
         "//deeplearning/deepsmith/proto:generator_pb_py_grpc",
-        "//labm8/py:app",
+        "//labm8/py:bazelutil",
         "//labm8/py:pbutil",
         "//labm8/py:test",
     ],

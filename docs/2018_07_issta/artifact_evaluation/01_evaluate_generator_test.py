@@ -1,24 +1,22 @@
 """Unit tests for :01_evaluate_generator.py."""
-import importlib
+import subprocess
 
 from deeplearning.clgen.conftest import *
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
+from labm8.py import bazelutil
+from labm8.py import pbutil
 from labm8.py import test
-
 # Import the CLgen test fixtures into the global namespace. Note we can't import
 # only the fixtures we need here, since we must also import any dependent
 # fixtures.
 
-# We must use importlib.import_module() since the package and module names start
-# with digits, which is considered invalid syntax using the normal import
-# keyword.
-evaluate_generator = importlib.import_module(
-  "docs.2018_07_issta.artifact_evaluation.01_evaluate_generator"
+BIN = bazelutil.DataPath(
+  "phd/docs/2018_07_issta/artifact_evaluation/01_evaluate_generator"
 )
 
 
-def test_GenerateTestcases(abc_instance_config):
+def test_GenerateTestcases(abc_instance_config, tempdir: pathlib.Path):
   """Run a tiny end-to-end test."""
   generator_config = generator_pb2.ClgenGenerator(
     instance=abc_instance_config,
@@ -32,13 +30,27 @@ def test_GenerateTestcases(abc_instance_config):
       )
     ],
   )
-  with tempfile.TemporaryDirectory() as d:
-    d = pathlib.Path(d)
-    evaluate_generator.GenerateTestcases(generator_config, d, 3)
-    assert len(list((d / "generated_testcases").iterdir())) >= 3
-    assert len(list((d / "generated_kernels").iterdir())) >= 3
-    for f in (d / "generated_testcases").iterdir():
-      assert pbutil.ProtoIsReadable(f, deepsmith_pb2.Testcase())
+  generator_path = tempdir / "generator.pbtxt"
+  pbutil.ToFile(generator_config, generator_path)
+
+  output_dir = tempdir / "outputs"
+
+  subprocess.check_call(
+    [
+      str(BIN),
+      "--generator",
+      generator_path,
+      "--output_directory",
+      str(output_dir),
+      "--num_testcases",
+      str(3),
+    ]
+  )
+
+  assert len(list((output_dir / "generated_testcases").iterdir())) >= 3
+  assert len(list((output_dir / "generated_kernels").iterdir())) >= 3
+  for f in (output_dir / "generated_testcases").iterdir():
+    assert pbutil.ProtoIsReadable(f, deepsmith_pb2.Testcase())
 
 
 if __name__ == "__main__":
