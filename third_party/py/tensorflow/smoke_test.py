@@ -2,7 +2,6 @@
 import sys
 
 import numpy as np
-import pytest
 
 import getconfig
 from labm8.py import app
