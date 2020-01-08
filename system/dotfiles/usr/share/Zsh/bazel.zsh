@@ -3,6 +3,10 @@ alias bb='bazel build'
 alias bq='bazel query'
 alias br='bazel run'
 alias bt='bazel test'
+alias ib='ibazel'
+alias ibb='ibazel build'
+alias ibr='ibazel run'
+alias ibt='ibazel test'
 
 # This way the completion script does not have to parse Bazel's options
 # repeatedly.  The directory in cache-path must be created manually.
