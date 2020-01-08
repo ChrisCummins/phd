@@ -105,8 +105,9 @@ def Exec(
   Returns:
     A Popen instance, with string stdout and stderr attributes set.
   """
+  # On linux we must set the LD_PRELOAD to point to the libOpenCL.so.
   if system.is_linux():
-    env = env or {}
+    env = env or os.environ.copy()
     env["LD_PRELOAD"] = PrependToPath(str(LIBOPENCL_SO), env.get("LD_PRELOAD"))
   with fs.TemporaryWorkingDir(prefix="cl_launcher_") as d:
     for src in CL_LAUNCHER_RUN_FILES:
