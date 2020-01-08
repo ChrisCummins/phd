@@ -18,6 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+load("@com_github_chriscummins_rules_bats//:bats.bzl", "bats_test")
+
 py_binary(
     name = "generative_model",
     srcs = ["generative_model.py"],
@@ -41,10 +43,13 @@ py_test(
     ],
 )
 
-sh_test(
+bats_test(
     name = "generative_model_smoke_test",
-    srcs = ["generative_model_smoke_test.sh"],
-    data = [":generative_model"],
+    srcs = ["generative_model_smoke_test.bats"],
+    data = [
+        ":generative_model",
+        "//labm8/sh:test",
+    ],
 )
 
 py_library(
