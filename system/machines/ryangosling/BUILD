@@ -10,10 +10,16 @@ filegroup(
     srcs = ["ryangosling.zsh"],
 )
 
+# This test checks for availability of ryangosling shares. This is incompatible
+# with bazel sandboxing and can only be using bazel run, not test.
 py_test(
     name = "ryangosling_test",
     srcs = ["ryangosling_test.py"],
     data = [":ryangosling_proto"],
+    tags = [
+        "local",
+        "manual",
+    ],
     deps = [
         "//labm8/py:app",
         "//labm8/py:bazelutil",
@@ -32,7 +38,7 @@ sh_binary(
     ],
 )
 
-py_binary(
+py_test(
     name = "samba_shares",
     srcs = ["samba_shares.py"],
     deps = ["//labm8/py:app"],
