@@ -11,3 +11,8 @@ OCLGRIND="$(DataPath phd/third_party/oclgrind/oclgrind)"
   [ "$status" -eq 0 ]
 }
 
+@test "run help from another directory" {
+  cd "$TEST_TMPDIR"
+  run "$OCLGRIND" --help
+  [ "$status" -eq 0 ]
+}
