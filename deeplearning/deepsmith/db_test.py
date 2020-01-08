@@ -13,14 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with DeepSmith.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for :db."""
-import pytest
-
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith import toolchain
 from labm8.py import app
 from labm8.py import test
 
 FLAGS = app.FLAGS
+
+pytest_plugins = ["deeplearning.deepsmith.tests.fixtures"]
 
 
 def HasFieldMock(self, name):

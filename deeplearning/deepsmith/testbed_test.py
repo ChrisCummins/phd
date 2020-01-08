@@ -24,6 +24,8 @@ from labm8.py import test
 
 FLAGS = app.FLAGS
 
+pytest_plugins = ["deeplearning.deepsmith.tests.fixtures"]
+
 
 def test_Testbed_ToProto():
   testbed = deeplearning.deepsmith.testbed.Testbed(

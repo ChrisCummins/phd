@@ -20,20 +20,6 @@ licenses(["restricted"])  # GPL v3
 exports_files(["LICENSE"])
 
 py_library(
-    name = "conftest",
-    testonly = 1,
-    srcs = ["conftest.py"],
-    data = glob(["tests/data/datastores/*"]),
-    visibility = ["//deeplearning/deepsmith:__subpackages__"],
-    deps = [
-        ":datastore",
-        ":db",
-        "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
-        "//labm8/py:test",
-    ],
-)
-
-py_library(
     name = "client",
     srcs = ["client.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
@@ -81,9 +67,9 @@ py_test(
     size = "small",
     srcs = ["db_test.py"],
     deps = [
-        ":conftest",
         ":db",
         ":toolchain",
+        "//deeplearning/deepsmith/tests:fixtures",
         "//labm8/py:app",
         "//labm8/py:test",
     ],
@@ -107,9 +93,9 @@ py_test(
     size = "small",
     srcs = ["generator_test.py"],
     deps = [
-        ":conftest",
         ":generator",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
+        "//deeplearning/deepsmith/tests:fixtures",
         "//labm8/py:app",
         "//labm8/py:test",
     ],
@@ -134,9 +120,9 @@ py_test(
     size = "small",
     srcs = ["harness_test.py"],
     deps = [
-        ":conftest",
         ":harness",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
+        "//deeplearning/deepsmith/tests:fixtures",
         "//labm8/py:app",
         "//labm8/py:test",
     ],
@@ -186,7 +172,6 @@ py_test(
     srcs = ["result_test.py"],
     deps = [
         ":client",
-        ":conftest",
         ":generator",
         ":harness",
         ":profiling_event",
@@ -194,6 +179,7 @@ py_test(
         ":testbed",
         ":testcase",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
+        "//deeplearning/deepsmith/tests:fixtures",
         "//labm8/py:app",
         "//labm8/py:labdate",
         "//labm8/py:test",
@@ -231,10 +217,10 @@ py_test(
     size = "small",
     srcs = ["testbed_test.py"],
     deps = [
-        ":conftest",
         ":testbed",
         ":toolchain",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
+        "//deeplearning/deepsmith/tests:fixtures",
         "//labm8/py:app",
         "//labm8/py:test",
     ],
@@ -264,13 +250,13 @@ py_test(
     srcs = ["testcase_test.py"],
     deps = [
         ":client",
-        ":conftest",
         ":generator",
         ":harness",
         ":profiling_event",
         ":testcase",
         ":toolchain",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
+        "//deeplearning/deepsmith/tests:fixtures",
         "//labm8/py:app",
         "//labm8/py:labdate",
         "//labm8/py:test",

@@ -90,5 +90,5 @@ def session(request) -> db.session_t:
   Returns:
     A Session instance.
   """
-  with ds(request).Session() as session_:
+  with datastore.DataStore(request.param).Session() as session_:
     yield session_
