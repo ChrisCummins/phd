@@ -4,7 +4,7 @@
 #
 # Usage:
 #
-#    bazel run //third_party:oclgrind -- <oclgrind_args>
+#    bazel run //third_party/oclgrind -- <oclgrind_args>
 #
 
 # --- begin labm8 init ---

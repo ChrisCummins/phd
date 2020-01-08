@@ -1,4 +1,4 @@
-# Third party code.
+# Oclgrind.
 
 load("@com_github_chriscummins_rules_bats//:bats.bzl", "bats_test")
 
