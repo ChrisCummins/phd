@@ -324,7 +324,7 @@ def train_skip_gram(
   ####################################################################################################################
   # Misc.
   restore_completed = False
-  init = tf.global_variables_initializer()  # variables initializer
+  init = tf.compat.v1.global_variables_initializer()  # variables initializer
   summary_op = tf.summary.merge_all()  # merge summaries into one operation
 
   ####################################################################################################################
@@ -337,7 +337,9 @@ def train_skip_gram(
     gvars = [
       gvar for gvar in tf.global_variables() if "analogy_score" not in gvar.name
     ]
-    saver = tf.train.Saver(gvars, max_to_keep=5)  # create checkpoint saver
+    saver = tf.compat.v1.train.Saver(
+      gvars, max_to_keep=5
+    )  # create checkpoint saver
     config = projector.ProjectorConfig()  # create projector config
     embedding = config.embeddings.add()  # add embeddings visualizer
     embedding.tensor_name = W_in.name
@@ -363,7 +365,7 @@ def train_skip_gram(
 
     else:  # save the computational graph to file and initialize variables
 
-      graph_saver = tf.train.Saver(allow_empty=True)
+      graph_saver = tf.compat.v1.train.Saver(allow_empty=True)
       init.run()
       graph_saver.save(
         sess, ckpt_saver_file_init, global_step=0, write_meta_graph=True

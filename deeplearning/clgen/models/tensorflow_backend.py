@@ -557,7 +557,7 @@ class TensorFlowBackend(backends.BackendBase):
     # Seed the RNG.
     if seed is not None:
       np.random.seed(seed)
-      self.inference_tf.set_random_seed(seed)
+      self.inference_tf.compat.v1.set_random_seed(seed)
 
     # If --clgen_tf_backend_reset_inference_state_between_batches, the state
     # is reset at the beginning of every sample batch. Else, this is the only
@@ -566,11 +566,13 @@ class TensorFlowBackend(backends.BackendBase):
       self.cell.zero_state(sampler.batch_size, self.inference_tf.float32)
     )
 
-    self.inference_tf.global_variables_initializer().run(
+    self.inference_tf.compat.v1.global_variables_initializer().run(
       session=self.inference_sess
     )
     # Restore trained model weights.
-    saver = self.inference_tf.train.Saver(self.inference_tf.global_variables())
+    saver = self.inference_tf.compat.v1.train.Saver(
+      self.inference_tf.global_variables()
+    )
     checkpoint_state = self.inference_tf.train.get_checkpoint_state(
       self.cache.path / "checkpoints"
     )
