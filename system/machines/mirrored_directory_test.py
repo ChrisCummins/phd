@@ -1,11 +1,9 @@
 """Unit tests for //system/machines:mirrored_directory.py."""
+import datetime
 import pathlib
 import subprocess
 import tempfile
-import time
 import typing
-
-import pytest
 
 from labm8.py import app
 from labm8.py import fs
@@ -231,32 +229,6 @@ def test_PullFromRemoteToLocal_timestamp_in_past_cannot_be_pulled(
   fs.Write(pathlib.Path(m.remote_path) / "TIME.txt", "50".encode("utf-8"))
   with test.Raises(mirrored_directory.InvalidOperation):
     m.PullFromRemoteToLocal()
-
-
-def test_push_race(
-  test_host: machine_spec_pb2.Host,
-  test_mirrored_directory: machine_spec_pb2.MirroredDirectory,
-  test_mirrored_directory2: machine_spec_pb2.MirroredDirectory,
-):
-  """Test a common push race scenario."""
-  test_mirrored_directory.timestamp_relpath = "TIME.txt"
-  test_mirrored_directory2.timestamp_relpath = "TIME.txt"
-  test_mirrored_directory2.remote_path = test_mirrored_directory.remote_path
-  m1 = LocalMirroredDirectory(test_host, test_mirrored_directory)
-  m2 = LocalMirroredDirectory(test_host, test_mirrored_directory2)
-
-  m1.PushFromLocalToRemote()
-  with test.Raises(mirrored_directory.InvalidOperation):
-    m2.PushFromLocalToRemote()
-  assert m1.local_timestamp == m2.remote_timestamp
-  assert m1.remote_timestamp == m2.remote_timestamp
-
-  m1.PushFromLocalToRemote()
-  time.sleep(0.1)  # Make sure that timestamp increases.
-  m2.PullFromRemoteToLocal()
-  with test.Raises(mirrored_directory.InvalidOperation):
-    m1.PushFromLocalToRemote()
-  m2.PushFromLocalToRemote()
 
 
 if __name__ == "__main__":
