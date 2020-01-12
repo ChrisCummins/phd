@@ -41,20 +41,20 @@ path of the cache. Included in the cache is a file lock which prevents mulitple
 instances of this program from modifying files at the same time, irrespective
 of the files being formatted.
 """
+import appdirs
+import build_info
 import os
 import pathlib
 import queue
 import sys
 from typing import Iterable
+from typing import List
 
-import appdirs
 import fasteners
-
-import build_info
 from labm8.py import app
 from tools.format import formatter_executor
-from tools.format import path_generator
-from tools.format import pre_commit
+from tools.format import git_util
+from tools.format import path_generator as path_generators
 from tools.format.formatters.suffix_mapping import mapping as formatters
 
 
@@ -117,24 +117,69 @@ def Main(argv):
   assert fasteners.InterProcessLock(cache_dir / "LOCK")
 
   args = argv[1:]
+  path_generator = path_generators.PathGenerator(".formatignore")
 
+  # Resolve the paths to format.
   if FLAGS.pre_commit:
     if args:
       raise app.UsageError("--pre_commit takes no arguments")
-    args = pre_commit.GetArgsFromGitDiff()
+
+    # In --pre_commit mode, we take the union of staged and partially-staged
+    # files to format.
+    staged_paths, partially_staged_paths = git_util.GetStagedPathsOrDie(
+      path_generator
+    )
+
+    paths = set(staged_paths).union(set(partially_staged_paths))
   elif not args:
     raise app.UsageError("Must provide a path")
+  else:
+    paths = path_generator.GeneratePaths(args)
 
-  paths = path_generator.PathGenerator(".formatignore").GeneratePaths(args)
+  executor = FormatPathsOrDie(cache_dir, paths)
+
+  if FLAGS.pre_commit and executor.modified_files:
+    # When in --pre_commit mode, a non-zero status means that staged files were
+    # modified.
+    modified_files = set(executor.modified_files)
+
+    need_review = modified_files.intersection(set(partially_staged_paths))
+    to_commit = modified_files - need_review
+
+    if to_commit:
+      print("✅  Modified files that will be automatically committed:")
+      for path in sorted(to_commit):
+        print("   ", path)
+      git_util.GitAddOrDie(to_commit)
+
+    if need_review:
+      print(
+        "⚠️  Partially staged modified files that must be inspected:",
+        file=sys.stderr,
+      )
+
+      for path in sorted(need_review):
+        print("   ", path, file=sys.stderr)
+      print("[action] Selectively add unstaged changes using:", file=sys.stderr)
+      print("    git add --patch --", *need_review, file=sys.stderr)
+      sys.exit(1)
+
+
+def FormatPathsOrDie(cache_dir: pathlib.Path, paths: List[pathlib.Path]):
+  """Run the formatter on a list of arguments.
+
+  Returns:
+    The formatter executor.
+  """
+  q = queue.Queue()
+  executor = formatter_executor.FormatterExecutor(cache_dir, q)
 
   # --dry_run flag to print the paths that would be formatted.
   if FLAGS.dry_run:
     for path in paths:
       print(path)
-    return
+    return executor
 
-  q = queue.Queue()
-  executor = formatter_executor.FormatterExecutor(cache_dir, q)
   executor.start()
 
   for path in paths:
@@ -150,10 +195,7 @@ def Main(argv):
   if executor.errors:
     sys.exit(2)
 
-  # When in --pre_commit mode, a non-zero status means that staged files were
-  # modified.
-  if FLAGS.pre_commit and executor.modified_files:
-    sys.exit(1)
+  return executor
 
 
 if __name__ == "__main__":

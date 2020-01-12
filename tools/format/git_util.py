@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utilities for interfacing with git."""
+import os
 import pathlib
 import subprocess
 import sys
+from typing import Iterable
 from typing import List
+from typing import Tuple
 
 from labm8.py import app
 
@@ -50,3 +53,39 @@ def GetModifiedFilesOrDie(staged: bool) -> List[pathlib.Path]:
   lines = output.split("\n")
   staged_file_relpaths = lines[:-1]  # Last line is blank.
   return staged_file_relpaths
+
+
+def GetStagedPathsOrDie(
+  path_generator,
+) -> Tuple[List[pathlib.Path], List[pathlib.Path]]:
+  os.chdir(GetGitRootOrDie())
+
+  staged_paths, partially_staged_paths = [], []
+
+  staged_relpaths = GetModifiedFilesOrDie(staged=True)
+  unstaged_relpaths = GetModifiedFilesOrDie(staged=False)
+  partially_staged_relpaths = list(
+    set(staged_relpaths).intersection(set(unstaged_relpaths))
+  )
+
+  for relpath in staged_relpaths:
+    paths = list(path_generator.GeneratePaths([relpath]))
+    assert len(paths) <= 1
+    if paths:
+      staged_paths.append(paths[0])
+
+  for relpath in partially_staged_relpaths:
+    paths = list(path_generator.GeneratePaths([relpath]))
+    assert len(paths) <= 1
+    if paths:
+      partially_staged_paths.append(paths[0])
+
+  return staged_paths, partially_staged_paths
+
+
+def GitAddOrDie(paths: Iterable[pathlib.Path]):
+  try:
+    subprocess.check_call(["git", "add"] + [str(x) for x in paths])
+  except subprocess.CalledProcessError:
+    print(f"ERROR: git add faled: {paths}", file=sys.stderr)
+    sys.exit(1)

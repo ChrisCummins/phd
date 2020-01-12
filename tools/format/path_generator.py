@@ -32,7 +32,6 @@ class PathGenerator(object):
 
   def __init__(self, ignore_file_name: str):
     self.ignore_file_name = ignore_file_name
-    self.visited_paths = set()
     self.ignored_paths: Set[pathlib.Path] = set()
     self.visited_ignore_files: Set[pathlib.Path] = set()
 
@@ -54,6 +53,8 @@ class PathGenerator(object):
       An iterator over absolute pathlib.Path instances. Every path returned
       is a unique file that exists
     """
+    visited_paths = set()
+
     for arg in args:
       for path in glob.iglob(arg, recursive=True):
         path = pathlib.Path(path).absolute()
@@ -66,12 +67,12 @@ class PathGenerator(object):
             if not self.IsIgnored(pathlib.Path(root)):
               for file in files:
                 path = (pathlib.Path(root) / file).absolute()
-                if path not in self.visited_paths and not self.IsIgnored(path):
-                  self.visited_paths.add(path)
+                if path not in visited_paths and not self.IsIgnored(path):
+                  visited_paths.add(path)
                   yield path
         else:
-          if path not in self.visited_paths and not self.IsIgnored(path):
-            self.visited_paths.add(path)
+          if path not in visited_paths and not self.IsIgnored(path):
+            visited_paths.add(path)
             yield path
 
   def IsIgnored(self, path: pathlib.Path) -> bool:
