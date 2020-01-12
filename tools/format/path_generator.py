@@ -87,6 +87,9 @@ class PathGenerator(object):
     Returns:
       True if the path should be ignored, else False.
     """
+    if ".git" in path.parts:
+      return True
+
     for parent in path.parents:
       ignore_file = parent / self.ignore_file_name
       if ignore_file.is_file() and ignore_file not in self.visited_ignore_files:
