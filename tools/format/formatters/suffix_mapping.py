@@ -15,13 +15,13 @@
 from labm8.py import app
 from tools.format.formatters import bazel
 from tools.format.formatters import cxx
-from tools.format.formatters import formatter
 from tools.format.formatters import go
 from tools.format.formatters import java
 from tools.format.formatters import javascript
 from tools.format.formatters import json
 from tools.format.formatters import python
 from tools.format.formatters import sql
+from tools.format.formatters import text
 
 FLAGS = app.FLAGS
 
@@ -48,4 +48,5 @@ mapping = {
   "BUILD": bazel.FormatBuild,
   "BUILD": bazel.FormatBuild,
   "WORKSPACE": bazel.FormatBuild,
+  ".formatignore": text.FormatText,
 }

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This module defines a formatter for Python sources."""
-from tools.format.formatters import formatter
+from tools.format import formatter
 
 
 class FormatPython(formatter.BatchedFormatter):

@@ -13,7 +13,7 @@
 # limitations under the License.
 """This module defines a formatter for java sources."""
 from labm8.py import bazelutil
-from tools.format.formatters import formatter
+from tools.format import formatter
 
 
 class FormatJava(formatter.BatchedFormatter):

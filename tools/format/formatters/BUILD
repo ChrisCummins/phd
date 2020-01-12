@@ -17,32 +17,27 @@
 py_library(
     name = "bazel",
     srcs = ["bazel.py"],
+    visibility = ["//tools/format/formatters:__subpackages__"],
     deps = [
-        ":formatter",
+        "//tools/format:formatter",
     ],
 )
 
 py_library(
     name = "cxx",
     srcs = ["cxx.py"],
+    visibility = ["//tools/format/formatters:__subpackages__"],
     deps = [
-        ":formatter",
-    ],
-)
-
-py_library(
-    name = "formatter",
-    srcs = ["formatter.py"],
-    deps = [
-        "//labm8/py:app",
+        "//tools/format:formatter",
     ],
 )
 
 py_library(
     name = "go",
     srcs = ["go.py"],
+    visibility = ["//tools/format/formatters:__subpackages__"],
     deps = [
-        ":formatter",
+        "//tools/format:formatter",
     ],
 )
 
@@ -50,41 +45,46 @@ py_library(
     name = "java",
     srcs = ["java.py"],
     data = ["//third_party/java:google_java_format_jar"],
+    visibility = ["//tools/format/formatters:__subpackages__"],
     deps = [
-        ":formatter",
         "//labm8/py:bazelutil",
+        "//tools/format:formatter",
     ],
 )
 
 py_library(
     name = "javascript",
     srcs = ["javascript.py"],
+    visibility = ["//tools/format/formatters:__subpackages__"],
     deps = [
-        ":formatter",
+        "//tools/format:formatter",
     ],
 )
 
 py_library(
     name = "json",
     srcs = ["json.py"],
+    visibility = ["//tools/format/formatters:__subpackages__"],
     deps = [
-        ":formatter",
+        "//tools/format:formatter",
     ],
 )
 
 py_library(
     name = "python",
     srcs = ["python.py"],
+    visibility = ["//tools/format/formatters:__subpackages__"],
     deps = [
-        ":formatter",
+        "//tools/format:formatter",
     ],
 )
 
 py_library(
     name = "sql",
     srcs = ["sql.py"],
+    visibility = ["//tools/format/formatters:__subpackages__"],
     deps = [
-        ":formatter",
+        "//tools/format:formatter",
     ],
 )
 
@@ -101,6 +101,16 @@ py_library(
         ":json",
         ":python",
         ":sql",
+        ":text",
         "//labm8/py:app",
+    ],
+)
+
+py_library(
+    name = "text",
+    srcs = ["text.py"],
+    visibility = ["//tools/format/formatters:__subpackages__"],
+    deps = [
+        "//tools/format:formatter",
     ],
 )

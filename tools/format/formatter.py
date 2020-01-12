@@ -19,10 +19,6 @@ import sys
 from typing import List
 from typing import Optional
 
-from labm8.py import app
-
-FLAGS = app.FLAGS
-
 
 class Formatter(object):
   """Base class for implementing formatters."""
