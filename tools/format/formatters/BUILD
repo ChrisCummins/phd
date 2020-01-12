@@ -57,6 +57,7 @@ py_library(
     srcs = ["javascript.py"],
     visibility = ["//tools/format/formatters:__subpackages__"],
     deps = [
+        "//labm8/py:fs",
         "//tools/format:formatter",
     ],
 )

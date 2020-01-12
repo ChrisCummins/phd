@@ -63,6 +63,7 @@ par_binary(
     deps = [
         ":formatter_executor",
         ":path_generator",
+        ":pre_commit",
         "//:build_info",
         "//labm8/py:app",
         "//third_party/py/appdirs",
@@ -81,6 +82,14 @@ bats_test(
 )
 
 py_library(
+    name = "git_util",
+    srcs = ["git_util.py"],
+    deps = [
+        "//labm8/py:app",
+    ],
+)
+
+py_library(
     name = "path_generator",
     srcs = ["path_generator.py"],
     deps = [
@@ -95,5 +104,14 @@ py_test(
         ":path_generator",
         "//labm8/py:fs",
         "//labm8/py:test",
+    ],
+)
+
+py_library(
+    name = "pre_commit",
+    srcs = ["pre_commit.py"],
+    deps = [
+        ":git_util",
+        "//labm8/py:app",
     ],
 )

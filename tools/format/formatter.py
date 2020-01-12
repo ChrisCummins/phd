@@ -32,6 +32,7 @@ class Formatter(object):
     self.futures = []
 
   def __call__(self, path: pathlib.Path, cached_mtime: Optional[int]):
+    app.Log(2, "format %s", path)
     return lambda: ([path], [cached_mtime], self.RunOne(path))
 
   def RunOne(self, path: pathlib.Path) -> Optional[str]:
@@ -50,6 +51,8 @@ class BatchedFormatter(Formatter):
     self._actions = []
 
   def __call__(self, path: pathlib.Path, cached_mtime: Optional[int]):
+    app.Log(2, "format %s", path)
+
     self._actions.append((path, cached_mtime))
     if len(self._actions) > self.batch_size:
       paths = [x[0] for x in self._actions]
@@ -94,6 +97,9 @@ def WhichOrDie(name: str, install_instructions: Optional[str] = None):
 
 def ExecOrError(cmd):
   """Run the given command silently and return its output if it fails."""
+  if app.GetVerbosity() >= 3:
+    app.Log(3, "exec $ %s", " ".join(str(x) for x in cmd))
+
   process = subprocess.Popen(
     cmd,
     stdout=subprocess.PIPE,

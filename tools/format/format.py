@@ -54,6 +54,7 @@ import build_info
 from labm8.py import app
 from tools.format import formatter_executor
 from tools.format import path_generator
+from tools.format import pre_commit
 from tools.format.formatters.suffix_mapping import mapping as formatters
 
 
@@ -75,6 +76,7 @@ app.DEFINE_boolean(
   "Only print the paths of files that will be formatted, without formatting "
   "them.",
 )
+app.DEFINE_boolean("pre_commit", False, "Run formatter as a pre-commit hook.")
 app.DEFINE_boolean(
   "with_cache",
   True,
@@ -98,9 +100,6 @@ def GetCacheDir() -> pathlib.Path:
 
 
 def Main(argv):
-  if not argv:
-    raise app.UsageError("Must provide a path")
-
   cache_dir = GetCacheDir()
   cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -117,13 +116,44 @@ def Main(argv):
   # ensuring that only a single formatter is running at a time.
   assert fasteners.InterProcessLock(cache_dir / "LOCK")
 
-  paths = path_generator.PathGenerator(".formatignore").GeneratePaths(argv[1:])
+  args = argv[1:]
+
+  if FLAGS.pre_commit:
+    if args:
+      raise app.UsageError("--pre_commit takes no arguments")
+    args = pre_commit.GetArgsFromGitDiff()
+  elif not args:
+    raise app.UsageError("Must provide a path")
+
+  paths = path_generator.PathGenerator(".formatignore").GeneratePaths(args)
+
+  # --dry_run flag to print the paths that would be formatted.
   if FLAGS.dry_run:
     for path in paths:
       print(path)
-  else:
-    errors = FormatPaths(cache_dir, paths)
-    sys.exit(1 if errors else 0)
+    return
+
+  q = queue.Queue()
+  executor = formatter_executor.FormatterExecutor(cache_dir, q)
+  executor.start()
+
+  for path in paths:
+    # Check if there are corresponding formatters, and if so, send it off to
+    # the executor to process.
+    key = path.suffix or path.name
+    if key in formatters:
+      q.put(path)
+
+  q.put(None)
+  executor.join()
+
+  if executor.errors:
+    sys.exit(2)
+
+  # When in --pre_commit mode, a non-zero status means that staged files were
+  # modified.
+  if FLAGS.pre_commit and executor.modified_files:
+    sys.exit(1)
 
 
 if __name__ == "__main__":
