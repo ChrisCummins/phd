@@ -14,7 +14,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("//tools/bzl:exports.bzl", "exports_repo")
+load("@com_github_chriscummins_rules_bats//:bats.bzl", "bats_test")
 load("@subpar//:subpar.bzl", "par_binary")
+
+exports_files([
+    "LICENSE",
+    "README.md",
+    "CNAME",
+])
+
+exports_repo(
+    name = "export",
+    github_repo = "format",
+    move_file_mapping = {
+        "tools/format/README.md": "README.md",
+        "tools/format/LICENSE": "LICENSE",
+        "tools/format/travis.yml": ".travis.yml",
+    },
+    targets = ["//tools/format/..."],
+)
+
+py_library(
+    name = "formatter",
+    srcs = ["formatter.py"],
+    visibility = ["//tools/format/formatters:__subpackages__"],
+    deps = [
+        "//labm8/py:app",
+    ],
+)
 
 py_library(
     name = "formatter_executor",
@@ -40,6 +68,15 @@ par_binary(
         "//third_party/py/appdirs",
         "//third_party/py/fasteners",
         "//tools/format/formatters:suffix_mapping",
+    ],
+)
+
+bats_test(
+    name = "format_par_test",
+    srcs = ["format_par_test.bats"],
+    data = [
+        ":format.par",
+        "//labm8/sh:test",
     ],
 )
 
