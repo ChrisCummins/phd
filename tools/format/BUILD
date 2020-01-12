@@ -50,3 +50,13 @@ py_library(
         "//labm8/py:app",
     ],
 )
+
+py_test(
+    name = "path_generator_test",
+    srcs = ["path_generator_test.py"],
+    deps = [
+        ":path_generator",
+        "//labm8/py:fs",
+        "//labm8/py:test",
+    ],
+)

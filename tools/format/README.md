@@ -13,6 +13,10 @@ Features:
 
   * Automated code styling of C/C++, Python, Java, SQL, JavaScript, HTML,
     CSS, go, and JSON files.
+  * Support for `.formatignore` files to mark files to be excluded from 
+    formatting. The syntax of ignore files is similar to `.gitignore`, e.g. a 
+    list of patterns to match, including (recursive) glob expansion, and 
+    patterns beginning with `!` are un-ignored. 
   * Persistent caching of "last modified" timestamps for files to minimize the
     amount of work done.
   * A process lock which prevents races when multiple formatters are launched

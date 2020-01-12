@@ -23,6 +23,10 @@ Features:
 
   * Automated code styling of C/C++, Python, Java, SQL, JavaScript, HTML,
     CSS, go, and JSON files.
+  * Support for `.formatignore` files to mark files to be excluded from
+    formatting. The syntax of ignore files is similar to `.gitignore`, e.g. a
+    list of patterns to match, including (recursive) glob expansion, and
+    patterns beginning with `!` are un-ignored.
   * Persistent caching of "last modified" timestamps for files to minimize the
     amount of work done.
   * A process lock which prevents races when multiple formatters are launched
@@ -42,7 +46,6 @@ import pathlib
 import queue
 import sys
 from typing import Iterable
-from typing import List
 
 import appdirs
 import fasteners
@@ -91,18 +94,12 @@ def FormatPaths(cache_dir: pathlib.Path, paths: Iterable[pathlib.Path]) -> bool:
   executor = formatter_executor.FormatterExecutor(cache_dir, q)
   executor.start()
 
-  visited = set()
   for path in paths:
-    if path in visited:
-      continue
-
     # Check if there are corresponding formatters, and if so, send it off to
     # the executor to process.
     key = path.suffix or path.name
     if key in formatters:
       q.put(path)
-
-    visited.add(path)
 
   q.put(None)
   executor.join()
@@ -142,7 +139,7 @@ def Main(argv):
   # ensuring that only a single formatter is running at a time.
   assert fasteners.InterProcessLock(cache_dir / "LOCK")
 
-  paths = path_generator.GeneratePaths(argv[1:])
+  paths = path_generator.PathGenerator(".formatignore").GeneratePaths(argv[1:])
   errors = FormatPaths(cache_dir, paths)
   sys.exit(1 if errors else 0)
 

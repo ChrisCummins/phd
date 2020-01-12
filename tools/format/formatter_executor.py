@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS cache(
         if FLAGS.with_cache:
           query = connection.execute(
             sql.text("SELECT mtime FROM cache WHERE path = :path"),
-            path=str(path.absolute()),
+            path=str(path),
           )
           result = query.first()
           if result:
@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS cache(
                 sql.text(
                   "REPLACE INTO cache (path, mtime) VALUES (:path, :mtime)"
                 ),
-                path=str(path.absolute()),
+                path=str(path),
                 mtime=mtime,
               )
 
