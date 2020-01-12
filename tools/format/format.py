@@ -41,8 +41,6 @@ path of the cache. Included in the cache is a file lock which prevents mulitple
 instances of this program from modifying files at the same time, irrespective
 of the files being formatted.
 """
-import appdirs
-import build_info
 import os
 import pathlib
 import queue
@@ -50,7 +48,10 @@ import sys
 from typing import Iterable
 from typing import List
 
+import appdirs
 import fasteners
+
+import build_info
 from labm8.py import app
 from tools.format import formatter_executor
 from tools.format import git_util
@@ -114,7 +115,10 @@ def Main(argv):
   # of inter-process locks using the fasteners library is automatic. This will
   # block indefinitely if the lock is already acquired by a different process,
   # ensuring that only a single formatter is running at a time.
-  assert fasteners.InterProcessLock(cache_dir / "LOCK")
+  lock_file = cache_dir / "LOCK"
+  app.Log(3, "Acquiring lock file %s", lock_file)
+  assert fasteners.InterProcessLock(lock_file)
+  app.Log(3, "Lock file acquired")
 
   args = argv[1:]
   path_generator = path_generators.PathGenerator(".formatignore")
