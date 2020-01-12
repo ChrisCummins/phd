@@ -120,6 +120,7 @@ class PathGenerator(object):
     Args:
       ignore_file: The path of an ignore file.
     """
+    app.Log(4, "visting ignore file %s", ignore_file)
     with open(ignore_file) as f:
       for line in f:
         components = line.split("#")
