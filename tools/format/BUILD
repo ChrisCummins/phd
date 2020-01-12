@@ -85,6 +85,7 @@ py_library(
     name = "git_util",
     srcs = ["git_util.py"],
     deps = [
+        "//:build_info",
         "//labm8/py:app",
     ],
 )

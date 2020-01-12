@@ -20,6 +20,7 @@ from typing import Iterable
 from typing import List
 from typing import Tuple
 
+import build_info
 from labm8.py import app
 
 FLAGS = app.FLAGS
@@ -100,11 +101,31 @@ def InstallPreCommitHookOrDie():
     print(f"ERROR: git hooks directory not found: {hooks_dir}", file=sys.stderr)
     sys.exit(1)
 
+  # Install pre-commit hook which runs this program in --pre_commit mode.
   pre_commit = hooks_dir / "pre-commit"
   if pre_commit.is_file():
     os.unlink(pre_commit)
 
   with open(pre_commit, "w") as f:
-    f.write(f"set -eu\n{sys.argv[0]} --pre_commit\n")
+    f.write(f"#!/usr/bin/env bash\nset -eu\n{sys.argv[0]} --pre_commit\n")
   os.chmod(pre_commit, 0o744)
   print(pre_commit)
+
+  # Install prepare-commit-msg hook which adds a "signed off" hook.
+  prepare_commit_msg = hooks_dir / "prepare-commit-msg"
+  if prepare_commit_msg.is_file():
+    os.unlink(prepare_commit_msg)
+
+  version = build_info.GetBuildInfo().version
+  with open(prepare_commit_msg, "w") as f:
+    f.write(
+      f"""\
+#!/usr/bin/env bash
+cp $1 /tmp/format_pre_commit_message.txt
+echo -e "\\n\\nSigned-off-by: format {version} <github.com/ChrisCummins/format>" > $1
+cat /tmp/format_pre_commit_message.txt >> $1
+rm -f /tmp/format_pre_commit_message.txt
+"""
+    )
+  os.chmod(prepare_commit_msg, 0o744)
+  print(prepare_commit_msg)
