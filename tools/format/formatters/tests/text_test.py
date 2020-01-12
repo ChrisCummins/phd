@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //tools/format/formatters:text."""
-import pathlib
-
 from labm8.py import test
 from tools.format.formatters import text
 from tools.format.formatters.tests import testing
@@ -21,11 +19,11 @@ from tools.format.formatters.tests import testing
 FLAGS = test.FLAGS
 
 
-def test_strip_trailing_whitespace(tempdir: pathlib.Path):
+def test_strip_trailing_whitespace():
   assert testing.FormatText(text.FormatText, "Hello   \n") == "Hello\n"
 
 
-def test_add_newline(tempdir: pathlib.Path):
+def test_add_newline():
   assert testing.FormatText(text.FormatText, "Hello") == "Hello\n"
 
 

@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //tools/format/formatters:sql."""
-import pathlib
-
 from labm8.py import test
 from tools.format.formatters import sql
 from tools.format.formatters.tests import testing
@@ -21,7 +19,7 @@ from tools.format.formatters.tests import testing
 FLAGS = test.FLAGS
 
 
-def test_format_single_query(tempdir: pathlib.Path):
+def test_format_single_query():
   assert (
     testing.FormatText(
       sql.FormatSql,
@@ -36,7 +34,7 @@ FROM users;
   )
 
 
-def test_format_empty_file(tempdir: pathlib.Path):
+def test_format_empty_file():
   assert testing.FormatText(sql.FormatSql, "") == "\n"
 
 
