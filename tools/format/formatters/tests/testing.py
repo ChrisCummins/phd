@@ -14,20 +14,19 @@
 """Utilities for testing formatters."""
 import pathlib
 import tempfile
-from typing import List
+
+from labm8.py import fs
 
 
-def RunLinter(formatter_class, paths: List[pathlib.Path]):
+def FormatText(formatter_class, text: str, filename: str = "text") -> str:
   with tempfile.TemporaryDirectory(prefix="format_test_") as d:
     cache_path = pathlib.Path(d)
     formatter = formatter_class(cache_path)
 
-    actions = []
+    path = cache_path / filename
+    fs.Write(path, text.encode("utf-8"))
 
-    for path in paths:
-      actions.append(formatter(path, cached_mtime=None))
-
-    actions.append(formatter.Finalize())
+    actions = [formatter(path, cached_mtime=None), formatter.Finalize()]
 
     # Run the actions and accumulate errors.
     errors = []
@@ -37,4 +36,7 @@ def RunLinter(formatter_class, paths: List[pathlib.Path]):
         if error:
           errors.append(error)
 
-    return errors
+    if errors:
+      raise ValueError(errors)
+
+    return fs.Read(path)

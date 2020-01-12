@@ -11,22 +11,48 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Unit tests for //tools/format/formatters:text."""
+"""Unit tests for //tools/format/formatters:sql."""
 import pathlib
 
 from labm8.py import test
-from tools.format.formatters import text
+from tools.format.formatters import sql
 from tools.format.formatters.tests import testing
 
 FLAGS = test.FLAGS
 
 
-def test_strip_trailing_whitespace(tempdir: pathlib.Path):
-  assert testing.FormatText(text.FormatText, "Hello   \n") == "Hello\n"
+def test_format_single_query(tempdir: pathlib.Path):
+  assert (
+    testing.FormatText(
+      sql.FormatSql,
+      """
+select * from users;
+""",
+    )
+    == """
+SELECT *
+FROM users;
+"""
+  )
 
 
-def test_add_newline(tempdir: pathlib.Path):
-  assert testing.FormatText(text.FormatText, "Hello") == "Hello\n"
+def test_format_empty_file(tempdir: pathlib.Path):
+  assert testing.FormatText(sql.FormatSql, "") == "\n"
+
+
+def test_format_hello_world():
+  assert testing.FormatText(sql.FormatSql, "Hello world") == "Hello world\n"
+
+
+def test_format_sql_query():
+  assert (
+    testing.FormatText(sql.FormatSql, "select count(*),foo.bar from foo;")
+    == """\
+SELECT count(*),
+       foo.bar
+FROM foo;
+"""
+  )
 
 
 if __name__ == "__main__":
