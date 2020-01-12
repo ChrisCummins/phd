@@ -14,19 +14,16 @@
 """This module defines the master thread for executing formatters."""
 import concurrent.futures
 import contextlib
-import glob
 import multiprocessing
 import os
 import pathlib
 import queue
+import sys
 import threading
-from typing import List
 
 import sqlalchemy as sql
 
 from labm8.py import app
-from labm8.py import crypto
-from labm8.py import shell
 from labm8.py import sqlutil
 from tools.format.formatters.suffix_mapping import mapping as formatters
 
@@ -55,7 +52,11 @@ class FormatterExecutor(threading.Thread):
     self.cache_path = cache_path
     self.q = q
     self.formatters = {}
+
+    # The results of formatting. Access these member variables after the thread
+    # has terminated.
     self.errors = False
+    self.modified_files = []
 
   @contextlib.contextmanager
   def DatabaseConnection(self):
@@ -87,6 +88,7 @@ CREATE TABLE IF NOT EXISTS cache(
       connection.close()
 
   def run(self):
+    """Read the input paths and format them as required.."""
     with concurrent.futures.ThreadPoolExecutor(
       max_workers=multiprocessing.cpu_count()
     ) as executor, self.DatabaseConnection() as connection:
@@ -99,45 +101,25 @@ CREATE TABLE IF NOT EXISTS cache(
         if path is None:
           break
 
-        # Determine if the file should be processed.
-        mtime = int(os.path.getmtime(path) * 1e6)
-        cached_mtime = None
-        if FLAGS.with_cache:
-          query = connection.execute(
-            sql.text("SELECT mtime FROM cache WHERE path = :path"),
-            path=str(path),
-          )
-          result = query.first()
-          if result:
-            cached_mtime = result[0]
-        # Skip
-        if mtime == cached_mtime:
-          continue
-
-        # Get or create the formatter.
-        key = path.suffix or path.name
-        if key in self.formatters:
-          form = self.formatters[key]
-        else:
-          form = formatters[key](self.cache_path)
-          self.formatters[key] = form
-
-        # Run the formatter.
-        action = form(path, cached_mtime)
+        action = self.MaybeFormat(connection, path)
         if action:
           futures.append(executor.submit(action))
 
+      # We have run out of paths to format, finalize the formatters.
       for form in self.formatters.values():
         action = form.Finalize()
         if action:
           futures.append(executor.submit(action))
 
-      for future in futures:
+      # Wait for the formatters to complete.
+      for future in concurrent.futures.as_completed(futures):
         paths, cached_mtimes, error = future.result()
+
         for path, cached_mtime in zip(paths, cached_mtimes):
           mtime = int(os.path.getmtime(path) * 1e6)
           if mtime != cached_mtime:
             print(path)
+            self.modified_files.append(path)
             if not error and FLAGS.with_cache:
               connection.execute(
                 sql.text(
@@ -150,6 +132,30 @@ CREATE TABLE IF NOT EXISTS cache(
         if error:
           print(error, file=sys.stderr)
           self.errors = True
-        elif FLAGS.with_cache:
-          # TODO: Run as a single query.
-          mtime = int(os.path.getmtime(path) * 1e6)
+
+  def MaybeFormat(self, connection, path: pathlib.Path):
+    """Schedule a file to be formatted if required."""
+    # Determine if the file should be processed.
+    mtime = int(os.path.getmtime(path) * 1e6)
+    cached_mtime = None
+    if FLAGS.with_cache:
+      query = connection.execute(
+        sql.text("SELECT mtime FROM cache WHERE path = :path"), path=str(path),
+      )
+      result = query.first()
+      if result:
+        cached_mtime = result[0]
+    # Skip a file that hasn't been modified since the last time it was
+    # formatted.
+    if mtime == cached_mtime:
+      return
+
+    # Get or create the formatter.
+    key = path.suffix or path.name
+    if key in self.formatters:
+      form = self.formatters[key]
+    else:
+      form = formatters[key](self.cache_path)
+      self.formatters[key] = form
+
+    return form(path, cached_mtime)

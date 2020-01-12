@@ -85,34 +85,6 @@ app.DEFINE_boolean(
 )
 
 
-def FormatPaths(cache_dir: pathlib.Path, paths: Iterable[pathlib.Path]) -> bool:
-  """Run formatter on an iterable sequence of paths.
-
-  Args:
-    cache_dir: The path of the persistent cache directory.
-    paths: An iterator of paths to format. All paths are assumed to (a) be
-      files, and (b) exist. Duplicates are okay.
-
-  Returns:
-    True if there were errors.
-  """
-  q = queue.Queue()
-  executor = formatter_executor.FormatterExecutor(cache_dir, q)
-  executor.start()
-
-  for path in paths:
-    # Check if there are corresponding formatters, and if so, send it off to
-    # the executor to process.
-    key = path.suffix or path.name
-    if key in formatters:
-      q.put(path)
-
-  q.put(None)
-  executor.join()
-
-  return executor.errors
-
-
 def GetCacheDir() -> pathlib.Path:
   """Resolve the cache directory for linters."""
   _BAZEL_TEST_TMPDIR = os.environ.get("TEST_TMPDIR")
