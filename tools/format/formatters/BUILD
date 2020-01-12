@@ -84,6 +84,7 @@ py_library(
     srcs = ["sql.py"],
     visibility = ["//tools/format/formatters:__subpackages__"],
     deps = [
+        "//third_party/py/sqlparse",
         "//tools/format:formatter",
     ],
 )
