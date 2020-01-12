@@ -187,6 +187,16 @@ def Main(argv):
       sys.exit(1)
 
 
+def PathsWithFormatters(
+  paths: Iterable[pathlib.Path],
+) -> Iterable[pathlib.Path]:
+  """Filter an iterable of paths for those with corresponding formatters."""
+  for path in paths:
+    key = path.suffix or path.name
+    if key in formatters:
+      yield path
+
+
 def FormatPathsOrDie(cache_dir: pathlib.Path, paths: List[pathlib.Path]):
   """Run the formatter on a list of arguments.
 
@@ -195,6 +205,8 @@ def FormatPathsOrDie(cache_dir: pathlib.Path, paths: List[pathlib.Path]):
   """
   q = queue.Queue()
   executor = formatter_executor.FormatterExecutor(cache_dir, q)
+
+  paths = PathsWithFormatters(paths)
 
   # --dry_run flag to print the paths that would be formatted.
   if FLAGS.dry_run:
@@ -205,11 +217,7 @@ def FormatPathsOrDie(cache_dir: pathlib.Path, paths: List[pathlib.Path]):
   executor.start()
 
   for path in paths:
-    # Check if there are corresponding formatters, and if so, send it off to
-    # the executor to process.
-    key = path.suffix or path.name
-    if key in formatters:
-      q.put(path)
+    q.put(path)
 
   q.put(None)
   executor.join()
