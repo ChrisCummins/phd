@@ -42,6 +42,12 @@ of the files being formatted.
 
 Download the latest binary from the [Releases page](https://github.com/ChrisCummins/format) and put it in your $PATH.
 
+Or to build from source:
+
+```sh
+$ bazel run -c opt //tools/format:install
+```
+
 ## License
 
 Copyright 2020 Chris Cummins <chrisc.101@gmail.com>.

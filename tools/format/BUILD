@@ -89,6 +89,15 @@ py_library(
     ],
 )
 
+sh_binary(
+    name = "install",
+    srcs = ["install.sh"],
+    data = [":format.par"],
+    deps = [
+        "//labm8/sh:app",
+    ],
+)
+
 py_library(
     name = "path_generator",
     srcs = ["path_generator.py"],
