@@ -92,7 +92,7 @@ def GitAddOrDie(paths: Iterable[pathlib.Path]):
     sys.exit(1)
 
 
-def InstallPreCommitHookOrDie():
+def InstallPreCommitHookOrDie(cache_path: pathlib.Path):
   git_root = GetGitRootOrDie()
 
   hooks_dir = git_root / ".git" / "hooks"
@@ -121,10 +121,10 @@ def InstallPreCommitHookOrDie():
     f.write(
       f"""\
 #!/usr/bin/env bash
-cp $1 /tmp/format_pre_commit_message.txt
+cp $1 {cache_path / 'git_commit_message.txt'}
 echo -e "\\n\\nSigned-off-by: format {version} <github.com/ChrisCummins/format>" > $1
-cat /tmp/format_pre_commit_message.txt >> $1
-rm -f /tmp/format_pre_commit_message.txt
+cat {cache_path / 'git_commit_message.txt'} >> $1
+rm -f {cache_path / 'git_commit_message.txt'}
 """
     )
   os.chmod(prepare_commit_msg, 0o744)

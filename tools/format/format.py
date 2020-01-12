@@ -126,7 +126,7 @@ def Main(argv):
     print("\n".join(sorted(formatters.keys())))
     return
   elif FLAGS.install_pre_commit_hook:
-    git_util.InstallPreCommitHookOrDie()
+    git_util.InstallPreCommitHookOrDie(cache_dir)
     return
 
   # Acquire an inter-process lock. This does not need to be released - cleanup
