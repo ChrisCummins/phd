@@ -77,7 +77,22 @@ app.DEFINE_boolean(
   "Only print the paths of files that will be formatted, without formatting "
   "them.",
 )
-app.DEFINE_boolean("pre_commit", False, "Run formatter as a pre-commit hook.")
+app.DEFINE_boolean(
+  "pre_commit",
+  False,
+  "Run formatter in pre-commit mode. When in pre-commit mode, all files that "
+  "are staged for commit are formatted. If a formatter modifies a file that "
+  "was staged for commit, the new changes are automatically staged. If a file "
+  "was only partially staged for commit, then this program exits with a "
+  "non-zero returncode, requiring you to review the formatter's changes "
+  "before re-running the commit.",
+)
+app.DEFINE_boolean(
+  "install_pre_commit_hook",
+  False,
+  "Install a pre-commit hook for the current git repository that runs this "
+  "program.",
+)
 app.DEFINE_boolean(
   "with_cache",
   True,
@@ -109,6 +124,9 @@ def Main(argv):
     return
   elif FLAGS.print_suffixes:
     print("\n".join(sorted(formatters.keys())))
+    return
+  elif FLAGS.install_pre_commit_hook:
+    git_util.InstallPreCommitHookOrDie()
     return
 
   # Acquire an inter-process lock. This does not need to be released - cleanup

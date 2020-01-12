@@ -89,3 +89,22 @@ def GitAddOrDie(paths: Iterable[pathlib.Path]):
   except subprocess.CalledProcessError:
     print(f"ERROR: git add faled: {paths}", file=sys.stderr)
     sys.exit(1)
+
+
+def InstallPreCommitHookOrDie():
+  git_root = GetGitRootOrDie()
+
+  hooks_dir = git_root / ".git" / "hooks"
+
+  if not hooks_dir.is_dir():
+    print(f"ERROR: git hooks directory not found: {hooks_dir}", file=sys.stderr)
+    sys.exit(1)
+
+  pre_commit = hooks_dir / "pre-commit"
+  if pre_commit.is_file():
+    os.unlink(pre_commit)
+
+  with open(pre_commit, "w") as f:
+    f.write(f"set -eu\n{sys.argv[0]} --pre_commit\n")
+  os.chmod(pre_commit, 0o744)
+  print(pre_commit)
