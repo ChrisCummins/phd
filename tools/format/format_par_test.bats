@@ -19,6 +19,10 @@ setup() {
   "$BIN" --version
 }
 
+@test "dry_run" {
+  "$BIN" --dry_run "$TEST_TMPDIR"
+}
+
 @test "format Python" {
   "$BIN" "$TEST_TMPDIR/src/py/hello.py"
 }

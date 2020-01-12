@@ -70,6 +70,12 @@ app.DEFINE_boolean(
   "Print the list of filename suffixes which are formatted and return.",
 )
 app.DEFINE_boolean(
+  "dry_run",
+  False,
+  "Only print the paths of files that will be formatted, without formatting "
+  "them.",
+)
+app.DEFINE_boolean(
   "with_cache",
   True,
   'Enable the persistent caching of "last modified" timestamps for files. '
@@ -140,8 +146,12 @@ def Main(argv):
   assert fasteners.InterProcessLock(cache_dir / "LOCK")
 
   paths = path_generator.PathGenerator(".formatignore").GeneratePaths(argv[1:])
-  errors = FormatPaths(cache_dir, paths)
-  sys.exit(1 if errors else 0)
+  if FLAGS.dry_run:
+    for path in paths:
+      print(path)
+  else:
+    errors = FormatPaths(cache_dir, paths)
+    sys.exit(1 if errors else 0)
 
 
 if __name__ == "__main__":
