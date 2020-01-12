@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This module defines a formatter for bazel files."""
+import os
+import sys
+
+from labm8.py import bazelutil
 from tools.format import formatter
 
 
@@ -20,7 +24,17 @@ class FormatBuild(formatter.BatchedFormatter):
 
   def __init__(self, *args, **kwargs):
     super(FormatBuild, self).__init__(*args, **kwargs)
-    self.buildifier = formatter.WhichOrDie("buildifier")
+
+    # Unpack buildifier.
+    self.buildifier = self.cache_path / "buildifier"
+    if not self.buildifier.is_file():
+      arch = "darwin" if sys.platform == "darwin" else "linux"
+      buildifier = bazelutil.DataString(
+        f"com_github_bazelbuild_buildtools/buildifier/{arch}_amd64_stripped/buildifier"
+      )
+      with open(self.buildifier, "wb") as f:
+        f.write(buildifier)
+        os.chmod(self.buildifier, 0o744)
 
   def RunMany(self, paths):
     return formatter.ExecOrError([self.buildifier] + paths)

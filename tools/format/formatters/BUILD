@@ -17,8 +17,12 @@
 py_library(
     name = "bazel",
     srcs = ["bazel.py"],
+    data = [
+        "@com_github_bazelbuild_buildtools//buildifier",
+    ],
     visibility = ["//tools/format/formatters:__subpackages__"],
     deps = [
+        "//labm8/py:bazelutil",
         "//tools/format:formatter",
     ],
 )
