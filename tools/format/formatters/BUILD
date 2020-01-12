@@ -26,8 +26,18 @@ py_library(
 py_library(
     name = "cxx",
     srcs = ["cxx.py"],
+    data = select({
+        "//:darwin": [
+            "@llvm_mac//:clang-format",
+        ],
+        "//conditions:default": [
+            "@llvm_linux//:clang-format",
+        ],
+    }),
     visibility = ["//tools/format/formatters:__subpackages__"],
     deps = [
+        "//labm8/py:bazelutil",
+        "//labm8/py:system",
         "//tools/format:formatter",
     ],
 )

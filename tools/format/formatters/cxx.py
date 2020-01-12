@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This module defines a formatter for C/C++ sources."""
+import os
+
+from labm8.py import bazelutil
+from labm8.py import system
 from tools.format import formatter
 
 
@@ -21,6 +25,17 @@ class FormatCxx(formatter.BatchedFormatter):
   def __init__(self, *args, **kwargs):
     super(FormatCxx, self).__init__(*args, **kwargs)
     self.clang_format = formatter.WhichOrDie("clang-format")
+
+    # Unpack clang-format.
+    self.clang_format = self.cache_path / "clang-format"
+    if not self.clang_format.is_file():
+      if system.is_mac():
+        clang_format = bazelutil.DataString("llvm_mac/bin/clang-format")
+      else:
+        clang_format = bazelutil.DataString("llvm_linux/bin/clang-format")
+      with open(self.clang_format, "wb") as f:
+        f.write(clang_format)
+        os.chmod(self.clang_format, 0o744)
 
   def RunMany(self, paths):
     return formatter.ExecOrError(

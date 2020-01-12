@@ -1,6 +1,16 @@
 # Tests for formatters.
 
 py_test(
+    name = "cxx_test",
+    srcs = ["cxx_test.py"],
+    deps = [
+        ":testing",
+        "//labm8/py:test",
+        "//tools/format/formatters:cxx",
+    ],
+)
+
+py_test(
     name = "sql_test",
     srcs = ["sql_test.py"],
     deps = [
