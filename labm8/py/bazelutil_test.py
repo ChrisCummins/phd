@@ -62,7 +62,7 @@ def test_DataString_missing_data_dep():
 def test_DataString_contents():
   """Test that DataString is correct for a known data file."""
   assert (
-    bazelutil.DataString("phd/labm8/py/test_data/hello_world")
+    bazelutil.DataString("phd/labm8/py/test_data/hello_world").decode("utf-8")
     == "Hello, world!\n"
   )
 
