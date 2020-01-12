@@ -10,7 +10,10 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null || \
   { echo>&2 "ERROR: cannot find $f"; exit 1; }; f=
 --- begin app init ---
 
+set -eu
+
 PREFIX=$HOME/.local
 
 mkdir -pv "$PREFIX/bin"
+rm -vf "$PREFIX/bin/format"
 cp -v "$(DataPath phd/tools/format/format.par)" "$PREFIX/bin/format"
