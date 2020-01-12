@@ -27,6 +27,10 @@ Features:
     formatting. The syntax of ignore files is similar to `.gitignore`, e.g. a
     list of patterns to match, including (recursive) glob expansion, and
     patterns beginning with `!` are un-ignored.
+  * A `--pre_commit` mode which formats files that have been staged for commit,
+    and stages changes. The commit is rejected if a partially-staged file is
+    modified. Enforce the use of pre-commit mode (and add a "Signed off" footer
+    to commits) by running `--install_pre_commit_hook`.
   * Persistent caching of "last modified" timestamps for files to minimize the
     amount of work done.
   * A process lock which prevents races when multiple formatters are launched
