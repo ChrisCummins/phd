@@ -40,15 +40,6 @@ Download a binary from the
 [release page](https://github.com/ChrisCummins/format/releases) and put it in
 your `$PATH`.
 
-Alternatively you can build and install the formatter from source in this
-repository using:
-
-```sh
-$ git clone https://github.com/ChrisCummins/format.git
-$ cd format
-$ bazel run -c opt //tools/format:install
-```
-
 Requires Python >= 3.6 and sqlite. Syntax-specific formatters may have
 additional dependencies:
 
@@ -96,6 +87,36 @@ contents passed formatting checks.
 This program uses a filesystem cache to store various attributes such as a
 database of file modified times. See `format --print_cache_path` to print the
 path of the cache.
+
+## Development
+
+Development takes place in the [phd](https://github.com/ChrisCummins/phd)
+repository. Grab a copy from here:
+
+```sh
+$ git clone https://github.com/ChrisCummins/phd.git format
+$ cd format
+```
+
+Run the test suite using:
+
+```sh
+$ bazel test //tools/format/...
+```
+
+Build and install the formatter binary from source using:
+
+```sh
+$ bazel run -c opt //tools/format:install
+```
+
+Update the [format](https://github.com/ChrisCummins/format) repository using:
+
+```sh
+$ bazel run //tools/format:export
+```
+
+Then manually create a new release and attach binary files.
 
 ## License
 
