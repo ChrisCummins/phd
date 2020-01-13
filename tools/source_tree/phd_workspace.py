@@ -250,6 +250,14 @@ class PhdWorkspace(bazelutil.Workspace):
     # The timestamp for the export.
     timestamp = datetime.datetime.utcnow()
 
+    # Check now that all of the auxiliary files exist.
+    for relpath in extra_files:
+      if not (self.workspace_root / relpath).is_file():
+        raise FileNotFoundError(self.workspace_root / relpath)
+    for relpath in file_move_mapping:
+      if not (self.workspace_root / relpath).is_file():
+        raise FileNotFoundError(self.workspace_root / relpath)
+
     # Export the git history.
     app.Log(
       1, "Exporting git history for %s files", humanize.Commas(len(src_files))
