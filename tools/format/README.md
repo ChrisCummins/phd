@@ -48,7 +48,7 @@ additional dependencies:
 
 ## Usage
 
-Format files in place using:
+Format files in-place using:
 
 ```sh
 $ format <path ...>
