@@ -40,9 +40,6 @@
 [submodule "third_party/visioncpp"]
 	path = third_party/visioncpp
 	url = https://github.com/codeplaysoftware/visioncpp.git
-[submodule "util/gh-archiver"]
-	path = util/gh-archiver
-	url = https://github.com/ChrisCummins/gh-archiver.git
 [submodule "util/srtime"]
 	path = util/srtime
 	url = https://github.com/ChrisCummins/srtime.git
