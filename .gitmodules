@@ -10,12 +10,6 @@
 [submodule "docs/2017_09_pact"]
 	path = docs/2017_09_pact
 	url = https://github.com/ChrisCummins/paper-end2end-dl
-[submodule "experimental/eevee"]
-	path = experimental/eevee
-	url = https://github.com/ChrisCummins/eevee.git
-[submodule "experimental/euclid"]
-	path = experimental/euclid
-	url = https://github.com/ChrisCummins/euclid.git
 [submodule "http/cgo.org/cgo2018"]
 	path = http/cgo.org/cgo2018
 	url = https://github.com/ChrisCummins/cgo2018.git
