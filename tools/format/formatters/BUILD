@@ -104,6 +104,24 @@ py_library(
 )
 
 py_library(
+    name = "shell",
+    srcs = ["shell.py"],
+    data = select({
+        "//:darwin": [
+            "@shfmt_mac//file",
+        ],
+        "//conditions:default": [
+            "@shfmt_linux//file",
+        ],
+    }),
+    visibility = ["//tools/format/formatters:__subpackages__"],
+    deps = [
+        "//labm8/py:bazelutil",
+        "//tools/format:formatter",
+    ],
+)
+
+py_library(
     name = "sql",
     srcs = ["sql.py"],
     visibility = ["//tools/format/formatters:__subpackages__"],
@@ -125,6 +143,7 @@ py_library(
         ":javascript",
         ":json",
         ":python",
+        ":shell",
         ":sql",
         ":text",
         "//labm8/py:app",

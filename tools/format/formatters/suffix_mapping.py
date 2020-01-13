@@ -20,6 +20,7 @@ from tools.format.formatters import java
 from tools.format.formatters import javascript
 from tools.format.formatters import json
 from tools.format.formatters import python
+from tools.format.formatters import shell
 from tools.format.formatters import sql
 from tools.format.formatters import text
 
@@ -48,6 +49,8 @@ mapping = {
   ".py": python.FormatPython,
   ".sql": sql.FormatSql,
   ".txt": text.FormatText,
+  ".sh": shell.FormatShell,
+  ".bats": shell.FormatShell,
   "BUILD": bazel.FormatBuild,
   "WORKSPACE": bazel.FormatBuild,
 }
