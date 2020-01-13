@@ -37,6 +37,6 @@ def FormatText(formatter_class, text: str, filename: str = "text") -> str:
           errors.append(error)
 
     if errors:
-      raise ValueError(errors)
+      raise ValueError("\n".join(errors))
 
     return fs.Read(path)
