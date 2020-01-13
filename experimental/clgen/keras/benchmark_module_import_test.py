@@ -39,7 +39,7 @@ def test_Tensorflow_import(benchmark):
   """Benchmark tensorflow module import."""
 
   def Benchmark():
-    import tensorflow as tf
+    from third_party.py.tensorflow import tf
 
     a = tf.Variable(1)
     del a

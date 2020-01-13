@@ -4,6 +4,14 @@
 # (i.e. //third_party/py/tensorflow), instead of requirement("tensorflow").
 # This is because the pip package for TensorFlow with CUDA support has a
 # different name.
+#
+# Use:
+#
+#     from third_party.py.tensorflow import tf
+#
+# to import Tensorflow rather than "import tensorflow as tf" due to a bug in
+# packing Tensorflow as a pip dependency for bazel.
+# See github.com/bazelbuild/rules_python/issues/71
 
 load("@requirements//:requirements.bzl", "requirement")
 

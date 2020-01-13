@@ -4,7 +4,7 @@ Usage: python ./overview.py 2>/dev/null
 """
 import os
 
-import tensorflow as tf
+from third_party.py.tensorflow import tf
 
 
 def main():

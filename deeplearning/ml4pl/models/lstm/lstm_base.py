@@ -22,8 +22,6 @@ from typing import Iterable
 from typing import List
 from typing import Optional
 
-import tensorflow as tf
-
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch as batches
@@ -34,6 +32,7 @@ from deeplearning.ml4pl.seq import graph2seq
 from labm8.py import app
 from labm8.py import humanize
 from labm8.py import progress
+from third_party.py.tensorflow import tf
 
 
 FLAGS = app.FLAGS

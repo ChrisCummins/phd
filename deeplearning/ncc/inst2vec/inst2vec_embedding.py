@@ -31,13 +31,13 @@ import sys
 from datetime import datetime
 
 import numpy as np
-import tensorflow as tf
 from tensorflow.contrib.tensorboard.plugins import projector
 from tensorflow.python.client import timeline
 
 from deeplearning.ncc.inst2vec import inst2vec_evaluate as i2v_eval
 from deeplearning.ncc.inst2vec import inst2vec_utils as i2v_utils
 from labm8.py import app
+from third_party.py.tensorflow import tf
 
 FLAGS = app.FLAGS
 

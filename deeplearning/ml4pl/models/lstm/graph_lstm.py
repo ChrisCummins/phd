@@ -21,7 +21,6 @@ from typing import NamedTuple
 from typing import Optional
 
 import numpy as np
-import tensorflow as tf
 
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.ir import ir_database
@@ -33,6 +32,7 @@ from deeplearning.ml4pl.seq import graph2seq
 from deeplearning.ml4pl.seq import ir2seq
 from labm8.py import app
 from labm8.py import progress
+from third_party.py.tensorflow import tf
 
 
 FLAGS = app.FLAGS

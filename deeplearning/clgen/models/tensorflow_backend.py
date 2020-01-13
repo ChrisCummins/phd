@@ -87,7 +87,7 @@ class TensorFlowBackend(backends.BackendBase):
 
     # Create the summary writer, shared between Train() and
     # _EndOfEpochTestSample().
-    import tensorflow as tf
+    from third_party.py.tensorflow import tf
 
     tensorboard_dir = f"{self.cache.path}/tensorboard"
     app.Log(
@@ -124,8 +124,8 @@ class TensorFlowBackend(backends.BackendBase):
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
     # Deferred importing of TensorFlow.
-    import tensorflow as tf
-    import tensorflow.contrib.seq2seq as seq2seq
+    from third_party.py.tensorflow import tf
+    import third_party.py.tensorflow.tf.contrib.seq2seq as seq2seq
     from tensorflow.contrib import rnn
     from deeplearning.clgen.models import helper
 
@@ -483,7 +483,7 @@ class TensorFlowBackend(backends.BackendBase):
     self, corpus, sampler: samplers.Sampler, step: int, epoch_num: int
   ):
     """Run sampler"""
-    import tensorflow as tf
+    from third_party.py.tensorflow import tf
 
     atomizer = corpus.atomizer
     sampler.Specialize(atomizer)
@@ -545,7 +545,7 @@ class TensorFlowBackend(backends.BackendBase):
     self, sampler: samplers.Sampler, seed: typing.Optional[int] = None
   ) -> None:
     """Initialize model for sampling."""
-    import tensorflow as tf
+    from third_party.py.tensorflow import tf
 
     # Delete any previous sampling session.
     if self.inference_tf:
@@ -622,7 +622,7 @@ class TensorFlowBackend(backends.BackendBase):
     return generated
 
   def RandomizeSampleState(self) -> None:
-    import tensorflow as tf
+    from third_party.py.tensorflow import tf
 
     self.inference_state = [
       tf.nn.rnn_cell.LSTMStateTuple(

@@ -49,13 +49,3 @@ genrule(
 """,
     stamp = 1,
 )
-
-py_test(
-    name = "tensorflow_test",
-    srcs = ["tensorflow_test.py"],
-    deps = [
-        "//labm8/py:app",
-        "//labm8/py:test",
-        "//third_party/py/tensorflow",
-    ],
-)

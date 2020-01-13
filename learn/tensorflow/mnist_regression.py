@@ -6,11 +6,11 @@ training hyperparameters.
 import typing
 
 import numpy as np
-import tensorflow as tf
 from scipy.optimize import minimize
 from tensorflow.examples.tutorials.mnist import input_data
 
 from labm8.py import app
+from third_party.py.tensorflow import tf
 
 FLAGS = app.FLAGS
 app.DEFINE_integer(

@@ -309,7 +309,7 @@ def evaluate(
     sequences, maxlen = encode_srcs(data_folder, df)
 
     # Load embeddings
-    import tensorflow as tf  # for embeddings lookup
+    from third_party.py.tensorflow import tf  # for embeddings lookup
 
     embedding_matrix_normalized = tf.nn.l2_normalize(embeddings, axis=1)
     vocabulary_size, embedding_dimension = embedding_matrix_normalized.shape

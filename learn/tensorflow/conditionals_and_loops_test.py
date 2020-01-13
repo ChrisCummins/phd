@@ -1,10 +1,9 @@
 """Learning conditional and loop patterns for TensorFlow."""
 import typing
 
-import tensorflow as tf
-
 from labm8.py import app
 from labm8.py import test
+from third_party.py.tensorflow import tf
 
 FLAGS = app.FLAGS
 

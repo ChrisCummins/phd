@@ -21,7 +21,6 @@ import typing
 import networkx as nx
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 from graph_nets.demos import models as gn_models
 
 from compilers.llvm import opt_util
@@ -32,6 +31,7 @@ from deeplearning.ncc import inst2vec_pb2
 from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
 from labm8.py import app
+from third_party.py.tensorflow import tf
 
 FLAGS = app.FLAGS
 

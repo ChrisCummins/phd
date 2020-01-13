@@ -26,7 +26,6 @@ import pickle
 import re
 
 import numpy as np
-import tensorflow as tf
 import umap
 from bokeh.models import CategoricalColorMapper
 from bokeh.models import ColumnDataSource
@@ -40,6 +39,7 @@ from deeplearning.ncc import rgx_utils as rgx
 from deeplearning.ncc.inst2vec import inst2vec_analogygen as analogygen
 from deeplearning.ncc.inst2vec import inst2vec_utils as i2v_utils
 from labm8.py import app
+from third_party.py.tensorflow import tf
 
 FLAGS = app.FLAGS
 
