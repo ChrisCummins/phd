@@ -1,4 +1,4 @@
-# Copyright 2017 Chris Cummins <chrisc.101@gmail.com>
+# Copyright 2017-2020 Chris Cummins <chrisc.101@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -17,25 +17,16 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-#
 
-from setuptools import setup
+source labm8/sh/test.sh
 
+BIN="$(DataPath phd/util/gh_archiver/gh_archiver.par)"
 
-def read_requirements(path='requirements.txt'):
-  with open(path) as infile:
-    return [x.strip() for x in infile.readlines() if x.strip()]
+@test "run help" {
+  "$BIN" --help | grep gh_archiver
+  "$BIN" --helpfull | grep gh_archiver
+}
 
-
-setup(
-    name='gh-archiver',
-    version='0.0.6.dev0',
-    description="Clone and update a GitHub user's repos locally.",
-    url='https://github.com/ChrisCummins/gh-archiver',
-    author='Chris Cummins',
-    author_email='chrisc.101@gmail.com',
-    license='MIT License',
-    packages=['gh_archiver'],
-    entry_points={'console_scripts': ['gh-archiver=gh_archiver:main']},
-    install_requires=read_requirements('requirements.txt'),
-    zip_safe=True)
+@test "run version" {
+  "$BIN" --version
+}

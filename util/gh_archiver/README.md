@@ -1,7 +1,5 @@
 <h1>
   gh-archiver
-  <a href="https://badge.fury.io/py/gh-archiver">
-    <img src="https://img.shields.io/pypi/v/gh-archiver.svg?colorB=green&style=flat">
   </a> <a href="https://tldrlegal.com/license/mit-license" target="_blank">
     <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat">
   </a>
@@ -30,20 +28,23 @@ mirroring chriscummins.cc ... 201
 ## Installation
 
 ```sh
-$ pip install gh-archiver
+$ bazel run //util/gh_archiver:install
 ```
 
 Requires Python >= 3.6.
 
 **GitHub credentials**
 
-Create a credentials file `~/.githubrc` with your GitHub username and password:
+Create a credentials file `~/.githubrc` with your GitHub username and a
+[personal access token](https://github.com/settings/tokens):
 
 ```sh
 $ cat <<EOF > ~/.githubrc
 [User]
 Username = YourUsername
-Password = password1234
+
+[Tokens]
+gh_archiver = YourAccessToken
 EOF
 $ chmod 0600 ~/.githubrc
 ```

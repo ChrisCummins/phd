@@ -9,7 +9,7 @@ export JOB_TIMEOUT=1800  # 30 minutes
 export LMK="/usr/local/bin/lmk -e"
 export LMK_TO="chrisc.101@gmail.com"
 
-export GH_ARCHIVER="/usr/local/bin/gh-archiver"
+export GH_ARCHIVER="$HOME/.local/bin/gh-archiver"
 export GH_USERNAME="ChrisCummins"
 export GOGS_CLONE_DIR="$HOME/git/cec"
 
