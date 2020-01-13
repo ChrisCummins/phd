@@ -19,7 +19,7 @@ from tools.format.formatters.tests import testing
 FLAGS = test.FLAGS
 
 
-def test_ClangPreprocess_small_cxx_program():
+def test_small_cxx_program():
   """Test pre-processing a small C++ program."""
   assert (
     testing.FormatText(
