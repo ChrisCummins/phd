@@ -71,13 +71,19 @@ def GetStagedPathsOrDie(
 
   for relpath in staged_relpaths:
     paths = list(path_generator.GeneratePaths([relpath]))
-    assert len(paths) <= 1
+    # A staged path can resolve to multiple real paths if it is a submodule
+    # that is being altered. Ignore those.
+    if len(paths) > 1:
+      continue
     if paths:
       staged_paths.append(paths[0])
 
   for relpath in partially_staged_relpaths:
     paths = list(path_generator.GeneratePaths([relpath]))
-    assert len(paths) <= 1
+    # A staged path can resolve to multiple real paths if it is a submodule
+    # that is being altered. Ignore those.
+    if len(paths) > 1:
+      continue
     if paths:
       partially_staged_paths.append(paths[0])
 
