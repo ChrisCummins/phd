@@ -61,7 +61,7 @@ $ cat <<EOF > ~/.gogsrc
 Address = http://example.com:3000
 
 [User]
-Token = 39bbdb529fed7fc4f373410518745446d9901450
+Token = YourToken
 EOF
 $ chmod 0600 ~/.gogsrc
 ```
