@@ -35,15 +35,6 @@ app.DEFINE_boolean(
 Base = declarative.declarative_base()
 
 
-class Meta(Base):
-  """The meta table."""
-
-  __tablename__ = "meta"
-
-  key: str = sql.Column(sql.String(512), primary_key=True)
-  value: str = sql.Column(sql.String(1024), nullable=False)
-
-
 class GitHubRepository(Base):
   """A GitHub repository record."""
 
