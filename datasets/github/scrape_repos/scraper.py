@@ -215,7 +215,7 @@ def GetRepositoryMetadata(
     A GitHubRepoMetadata instance.
   """
   meta = scrape_repos_pb2.GitHubRepoMetadata()
-  meta.scraped_utc_epoch_ms = labdate.MillisecondsTimestamp(
+  meta.scraped_unix_epoch_ms = labdate.MillisecondsTimestamp(
     labdate.GetUtcMillisecondsNow()
   )
   meta.owner = repo.owner.login

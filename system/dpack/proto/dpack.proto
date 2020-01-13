@@ -9,7 +9,7 @@ message DataPackage {
   // A list of one or more files contained in the data package.
   repeated DataPackageFile file = 2;
   // The date of package creation, expressed in milliseconds since the epoch.
-  optional int64 utc_epoch_ms_packaged = 3;
+  optional int64 unix_epoch_ms_packaged = 3;
   // The hashing function used for 'checksum' field. Must be set if 'checksum'
   // field is set.
   optional ChecksumHash checksum_hash = 4;

@@ -225,7 +225,7 @@ def test_CreatePackageManifest_empty_directory(tempdir: pathlib.Path):
   """Test the manifest of an empty directory."""
   m = dpack.CreatePackageManifest(tempdir, [])
   assert m.comment == ""
-  assert m.utc_epoch_ms_packaged
+  assert m.unix_epoch_ms_packaged
   assert not len(m.file)
 
 

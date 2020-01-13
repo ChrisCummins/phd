@@ -118,9 +118,9 @@ class LockFile:
     """The date that the lock was acquired. Value is None if lock is unclaimed.
     """
     lockfile = self.read(self.path)
-    if lockfile.date_acquired_utc_epoch_ms:
+    if lockfile.date_acquired_unix_epoch_ms:
       return labdate.DatetimeFromMillisecondsTimestamp(
-        lockfile.date_acquired_utc_epoch_ms,
+        lockfile.date_acquired_unix_epoch_ms,
       )
     else:
       return None
@@ -194,7 +194,7 @@ class LockFile:
       lockfile = lockfile_pb2.LockFile(
         owner_process_id=os.getpid() if pid is None else pid,
         owner_process_argv=" ".join(sys.argv),
-        date_acquired_utc_epoch_ms=labdate.MillisecondsTimestamp(
+        date_acquired_unix_epoch_ms=labdate.MillisecondsTimestamp(
           labdate.GetUtcMillisecondsNow(),
         ),
         owner_hostname=system.HOSTNAME,

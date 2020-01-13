@@ -76,7 +76,7 @@ class GitHubRepository(Base):
     proto: scrape_repos_pb2.GitHubRepoMetadata,
   ) -> typing.Dict[str, typing.Any]:
     date_scraped = labdate.DatetimeFromMillisecondsTimestamp(
-      proto.scraped_utc_epoch_ms
+      proto.scraped_unix_epoch_ms
     )
     return {
       "clone_from_url": proto.clone_from_url,

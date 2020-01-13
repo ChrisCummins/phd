@@ -7,6 +7,6 @@ file {
   comment: "Keynote slides."
   relative_path: "ML for compilers.key"
 }
-utc_epoch_ms_packaged: 1532327334496
+unix_epoch_ms_packaged: 1532327334496
 checksum_hash: SHA256
 checksum: "c2507624a2960c104147465b9eaaa2cd0f345148d00579b23804d9777e7e66ec"

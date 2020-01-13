@@ -32,7 +32,7 @@ def dummy_lockfile_proto() -> lockfile_pb2.LockFile:
   return lockfile_pb2.LockFile(
     owner_process_id=100,
     owner_process_argv="./foo --bar",
-    date_acquired_utc_epoch_ms=1529403585000,
+    date_acquired_unix_epoch_ms=1529403585000,
     owner_hostname="foo",
     owner_user="bar",
   )

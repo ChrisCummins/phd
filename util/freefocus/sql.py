@@ -61,11 +61,11 @@ class Person(Base):
       cls,
       public_id=proto.id,
       created_at=labdate.DatetimeFromMillisecondsTimestamp(
-        proto.created_at_utc_epoch_ms
+        proto.created_at_unix_epoch_ms
       ),
       modified_at=labdate.DatetimeFromMillisecondsTimestamp(
-        proto.created_at_utc_epoch_ms
-        or proto.most_recently_modified_at_utc_epoch_ms
+        proto.created_at_unix_epoch_ms
+        or proto.most_recently_modified_at_unix_epoch_ms
       ),
     )
     for name in proto.name:
@@ -88,8 +88,8 @@ class Person(Base):
         )
         for workspace_id in workspace_groups
       ],
-      created_at_utc_epoch_ms=labdate.MillisecondsTimestamp(self.created_at),
-      most_recently_modified_at_utc_epoch_ms=labdate.MillisecondsTimestamp(
+      created_at_unix_epoch_ms=labdate.MillisecondsTimestamp(self.created_at),
+      most_recently_modified_at_unix_epoch_ms=labdate.MillisecondsTimestamp(
         self.created_at
       ),
     )
