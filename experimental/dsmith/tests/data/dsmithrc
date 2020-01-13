@@ -1,8 +1,0 @@
-[database]
-engine = sqlite
-dir = ~/.cache/dsmith/test-dbs
-buffer_size = 500
-
-[github]
-username =
-password =
