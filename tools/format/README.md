@@ -1,11 +1,11 @@
 # Format: Automated Code Formatter
 
 <!-- download -->
-<a href="https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)">
+<a href="https://github.com/ChrisCummins/format/releases">
   <img src="https://img.shields.io/github/v/release/ChrisCummins/format.svg">
 </a>
 <!-- Travis CI -->
-<a href="https://github.com/ChrisCummins/format">
+<a href="https://travis-ci.org/ChrisCummins/format">
   <img src="https://img.shields.io/travis/ChrisCummins/format/master.svg">
 </a>
 <!-- license -->
