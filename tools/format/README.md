@@ -1,5 +1,18 @@
 # Format: Automated Code Formatter
 
+<!-- download -->
+<a href="https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)">
+  <img src="https://img.shields.io/github/v/release/ChrisCummins/format.svg">
+</a>
+<!-- Travis CI -->
+<a href="https://github.com/ChrisCummins/format">
+  <img src="https://img.shields.io/travis/ChrisCummins/format/master.svg">
+</a>
+<!-- license -->
+<a href="https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)">
+  <img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg?color=brightgreen">
+</a>
+
 This projects implements an opinionated, non-configurable enforcer of code
 style. The aim is to take control of source formatting away from the developer,
 reducing cognitive load and allowing you to focus on what matters.
