@@ -14,8 +14,6 @@ linux: go get github.com/uber/prototool/cmd/prototool
 macos: brew install prototool
 # For linting HTML+CSS+JS files.
 all: npm install -g js-beautify
-# For linting JSON files.
-all: npm install -g jsonlint
 # For linting bash scripts.
 linux: wget https://github.com/mvdan/sh/releases/download/v2.6.4/shfmt_v2.6.4_linux_386 -O $HOME/.local/bin/shfmt && chmod +x $HOME/.local/bin/shfmt
 macos: wget https://github.com/mvdan/sh/releases/download/v2.6.4/shfmt_v2.6.4_darwin_386 -O $HOME/.local/bin/shfmt && chmod +x $HOME/.local/bin/shfmt

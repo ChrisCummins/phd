@@ -11,16 +11,31 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This module defines a formatter for JSON files."""
-from tools.format import formatter
-import json
+"""Unit tests for //tools/format/formatters:json."""
+from labm8.py import test
+from tools.format.formatters import json
+from tools.format.formatters.tests import testing
 
-class FormatJson(formatter.Formatter):
-  """Format JSON files."""
+FLAGS = test.FLAGS
 
-  def RunOne(self, path):
-    with open(path, "r+") as f:
-      data = json.load(f)
-      f.seek(0)
-      json.dump(data, f, indent=2, sort_keys=True)
-      f.write('\n')
+
+def test_small_json_array():
+  formatted = testing.FormatText(json.FormatJson,
+    '["foo", {"bar":["baz", null, 1.0, 2]}]')
+  print("FORMATTED", formatted)
+  assert formatted == """\
+[
+  "foo",
+  {
+    "bar": [
+      "baz",
+      null,
+      1.0,
+      2
+    ]
+  }
+]
+"""
+
+if __name__ == "__main__":
+  test.Main()

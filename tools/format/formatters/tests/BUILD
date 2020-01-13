@@ -31,6 +31,16 @@ py_test(
 )
 
 py_test(
+    name = "json_test",
+    srcs = ["json_test.py"],
+    deps = [
+        ":testing",
+        "//labm8/py:test",
+        "//tools/format/formatters:json",
+    ],
+)
+
+py_test(
     name = "sql_test",
     srcs = ["sql_test.py"],
     deps = [
