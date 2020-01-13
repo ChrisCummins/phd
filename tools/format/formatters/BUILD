@@ -49,8 +49,17 @@ py_library(
 py_library(
     name = "go",
     srcs = ["go.py"],
+    data = select({
+        "//:darwin": [
+            "@go_mac//:gofmt",
+        ],
+        "//conditions:default": [
+            "@go_linux//:gofmt",
+        ],
+    }),
     visibility = ["//tools/format/formatters:__subpackages__"],
     deps = [
+        "//labm8/py:bazelutil",
         "//tools/format:formatter",
     ],
 )

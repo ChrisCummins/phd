@@ -21,6 +21,16 @@ py_test(
 )
 
 py_test(
+    name = "go_test",
+    srcs = ["go_test.py"],
+    deps = [
+        ":testing",
+        "//labm8/py:test",
+        "//tools/format/formatters:go",
+    ],
+)
+
+py_test(
     name = "sql_test",
     srcs = ["sql_test.py"],
     deps = [

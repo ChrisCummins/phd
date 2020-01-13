@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This module defines a formatter for go sources."""
+import os
+import sys
+
+from labm8.py import bazelutil
 from tools.format import formatter
 
 
@@ -24,8 +28,17 @@ class FormatGo(formatter.Formatter):
   """
 
   def __init__(self, *args, **kwargs):
-    super(FormatJavaScript, self).__init__(*args, **kwargs)
-    self.go = formatter.WhichOrDie("go")
+    super(FormatGo, self).__init__(*args, **kwargs)
+    self.gofmt = formatter.WhichOrDie("gofmt")
+
+    # Unpack gofmt.
+    self.gofmt = self.cache_path / "gofmt"
+    if not self.gofmt.is_file():
+      arch = "mac" if sys.platform == "darwin" else "linux"
+      gofmt = bazelutil.DataString(f"go_{arch}/bin/gofmt")
+      with open(self.gofmt, "wb") as f:
+        f.write(gofmt)
+        os.chmod(self.gofmt, 0o744)
 
   def RunOne(self, path):
-    return formatter.ExecOrError([GO, "fmt", path])
+    return formatter.ExecOrError([self.gofmt, "-w", path])
