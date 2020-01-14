@@ -125,14 +125,12 @@ class TensorFlowBackend(backends.BackendBase):
 
     # Deferred importing of TensorFlow.
     from third_party.py.tensorflow import tf
-    import third_party.py.tensorflow.tf.contrib.seq2seq as seq2seq
-    from tensorflow.contrib import rnn
     from deeplearning.clgen.models import helper
 
     cell_type = {
-      model_pb2.NetworkArchitecture.LSTM: rnn.LSTMBlockCell,
-      model_pb2.NetworkArchitecture.GRU: rnn.GRUBlockCellV2,
-      model_pb2.NetworkArchitecture.RNN: rnn.BasicRNNCell,
+      model_pb2.NetworkArchitecture.LSTM: tf.contrib.rnn.LSTMBlockCell,
+      model_pb2.NetworkArchitecture.GRU: tf.contrib.rnn.GRUBlockCellV2,
+      model_pb2.NetworkArchitecture.RNN: tf.contrib.rnn.BasicRNNCell,
     }.get(self.config.architecture.neuron_type, None)
     if cell_type is None:
       raise NotImplementedError
@@ -151,7 +149,9 @@ class TensorFlowBackend(backends.BackendBase):
     cells_lst = []
     for _ in range(self.config.architecture.num_layers):
       cells_lst.append(cell_type(self.config.architecture.neurons_per_layer))
-    self.cell = cell = rnn.MultiRNNCell(cells_lst, state_is_tuple=True)
+    self.cell = cell = tf.contrib.rnn.MultiRNNCell(
+      cells_lst, state_is_tuple=True
+    )
 
     self.input_data = tf.compat.v1.placeholder(
       tf.int32, [batch_size, sequence_length]
@@ -181,17 +181,17 @@ class TensorFlowBackend(backends.BackendBase):
         inputs, self.lengths, self.seed_length, embedding, self.temperature
       )
     else:
-      decode_helper = seq2seq.TrainingHelper(
+      decode_helper = tf.contrib.seq2seq.TrainingHelper(
         inputs, self.lengths, time_major=False
       )
 
-    decoder = seq2seq.BasicDecoder(
+    decoder = tf.contrib.seq2seq.BasicDecoder(
       cell,
       decode_helper,
       self.initial_state,
       tf.compat.v1.layers.Dense(vocab_size),
     )
-    outputs, self.final_state, _ = seq2seq.dynamic_decode(
+    outputs, self.final_state, _ = tf.contrib.seq2seq.dynamic_decode(
       decoder,
       output_time_major=False,
       impute_finished=True,
@@ -203,7 +203,7 @@ class TensorFlowBackend(backends.BackendBase):
     self.logits = outputs.rnn_output
 
     sequence_weigths = tf.ones([batch_size, sequence_length])
-    self.loss = seq2seq.sequence_loss(
+    self.loss = tf.contrib.seq2seq.sequence_loss(
       self.logits, self.targets, sequence_weigths
     )
 
