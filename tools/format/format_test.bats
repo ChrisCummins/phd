@@ -1,6 +1,6 @@
 source labm8/sh/test.sh
 
-BIN="$(DataPath phd/tools/format/format.par)"
+BIN="$(DataPath phd/tools/format/format)"
 
 setup() {
   mkdir -p "$TEST_TMPDIR/src/java" "$TEST_TMPDIR/src/py"

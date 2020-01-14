@@ -16,9 +16,9 @@
 
 load("//tools/bzl:exports.bzl", "exports_repo")
 load("@com_github_chriscummins_rules_bats//:bats.bzl", "bats_test")
-load("@subpar//:subpar.bzl", "par_binary")
 
 exports_files([
+    "install.sh",
     "LICENSE",
     "README.md",
     "CNAME",
@@ -26,6 +26,9 @@ exports_files([
 
 exports_repo(
     name = "export",
+    extra_files = [
+        "tools/format/install.sh",
+    ],
     github_repo = "format",
     move_file_mapping = {
         "tools/format/README.md": "README.md",
@@ -57,7 +60,7 @@ py_library(
     ],
 )
 
-par_binary(
+py_binary(
     name = "format",
     srcs = ["format.py"],
     deps = [
@@ -73,10 +76,10 @@ par_binary(
 )
 
 bats_test(
-    name = "format_par_test",
-    srcs = ["format_par_test.bats"],
+    name = "format_test",
+    srcs = ["format_test.bats"],
     data = [
-        ":format.par",
+        ":format",
         "//labm8/sh:test",
     ],
 )
@@ -87,15 +90,6 @@ py_library(
     deps = [
         "//:build_info",
         "//labm8/py:app",
-    ],
-)
-
-sh_binary(
-    name = "install",
-    srcs = ["install.sh"],
-    data = [":format.par"],
-    deps = [
-        "//labm8/sh:app",
     ],
 )
 

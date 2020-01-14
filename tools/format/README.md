@@ -36,11 +36,11 @@ reducing cognitive load and allowing you to focus on what matters.
 
 ## Install
 
-Download a binary from the
-[release page](https://github.com/ChrisCummins/format/releases) and put it in
+Download an archive from the
+[release page](https://github.com/ChrisCummins/format/releases) and extract it in
 your `$PATH`.
 
-Requires Python >= 3.6 and sqlite. Syntax-specific formatters may have
+Requires Python >= 3.7 and sqlite. Syntax-specific formatters may have
 additional dependencies:
 
 * **Java** files require a host java.
@@ -107,7 +107,7 @@ $ bazel test //tools/format/...
 Build and install the formatter binary from source using:
 
 ```sh
-$ bazel run -c opt //tools/format:install
+$ ./tools/format/install.sh
 ```
 
 Update the [format](https://github.com/ChrisCummins/format) repository using:
