@@ -25,6 +25,10 @@ coverage==4.5.1  # Needed by pytest-cov.
 cpplint==1.3.0
 cycler==0.10.0
 dash==0.39.0
+dash-core-components==0.44.0
+dash-html-components==0.14.0
+dash-renderer==0.20.0
+dash-table==3.6.0
 decorator==4.3.0
 detect-secrets==0.12.4
 # The graph_nets package depends on a specific version of dm-sonnet. See:
