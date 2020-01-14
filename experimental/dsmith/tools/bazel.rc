@@ -1,3 +1,0 @@
-test --verbose_failures --test_output=errors --test_verbose_timeout_warnings
-test --python_top=//:python3.6
-run --python_top=//:python3.6

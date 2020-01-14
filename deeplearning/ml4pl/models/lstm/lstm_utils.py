@@ -14,9 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utilities for LSTM models."""
-import tensorflow as tf
-
 from labm8.py import app
+from third_party.py.tensorflow import tf
 
 app.DEFINE_boolean(
   "cudnn_lstm",

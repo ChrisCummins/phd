@@ -17,8 +17,6 @@ import os
 import pathlib
 import tempfile
 
-import pytest
-
 from deeplearning.clgen import clgen
 from deeplearning.clgen import errors
 from deeplearning.clgen.proto import clgen_pb2
@@ -26,7 +24,9 @@ from labm8.py import app
 from labm8.py import pbutil
 from labm8.py import test
 
-FLAGS = app.FLAGS
+FLAGS = test.FLAGS
+
+pytest_plugins = ["deeplearning.clgen.tests.fixtures"]
 
 # Instance tests.
 
@@ -113,7 +113,9 @@ def test_RunWithErrorHandling_system_exit(clgen_cache_dir):
 def test_RunWithErrorHandling_exception_debug(clgen_cache_dir):
   """Test that FLAGS.debug disables exception catching."""
   del clgen_cache_dir
-  app.FLAGS(["argv[0]", "--clgen_debug"])
+  FLAGS.unparse_flags()
+  FLAGS(["argv0"])
+  FLAGS.clgen_debug = True
   with test.Raises(ZeroDivisionError):
     clgen.RunWithErrorHandling(lambda a, b: a // b, 1, 0)
 
@@ -121,17 +123,10 @@ def test_RunWithErrorHandling_exception_debug(clgen_cache_dir):
 # main tests.
 
 
-def test_main_unrecognized_arguments():
-  """Test that UsageError is raised if arguments are not recognized."""
-  with test.Raises(app.UsageError) as e_info:
-    clgen.main(["argv[0]", "--foo", "--bar"])
-  assert "Unrecognized command line options: '--foo --bar'" == str(e_info.value)
-
-
 def test_main_no_config_flag():
   """Test that UsageError is raised if --config flag not set."""
   with test.Raises(app.UsageError) as e_info:
-    clgen.main(["argv[0]"])
+    clgen.main()
   assert "CLgen --config file not found: '/clgen/config.pbtxt'" == str(
     e_info.value
   )
@@ -139,11 +134,12 @@ def test_main_no_config_flag():
 
 def test_main_config_file_not_found():
   """Test that UsageError is raised if --config flag not found."""
+  FLAGS.unparse_flags()
+  FLAGS(["argv0"])
   with tempfile.TemporaryDirectory() as d:
-    app.FLAGS.unparse_flags()
-    app.FLAGS(["argv[0]", "--config", f"{d}/config.pbtxt"])
+    FLAGS.config = f"{d}/config.pbtxt"
     with test.Raises(app.UsageError) as e_info:
-      clgen.main(["argv[0]"])
+      clgen.main()
     assert f"CLgen --config file not found: '{d}/config.pbtxt'" == str(
       e_info.value
     )
@@ -151,23 +147,25 @@ def test_main_config_file_not_found():
 
 def test_main_print_cache_path_corpus(abc_instance_file, capsys):
   """Test that --print_cache_path=corpus prints directory path."""
-  app.FLAGS.unparse_flags()
-  app.FLAGS(
-    ["argv[0]", "--config", abc_instance_file, "--print_cache_path=corpus"]
-  )
-  clgen.main([])
+  FLAGS.unparse_flags()
+  FLAGS(["argv0"])
+  FLAGS.config = abc_instance_file
+  FLAGS.print_cache_path = "corpus"
+  clgen.main()
   out, err = capsys.readouterr()
+  print("OUT", out)
   assert "/corpus/" in out
-  assert pathlib.Path(out.strip()).is_dir()
+  path = out.strip()
+  assert pathlib.Path(path).is_dir()
 
 
 def test_main_print_cache_path_model(abc_instance_file, capsys):
   """Test that --print_cache_path=model prints directory path."""
-  app.FLAGS.unparse_flags()
-  app.FLAGS(
-    ["argv[0]", "--config", abc_instance_file, "--print_cache_path=model"]
-  )
-  clgen.main([])
+  FLAGS.unparse_flags()
+  FLAGS(["argv0"])
+  FLAGS.config = abc_instance_file
+  FLAGS.print_cache_path = "model"
+  clgen.main()
   out, err = capsys.readouterr()
   assert "/model/" in out
   assert pathlib.Path(out.strip()).is_dir()
@@ -175,11 +173,11 @@ def test_main_print_cache_path_model(abc_instance_file, capsys):
 
 def test_main_print_cache_path_sampler(abc_instance_file, capsys):
   """Test that --print_cache_path=sampler prints directory path."""
-  app.FLAGS.unparse_flags()
-  app.FLAGS(
-    ["argv[0]", "--config", abc_instance_file, "--print_cache_path=sampler"]
-  )
-  clgen.main([])
+  FLAGS.unparse_flags()
+  FLAGS(["argv0"])
+  FLAGS.config = abc_instance_file
+  FLAGS.print_cache_path = "sampler"
+  clgen.main()
   out, err = capsys.readouterr()
   assert "/samples/" in out
   # A sampler's cache isn't created until Sample() is called.
@@ -188,29 +186,31 @@ def test_main_print_cache_path_sampler(abc_instance_file, capsys):
 
 def test_main_print_cache_invalid_argument(abc_instance_file):
   """Test that UsageError raised if --print_cache_path arg not valid."""
-  app.FLAGS.unparse_flags()
-  app.FLAGS(
-    ["argv[0]", "--config", abc_instance_file, "--print_cache_path=foo"]
-  )
+  FLAGS.unparse_flags()
+  FLAGS(["argv0"])
+  FLAGS.config = abc_instance_file
+  FLAGS.print_cache_path = "foo"
   with test.Raises(app.UsageError) as e_info:
-    clgen.main([])
+    clgen.main()
   assert "Invalid --print_cache_path argument: 'foo'" == str(e_info.value)
 
 
 def test_main_min_samples(abc_instance_file):
   """Test that min_samples samples are produced."""
-  app.FLAGS.unparse_flags()
-  app.FLAGS(["argv[0]", "--config", abc_instance_file, "--min_samples", "1"])
-  clgen.main([])
+  FLAGS.unparse_flags()
+  FLAGS(["argv0"])
+  FLAGS.config = abc_instance_file
+  FLAGS.min_samples = 1
+  clgen.main()
 
 
 def test_main_stop_after_corpus(abc_instance_file):
   """Test that --stop_after corpus prevents model training."""
-  app.FLAGS.unparse_flags()
-  app.FLAGS(
-    ["argv[0]", "--config", abc_instance_file, "--stop_after", "corpus"]
-  )
-  clgen.main([])
+  FLAGS.unparse_flags()
+  FLAGS(["argv0"])
+  FLAGS.config = abc_instance_file
+  FLAGS.stop_after = "corpus"
+  clgen.main()
   instance = clgen.Instance(
     pbutil.FromFile(pathlib.Path(abc_instance_file), clgen_pb2.Instance())
   )
@@ -219,9 +219,11 @@ def test_main_stop_after_corpus(abc_instance_file):
 
 def test_main_stop_after_train(abc_instance_file):
   """Test that --stop_after train trains the model."""
-  app.FLAGS.unparse_flags()
-  app.FLAGS(["argv[0]", "--config", abc_instance_file, "--stop_after", "train"])
-  clgen.main([])
+  FLAGS.unparse_flags()
+  FLAGS(["argv0"])
+  FLAGS.config = abc_instance_file
+  FLAGS.stop_after = "train"
+  clgen.main()
   instance = clgen.Instance(
     pbutil.FromFile(pathlib.Path(abc_instance_file), clgen_pb2.Instance())
   )
@@ -230,10 +232,12 @@ def test_main_stop_after_train(abc_instance_file):
 
 def test_main_stop_after_uncrecognized(abc_instance_file):
   """Test that --stop_after raises an error on unknown."""
-  app.FLAGS.unparse_flags()
-  app.FLAGS(["argv[0]", "--config", abc_instance_file, "--stop_after", "foo"])
+  FLAGS.unparse_flags()
+  FLAGS(["argv0"])
+  FLAGS.config = abc_instance_file
+  FLAGS.stop_after = "foo"
   with test.Raises(app.UsageError):
-    clgen.main([])
+    clgen.main()
 
 
 if __name__ == "__main__":

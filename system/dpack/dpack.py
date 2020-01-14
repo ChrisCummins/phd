@@ -191,7 +191,7 @@ def MergeManifests(
     old: The manifest to merge fields from.
   """
   new.comment = old.comment
-  new.utc_epoch_ms_packaged = old.utc_epoch_ms_packaged
+  new.unix_epoch_ms_packaged = old.unix_epoch_ms_packaged
   old_files = {f.relative_path: f for f in old.file}
   for f in new.file:
     if f.relative_path in old_files:
@@ -212,7 +212,7 @@ def CreatePackageManifest(
   """
   manifest = dpack_pb2.DataPackage()
   manifest.comment = ""
-  manifest.utc_epoch_ms_packaged = labdate.MillisecondsTimestamp(
+  manifest.unix_epoch_ms_packaged = labdate.MillisecondsTimestamp(
     labdate.GetUtcMillisecondsNow()
   )
   for path in contents:

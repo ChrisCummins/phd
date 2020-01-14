@@ -96,24 +96,29 @@ app.DEFINE_boolean(
 app.DEFINE_boolean(
   "clgen_print_samples", True, "If set, print CLgen sample outputs."
 )
+app.DEFINE_list(
+  "clgen_preprocessor",
+  [
+    "deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim",
+    "deeplearning.clgen.preprocessors.opencl:Compile",
+    "deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers",
+    "deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes",
+    "deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines",
+    "deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype",
+    "deeplearning.clgen.preprocessors.common:StripTrailingWhitespace",
+    "deeplearning.clgen.preprocessors.opencl:ClangFormat",
+    "deeplearning.clgen.preprocessors.common:MinimumLineCount3",
+    "deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes",
+    "deeplearning.clgen.preprocessors.opencl:Compile",
+  ],
+  "A list of pre-processors to run on the corpus.",
+)
 
 
 def CreateCorpusProtoFromFlags() -> corpus_pb2.Corpus:
   corpus = corpus_pb2.Corpus(
     local_directory=FLAGS.clgen_corpus_dir,
-    preprocessor=[
-      "deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim",
-      "deeplearning.clgen.preprocessors.opencl:Compile",
-      "deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers",
-      "deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes",
-      "deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines",
-      "deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype",
-      "deeplearning.clgen.preprocessors.common:StripTrailingWhitespace",
-      "deeplearning.clgen.preprocessors.opencl:ClangFormat",
-      "deeplearning.clgen.preprocessors.common:MinimumLineCount3",
-      "deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes",
-      "deeplearning.clgen.preprocessors.opencl:Compile",
-    ],
+    preprocessor=FLAGS.clgen_preprocessor,
     contentfile_separator="\n\n",
   )
   if FLAGS.clgen_multichar_tokenizer:

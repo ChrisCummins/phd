@@ -1,11 +1,11 @@
-import tensorflow as tf
-import tensorflow.contrib.seq2seq as seq2seq
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops.distributions import categorical
 from tensorflow.python.util import nest
 
+from third_party.py.tensorflow import tf
 
-class CustomInferenceHelper(seq2seq.TrainingHelper):
+
+class CustomInferenceHelper(tf.contrib.seq2seq.TrainingHelper):
   """An inference helper that takes a seed text"""
 
   def __init__(

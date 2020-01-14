@@ -2,21 +2,24 @@
 
 source labm8/sh/test.sh
 
-tempdir="$(MakeTemporaryDirectory)"
-
 setup() {
-  mkdir -p "$tempdir"
+  echo "Hello, bats!" > "$BATS_TMPDIR/foo"
 }
 
 teardown() {
-  rm -rfv "$tempdir"
+  # The contents of $BATS_TMPDIR is automatically cleaned up so this is not
+  # necessary. It is more of a demonstration of test teardown procedure.
+  rm -f "$BATS_TMPDIR/foo"
 }
 
 @test "tempdir exists" {
-  test -d "$tempdir"
+  test -d "$BATS_TMPDIR"
 }
 
 @test "tempdir is writable" {
-  touch "$tempdir/a"
-  test -f "$tempdir/a"
+  touch "$BATS_TMPDIR/a"
+}
+
+@test "setup executed" {
+  test -f "$BATS_TMPDIR/foo"
 }

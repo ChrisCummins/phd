@@ -57,7 +57,7 @@ def test_GetRepositoryMetadata_timestamp():
   """Test that the timestamp in metadata is set to (aprox) now."""
   now_ms = labdate.MillisecondsTimestamp(labdate.GetUtcMillisecondsNow())
   meta = scraper.GetRepositoryMetadata(MockRepository())
-  assert now_ms - meta.scraped_utc_epoch_ms <= 1000
+  assert now_ms - meta.scraped_unix_epoch_ms <= 1000
 
 
 def test_main_unrecognized_arguments():

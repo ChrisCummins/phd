@@ -52,6 +52,7 @@ func ParseFunction(ts token.TokenStream) (*ast.Function, error) {
 	if !ts.Next() || ts.Value().Type != token.OpenParenthesisToken {
 		return nil, errors.New("expected `(`")
 	}
+	// This is where we would parse function signatures.
 	if !ts.Next() || ts.Value().Type != token.CloseParenthesisToken {
 		return nil, errors.New("expected `)`")
 	}

@@ -15,8 +15,6 @@
 import pathlib
 import typing
 
-import pytest
-
 from datasets.github.scrape_repos.preprocessors import preprocessors
 from datasets.github.scrape_repos.preprocessors import public
 from labm8.py import app
@@ -118,7 +116,7 @@ def test_GetPreprocessFunction_mock_preprocessor():
   f = preprocessors.GetPreprocessorFunction(
     "datasets.github.scrape_repos.preprocessors.preprocessors_test:MockPreprocessor"
   )
-  assert f == MockPreprocessor
+  assert f.__name__ == "MockPreprocessor"
 
 
 # Preprocess() tests.

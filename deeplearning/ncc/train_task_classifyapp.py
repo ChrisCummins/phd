@@ -28,7 +28,6 @@ import pickle
 import struct
 
 import numpy as np
-import tensorflow as tf
 from keras import utils
 from keras.callbacks import Callback
 from sklearn.utils import resample
@@ -37,6 +36,7 @@ from deeplearning.ncc import task_utils
 from deeplearning.ncc import vocabulary
 from labm8.py import app
 from labm8.py import fs
+from third_party.py.tensorflow import tf
 
 # Parameters of classifyapp
 app.DEFINE_string(
@@ -468,7 +468,7 @@ def evaluate(
   else:  # could not find predictions already computed with these embeddings
 
     # Embeddings
-    import tensorflow as tf  # for embeddings lookup
+    from third_party.py.tensorflow import tf  # for embeddings lookup
 
     embedding_matrix_normalized = tf.nn.l2_normalize(embeddings, axis=1)
     vocabulary_size, embedding_dimension = embedding_matrix_normalized.shape

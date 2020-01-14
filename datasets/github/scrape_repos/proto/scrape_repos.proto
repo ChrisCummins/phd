@@ -78,10 +78,10 @@ message ContentFilesImporterConfig {
 // The "metafile" schema. Each repository which is scraped produces one of these
 // files, recording various attributes about the repository.
 message GitHubRepoMetadata {
-  // The number of milliseconds since the epoch (UTC) that the repository was
+  // The number of milliseconds since the Unix epoch that the repository was
   // scraped or cloned.
-  optional int64 scraped_utc_epoch_ms = 7;
-  optional int64 cloned_utc_epoch_ms = 8;
+  optional int64 scraped_unix_epoch_ms = 7;
+  optional int64 cloned_unix_epoch_ms = 8;
   // The GitHub username of the repository owner.
   optional string owner = 1;
   // The name of the repository as it appears on GitHub.

@@ -148,9 +148,10 @@ def test_df_gpu_runtimes_not_equal(
     lambda x: x.df,
     lambda x: x.ComputeGreweFeaturesForGpu("amd_tahiti_7970"),
     lambda x: x.ComputeGreweFeaturesForGpu("nvidia_gtx_960"),
-    lambda x: x.AugmentWithDeadcodeMutations(
-      np.random.RandomState(0), df=x.df[:10].copy()
-    ),
+    # Temporarily disabled
+    # lambda x: x.AugmentWithDeadcodeMutations(
+    #   np.random.RandomState(0), df=x.df[:10].copy()
+    # ),
   ),
 )
 def test_df_nan(
@@ -164,6 +165,7 @@ def test_df_nan(
   assert not df.isnull().values.any()
 
 
+@test.XFail(reason="Temporarily disabled dead code augmentation")
 @test.SlowTest(
   reason="AugementWithDeadcodeMutations is slow, should switch to a smaller dataset"
 )
@@ -178,6 +180,7 @@ def test_AugmentWithDeadcodeMutations_num_output_rows(
   assert len(df) == len(dataset.df) * (3 + 1)
 
 
+@test.XFail(reason="Temporarily disabled dead code augmentation")
 @test.SlowTest(
   reason="AugementWithDeadcodeMutations is slow, should switch to a smaller dataset"
 )

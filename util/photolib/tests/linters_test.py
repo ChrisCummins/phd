@@ -1,13 +1,23 @@
 """Unit tests for linters.py."""
-import pytest
+import pathlib
 
 from labm8.py import app
 from labm8.py import test
+from util.photolib import contentfiles
 from util.photolib import linters
+from util.photolib import workspace
+from util.photolib import xmp_cache
 
 FLAGS = app.FLAGS
 
 MODULE_UNDER_TEST = "util.photolib.linters"
+
+
+@test.Fixture(scope="function")
+def empty_workspace(tempdir: pathlib.Path):
+  (tempdir / "workspace").mkdir()
+  (tempdir / "workspace" / "WORKSPACE").touch()
+  yield workspace.Workspace(str(tempdir / "workspace"))
 
 
 def test_error():
@@ -16,21 +26,27 @@ def test_error():
     linters.Error("//photos", "not/a/real/category", "msg")
 
 
-def test_PhotolibFilename():
-  linter = linters.PhotolibFilename()
+def _MakePhoto(workspace_, filename):
+  cf_path = workspace_.workspace_root / "photos" / f"{filename}.dng"
+  return contentfiles.Contentfile(
+    cf_path,
+    workspace_.GetRelpath(str(cf_path)),
+    filename,
+    xmp_cache.XmpCache(workspace_),
+  )
+
+
+def test_PhotolibFilename(empty_workspace: workspace.Workspace):
+  linter = linters.PhotolibFilename(empty_workspace)
 
   def good_name(filename):
     n = linters.ERROR_COUNTS.get("file/name", 0)
-    linter(
-      f"/photos/{filename}.dng", f"//photos/{filename}.jpg", f"{filename}.jpg"
-    )
+    linter(_MakePhoto(empty_workspace, filename))
     assert linters.ERROR_COUNTS.get("file/name", 0) == n
 
   def bad_name(filename):
     n = linters.ERROR_COUNTS.get("file/name", 0)
-    linter(
-      f"/photos/{filename}.dng", f"//photos/{filename}.jpg", f"{filename}.jpg"
-    )
+    linter(_MakePhoto(empty_workspace, filename))
     assert linters.ERROR_COUNTS.get("file/name", 0) == n + 1
 
   bad_name("foo")
@@ -92,22 +108,18 @@ def test_PhotolibFilename():
   good_name("000101A-30-1-Edit")
 
 
-def test_GalleryFilename():
+def test_ThirdPartyFilename(empty_workspace: workspace.Workspace):
   """Checks that file name matches one of expected formats."""
-  linter = linters.GalleryFilename()
+  linter = linters.ThirdPartyFilename(empty_workspace)
 
   def good_name(filename):
     n = linters.ERROR_COUNTS.get("file/name", 0)
-    linter(
-      f"/photos/{filename}.dng", f"//photos/{filename}.jpg", f"{filename}.jpg"
-    )
+    linter(_MakePhoto(empty_workspace, filename))
     assert linters.ERROR_COUNTS.get("file/name", 0) == n
 
   def bad_name(filename):
     n = linters.ERROR_COUNTS.get("file/name", 0)
-    linter(
-      f"/photos/{filename}.dng", f"//photos/{filename}.jpg", f"{filename}.jpg"
-    )
+    linter(_MakePhoto(empty_workspace, filename))
     assert linters.ERROR_COUNTS.get("file/name", 0) == n + 1
 
   good_name("photos-1")

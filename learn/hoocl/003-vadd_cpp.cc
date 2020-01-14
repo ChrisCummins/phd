@@ -14,10 +14,7 @@
 //
 //------------------------------------------------------------------------------
 
-#include "third_party/opencl/cl.hpp"
-
-#include "./err_code.h"
-#include "./util.hpp"
+#include <stdlib.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -26,7 +23,9 @@
 #include <string>
 #include <vector>
 
-#include <stdlib.h>
+#include "./err_code.h"
+#include "./util.hpp"
+#include "third_party/opencl/cl.hpp"
 
 static unsigned int seed = 0xCEC;
 
@@ -60,7 +59,8 @@ int main(void) {
 
     // Load in kernel source, creating a program object for the context
 
-    cl::Program program(context, util::loadProgram("vadd.cl"), true);
+    cl::Program program(context, util::loadProgram("learn/hoocl/vadd.cl"),
+                        true);
 
     // Get the command queue
     cl::CommandQueue queue(context);

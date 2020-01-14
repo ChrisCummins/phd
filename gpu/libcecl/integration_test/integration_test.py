@@ -18,8 +18,6 @@ import pathlib
 import re
 import subprocess
 
-import pytest
-
 from gpu.cldrive.legacy import env as cldrive_env
 from gpu.libcecl import libcecl_compile
 from gpu.libcecl import libcecl_rewriter
@@ -34,7 +32,7 @@ FLAGS = app.FLAGS
 MODULE_UNDER_TEST = "gpu"
 
 _CLINFO = bazelutil.DataPath("phd/third_party/clinfo/clinfo.c")
-_HELLO = bazelutil.DataPath("phd/gpu/libcecl/integration_test/hello.cc")
+_HELLO = bazelutil.DataPath("phd/third_party/opencl/examples/hello.cc")
 
 
 @test.Fixture(scope="function")
@@ -72,7 +70,7 @@ def _RewriteCompileLinkExecute(
     f.write(libcecl_src)
   extra_cflags = extra_cflags or []
   subprocess.check_call(
-    ["clang++", "-x", lang, str(src_path), "-c", "-o", str(objectfile_path)]
+    ["c++", "-x", lang, str(src_path), "-c", "-o", str(objectfile_path)]
     + cflags
     + extra_cflags
   )
@@ -82,9 +80,7 @@ def _RewriteCompileLinkExecute(
   bin_path = outdir / "a.out"
   extra_ldflags = extra_ldflags or []
   subprocess.check_call(
-    ["clang++", "-o", str(bin_path), str(objectfile_path)]
-    + ldflags
-    + extra_ldflags
+    ["c++", "-o", str(bin_path), str(objectfile_path)] + ldflags + extra_ldflags
   )
   assert bin_path.is_file()
 
@@ -105,6 +101,8 @@ def test_rewrite_compile_link_execute_clinfo(
     extra_ldflags=["-lm", "-lstdc++"],
     extra_exec_args=["--raw"],
   )
+
+  print(log)
 
   assert log.ms_since_unix_epoch
   assert log.returncode == 0
@@ -128,14 +126,14 @@ def test_rewrite_compile_link_execute_clinfo(
   )
 
 
+@test.XFail(reason="FIXME(github.com/ChrisCummins/phd/issues/69)")
 def test_rewrite_compile_link_execute(tempdir: pathlib.Path, hello_src: str):
   """Test end-to-end libcecl pipeline."""
   log = _RewriteCompileLinkExecute(
     tempdir, hello_src, lang="c++", extra_cflags=["-std=c++11"]
   )
 
-  print(log.stdout)
-  print(log.stderr)
+  print(log)
 
   # Check values in log.
   assert log.ms_since_unix_epoch

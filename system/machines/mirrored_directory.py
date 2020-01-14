@@ -87,7 +87,7 @@ class MirroredDirectory(object):
       return datetime.datetime.fromtimestamp(
         int(
           self._Ssh(
-            f'cat "{os.path.join(self.remote_path, self.timestamp_relpath)}"'
+            f'cat "{os.path.join(self.remote_path, self.timestamp_relpath)}" 2>/dev/null'
           )
         )
         / 1e6
@@ -176,8 +176,14 @@ class MirroredDirectory(object):
         raise InvalidOperation(
           "Refusing to pull from remote directory with out-of-date timestamp"
         )
-      if not dry_run:
-        self.local_timestamp = self.remote_timestamp
+      # If there was no timestamp on the remote, create one.
+      if (
+        not dry_run
+        and self.remote_timestamp == datetime.datetime.fromtimestamp(0)
+      ):
+        new_timestamp = int(time.time() * 1e6)
+        self.remote_timestamp = new_timestamp
+
     self.Rsync(
       self.rsync_remote_path,
       self.local_path,
@@ -188,6 +194,9 @@ class MirroredDirectory(object):
       delete,
       progress,
     )
+    # Update the local timestamp to the remote.
+    if self.timestamp_relpath and not dry_run:
+      self.local_timestamp = self.remote_timestamp
 
   def __repr__(self) -> str:
     return (

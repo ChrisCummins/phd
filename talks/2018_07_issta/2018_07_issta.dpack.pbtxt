@@ -11,6 +11,6 @@ file {
   comment: "A screen grab of the opencl_fuzz demo."
   relative_path: "assets/opencl_fuzz.gif"
 }
-utc_epoch_ms_packaged: 1531751239570
+unix_epoch_ms_packaged: 1531751239570
 checksum_hash: SHA256
 checksum: "9e6a0f44a04f4bfde38d1b386eb3e9305e730f92f3f533cd12c69057d2aff1b9"

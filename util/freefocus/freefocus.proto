@@ -20,11 +20,11 @@ message Person {
   repeated WorkspaceGroups workspace_groups = 3;
   // A list of one or more email addresses for a Person.
   repeated string email = 4;
-  // The number of milliseconds since the epoch (UTC) that a Person was created.
-  optional int64 created_at_utc_epoch_ms = 5;
-  // The number of milliseconds since the epoch (UTC) that the Person was
+  // The number of milliseconds since the Unix epoch that a Person was created.
+  optional int64 created_at_unix_epoch_ms = 5;
+  // The number of milliseconds since the Unix epoch that the Person was
   // most recently modified.
-  optional int64 most_recently_modified_at_utc_epoch_ms = 6;
+  optional int64 most_recently_modified_at_unix_epoch_ms = 6;
 
   // A list of Groups and the Workspace they belong to. This is required because
   // a Group's ID is unique only to a Workspace. Groups do not need to be
@@ -56,9 +56,9 @@ message Workspace {
   // groups have read-only access to the Workspace, but can add comments. Friend
   // groups must belong to the workspace.
   repeated string friend_group_id = 7;
-  // The number of milliseconds since the epoch (UTC) that the Workspace was
+  // The number of milliseconds since the Unix epoch that the Workspace was
   // created.
-  optional int64 created_at_utc_epoch_ms = 8;
+  optional int64 created_at_unix_epoch_ms = 8;
   // The root of a Workspace's comment trees.
   repeated int64 comment_id = 10;
 }
@@ -83,18 +83,18 @@ message Group {
   repeated string member_person_id = 6;
   // The ID of the Person who created the group.
   optional string created_by_person_id = 7;
-  // The number of milliseconds since the epoch (UTC) that the Group was
+  // The number of milliseconds since the Unix epoch that the Group was
   // created.
-  optional int64 created_at_utc_epoch_ms = 8;
+  optional int64 created_at_unix_epoch_ms = 8;
   // TODO(cec): Create a GroupChange message, and record a history of all
   // modifications to a group, not just the ID and timestamp of the most recent
   // modification.
   //
   // The ID of the Person who most recently modified the group.
   optional string most_recently_modified_by_person_id = 9;
-  // The number of milliseconds since the epoch (UTC) that the Group was
+  // The number of milliseconds since the Unix epoch that the Group was
   // most recently modified.
-  optional int64 most_recently_modified_at_utc_epoch_ms = 10;
+  optional int64 most_recently_modified_at_unix_epoch_ms = 10;
   // The root of a Group's comment trees.
   repeated int64 comment_id = 11;
 }
@@ -137,7 +137,7 @@ message Task {
     // The task is available and elligible for completion.
     READY = 0;
     // The task is not yet ready to be elligible for completion. If a Task is
-    // not ready, the field ready_at_utc_epoch_ms must be set to a time in the
+    // not ready, the field ready_at_unix_epoch_ms must be set to a time in the
     // future at which the task will transition either to READY or BLOCKED.
     NOT_READY = 1;
     // The task depends on other tasks which are not yet completed. If a Task
@@ -151,30 +151,30 @@ message Task {
     IN_PROGRESS = 3;
     // The task has been completed. A Task which has been completed cannot
     // change state. If a Task is complete, the completed_by_person_id and
-    // completed_at_utc_epoch_ms fields must be set.
+    // completed_at_unix_epoch_ms fields must be set.
     COMPLETE = 4;
     // The task has been dropped. A dropped task can transition to READY, NOT
     // READ
     DROPPED = 5;
   }
   optional TaskState state = 11;
-  optional int64 ready_at_utc_epoch_ms = 12;
+  optional int64 ready_at_unix_epoch_ms = 12;
   repeated int64 blocked_by_id = 13;
   optional string completed_by_person_id = 28;
-  optional int64 completed_at_utc_epoch_ms = 14;
-  // An optional number of milliseconds since the epoch (UTC) that the a Task is
+  optional int64 completed_at_unix_epoch_ms = 14;
+  // An optional number of milliseconds since the Unix epoch that the a Task is
   // due at. A task is OVERDUE if this value is in the past and the Task state
   // is one of {READY,BLOCKED,IN_PROGRESS}.
-  optional int64 due_at_utc_epoch_ms = 15;
+  optional int64 due_at_unix_epoch_ms = 15;
   // An optional estimate for the amount of time taken to complete a task.
   optional int64 estimated_duration_ms = 16;
   // An optional record of the amount of time that a Task has been worked on
   // for. This can be set to any arbitrary positive integer by a Person - there
   // is no mechanism to enforce its accuracy.
   optional int64 actual_duration_ms = 17;
-  // An optional number of milliseconds since the epoch (UTC) that a Task was
+  // An optional number of milliseconds since the Unix epoch that a Task was
   // most recently transition to the IN_PROGRESS state.
-  optional int64 started_at_utc_epoch_ms = 18;
+  optional int64 started_at_unix_epoch_ms = 18;
   // Support for optionally duplicating tasks.
   oneof duplicate_after {
     // Duplicate the Task this many milliseconds after the Task is completed.
@@ -190,13 +190,13 @@ message Task {
   optional int32 remaining_duplications = 22;
   // The ID of the Person who created the task.
   optional string created_by_person_id = 23;
-  // The number of milliseconds since the epoch (UTC) that the task was created.
-  optional int64 created_at_utc_epoch_ms = 24;
+  // The number of milliseconds since the Unix epoch that the task was created.
+  optional int64 created_at_unix_epoch_ms = 24;
   // The ID of the Person who most recently modified the group.
   optional string most_recently_modified_by_person_id = 25;
-  // The number of milliseconds since the epoch (UTC) that the Group was
+  // The number of milliseconds since the Unix epoch that the Group was
   // created.
-  optional int64 most_recently_modified_at_utc_epoch_ms = 26;
+  optional int64 most_recently_modified_at_unix_epoch_ms = 26;
   // The root of the Task's comment tree.
   repeated int64 comment_id = 27;
 }
@@ -225,13 +225,13 @@ message Tag {
   optional string description = 7;
   // The ID of the Person who created the tag.
   optional string created_by_person_id = 23;
-  // The number of milliseconds since the epoch (UTC) that the tag was created.
-  optional int64 created_at_utc_epoch_ms = 24;
+  // The number of milliseconds since the Unix epoch that the tag was created.
+  optional int64 created_at_unix_epoch_ms = 24;
   // The ID of the Person who most recently modified the tag.
   optional string most_recently_modified_by_person_id = 25;
-  // The number of milliseconds since the epoch (UTC) that the tag was
+  // The number of milliseconds since the Unix epoch that the tag was
   // created.
-  optional int64 most_recently_modified_at_utc_epoch_ms = 26;
+  optional int64 most_recently_modified_at_unix_epoch_ms = 26;
   // The root of the Tag's comment tree.
   repeated int64 comment_id = 11;
 }
@@ -270,14 +270,14 @@ message Asset {
   optional string description = 11;
   // The ID of the Person who created the asset.
   optional string created_by_person_id = 12;
-  // The number of milliseconds since the epoch (UTC) that the asset was
+  // The number of milliseconds since the Unix epoch that the asset was
   // created.
-  optional int64 created_at_utc_epoch_ms = 13;
+  optional int64 created_at_unix_epoch_ms = 13;
   // The ID of the Person who most recently modified the asset.
   optional string most_recently_modified_by_person_id = 14;
-  // The number of milliseconds since the epoch (UTC) that the asset was
+  // The number of milliseconds since the Unix epoch that the asset was
   // created.
-  optional int64 most_recently_modified_at_utc_epoch_ms = 15;
+  optional int64 most_recently_modified_at_unix_epoch_ms = 15;
   // The roof of the Asset's comment tree.
   repeated int64 comment_id = 16;
 }
@@ -305,12 +305,12 @@ message Comment {
   optional string body = 8;
   // The ID of the Person who created the comment.
   optional string created_by_person_id = 9;
-  // The number of milliseconds since the epoch (UTC) that the comment was
+  // The number of milliseconds since the Unix epoch that the comment was
   // created.
-  optional int64 created_at_utc_epoch_ms = 10;
+  optional int64 created_at_unix_epoch_ms = 10;
   // The pid of the Person who most recently modified the comment.
   optional string most_recently_modified_by_pid = 11;
-  // The number of milliseconds since the epoch (UTC) that the comment was
+  // The number of milliseconds since the Unix epoch that the comment was
   // most recently modified.
-  optional int64 most_recently_modified_at_utc_epoch_ms = 12;
+  optional int64 most_recently_modified_at_unix_epoch_ms = 12;
 }

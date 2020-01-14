@@ -14,5 +14,6 @@ py_test(
     srcs = ["example_test.py"],
     data = [":example.so"],
     deps = [
+        "//labm8/py:test",
     ],
 )

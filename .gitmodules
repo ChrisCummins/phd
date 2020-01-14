@@ -10,12 +10,6 @@
 [submodule "docs/2017_09_pact"]
 	path = docs/2017_09_pact
 	url = https://github.com/ChrisCummins/paper-end2end-dl
-[submodule "experimental/eevee"]
-	path = experimental/eevee
-	url = https://github.com/ChrisCummins/eevee.git
-[submodule "experimental/euclid"]
-	path = experimental/euclid
-	url = https://github.com/ChrisCummins/euclid.git
 [submodule "http/cgo.org/cgo2018"]
 	path = http/cgo.org/cgo2018
 	url = https://github.com/ChrisCummins/cgo2018.git
@@ -40,12 +34,12 @@
 [submodule "third_party/visioncpp"]
 	path = third_party/visioncpp
 	url = https://github.com/codeplaysoftware/visioncpp.git
-[submodule "util/gh-archiver"]
-	path = util/gh-archiver
-	url = https://github.com/ChrisCummins/gh-archiver.git
 [submodule "util/srtime"]
 	path = util/srtime
 	url = https://github.com/ChrisCummins/srtime.git
 [submodule "tools/code_style/py/black-2spaces"]
 	path = tools/code_style/py/black-2spaces
 	url = https://github.com/ChrisCummins/black-2spaces.git
+[submodule "third_party/pybind11_bazel"]
+	path = third_party/pybind11_bazel
+	url = https://github.com/pybind/pybind11_bazel.git

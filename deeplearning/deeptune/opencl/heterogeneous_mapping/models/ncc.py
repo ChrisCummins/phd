@@ -25,7 +25,6 @@ import typing
 
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 from keras.preprocessing import sequence as keras_sequence
 
 from compilers.llvm import clang
@@ -35,6 +34,7 @@ from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
 from labm8.py import app
 from labm8.py import bazelutil
+from third_party.py.tensorflow import tf
 
 # The pre-trained embeddings used by default by DeepTuneInst2Vec models.
 DEEPTUNE_INST2VEC_EMBEDDINGS = bazelutil.DataPath(

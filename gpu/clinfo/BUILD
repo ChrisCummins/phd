@@ -22,6 +22,12 @@ cc_binary(
     deps = [":libclinfo"],
 )
 
+sh_binary(
+    name = "clinfo_smoke_test",
+    srcs = ["clinfo_smoke_test.sh"],
+    data = [":clinfo"],
+)
+
 cc_library(
     name = "libclinfo",
     srcs = [

@@ -1,8 +1,6 @@
 """Unit tests for //deeplearning/clgen/docker:export_pretrained_model."""
 import pathlib
 
-import pytest
-
 from deeplearning.clgen import clgen
 from deeplearning.clgen.docker import export_pretrained_model
 from deeplearning.clgen.proto import clgen_pb2
@@ -10,6 +8,8 @@ from labm8.py import app
 from labm8.py import test
 
 FLAGS = app.FLAGS
+
+pytest_plugins = ["deeplearning.clgen.tests.fixtures"]
 
 
 @test.Fixture(scope="function")

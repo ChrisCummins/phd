@@ -15,9 +15,7 @@ from system.machines.proto import machine_spec_pb2
 
 FLAGS = app.FLAGS
 
-app.DEFINE_input_path(
-  "machine", None, "Path to MachineSpec proto.", required=True
-)
+app.DEFINE_input_path("machine", None, "Path to MachineSpec proto.")
 app.DEFINE_list("push", [], "Mirrored directories to push.")
 app.DEFINE_list("pull", [], "Mirrored directories to push.")
 app.DEFINE_boolean(
@@ -116,6 +114,8 @@ class Machine(object):
 
 def main():
   """Main entry point."""
+  if not FLAGS.machine:
+    raise app.UsageError("--machine flag required")
   machine_proto_path = FLAGS.machine
   if not machine_proto_path.is_file():
     raise app.UsageError(f"Cannot find --machine proto '{machine_proto_path}'")

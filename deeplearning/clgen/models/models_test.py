@@ -15,8 +15,6 @@
 """Unit tests for //deeplearning/clgen/models/models.py."""
 import pathlib
 
-import pytest
-
 from deeplearning.clgen import errors
 from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import internal_pb2
@@ -26,6 +24,8 @@ from labm8.py import pbutil
 from labm8.py import test
 
 FLAGS = app.FLAGS
+
+pytest_plugins = ["deeplearning.clgen.tests.fixtures"]
 
 # The Model.hash for an instance of abc_model_config.
 ABC_MODEL_HASH = "bf95e335177883a9204a560617990caf3fd1efc6"

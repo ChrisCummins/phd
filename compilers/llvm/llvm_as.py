@@ -30,7 +30,6 @@ import typing
 from compilers.llvm import llvm
 from labm8.py import app
 from labm8.py import bazelutil
-from labm8.py import system
 
 FLAGS = app.FLAGS
 
@@ -40,10 +39,8 @@ app.DEFINE_integer(
   "The maximum number of seconds to allow process to run.",
 )
 
-_LLVM_REPO = "llvm_linux" if system.is_linux() else "llvm_mac"
-
 # Path to llvm-as binary.
-LLVM_AS = bazelutil.DataPath(f"{_LLVM_REPO}/bin/llvm-as")
+LLVM_AS = bazelutil.DataPath("phd/third_party/llvm/llvm-as")
 
 
 class LlvmAsError(llvm.LlvmError):

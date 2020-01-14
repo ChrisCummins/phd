@@ -15,7 +15,6 @@
 """Unit tests for //deeplearning/clgen/models/tensorflow_backend.py."""
 import checksumdir
 import numpy as np
-import pytest
 
 from deeplearning.clgen import sample_observers
 from deeplearning.clgen.models import models
@@ -27,6 +26,8 @@ from labm8.py import pbutil
 from labm8.py import test
 
 FLAGS = app.FLAGS
+
+pytest_plugins = ["deeplearning.clgen.tests.fixtures"]
 
 
 class MockSampler(object):
@@ -64,17 +65,7 @@ def abc_tensorflow_model_config(abc_model_config: model_pb2.Model):
   return abc_model_config
 
 
-# TensorFlowBackend.GetShortSummary() tests.abc_tensorflow_model_config
-
-
-def test_TensorFlowBackend_Train_GetShortSummary_before_create(
-  clgen_cache_dir, abc_tensorflow_model_config
-):
-  """Test that model training produced telemetry files."""
-  del clgen_cache_dir
-  m = models.Model(abc_tensorflow_model_config)
-  with test.Raises(ValueError):
-    m.GetShortSummary()
+# TensorFlowBackend.GetShortSummary()
 
 
 def test_TensorFlowBackend_Train_GetShortSummary(
@@ -84,10 +75,7 @@ def test_TensorFlowBackend_Train_GetShortSummary(
   del clgen_cache_dir
   m = models.Model(abc_tensorflow_model_config)
   m.Create()
-  assert (
-    m.GetShortSummary()
-    == "4×1 LSTM network, 59 token corpus with 25-element vocabulary"
-  )
+  assert m.GetShortSummary() == "4×1 LSTM network"
 
 
 # TensorFlowBackend.Train() tests.

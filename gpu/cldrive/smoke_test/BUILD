@@ -6,7 +6,7 @@ bats_test(
     srcs = ["smoke_test.bats"],
     data = [
         "//gpu/cldrive",
-        "//gpu/oclgrind",
         "//labm8/sh:test",
+        "//third_party/oclgrind",
     ],
 )

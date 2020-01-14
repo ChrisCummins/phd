@@ -1,8 +1,6 @@
 """Test for clgen_preprocess image."""
 import pathlib
 
-import pytest
-
 from labm8.py import dockerutil
 from labm8.py import fs
 from labm8.py import test
@@ -57,7 +55,6 @@ def test_cxx_preprocess(
         "outdir": "/preprocessed",
         "preprocessors": (
           "deeplearning.clgen.preprocessors.cxx:Compile,"
-          "deeplearning.clgen.preprocessors.cxx:NormalizeIdentifiers,"
           "deeplearning.clgen.preprocessors.cxx:StripComments,"
           "deeplearning.clgen.preprocessors.cxx:ClangFormat"
         ),
@@ -67,13 +64,7 @@ def test_cxx_preprocess(
 
   assert (tempdir2 / "a.cc").is_file()
   assert not (tempdir2 / "b.java").is_file()
-
-  with open(tempdir2 / "a.cc") as f:
-    assert (
-      f.read()
-      == """int A() {
-}"""
-    )
+  assert fs.Read(tempdir2 / "a.cc") == "int main() {\n}"
 
 
 def test_java_preprocess(

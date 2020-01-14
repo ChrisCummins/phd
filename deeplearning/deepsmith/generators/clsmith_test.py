@@ -16,8 +16,6 @@
 import os
 import tempfile
 
-import pytest
-
 from deeplearning.deepsmith.generators import clsmith
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2

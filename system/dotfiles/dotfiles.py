@@ -982,17 +982,6 @@ class DiffSoFancy(Task):
 #   def install(self):
 #     Python().pip_install('nbdime', self.VERSION)
 
-# class GhArchiver(Task):
-#   """ github archiver """
-#   VERSION = "0.0.6"
-
-#   __platforms__ = ['linux', 'osx']
-#   __deps__ = ['Python']
-#   __genfiles__ = [Homebrew.bin('gh-archiver')]
-
-#   def install(self):
-#     Python().pip_install("gh-archiver", self.VERSION)
-
 
 class Tmux(Task):
   """ tmux config """

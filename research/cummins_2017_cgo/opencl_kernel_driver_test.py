@@ -13,8 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //research/cummins_2017_cgo:opencl_kernel_driver."""
-import pytest
-
 from gpu.cldrive.legacy import env as cldrive_env
 from labm8.py import app
 from labm8.py import test
@@ -35,6 +33,7 @@ def test_Drive_invalid_opencl_kernel(opencl_env: cldrive_env.OpenCLEnvironment):
     opencl_kernel_driver.Drive("Syntax error!", 16, 16, opencl_env, 5)
 
 
+@test.XFail(reason="FIXME(github.com/ChrisCummins/phd/issues/69)")
 def test_Drive_no_output(opencl_env: cldrive_env.OpenCLEnvironment):
   """Test that the correct number of logs are returned."""
   with test.Raises(opencl_kernel_driver.KernelProducesNoOutput):
@@ -50,6 +49,7 @@ kernel void A(global int* a, global int* b) {
     )
 
 
+@test.XFail(reason="FIXME(github.com/ChrisCummins/phd/issues/69)")
 def test_Drive_maybe_non_deterministic(
   opencl_env: cldrive_env.OpenCLEnvironment,
 ):
@@ -73,6 +73,7 @@ kernel void A(global float* a, global float* b) {
     )
 
 
+@test.XFail(reason="FIXME(github.com/ChrisCummins/phd/issues/69)")
 def test_Drive_log_count(opencl_env: cldrive_env.OpenCLEnvironment):
   """Test that the correct number of logs are returned."""
   logs = opencl_kernel_driver.Drive(

@@ -20,6 +20,7 @@ import pandas as pd
 from labm8.py import app
 from labm8.py import bazelutil
 from labm8.py import decorators
+
 # TODO(cec): Temporarily removing this import to break the dependency of CLgen
 # rewriter:
 # from deeplearning.deeptune.opencl.adversary import (
@@ -285,6 +286,8 @@ class OpenClDeviceMappingsDataset(object):
       The table with num_rows * num_permutations_of_kernel rows, and an
       additional `program:is_mutation` column.
     """
+    raise NotImplementedError("Temporarily disabled")
+
     df = self.df if df is None else df
 
     new_columns = list(df.columns.values) + ["program:is_mutation"]

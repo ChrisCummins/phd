@@ -25,6 +25,10 @@ coverage==4.5.1  # Needed by pytest-cov.
 cpplint==1.3.0
 cycler==0.10.0
 dash==0.39.0
+dash-core-components==0.44.0
+dash-html-components==0.14.0
+dash-renderer==0.20.0
+dash-table==3.6.0
 decorator==4.3.0
 detect-secrets==0.12.4
 # The graph_nets package depends on a specific version of dm-sonnet. See:
@@ -70,7 +74,7 @@ ipywidgets==7.1.2
 isort==4.3.4
 itsdangerous==1.1.0  # Dependency of dash.
 jedi==0.11.1
-jinja2==2.10
+jinja2==2.10.1
 jsonschema==2.6.0
 jupyter-client==5.2.2
 jupyter-console==5.2.0
@@ -95,7 +99,7 @@ mysqlclient==1.4.2.post1
 nbconvert==5.3.1
 nbformat==4.4.0  # Needed by notebook.
 networkx==2.2
-notebook==5.7.2
+notebook==5.7.8
 numpy==1.16.4
 oauth2client==4.1.3
 packaging==19.2  # Needed by pytest.
@@ -200,7 +204,7 @@ urllib3==1.24.2  # Implicit dependency of requests.
 virtualenv==15.1.0
 wcwidth==0.1.7
 webencodings==0.5.1
-Werkzeug==0.14.1  # Implicit dependency of Flask.
+Werkzeug==0.15.3  # Implicit dependency of Flask.
 wget==3.2
 widgetsnbextension==3.1.4
 wrapt==1.11.2

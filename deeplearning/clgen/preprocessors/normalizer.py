@@ -24,10 +24,10 @@ from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 
+# Path of the clang rewriter binary.
 CLGEN_REWRITER = bazelutil.DataPath(
   "phd/deeplearning/clgen/preprocessors/clang_rewriter"
 )
-assert CLGEN_REWRITER.is_file()
 
 # On Linux we must preload the LLVM libraries.
 CLGEN_REWRITER_ENV = os.environ.copy()
@@ -89,7 +89,7 @@ def NormalizeIdentifiers(
     )
     stdout, stderr = process.communicate()
     app.Log(2, stderr)
-  # If there was nothing to rewrite, rewriter exits with error code:
+  # If there was nothing to rewrite, the rewriter exits with error code:
   EUGLY_CODE = 204
   if process.returncode == EUGLY_CODE:
     # Propagate the error:

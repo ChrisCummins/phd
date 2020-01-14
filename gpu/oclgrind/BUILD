@@ -15,13 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@com_github_chriscummins_rules_bats//:bats.bzl", "bats_test")
+
 py_binary(
     name = "oclgrind",
     srcs = ["oclgrind.py"],
-    data = select({
-        "//:darwin": ["@oclgrind_mac//:oclgrind"],
-        "//conditions:default": ["@oclgrind_linux//:oclgrind"],
-    }),
+    data = [
+        "//third_party/oclgrind",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//gpu/clinfo/proto:clinfo_pb_py",
@@ -40,5 +41,16 @@ py_test(
         "//labm8/py:app",
         "//labm8/py:bazelutil",
         "//labm8/py:test",
+    ],
+)
+
+bats_test(
+    name = "oclgrind_smoke_test",
+    srcs = ["oclgrind_smoke_test.bats"],
+    data = [
+        "//gpu/clinfo",
+        "//gpu/oclgrind/test/data:oclgrind_working",
+        "//labm8/sh:test",
+        "//third_party/oclgrind",
     ],
 )

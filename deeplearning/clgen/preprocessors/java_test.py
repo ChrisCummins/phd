@@ -13,8 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //deeplearning/clgen/preprocessors/java.py."""
-import pytest
-
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import java
 from labm8.py import app
@@ -486,7 +484,7 @@ public static String format(int num){
 public class A {
 \tpublic static String fn_A(int a) {
 \t\tString b = "" + a;
-\t\tString c = b.length() % 3 != 0 ? b.substring(0,b.length() % 3) + "," : "";
+\t\tString c = b.length() % 3 != 0 ? b.substring(0, b.length() % 3) + "," : "";
 \t\tfor (int d = b.length() % 3; d < b.length(); d += 3) {
 \t\t\tc += b.substring(d, d + 3) + ",";
 \t\t}

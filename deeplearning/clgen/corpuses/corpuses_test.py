@@ -18,8 +18,6 @@ import os
 import pathlib
 import tempfile
 
-import pytest
-
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import corpuses
 from deeplearning.clgen.corpuses import encoded
@@ -29,6 +27,8 @@ from labm8.py import app
 from labm8.py import test
 
 FLAGS = app.FLAGS
+
+pytest_plugins = ["deeplearning.clgen.tests.fixtures"]
 
 # The Corpus.hash for an OpenCL corpus of the abc_corpus.
 ABC_CORPUS_HASH = "cb7c7a23c433a1f628c9b120378759f1723fdf42"

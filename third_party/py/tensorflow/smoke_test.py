@@ -2,7 +2,6 @@
 import sys
 
 import numpy as np
-import pytest
 
 import getconfig
 from labm8.py import app
@@ -16,14 +15,14 @@ MODULE_UNDER_TEST = None  # No test coverage.
 def test_import_tensorflow():
   print("Python executable:", sys.executable)
   print("Python version:", sys.version)
-  import tensorflow
+  from third_party.py.tensorflow import tf as tensorflow
 
   print("Tensorflow:", tensorflow.__file__)
   print("Tensorflow version:", tensorflow.VERSION)
 
 
 def test_tensorflow_session():
-  import tensorflow as tf
+  from third_party.py.tensorflow import tf
 
   a = tf.constant(1)
   b = tf.constant(2)
@@ -36,7 +35,7 @@ def test_tensorflow_session():
 # operation to the GPU and test that it works.
 @test.SkipIf(not getconfig.GetGlobalConfig().with_cuda, reason="No GPU")
 def test_tensorflow_gpu_constant():
-  import tensorflow as tf
+  from third_party.py.tensorflow import tf
 
   with tf.compat.v1.Session(
     config=tf.compat.v1.ConfigProto(log_device_placement=True)
@@ -49,7 +48,7 @@ def test_tensorflow_gpu_constant():
 # operation to the GPU and test that it works.
 @test.SkipIf(not getconfig.GetGlobalConfig().with_cuda, reason="No GPU")
 def test_tensorflow_gpu_computation():
-  import tensorflow as tf
+  from third_party.py.tensorflow import tf
 
   with tf.device("/gpu:0"):
     a = tf.constant(
@@ -65,6 +64,13 @@ def test_tensorflow_gpu_computation():
     np.testing.assert_array_almost_equal(
       sess.run(c), np.array([[22, 28], [49, 64]])
     )
+
+
+def test_contrib_module():
+  """Test that Tensorflow submodules are accessible."""
+  from third_party.py.tensorflow import tf
+
+  _ = tf.contrib.seq2seq
 
 
 if __name__ == "__main__":

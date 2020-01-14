@@ -46,7 +46,7 @@ class TrainingLogger(object):
     now = labdate.MillisecondsTimestamp()
     epoch_time_ms = now - self.last_epoch_begin_timestamp
     telemetry = telemetry_pb2.ModelEpochTelemetry(
-      timestamp_utc_epoch_ms=now,
+      timestamp_unix_epoch_ms=now,
       epoch_num=epoch,
       epoch_wall_time_ms=epoch_time_ms,
       loss=loss,

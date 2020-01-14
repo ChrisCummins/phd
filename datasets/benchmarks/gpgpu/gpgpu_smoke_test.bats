@@ -17,20 +17,11 @@
 # limitations under the License.
 source labm8/sh/test.sh
 
-tempdir="$(MakeTemporaryDirectory)"
-
-setup() {
-  mkdir -p "$tempdir"
-}
-
-teardown() {
-  rm -rfv "$tempdir"
-}
 
 @test "run gpgpu" {
   run datasets/benchmarks/gpgpu/gpgpu \
     --gpgpu_benchmark_suites=dummy_just_for_testing \
     --gpgpu_envs='Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2' \
-    --gpgpu_logdir="$tempdir"
+    --gpgpu_logdir="$BATS_TMPDIR"
   [ "$status" -eq 0 ]
 }

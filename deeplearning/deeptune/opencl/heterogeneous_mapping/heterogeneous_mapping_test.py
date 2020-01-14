@@ -90,7 +90,7 @@ def test_deeptune_accuracy(
   r: heterogeneous_mapping.HeterogeneousMappingExperiment,
 ):
   """Test the accuracy of the DeepTune model."""
-  assert r.ResultsDataFrame(models.Deeptune)[
+  assert r.ResultsDataFrame(models.DeepTune)[
     "Correct?"
   ].mean() == pytest.approx(0.819853)
 
@@ -100,7 +100,7 @@ def test_deeptune_speedup(
   r: heterogeneous_mapping.HeterogeneousMappingExperiment,
 ):
   """Test the speedup of the DeepTune model."""
-  assert r.ResultsDataFrame(models.Deeptune)["Speedup"].mean() == pytest.approx(
+  assert r.ResultsDataFrame(models.DeepTune)["Speedup"].mean() == pytest.approx(
     2.373917
   )
 

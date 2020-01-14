@@ -63,8 +63,8 @@ message DataStore {
 
 // A map of datastore names to configs.
 //
-// Used by //deeplearning/deepsmith:conftest to parameterize the test fixtures
-// used for unit tests.
+// Used by //deeplearning/deepsmith/tests:fixtures to parameterize the test
+// fixtures used for unit tests.
 message DataStoreTestSet {
   map<string, DataStore> values = 1;
 }

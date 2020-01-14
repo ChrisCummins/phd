@@ -1,2 +1,0 @@
-                     liblm - Linear Math library
-                     ===========================

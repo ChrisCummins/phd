@@ -1,5 +1,6 @@
 """A flask server which renders test results."""
 import os
+import sys
 import threading
 
 import flask
@@ -16,10 +17,12 @@ from labm8.py import humanize
 
 FLAGS = app.FLAGS
 
+# Disable flask banner on load.
+_cli = sys.modules["flask.cli"]
+_cli.show_server_banner = lambda *x: None
+
 app.DEFINE_integer(
-  "clgen_dashboard_port",
-  portpicker.pick_unused_port(),
-  "The port to launch the server on.",
+  "clgen_dashboard_port", None, "The port to launch the server on.",
 )
 
 flask_app = flask.Flask(
@@ -29,9 +32,19 @@ flask_app = flask.Flask(
   ),
   static_folder=bazelutil.DataPath("phd/deeplearning/clgen/dashboard/static"),
 )
-flask_app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-  "CLGEN_DASHBOARD", "sqlite:////tmp/phd/deeplearning/clgen/dashboard.db"
-)
+
+# Get URI of the the dashboard database.
+#
+# Defaults to /tmp/phd/deeplearning/clgen/dashboard.db. If $CLGEN_DASHBOARD
+# is set, use this URL. Else if $TEST_TMPDIR is set (as set by bazel test
+# environment), create a dashboard in there.
+_dashboard_uri = "sqlite:////tmp/phd/deeplearning/clgen/dashboard.db"
+if os.environ.get("CLGEN_DASHBOARD"):
+  _dashboard_uri = os.environ["CLGEN_DASHBOARD"]
+elif os.environ.get("TEST_TMPDIR"):
+  _dashboard_uri = f"sqlite:///{os.environ['TEST_TMPDIR']}/dashboard.db"
+flask_app.config["SQLALCHEMY_DATABASE_URI"] = _dashboard_uri
+
 db = flask_sqlalchemy.SQLAlchemy(flask_app)
 
 
@@ -272,17 +285,17 @@ def samples(corpus_id: int, model_id: int, epoch: int):
 
 def Launch(debug: bool = False):
   """Launch dashboard in a separate thread."""
+  port = FLAGS.clgen_dashboard_port or portpicker.pick_unused_port()
   app.Log(
-    1,
-    "Launching CLgen dashboard on http://127.0.0.1:%d",
-    FLAGS.clgen_dashboard_port,
+    1, "Launching CLgen dashboard on http://127.0.0.1:%d", port,
   )
   kwargs = {
-    "port": FLAGS.clgen_dashboard_port,
+    "port": port,
     # Debugging must be disabled when run in a separate thread.
     "debug": debug,
     "host": "0.0.0.0",
   }
+
   db.create_all()
   if debug:
     flask_app.run(**kwargs)

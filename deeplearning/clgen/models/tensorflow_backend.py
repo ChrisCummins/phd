@@ -29,6 +29,7 @@ from deeplearning.clgen.models import backends
 from deeplearning.clgen.models import data_generators
 from deeplearning.clgen.proto import model_pb2
 from labm8.py import app
+from labm8.py import gpu_scheduler
 from labm8.py import humanize
 
 FLAGS = app.FLAGS
@@ -86,7 +87,7 @@ class TensorFlowBackend(backends.BackendBase):
 
     # Create the summary writer, shared between Train() and
     # _EndOfEpochTestSample().
-    import tensorflow as tf
+    from third_party.py.tensorflow import tf
 
     tensorboard_dir = f"{self.cache.path}/tensorboard"
     app.Log(
@@ -113,6 +114,9 @@ class TensorFlowBackend(backends.BackendBase):
     Returns:
       The imported TensorFlow module.
     """
+    # Lock exclusive access to a GPU, if present.
+    gpu_scheduler.LockExclusiveProcessGpuAccess()
+
     start_time = time.time()
 
     # Quiet tensorflow.
@@ -120,15 +124,13 @@ class TensorFlowBackend(backends.BackendBase):
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
     # Deferred importing of TensorFlow.
-    import tensorflow as tf
-    import tensorflow.contrib.seq2seq as seq2seq
-    from tensorflow.contrib import rnn
+    from third_party.py.tensorflow import tf
     from deeplearning.clgen.models import helper
 
     cell_type = {
-      model_pb2.NetworkArchitecture.LSTM: rnn.LSTMBlockCell,
-      model_pb2.NetworkArchitecture.GRU: rnn.GRUBlockCellV2,
-      model_pb2.NetworkArchitecture.RNN: rnn.BasicRNNCell,
+      model_pb2.NetworkArchitecture.LSTM: tf.contrib.rnn.LSTMBlockCell,
+      model_pb2.NetworkArchitecture.GRU: tf.contrib.rnn.GRUBlockCellV2,
+      model_pb2.NetworkArchitecture.RNN: tf.contrib.rnn.BasicRNNCell,
     }.get(self.config.architecture.neuron_type, None)
     if cell_type is None:
       raise NotImplementedError
@@ -147,7 +149,9 @@ class TensorFlowBackend(backends.BackendBase):
     cells_lst = []
     for _ in range(self.config.architecture.num_layers):
       cells_lst.append(cell_type(self.config.architecture.neurons_per_layer))
-    self.cell = cell = rnn.MultiRNNCell(cells_lst, state_is_tuple=True)
+    self.cell = cell = tf.contrib.rnn.MultiRNNCell(
+      cells_lst, state_is_tuple=True
+    )
 
     self.input_data = tf.compat.v1.placeholder(
       tf.int32, [batch_size, sequence_length]
@@ -177,17 +181,17 @@ class TensorFlowBackend(backends.BackendBase):
         inputs, self.lengths, self.seed_length, embedding, self.temperature
       )
     else:
-      decode_helper = seq2seq.TrainingHelper(
+      decode_helper = tf.contrib.seq2seq.TrainingHelper(
         inputs, self.lengths, time_major=False
       )
 
-    decoder = seq2seq.BasicDecoder(
+    decoder = tf.contrib.seq2seq.BasicDecoder(
       cell,
       decode_helper,
       self.initial_state,
       tf.compat.v1.layers.Dense(vocab_size),
     )
-    outputs, self.final_state, _ = seq2seq.dynamic_decode(
+    outputs, self.final_state, _ = tf.contrib.seq2seq.dynamic_decode(
       decoder,
       output_time_major=False,
       impute_finished=True,
@@ -199,7 +203,7 @@ class TensorFlowBackend(backends.BackendBase):
     self.logits = outputs.rnn_output
 
     sequence_weigths = tf.ones([batch_size, sequence_length])
-    self.loss = seq2seq.sequence_loss(
+    self.loss = tf.contrib.seq2seq.sequence_loss(
       self.logits, self.targets, sequence_weigths
     )
 
@@ -464,6 +468,7 @@ class TensorFlowBackend(backends.BackendBase):
 
         logger.EpochEndCallback(epoch_num, loss)
         # If we have a sampler that we can use at the end of epochs, then
+        # break now to run the test sampler.
         # This is confusing logic! Consider a refactor to simplify things.
         if test_sampler:
           break
@@ -472,13 +477,13 @@ class TensorFlowBackend(backends.BackendBase):
 
     if test_sampler and FLAGS.clgen_per_epoch_test_samples > 0:
       self._EndOfEpochTestSample(corpus, test_sampler, step, epoch_num)
-      self.Train(corpus, test_sampler)
+      self.Train(corpus, test_sampler=test_sampler)
 
   def _EndOfEpochTestSample(
     self, corpus, sampler: samplers.Sampler, step: int, epoch_num: int
   ):
     """Run sampler"""
-    import tensorflow as tf
+    from third_party.py.tensorflow import tf
 
     atomizer = corpus.atomizer
     sampler.Specialize(atomizer)
@@ -491,26 +496,23 @@ class TensorFlowBackend(backends.BackendBase):
     samples, stats = [], []
     for i in range(FLAGS.clgen_per_epoch_test_samples):
       done = np.zeros(1, dtype=np.bool)
-      while not done[0]:
-        start_time = time.time()
-        sample_in_progress = sampler.tokenized_start_text.copy()
-        indices = self.SampleNextIndices(sampler, done)
+      start_time = time.time()
+      sample_in_progress = sampler.tokenized_start_text.copy()
 
+      while not done[0]:
+        indices = self.SampleNextIndices(sampler, done)
         # Iterate over all samples in batch to determine whether they're
         # done.
         for index in indices[0]:
           sample_in_progress.append(atomizer.decoder[index])
-          if not sampler.SampleIsComplete(sample_in_progress):
-            continue
-
-          stats.append(
-            (len(sample_in_progress), int((time.time() - start_time) * 1000))
-          )
-          sample = "".join(sample_in_progress)
-          samples.append(sample)
-          app.Log(1, "End-of-epoch sample %d:\n%s", i + 1, sample)
-          done[0] = True
-          break
+          if sampler.SampleIsComplete(sample_in_progress):
+            stats.append(
+              (len(sample_in_progress), int((time.time() - start_time) * 1000))
+            )
+            sample = "".join(sample_in_progress)
+            samples.append(sample)
+            done[0] = True
+            break
 
     # Write samples to file.
     with self.dashboard_db.Session(commit=True) as dbs:
@@ -543,7 +545,7 @@ class TensorFlowBackend(backends.BackendBase):
     self, sampler: samplers.Sampler, seed: typing.Optional[int] = None
   ) -> None:
     """Initialize model for sampling."""
-    import tensorflow as tf
+    from third_party.py.tensorflow import tf
 
     # Delete any previous sampling session.
     if self.inference_tf:
@@ -557,7 +559,7 @@ class TensorFlowBackend(backends.BackendBase):
     # Seed the RNG.
     if seed is not None:
       np.random.seed(seed)
-      self.inference_tf.set_random_seed(seed)
+      self.inference_tf.compat.v1.set_random_seed(seed)
 
     # If --clgen_tf_backend_reset_inference_state_between_batches, the state
     # is reset at the beginning of every sample batch. Else, this is the only
@@ -566,11 +568,13 @@ class TensorFlowBackend(backends.BackendBase):
       self.cell.zero_state(sampler.batch_size, self.inference_tf.float32)
     )
 
-    self.inference_tf.global_variables_initializer().run(
+    self.inference_tf.compat.v1.global_variables_initializer().run(
       session=self.inference_sess
     )
     # Restore trained model weights.
-    saver = self.inference_tf.train.Saver(self.inference_tf.global_variables())
+    saver = self.inference_tf.compat.v1.train.Saver(
+      self.inference_tf.global_variables()
+    )
     checkpoint_state = self.inference_tf.train.get_checkpoint_state(
       self.cache.path / "checkpoints"
     )
@@ -618,7 +622,7 @@ class TensorFlowBackend(backends.BackendBase):
     return generated
 
   def RandomizeSampleState(self) -> None:
-    import tensorflow as tf
+    from third_party.py.tensorflow import tf
 
     self.inference_state = [
       tf.nn.rnn_cell.LSTMStateTuple(

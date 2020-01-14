@@ -1,8 +1,6 @@
 """Unit tests for //system/machines:machine.py."""
 import tempfile
 
-import pytest
-
 from labm8.py import app
 from labm8.py import test
 from system.machines import machine

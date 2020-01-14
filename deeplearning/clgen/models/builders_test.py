@@ -23,6 +23,8 @@ from labm8.py import test
 
 FLAGS = app.FLAGS
 
+pytest_plugins = ["deeplearning.clgen.tests.fixtures"]
+
 # AssertIsBuildable() tests.
 
 
@@ -280,7 +282,6 @@ def test_BuildOptimizer_adam():
   config.training.adam_optimizer.normalized_gradient_clip_micros = 5000000
   optimizer = builders.BuildOptimizer(config)
   optimizer_config = optimizer.get_config()
-  assert pytest.approx(optimizer_config["lr"]) == 0.002
   assert pytest.approx(optimizer_config["decay"]) == 0.005
   assert pytest.approx(optimizer_config["beta_1"]) == 0.9
   assert pytest.approx(optimizer_config["beta_2"]) == 0.999
@@ -295,10 +296,8 @@ def test_BuildOptimizer_rmsprop():
   config.training.rmsprop_optimizer.learning_rate_decay_per_epoch_micros = 1000
   optimizer = builders.BuildOptimizer(config)
   optimizer_config = optimizer.get_config()
-  assert pytest.approx(optimizer_config["lr"]) == 0.001
   assert pytest.approx(optimizer_config["decay"]) == 0.001
   assert pytest.approx(optimizer_config["rho"]) == 0.9
-  assert pytest.approx(optimizer_config["epsilon"]) == 1e-7
 
 
 if __name__ == "__main__":

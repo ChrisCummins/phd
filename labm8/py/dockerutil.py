@@ -62,7 +62,7 @@ class DockerImageRunContext(object):
       [[f"--{k}", str(v)] for k, v in (flags or {}).items()],
     )
     return _Docker(
-      ["run"]
+      ["run", "--rm"]
       + entrypoint_args
       + volume_args
       + [self.image_name]

@@ -45,7 +45,7 @@ def MinimizeBibtexInPlace(bibtex) -> None:
       ],
     )
     # Only delete the URL of non-"misc" entries. Misc entries include websites.
-    if entry["ENTRYTYPE"] != "misc" and "url" in entry:
+    if entry.get("ENTRYTYPE") != "misc" and "url" in entry:
       del entry["url"]
 
 

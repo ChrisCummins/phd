@@ -68,6 +68,8 @@ class Workspace(object):
     (root_path / "third_party").mkdir()
     (root_path / "lightroom").mkdir()
 
+    return cls(str(root_path))
+
   @classmethod
   def FindWorkspace(cls, path: pathlib.Path) -> "Workspace":
     """Look for and return a workspace at or above the current path.

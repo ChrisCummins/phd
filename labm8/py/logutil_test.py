@@ -105,14 +105,14 @@ F0527 23:14:18.903151 1 log_to_file.py:31] Hello, fatal!
 MS_IN_YEAR = 1000 * 60 * 60 * 24 * 365
 
 
-def test_ConvertAbslLogToProtos_date_utc_epoch_ms():
+def test_ConvertAbslLogToProtos_date_unix_epoch_ms():
   """Test that dates are converted correctly."""
   p = logutil.ConertAbslLogToProtos(
     """\
 I0527 23:14:18.903151 140735784891328 log_to_file.py:31] Hello, info!
 """
   )
-  dt = labdate.DatetimeFromMillisecondsTimestamp(p[0].date_utc_epoch_ms)
+  dt = labdate.DatetimeFromMillisecondsTimestamp(p[0].date_unix_epoch_ms)
   assert dt.year == datetime.datetime.utcnow().year
   assert dt.month == 5
   assert dt.day == 27
