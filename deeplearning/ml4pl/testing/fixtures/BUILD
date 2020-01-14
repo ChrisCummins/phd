@@ -16,14 +16,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+package(default_visibility = ["//visibility:public"])
+
 py_library(
     name = "llvm_ir",
     testonly = 1,
     srcs = ["llvm_ir.py"],
     data = ["//deeplearning/ml4pl/testing/data:llvm_ir"],
-    visibility = ["//deeplearning/ml4pl:__subpackages__"],
     deps = [
         "//labm8/py:bazelutil",
         "//labm8/py:test",
+    ],
+)
+
+py_library(
+    name = "llvm_program_graph",
+    testonly = 1,
+    srcs = ["llvm_program_graph.py"],
+    deps = [
+        ":llvm_ir",
+        "//deeplearning/ml4pl/graphs:programl_pb_py",
+        "//deeplearning/ml4pl/graphs/llvm2graph:llvm2graph_py",
+        "//labm8/py:test",
+        "//third_party/py/networkx",
     ],
 )
