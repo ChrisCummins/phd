@@ -22,7 +22,7 @@ par_binary(
         "//labm8/py:app",
         "//labm8/py:fs",
         "//labm8/py:text",
-        "//tools/code_style/formatters:sql_formatter",
+        "//third_party/py/sqlparse",
         "//util/lmk",
     ],
 )

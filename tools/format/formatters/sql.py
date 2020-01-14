@@ -23,7 +23,6 @@ class FormatSql(formatter.Formatter):
 
   def __init__(self, *args, **kwargs):
     super(FormatSql, self).__init__(*args, **kwargs)
-    self.sqlformat = formatter.WhichOrDie("sqlformat")
 
   def RunOne(self, path):
     try:
