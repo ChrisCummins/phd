@@ -32,13 +32,8 @@ class FormatGo(formatter.Formatter):
     self.gofmt = formatter.WhichOrDie("gofmt")
 
     # Unpack gofmt.
-    self.gofmt = self.cache_path / "gofmt"
-    if not self.gofmt.is_file():
-      arch = "mac" if sys.platform == "darwin" else "linux"
-      gofmt = bazelutil.DataString(f"go_{arch}/bin/gofmt")
-      with open(self.gofmt, "wb") as f:
-        f.write(gofmt)
-        os.chmod(self.gofmt, 0o744)
+    arch = "mac" if sys.platform == "darwin" else "linux"
+    self.gofmt = bazelutil.DataPath(f"go_{arch}/bin/gofmt")
 
   def RunOne(self, path):
     return formatter.ExecOrError([self.gofmt, "-w", path])

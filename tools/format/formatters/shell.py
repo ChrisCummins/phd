@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This module defines a formatter for shell (i.e. bash, bats) sources."""
-import os
 import sys
 
 from labm8.py import bazelutil
@@ -24,17 +23,8 @@ class FormatShell(formatter.BatchedFormatter):
 
   def __init__(self, *args, **kwargs):
     super(FormatShell, self).__init__(*args, **kwargs)
-
-    # Unpack shfmt.
-    self.shfmt = self.cache_path / "shfmt"
-    if not self.shfmt.is_file():
-      if sys.platform == "darwin":
-        shfmt = bazelutil.DataString("shfmt_mac/file/shfmt")
-      else:
-        shfmt = bazelutil.DataString("shfmt_linux/file/shfmt")
-      with open(self.shfmt, "wb") as f:
-        f.write(shfmt)
-      os.chmod(self.shfmt, 0o744)
+    arch = "darwin" if sys.platform == "darwin" else "linux"
+    self.shfmt = bazelutil.DataPath(f"shfmt_{arch}/file/shfmt")
 
   def RunMany(self, paths):
     # To enable shfmt to parse bats tests we must insert a newline before the

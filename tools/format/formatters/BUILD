@@ -41,7 +41,6 @@ py_library(
     visibility = ["//tools/format/formatters:__subpackages__"],
     deps = [
         "//labm8/py:bazelutil",
-        "//labm8/py:system",
         "//tools/format:formatter",
     ],
 )
