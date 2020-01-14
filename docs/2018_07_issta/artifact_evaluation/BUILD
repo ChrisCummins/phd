@@ -32,7 +32,7 @@ py_test(
         ":01_evaluate_generator",
     ],
     deps = [
-        "//deeplearning/clgen:conftest",
+        "//deeplearning/clgen/tests:fixtures",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
         "//deeplearning/deepsmith/proto:generator_pb_py_grpc",
         "//labm8/py:bazelutil",

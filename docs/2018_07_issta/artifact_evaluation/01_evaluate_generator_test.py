@@ -1,19 +1,18 @@
 """Unit tests for :01_evaluate_generator.py."""
+import pathlib
 import subprocess
 
-from deeplearning.clgen.conftest import *
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from labm8.py import bazelutil
 from labm8.py import pbutil
 from labm8.py import test
-# Import the CLgen test fixtures into the global namespace. Note we can't import
-# only the fixtures we need here, since we must also import any dependent
-# fixtures.
 
 BIN = bazelutil.DataPath(
   "phd/docs/2018_07_issta/artifact_evaluation/01_evaluate_generator"
 )
+
+pytest_plugins = ["deeplearning.clgen.tests.fixtures"]
 
 
 def test_GenerateTestcases(abc_instance_config, tempdir: pathlib.Path):
