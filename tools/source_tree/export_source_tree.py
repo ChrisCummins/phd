@@ -148,7 +148,13 @@ def Export(
       if not exported_commit_count:
         return
       app.Log(1, "Pushing changes to remote")
-      destination_repo.git.push("origin")
+
+      push_opts = {}
+      if not resume_export:
+        # Use --force when we are not resuming an export, as we may have
+        # rewritten history.
+        push_opts["force"] = True
+      destination_repo.git.push("origin", **push_opts)
 
   run_handler(_DoExport)
 

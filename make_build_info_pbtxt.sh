@@ -39,6 +39,7 @@ cat << EOF
 seconds_since_epoch: $BUILD_TIMESTAMP
 host: "$STABLE_HOST"
 user: "$STABLE_USER"
+version: "$STABLE_VERSION"
 repo_dirty: $STABLE_GIT_REPO_DIRTY
 git_commit: "$STABLE_GIT_COMMIT_HASH"
 git_branch: "$STABLE_GIT_BRANCH"

@@ -55,15 +55,15 @@ message BuildInfo {
   required int64 seconds_since_epoch = 1;
   required string host = 2;
   required string user = 3;
-
+  required string version = 4;
   required bool repo_dirty = 5;
 
   // Git branch and remote are only available if on and tracking a git branch,
   // respectively.
-  required string git_commit = 4;
-  optional string git_branch = 6;
-  optional string git_tracking = 7;
-  optional string git_remote_url = 8;
+  required string git_commit = 6;
+  optional string git_branch = 7;
+  optional string git_tracking = 8;
+  optional string git_remote_url = 9;
 
   optional string git_commit_author = 10;
   optional int64 git_commit_seconds_since_epoch = 11;

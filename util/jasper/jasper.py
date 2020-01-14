@@ -30,7 +30,7 @@ import typing
 from labm8.py import app
 from labm8.py import fs
 from labm8.py import text
-from tools.code_style.formatters import sql_formatter
+import sqlparse
 from util.lmk import lmk
 
 FLAGS = app.FLAGS
@@ -90,7 +90,9 @@ def getQueryFromUserOrDie(
       [x.rstrip() for x in query.split("\n") if x.strip()]
     ).strip()
 
-    query = sql_formatter.FormatSql(query)
+    query = sqlparse.format(
+        query, reindent=True, keyword_case="upper"
+    ).rstrip() + "\n"
 
   if not query:
     print("No query to execute, aborting.", file=sys.stderr)
