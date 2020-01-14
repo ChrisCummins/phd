@@ -66,5 +66,12 @@ def test_tensorflow_gpu_computation():
     )
 
 
+def test_contrib_module():
+  """Test that Tensorflow submodules are accessible."""
+  from third_party.py.tensorflow import tf
+
+  _ = tf.contrib.seq2seq
+
+
 if __name__ == "__main__":
   test.Main()
