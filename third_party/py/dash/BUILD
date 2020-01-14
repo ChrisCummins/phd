@@ -16,6 +16,7 @@ py_library(
         requirement("dash-renderer"),
         requirement("dash-table"),
         requirement("plotly"),
+        "//third_party/py/click",
         "//third_party/py/decorator",
         "//third_party/py/flask",
         "//third_party/py/requests",

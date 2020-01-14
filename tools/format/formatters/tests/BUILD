@@ -41,6 +41,16 @@ py_test(
 )
 
 py_test(
+    name = "python_test",
+    srcs = ["python_test.py"],
+    deps = [
+        ":testing",
+        "//labm8/py:test",
+        "//tools/format/formatters:python",
+    ],
+)
+
+py_test(
     name = "shell_test",
     srcs = ["shell_test.py"],
     deps = [

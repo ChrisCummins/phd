@@ -100,6 +100,7 @@ py_library(
     visibility = ["//tools/format/formatters:__subpackages__"],
     deps = [
         "//tools/format:formatter",
+        "@black2-spaces//:black",
     ],
 )
 

@@ -7,7 +7,7 @@ appdirs==1.4.3
 appnope==0.1.0
 ascii_art==0.1.0
 astroid==1.6.1
-attrs==17.4.0  # Dependency of pytest.
+attrs==19.3.0
 autoenv==1.0.0
 backports-abc==0.5
 backports.functools-lru-cache==1.5
@@ -19,7 +19,7 @@ certifi==2018.4.16  # Dependency of requests.
 cffi==1.11.5
 chardet==3.0.4  # Dependency of requests.
 checksumdir==1.0.5
-Click==7.0  # Dependency of dash.
+Click==7.0
 configparser==3.5.0
 coverage==4.5.1  # Needed by pytest-cov.
 cpplint==1.3.0
@@ -29,6 +29,7 @@ dash-core-components==0.44.0
 dash-html-components==0.14.0
 dash-renderer==0.20.0
 dash-table==3.6.0
+dataclasses==0.6
 decorator==4.3.0
 detect-secrets==0.12.4
 # The graph_nets package depends on a specific version of dm-sonnet. See:
@@ -95,6 +96,7 @@ memory-profiler==0.55.0
 mistune==0.8.3
 monotonic==1.5  # Needed by fasteners.
 more-itertools==7.2.0  # Need by pytest.
+mypy-extensions==0.4.3
 mysqlclient==1.4.2.post1
 nbconvert==5.3.1
 nbformat==4.4.0  # Needed by notebook.
@@ -110,6 +112,7 @@ paramiko==2.6.0  # Needed by fs.ssh.
 parso==0.1.1
 pathlib2==2.3.2
 pathlib==1.0.1
+pathspec==0.7.0
 pexpect==4.4.0
 pickleshare==0.7.4
 plotly==3.7.0
@@ -141,15 +144,14 @@ py==1.5.2
 #   pycparser.ply.yacc.YaccError: Unable to build parser
 pycparser==2.17
 pycparserext==2016.2
-# Interface for graphviz. See: https://github.com/pydot/pydot
 pydot==1.4.1
 PyGithub==1.39
 Pygments==2.2.0
-pybind11==2.4.2  # Implicit dependency of pyopencl.
+pybind11==2.4.2  # Needed by pyopencl.
 pyfiglet==0.8.post1
 pylint==1.8.2
 pyopencl==2018.2.5
-pyOpenSSL==19.1.0  # Implicit dependency of urllib3.
+pyOpenSSL==19.1.0  # Needed by urllib3.
 pyparsing==2.2.0
 pytest-benchmark==3.2.2
 pytest-cov==2.8.1
@@ -167,6 +169,7 @@ pyzmq==17.0.0
 pyasn1==0.4.7  # Needed by oauth2client.
 pyasn1_modules==0.2.7  # Needed by oauth2client.
 qtconsole==4.3.1
+regex==2019.11.1
 requests==2.20.1
 retrying==1.3.3  # Needed by plotly.
 rsa==4.0  # Needed by oauth2client.
@@ -194,17 +197,20 @@ tensorflow==1.14.0
 terminado==0.8.1
 testpath==0.3.1
 TogglPy==0.1.1
+toml==0.10.0
 torch==1.3.0
 tornado==5.0
 tqdm==4.38.0
 traitlets==4.3.2
 trash-cli==0.17.1.14
+typed-ast==1.4.1
+typing-extensions==3.7.4.1
 umap==0.1.1
-urllib3==1.24.2  # Implicit dependency of requests.
+urllib3==1.24.2  # Needed by requests.
 virtualenv==15.1.0
 wcwidth==0.1.7
 webencodings==0.5.1
-Werkzeug==0.15.3  # Implicit dependency of Flask.
+Werkzeug==0.15.3  # Needed by Flask.
 wget==3.2
 widgetsnbextension==3.1.4
 wrapt==1.11.2

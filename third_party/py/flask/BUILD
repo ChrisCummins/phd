@@ -17,7 +17,7 @@ py_library(
         requirement("Flask-SQLalchemy"),
         requirement("Werkzeug"),
         requirement("jinja2"),
-        requirement("Click"),
+        "//third_party/py/click",
         requirement("itsdangerous"),
         requirement("chardet"),
         requirement("certifi"),
