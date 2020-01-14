@@ -182,14 +182,6 @@ def Symlink(src, dst):
     os.symlink(src, dst)
 
 
-def SymlinkGitHook(src_basename, dst_basename):
-  """Symlink a git hook script."""
-  src = os.path.join(PHD_ROOT, 'tools', 'git', src_basename)
-  dst = os.path.join(PHD_ROOT, '.git', 'hooks', dst_basename)
-  assert os.path.isfile(src)
-  Symlink(src, dst)
-
-
 def GetConfigurationOptions(argv):
   """Parse command line arguments and ask yes/no questions.
 
@@ -250,19 +242,6 @@ def GetConfigurationOptions(argv):
   parser.set_defaults(update_git_submodules=False)
   if is_git_repo and os.path.isfile('.gitmodules'):
     yes_no_prompts.append(('update_git_submodules', 'Update git submodules?'))
-
-  # --[no]install_git_hooks.
-  parser.add_argument(
-      '--install_git_hooks', dest='install_git_hooks',
-      action='store_true', help='Install my custom workflow git hooks.')
-  parser.add_argument(
-      '--noinstall_git_hooks', dest='install_git_hooks',
-      action='store_false', help='Install my custom workflow git hooks.')
-  parser.set_defaults(install_git_hooks=False)
-  if is_git_repo and os.path.isdir('tools/git'):
-    yes_no_prompts.append(('install_git_hooks',
-                           "Install git hooks? (If you don't know what these "
-                           "are, you don't need them)"))
 
   args = parser.parse_args(argv)
 
@@ -369,12 +348,6 @@ def main(argv):
     subprocess.check_call(
         ['git', '-C', PHD_ROOT, 'submodule', 'update', '--init', '--recursive'],
         stdout=DEVNULL)
-
-  if args.install_git_hooks:
-    SymlinkGitHook('post_commit.py', 'post-commit')
-    SymlinkGitHook('post_rebase.py', 'post-rebase')
-    SymlinkGitHook('pre_commit.py', 'pre-commit')
-    SymlinkGitHook('pre_push.sh', 'pre-push')
 
   # Find the path of a supported python binary.
   SUPPORTED_PYTHON_VERSIONS_IN_ORDER_OF_PREFERENCE = ['python3.7', 'python3.6']
