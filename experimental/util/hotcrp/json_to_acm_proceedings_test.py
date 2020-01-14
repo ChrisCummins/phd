@@ -1,7 +1,7 @@
 """Unit tests for //experimental/hotcrp/json_to_acm_proceedings.py."""
 import io
 
-from experimental.hotcrp import json_to_acm_proceedings
+from experimental.util.hotcrp import json_to_acm_proceedings
 from labm8.py import app
 from labm8.py import test
 
