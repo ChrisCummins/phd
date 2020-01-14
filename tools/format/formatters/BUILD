@@ -99,6 +99,7 @@ py_library(
     srcs = ["python.py"],
     visibility = ["//tools/format/formatters:__subpackages__"],
     deps = [
+        "//third_party/py/reorder_python_imports",
         "//tools/format:formatter",
         "@black2-spaces//:black",
     ],
