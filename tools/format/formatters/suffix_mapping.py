@@ -30,6 +30,8 @@ FLAGS = app.FLAGS
 # for a path, key into this dictionary first by pathlib.Path.suffix, or by
 # pathlib.Path.name if there is no suffix.
 mapping = {
+  ".bats": shell.FormatShell,
+  ".BUILD": bazel.FormatBuild,
   ".bzl": python.FormatPython,
   ".c": cxx.FormatCxx,
   ".cc": cxx.FormatCxx,
@@ -47,10 +49,9 @@ mapping = {
   ".json": json.FormatJson,
   ".md": text.FormatText,
   ".py": python.FormatPython,
+  ".sh": shell.FormatShell,
   ".sql": sql.FormatSql,
   ".txt": text.FormatText,
-  ".sh": shell.FormatShell,
-  ".bats": shell.FormatShell,
   "BUILD": bazel.FormatBuild,
   "WORKSPACE": bazel.FormatBuild,
 }

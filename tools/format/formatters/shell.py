@@ -37,4 +37,21 @@ class FormatShell(formatter.BatchedFormatter):
       os.chmod(self.shfmt, 0o744)
 
   def RunMany(self, paths):
-    return formatter.ExecOrError([self.shfmt, "-i", "2", "-ci", "-w"] + paths)
+    # To enable shfmt to parse bats tests we must insert a newline before the
+    # opening brace.
+    # See https://www.gitmemory.com/issue/bats-core/bats-core/192/528315083
+    bats_paths = [p for p in paths if p.suffix == '.bats']
+    if bats_paths:
+      error = formatter.ExecOrError(["perl", "-pi", "-e" ,'s/^(\@test.*) \{$/$1\n{/'] + bats_paths)
+      if error:
+        return error
+
+    error = formatter.ExecOrError([self.shfmt, "-i", "2", "-ci", "-w"] + paths)
+    if error:
+      return error
+
+    # Reverse the temporary reformatting of bats tests.
+    if bats_paths:
+      error = formatter.ExecOrError(["perl", "-pi", "-e", 's/^\{\R//; s/(\@test.*$)/$1 {/'] + bats_paths)
+      if error:
+        return error
