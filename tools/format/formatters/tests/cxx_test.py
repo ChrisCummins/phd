@@ -14,24 +14,27 @@
 """Unit tests for //tools/format/formatters:cxx."""
 from labm8.py import test
 from tools.format.formatters import cxx
-from tools.format.formatters.tests import testing
 
 FLAGS = test.FLAGS
 
 
+def test_empty_program():
+  cxx.FormatCxx.Format("")
+
+
 def test_small_cxx_program():
   """Test pre-processing a small C++ program."""
-  assert (
-    testing.FormatText(
-      cxx.FormatCxx,
-      """
+  text = cxx.FormatCxx.Format(
+    """
 #define FOO T
 template<typename FOO>
 FOO foobar(const T& a) {return a;}
 
 int foo() { return foobar<int>(10); }
-""",
-    )
+"""
+  )
+  assert (
+    text
     == """
 #define FOO T
 template <typename FOO>

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Utilities for interfacing with git."""
+"""Python wrappers for interfacing with git."""
 import os
 import pathlib
 import subprocess
@@ -20,13 +20,17 @@ from typing import Iterable
 from typing import List
 from typing import Tuple
 
-import build_info
 from labm8.py import app
 
 FLAGS = app.FLAGS
 
 
 def GetGitRootOrDie() -> pathlib.Path:
+  """Get the root directory of the current git repository.
+
+  Returns:
+    The absolute path of the git repository of the current working directory.
+  """
   try:
     top_level = subprocess.check_output(
       ["git", "rev-parse", "--show-toplevel"], universal_newlines=True
@@ -37,10 +41,16 @@ def GetGitRootOrDie() -> pathlib.Path:
     sys.exit(1)
 
 
-def GetModifiedFilesOrDie(staged: bool) -> List[pathlib.Path]:
+def GetModifiedFilesOrDie(staged: bool) -> List[str]:
   """List *either* the staged or unstaged files (not both).
 
   To list both, call this function twice with both staged=True and staged=False.
+
+  Args:
+    staged: Return staged files if True, else unstaged files.
+
+  Returns:
+    A list of paths relative to the repo root.
   """
   cmd = ["git", "diff", "--name-only"]
   if staged:
@@ -59,8 +69,14 @@ def GetModifiedFilesOrDie(staged: bool) -> List[pathlib.Path]:
 def GetStagedPathsOrDie(
   path_generator,
 ) -> Tuple[List[pathlib.Path], List[pathlib.Path]]:
-  os.chdir(GetGitRootOrDie())
+  """
 
+  Args:
+    path_generator:
+
+  Returns:
+
+  """
   staged_paths, partially_staged_paths = [], []
 
   staged_relpaths = GetModifiedFilesOrDie(staged=True)
@@ -96,42 +112,3 @@ def GitAddOrDie(paths: Iterable[pathlib.Path]):
   except subprocess.CalledProcessError:
     print(f"ERROR: git add faled: {paths}", file=sys.stderr)
     sys.exit(1)
-
-
-def InstallPreCommitHookOrDie(cache_path: pathlib.Path):
-  git_root = GetGitRootOrDie()
-
-  hooks_dir = git_root / ".git" / "hooks"
-
-  if not hooks_dir.is_dir():
-    print(f"ERROR: git hooks directory not found: {hooks_dir}", file=sys.stderr)
-    sys.exit(1)
-
-  # Install pre-commit hook which runs this program in --pre_commit mode.
-  pre_commit = hooks_dir / "pre-commit"
-  if pre_commit.is_file():
-    os.unlink(pre_commit)
-
-  with open(pre_commit, "w") as f:
-    f.write(f"#!/usr/bin/env bash\nset -e\nformat --pre_commit\n")
-  os.chmod(pre_commit, 0o744)
-  print(pre_commit)
-
-  # Install prepare-commit-msg hook which adds a "signed off" hook.
-  prepare_commit_msg = hooks_dir / "prepare-commit-msg"
-  if prepare_commit_msg.is_file():
-    os.unlink(prepare_commit_msg)
-
-  version = build_info.GetBuildInfo().version
-  with open(prepare_commit_msg, "w") as f:
-    f.write(
-      f"""\
-#!/usr/bin/env bash
-cp $1 {cache_path / 'git_commit_message.txt'}
-echo -e "\\n\\nSigned-off-by: format {version} <github.com/ChrisCummins/format>" > $1
-cat {cache_path / 'git_commit_message.txt'} >> $1
-rm -f {cache_path / 'git_commit_message.txt'}
-"""
-    )
-  os.chmod(prepare_commit_msg, 0o744)
-  print(prepare_commit_msg)

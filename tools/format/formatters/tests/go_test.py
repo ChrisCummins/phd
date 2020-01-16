@@ -14,23 +14,22 @@
 """Unit tests for //tools/format/formatters:go."""
 from labm8.py import test
 from tools.format.formatters import go
-from tools.format.formatters.tests import testing
 
 FLAGS = test.FLAGS
 
 
 def test_small_go_program():
   """Test pre-processing a small C++ program."""
-  assert (
-    testing.FormatText(
-      go.FormatGo,
-      """
+  text = go.FormatGo.Format(
+    """
 package main
 import "fmt"
 func main() {
   fmt.Println("hello world")
-}""",
-    )
+}"""
+  )
+  assert (
+    text
     == """\
 package main
 
@@ -41,6 +40,11 @@ func main() {
 }
 """
   )
+
+
+def test_empty_file():
+  with test.Raises(go.FormatGo.FormatError):
+    go.FormatGo.Format("")
 
 
 if __name__ == "__main__":

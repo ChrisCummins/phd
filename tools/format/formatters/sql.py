@@ -13,12 +13,11 @@
 # limitations under the License.
 """This module defines a formatter for SQL sources."""
 import sqlparse
-
 from labm8.py import fs
-from tools.format import formatter
+from tools.format.formatters.base import file_formatter
 
 
-class FormatSql(formatter.Formatter):
+class FormatSql(file_formatter.FileFormatter):
   """Format SQL files."""
 
   def __init__(self, *args, **kwargs):

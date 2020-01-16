@@ -39,24 +39,33 @@ exports_repo(
 )
 
 py_library(
-    name = "formatter",
-    srcs = ["formatter.py"],
-    visibility = ["//tools/format/formatters:__subpackages__"],
+    name = "app_paths",
+    srcs = ["app_paths.py"],
+    visibility = ["//tools/format:__subpackages__"],
     deps = [
+        "//:build_info",
         "//labm8/py:app",
+        "//third_party/py/appdirs",
     ],
 )
 
 py_library(
-    name = "formatter_executor",
-    srcs = ["formatter_executor.py"],
+    name = "default_suffix_mapping",
+    srcs = ["default_suffix_mapping.py"],
+    visibility = ["//tools/format:__subpackages__"],
     deps = [
         "//labm8/py:app",
-        "//labm8/py:crypto",
-        "//labm8/py:shell",
-        "//labm8/py:sqlutil",
-        "//third_party/py/sqlalchemy",
-        "//tools/format/formatters:suffix_mapping",
+        "//tools/format/formatters:bazel",
+        "//tools/format/formatters:cxx",
+        "//tools/format/formatters:go",
+        "//tools/format/formatters:java",
+        "//tools/format/formatters:javascript",
+        "//tools/format/formatters:json",
+        "//tools/format/formatters:protobuf",
+        "//tools/format/formatters:python",
+        "//tools/format/formatters:shell",
+        "//tools/format/formatters:sql",
+        "//tools/format/formatters:text",
     ],
 )
 
@@ -64,14 +73,12 @@ py_binary(
     name = "format",
     srcs = ["format.py"],
     deps = [
-        ":formatter_executor",
-        ":git_util",
+        ":app_paths",
+        ":default_suffix_mapping",
+        ":format_paths",
         ":path_generator",
-        "//:build_info",
+        ":pre_commit",
         "//labm8/py:app",
-        "//third_party/py/appdirs",
-        "//third_party/py/fasteners",
-        "//tools/format/formatters:suffix_mapping",
     ],
 )
 
@@ -85,10 +92,23 @@ bats_test(
 )
 
 py_library(
+    name = "format_paths",
+    srcs = ["format_paths.py"],
+    deps = [
+        ":app_paths",
+        ":default_suffix_mapping",
+        "//labm8/py:app",
+        "//labm8/py:ppar",
+        "//labm8/py:shell",
+        "//labm8/py:sqlutil",
+        "//third_party/py/sqlalchemy",
+    ],
+)
+
+py_library(
     name = "git_util",
     srcs = ["git_util.py"],
     deps = [
-        "//:build_info",
         "//labm8/py:app",
     ],
 )
@@ -108,5 +128,19 @@ py_test(
         ":path_generator",
         "//labm8/py:fs",
         "//labm8/py:test",
+    ],
+)
+
+py_binary(
+    name = "pre_commit",
+    srcs = ["pre_commit.py"],
+    deps = [
+        ":app_paths",
+        ":format_paths",
+        ":git_util",
+        ":path_generator",
+        "//:build_info",
+        "//labm8/py:app",
+        "//labm8/py:fs",
     ],
 )

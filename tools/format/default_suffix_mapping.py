@@ -19,6 +19,7 @@ from tools.format.formatters import go
 from tools.format.formatters import java
 from tools.format.formatters import javascript
 from tools.format.formatters import json
+from tools.format.formatters import protobuf
 from tools.format.formatters import python
 from tools.format.formatters import shell
 from tools.format.formatters import sql
@@ -26,7 +27,7 @@ from tools.format.formatters import text
 
 FLAGS = app.FLAGS
 
-# The mapping from path suffixes to Formatter classes. To look up the formatter
+# The mapping from path suffixes to FileFormatter classes. To look up the formatter
 # for a path, key into this dictionary first by pathlib.Path.suffix, or by
 # pathlib.Path.name if there is no suffix.
 mapping = {
@@ -48,6 +49,7 @@ mapping = {
   ".js": javascript.FormatJavaScript,
   ".json": json.FormatJson,
   ".md": text.FormatText,
+  ".proto": protobuf.FormatProtobuf,
   ".py": python.FormatPython,
   ".sh": shell.FormatShell,
   ".sql": sql.FormatSql,

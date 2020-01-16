@@ -14,28 +14,35 @@
 """Unit tests for //tools/format/formatters:python."""
 from labm8.py import test
 from tools.format.formatters import python
-from tools.format.formatters.tests import testing
 
 FLAGS = test.FLAGS
 
 
+def test_empty_python_program():
+  assert python.FormatPython.Format("") == ""
+
+
 def test_small_python_program():
   """Test pre-processing a small C++ program."""
-  formatted = testing.FormatText(
-      python.FormatPython,
-      """
+  text = python.FormatPython.Format(
+    """
 def foo():
       print('hi')
-""",
+"""
   )
-  print(formatted)
+  print(text)
   assert (
-    formatted
+    text
     == """\
 def foo():
   print("hi")
 """
   )
+
+
+def test_malformed_python_program():
+  with test.Raises(python.FormatPython.FormatError):
+    python.FormatPython.Format("invalid syntax")
 
 
 if __name__ == "__main__":

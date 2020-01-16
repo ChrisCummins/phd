@@ -20,7 +20,7 @@ reducing cognitive load and allowing you to focus on what matters.
 ## Features
 
 ☑️ **Consistent** code styling of C/C++, Python, Java, SQL, JavaScript, HTML,
-  CSS, Go, Markdown, plain text, and JSON files.
+  Protocol Buffers, CSS, Go, Markdown, plain text, and JSON files.
 
 ☑️ **Git-aware** pre-commit mode which formats changed files and signs off
   commits.

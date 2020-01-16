@@ -14,17 +14,25 @@
 """Unit tests for //tools/format/formatters:text."""
 from labm8.py import test
 from tools.format.formatters import text
-from tools.format.formatters.tests import testing
 
 FLAGS = test.FLAGS
 
 
+def test_empty_file():
+  assert text.FormatText.Format("") == ""
+
+
 def test_strip_trailing_whitespace():
-  assert testing.FormatText(text.FormatText, "Hello   \n") == "Hello\n"
+  assert text.FormatText.Format("Hello   \n") == "Hello\n"
 
 
 def test_add_newline():
-  assert testing.FormatText(text.FormatText, "Hello") == "Hello\n"
+  assert text.FormatText.Format("Hello") == "Hello\n"
+
+
+@test.XFail(reason="I have not yet implemented EOF clean-up")
+def test_multiple_newlines_at_end_of_file():
+  assert text.FormatText.Format("Hello\n\n") == "Hello\n"
 
 
 if __name__ == "__main__":

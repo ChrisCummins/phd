@@ -20,10 +20,10 @@ py_library(
     data = [
         "@com_github_bazelbuild_buildtools//buildifier",
     ],
-    visibility = ["//tools/format/formatters:__subpackages__"],
+    visibility = ["//tools/format:__subpackages__"],
     deps = [
         "//labm8/py:bazelutil",
-        "//tools/format:formatter",
+        "//tools/format/formatters/base:batched_file_formatter",
     ],
 )
 
@@ -38,10 +38,10 @@ py_library(
             "@llvm_linux//:clang-format",
         ],
     }),
-    visibility = ["//tools/format/formatters:__subpackages__"],
+    visibility = ["//tools/format:__subpackages__"],
     deps = [
         "//labm8/py:bazelutil",
-        "//tools/format:formatter",
+        "//tools/format/formatters/base:batched_file_formatter",
     ],
 )
 
@@ -56,10 +56,10 @@ py_library(
             "@go_linux//:gofmt",
         ],
     }),
-    visibility = ["//tools/format/formatters:__subpackages__"],
+    visibility = ["//tools/format:__subpackages__"],
     deps = [
         "//labm8/py:bazelutil",
-        "//tools/format:formatter",
+        "//tools/format/formatters/base:file_formatter",
     ],
 )
 
@@ -67,39 +67,57 @@ py_library(
     name = "java",
     srcs = ["java.py"],
     data = ["//third_party/java:google_java_format_jar"],
-    visibility = ["//tools/format/formatters:__subpackages__"],
+    visibility = ["//tools/format:__subpackages__"],
     deps = [
         "//labm8/py:bazelutil",
-        "//tools/format:formatter",
+        "//tools/format/formatters/base:batched_file_formatter",
     ],
 )
 
 py_library(
     name = "javascript",
     srcs = ["javascript.py"],
-    visibility = ["//tools/format/formatters:__subpackages__"],
+    visibility = ["//tools/format:__subpackages__"],
     deps = [
         "//labm8/py:fs",
-        "//tools/format:formatter",
+        "//tools/format/formatters/base:batched_file_formatter",
     ],
 )
 
 py_library(
     name = "json",
     srcs = ["json.py"],
-    visibility = ["//tools/format/formatters:__subpackages__"],
+    visibility = ["//tools/format:__subpackages__"],
     deps = [
-        "//tools/format:formatter",
+        "//tools/format/formatters/base:file_formatter",
+    ],
+)
+
+py_library(
+    name = "protobuf",
+    srcs = ["protobuf.py"],
+    data = select({
+        "//:darwin": [
+            "@prototool_darwin//file",
+        ],
+        "//conditions:default": [
+            "@prototool_linux//file",
+        ],
+    }),
+    visibility = ["//tools/format:__subpackages__"],
+    deps = [
+        "//labm8/py:bazelutil",
+        "//tools/format/formatters/base:file_formatter",
     ],
 )
 
 py_library(
     name = "python",
     srcs = ["python.py"],
-    visibility = ["//tools/format/formatters:__subpackages__"],
+    visibility = ["//tools/format:__subpackages__"],
     deps = [
         "//third_party/py/reorder_python_imports",
-        "//tools/format:formatter",
+        "//tools/format/formatters/base:batched_file_formatter",
         "@black2-spaces//:black",
     ],
 )
@@ -115,47 +133,28 @@ py_library(
             "@shfmt_linux//file",
         ],
     }),
-    visibility = ["//tools/format/formatters:__subpackages__"],
+    visibility = ["//tools/format:__subpackages__"],
     deps = [
         "//labm8/py:bazelutil",
-        "//tools/format:formatter",
+        "//tools/format/formatters/base:batched_file_formatter",
     ],
 )
 
 py_library(
     name = "sql",
     srcs = ["sql.py"],
-    visibility = ["//tools/format/formatters:__subpackages__"],
-    deps = [
-        "//third_party/py/sqlparse",
-        "//tools/format:formatter",
-    ],
-)
-
-py_library(
-    name = "suffix_mapping",
-    srcs = ["suffix_mapping.py"],
     visibility = ["//tools/format:__subpackages__"],
     deps = [
-        ":bazel",
-        ":cxx",
-        ":go",
-        ":java",
-        ":javascript",
-        ":json",
-        ":python",
-        ":shell",
-        ":sql",
-        ":text",
-        "//labm8/py:app",
+        "//third_party/py/sqlparse",
+        "//tools/format/formatters/base:file_formatter",
     ],
 )
 
 py_library(
     name = "text",
     srcs = ["text.py"],
-    visibility = ["//tools/format/formatters:__subpackages__"],
+    visibility = ["//tools/format:__subpackages__"],
     deps = [
-        "//tools/format:formatter",
+        "//tools/format/formatters/base:file_formatter",
     ],
 )

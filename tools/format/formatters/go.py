@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This module defines a formatter for go sources."""
-import os
 import sys
 
 from labm8.py import bazelutil
-from tools.format import formatter
+from tools.format.formatters.base import file_formatter
 
 
-class FormatGo(formatter.Formatter):
+class FormatGo(file_formatter.FileFormatter):
   """Format go sources.
 
   Run linter on each file individually because:
@@ -29,11 +28,11 @@ class FormatGo(formatter.Formatter):
 
   def __init__(self, *args, **kwargs):
     super(FormatGo, self).__init__(*args, **kwargs)
-    self.gofmt = formatter.WhichOrDie("gofmt")
+    self.gofmt = self._Which("gofmt")
 
     # Unpack gofmt.
     arch = "mac" if sys.platform == "darwin" else "linux"
     self.gofmt = bazelutil.DataPath(f"go_{arch}/bin/gofmt")
 
   def RunOne(self, path):
-    return formatter.ExecOrError([self.gofmt, "-w", path])
+    self._Exec([self.gofmt, "-w", path])
