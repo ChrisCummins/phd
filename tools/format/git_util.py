@@ -113,7 +113,7 @@ def InstallPreCommitHookOrDie(cache_path: pathlib.Path):
     os.unlink(pre_commit)
 
   with open(pre_commit, "w") as f:
-    f.write(f"#!/usr/bin/env bash\nset -eu\n{sys.argv[0]} --pre_commit\n")
+    f.write(f"#!/usr/bin/env bash\nset -e\nformat --pre_commit\n")
   os.chmod(pre_commit, 0o744)
   print(pre_commit)
 
