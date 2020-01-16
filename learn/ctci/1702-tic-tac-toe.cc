@@ -10,16 +10,19 @@ static unsigned int seed = 0xCEC;
 
 using Board = std::array<std::array<char, 3>, 3>;
 
-inline void zero_board(Board &b) {
-  for (auto &row : b)
-    for (auto &cell : row) cell = '-';
+inline void zero_board(Board *b) {
+  for (auto &row : *b) {
+    for (auto &cell : row) {
+      cell = '-';
+    }
+  }
 }
 
 //
 // There are eight possible solutions. Test for each.
 //
 bool player_won(const Board &b, const char player) {
-  // Columns:
+  // Rows:
   if (b[0][0] == player && b[1][0] == player && b[2][0] == player)
     return true;
   else if (b[0][1] == player && b[1][1] == player && b[2][1] == player)
@@ -27,7 +30,7 @@ bool player_won(const Board &b, const char player) {
   else if (b[0][2] == player && b[1][2] == player && b[2][2] == player)
     return true;
 
-  // Rows:
+  // Columns:
   else if (b[0][0] == player && b[0][1] == player && b[0][2] == player)
     return true;
   else if (b[1][0] == player && b[1][1] == player && b[1][2] == player)
@@ -49,13 +52,31 @@ bool player_won(const Board &b, const char player) {
 // Tests //
 ///////////
 
-TEST(TicTacToe, player_won) {
+TEST(TicTacToe, EmptyBoard) {
   Board b;
-  zero_board(b);
+  zero_board(&b);
 
   ASSERT_EQ(false, player_won(b, 'x'));
   ASSERT_EQ(false, player_won(b, 'y'));
 
+  //  - - -
+  //  - - -
+  //  - - -
+
+  ASSERT_EQ(false, player_won(b, 'x'));
+  ASSERT_EQ(false, player_won(b, 'y'));
+}
+
+TEST(TicTacToe, VerticalColumnWin) {
+  Board b;
+  zero_board(&b);
+
+  ASSERT_EQ(false, player_won(b, 'x'));
+  ASSERT_EQ(false, player_won(b, 'y'));
+
+  //  X Y -
+  //  X - Y
+  //  X - Y
   b[0][0] = 'x';
   b[1][0] = 'x';
   b[2][0] = 'x';
@@ -63,7 +84,7 @@ TEST(TicTacToe, player_won) {
   b[1][2] = 'y';
   b[2][2] = 'y';
 
-  ASSERT_EQ(true, player_won(b, 'x'));
+  ASSERT_EQ(tru, player_won(b, 'x'));
   ASSERT_EQ(false, player_won(b, 'y'));
 }
 

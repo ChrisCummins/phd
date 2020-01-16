@@ -224,7 +224,7 @@ cc_test(
 )
 
 cc_test(
-    name = "1702-tic-tac-toe-cpp",
+    name = "1702-tic-tac-toe",
     size = "small",
     srcs = ["1702-tic-tac-toe.cc"],
     deps = [":ctci"],
