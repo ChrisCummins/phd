@@ -12,26 +12,27 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
-"""Unit tests for //deeplearning/clgen/corpus.py."""
+"""Unit tests for //deeplearning/clgen/corpuses:corpus."""
 import datetime
 import os
 import pathlib
 import tempfile
+
+from labm8.py import app
+from labm8.py import test
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import corpuses
 from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import corpus_pb2
-from labm8.py import app
-from labm8.py import test
 
 FLAGS = app.FLAGS
 
 pytest_plugins = ["deeplearning.clgen.tests.fixtures"]
 
 # The Corpus.hash for an OpenCL corpus of the abc_corpus.
-ABC_CORPUS_HASH = "cb7c7a23c433a1f628c9b120378759f1723fdf42"
+ABC_CORPUS_HASH = "bcde13c33c378c0bfdbdbdce789029dfdb083b0f"
 
 # ExpandConfigPath() tests.
 
