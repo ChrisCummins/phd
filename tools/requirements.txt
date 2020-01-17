@@ -68,6 +68,7 @@ httplib2==0.14  # Needed by oauth2client
 humanize==0.5.1
 importlib-metadata==0.23  # Needed by pytest.
 idna==2.6  # Dependency of requests.
+inotify==0.2.10
 ipaddress==1.0.23  # Dependency of urllib3
 ipdb==0.11
 ipykernel==4.8.2
