@@ -1,4 +1,4 @@
-# Root package for code that works with GitHub.
+# Helpers for for writing tests that interface with Github API.
 #
 # Copyright 2018, 2019 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -14,27 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
-
-py_binary(
-    name = "api",
-    srcs = ["api.py"],
+py_library(
+    name = "requires_access_token",
+    testonly = 1,
+    srcs = ["requires_access_token.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//labm8/py:app",
-        "//third_party/py/github",
-    ],
-)
-
-py_test(
-    name = "api_test",
-    srcs = ["api_test.py"],
-    deps = [
-        ":api",
-        "//datasets/github/testing:requires_access_token",
-        "//labm8/py:app",
-        "//labm8/py:fs",
+        "//datasets/github:api",
         "//labm8/py:test",
-        "//third_party/py/pytest",
     ],
 )

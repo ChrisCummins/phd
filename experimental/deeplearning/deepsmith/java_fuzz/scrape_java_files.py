@@ -168,7 +168,9 @@ def main():
     humanize.Commas(len(words)),
   )
 
-  connection = github_api.GetGithubConectionFromFlagsOrDie()
+  connection = github_api.GetDefaultGithubConnectionOrDie(
+    extra_access_token_paths=["~/.github/access_tokens/scraper.txt"]
+  )
   scraper = FuzzyGitHubJavaScraper(connection, FLAGS.db(), words)
   scraper.Run(FLAGS.n)
 

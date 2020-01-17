@@ -44,6 +44,7 @@ par_binary(
     name = "gh_archiver",
     srcs = ["gh_archiver.py"],
     deps = [
+        "//datasets/github:api",
         "//labm8/py:app",
         "//third_party/py/git",
         "//third_party/py/github",

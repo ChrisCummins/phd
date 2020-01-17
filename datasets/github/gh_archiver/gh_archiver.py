@@ -26,24 +26,19 @@ remote.
 Setup:
 
     Create a Github personal access token by visiting
-    <https://github.com/settings/tokens>. If you intend to mirror your own
-    private repositories, you should enable private repository permissions when
-    creating the token. Else, no permissions are required.
+    <https://github.com/settings/tokens/new>. If you intend to mirror your own
+    private repositories, select "repo" from the list of available scopes. To
+    mirror only your public repositories or those another user, no scopes are
+    required..
 
-    Create a ~/.githubrc file containing your Github username and the personal
-    access token you just created:
+    Create a ~/.github/access_tokens/gh_archiver.txt file containing your
+    the personal access token you just created:
 
-        $ cat <<EOF > ~/.githubrc
-        [User]
-        Username = YourUsername
-
-        [Tokens]
-        gh_archiver = YourAccessToken
+        $ mkdir -p ~/.github/access_tokens
+        $ cat <<EOF > ~/.github/access_tokens/gh_archiver.txt
+        YourAccessToken
         EOF
-
-    You should restrict multi-user access to this file:
-
-        $ chmod 0600 ~/.githubrc
+        $ chmod 0600 ~/.github/access_tokens/gh_archiver.txt
 
 Usage:
 
@@ -58,14 +53,15 @@ import sys
 from configparser import ConfigParser
 from typing import Iterator
 from typing import Tuple
+from typing import Union
 
 import requests
 from git import Repo
 from github import AuthenticatedUser
-from github import Github
 from github import NamedUser
 from github.Repository import Repository as GithubRepository
 
+from datasets.github import api
 from labm8.py import app
 
 FLAGS = app.FLAGS
@@ -89,11 +85,6 @@ app.DEFINE_list(
   "cloned.",
 )
 app.DEFINE_list("exclude", [], "A list of repositories to exclude.")
-app.DEFINE_input_path(
-  "githubrc",
-  pathlib.Path("~/.githubrc").expanduser(),
-  "Path to a file containing Github credentials See --help.",
-)
 app.DEFINE_boolean("gogs", False, "Mirror repositories to gogs instance.")
 app.DEFINE_integer("gogs_uid", 1, "The gogs UID.")
 app.DEFINE_output_path(
@@ -106,21 +97,6 @@ app.DEFINE_boolean(
   False,
   "If set, force using HTTPS git remotes, even when SSH is available.",
 )
-
-
-def get_github_config() -> Github:
-  """ read Github config """
-  config = ConfigParser()
-  config.read(FLAGS.githubrc)
-
-  try:
-    github_username = config["User"]["Username"]
-    github_token = config["Tokens"]["gh_archiver"]
-  except KeyError as e:
-    print(f"config variable {e} not set in: {FLAGS.githubrc}", file=sys.stderr)
-    sys.exit(1)
-
-  return github_username, github_token
 
 
 def get_gogs_config() -> Tuple[str, str]:
@@ -181,14 +157,12 @@ def main():
     raise app.UsageError("--user not set")
 
   try:
-    github_username, github_token = get_github_config()
-    g = Github(github_token)
+    g = api.GetDefaultGithubConnectionOrDie(
+      extra_access_token_paths=["~/.github/access_tokens/gh_archiver.txt"]
+    )
 
-    if FLAGS.user == github_username:
-      # AuthenticatedUser provides access to private repos
-      user: AuthenticatedUser = g.get_user()
-    else:
-      user: NamedUser = g.get_user(FLAGS.user)
+    # AuthenticatedUser provides access to private repos
+    user: Union[NamedUser, AuthenticatedUser] = g.get_user(FLAGS.user)
 
     repos = list(get_repos(user))
 

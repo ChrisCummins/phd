@@ -1,5 +1,3 @@
-# Root package for code that works with GitHub.
-#
 # Copyright 2018, 2019 Chris Cummins <chrisc.101@gmail.com>.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,28 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""This module defines a decorator for marking skippable tests."""
+from datasets.github import api
+from labm8.py import test
 
-load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
-
-py_binary(
-    name = "api",
-    srcs = ["api.py"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//labm8/py:app",
-        "//third_party/py/github",
-    ],
-)
-
-py_test(
-    name = "api_test",
-    srcs = ["api_test.py"],
-    deps = [
-        ":api",
-        "//datasets/github/testing:requires_access_token",
-        "//labm8/py:app",
-        "//labm8/py:fs",
-        "//labm8/py:test",
-        "//third_party/py/pytest",
-    ],
+# Mark a test as skippable if there is no test access token for it to use. E.g.
+#
+#     from datasets.github.api.testing.requires_access_token import requires_access_token
+#
+#     @requires_access_token
+#     def test_something_on_github():
+#       github = api.GetDefaultGithubConnectionOrDie()
+#       # go nuts ...
+#
+requires_access_token = test.SkipIf(
+  not api.TEST_ACCESS_TOKEN_PATH, reason="Test requires a Github access token",
 )

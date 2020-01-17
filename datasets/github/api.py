@@ -11,20 +11,37 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""A utility module for creating GitHub API connections.
+"""This module defines a unified method to connect to the Github API.
 
-If writing code that requires connecting to GitHub, use the
-GetGithubConectionFromFlagsOrDie() function defined in this module. Don't write
-your own credentials handling code.
+Authenticating access to the Github API is done exclusively through access
+tokens. The function GetDefaultGithubAccessToken() attempts to resolve an access
+token using the following order:
+
+(1) If access token paths are provided, first try and read them, if they exist.
+(2) If $GITHUB_ACCESS_TOKEN is set, use it.
+(3) If $GITHUB_ACCESS_TOKEN_PATH is set and points to a file, attempt to read
+    it. If the variable is set but the file does not exist, a warning is
+    printed.
+(4) If --github_access_token is set, use it.
+(5) If --github_credentials_path points to a file, use it.
+(6) If we are in a test environment and ~/.github/access_tokens/test.txt is a
+    file, read the token from that.
+
+If writing code that requires connecting to Github, use the
+GetDefaultGithubConnection() or GetDefaultGithubConnectionOrDie() functions
+defined in this module. Don't write your own credentials handling code.
 """
-import configparser
+import os
 import pathlib
 import socket
 import subprocess
+from typing import Iterable
+from typing import NamedTuple
+from typing import Optional
+from typing import Union
 
 import github
 
-from datasets.github import github_pb2
 from labm8.py import app
 
 FLAGS = app.FLAGS
@@ -32,70 +49,243 @@ FLAGS = app.FLAGS
 app.DEFINE_string(
   "github_access_token",
   None,
-  "Github access token. See <https://github.com/settings/tokens> to "
-  "generate an access token.",
+  "A Github access token to use for authenticating with Github API. "
+  "To generate an access token, visit "
+  "<https://github.com/settings/tokens/new>. Please see the documentation for "
+  "this app for details on which scopes are required.",
 )
-app.DEFINE_string(
+app.DEFINE_output_path(
   "github_access_token_path",
-  "/var/phd/github_access_token.txt",
-  "Path to a file containing a github access token.",
-)
-app.DEFINE_string(
-  "github_credentials_path",
-  "~/.githubrc",
-  "The path to a file containing GitHub login credentials. See "
-  "//datasets/github/scrape_repos/README.md for details.",
+  pathlib.Path("~/.github/access_tokens/default.txt").expanduser(),
+  "Path to a file containing a Github access token for authenticated with the"
+  "Github API. The file should contain a single line with the access token, "
+  "and optional comment lines starting with '#' character. To generate an "
+  "access token, visit <https://github.com/settings/tokens/new>. Please see "
+  "the documentation for this app for details on which scopes are required.",
 )
 
+# The path to file containing a Github access token to use for running tests.
+# When $TEST_TMPDIR is set (as done by bazel's test environment), calls to
+# GetDefaultGithubAccessToken() will attempt to read an access token from this
+# path.
+#
+# When writing tests that require a live Github API connection, be sure to guard
+# the test to check for this file, so that the tests will be skipped on systems
+# without an access token for testing. E.g.
+#
+#     from datasets.github.api.testing.requires_access_token import requires_access_token
+#
+#     @requires_access_token
+#     def test_something_on_github():
+#       github = api.GetDefaultGithubConnectionOrDie()
+#       # go nuts ...
+#
+# It is assumed that the access token in this file has no scopes.
+TEST_ACCESS_TOKEN_PATH = pathlib.Path(
+  "~/.github/access_tokens/test.txt"
+).expanduser()
 
-def ReadGitHubCredentials(path: pathlib.Path) -> github_pb2.GitHubCredentials:
-  """Read user GitHub credentials from the local file system.
+
+class ConnectionFailed(OSError):
+  """Error raised if connection to the Github API fails."""
+
+  pass
+
+
+class BadCredentials(ConnectionFailed):
+  """Error raised if authenticating a connection to the Github API fails."""
+
+  pass
+
+
+def ReadGithubAccessTokenPath(path: pathlib.Path) -> str:
+  """Read a Github access token from a file.
 
   Returns:
-    A GitHubCredentials instance.
-  """
-  cfg = configparser.ConfigParser()
-  cfg.read(path)
-  credentials = github_pb2.GitHubCredentials()
-  credentials.username = cfg["User"]["Username"]
-  credentials.password = cfg["User"]["Password"]
-  return credentials
+    A string access token.
 
-
-def GetGithubConectionFromFlagsOrDie() -> github.Github:
-  """Get a GitHub API connection or die.
-
-  First, it attempts to connect using the --github_access_token flag. If that
-  flag is not set, then the contents of --github_access_token_path are used.
-  If that file does not exist, --github_credentials_path is read.
-
-  Returns:
-    A PyGithub Github instance.
+  Raises:
+    FileNotFoundError: If the file does not exist.
+    BadCredentials: If an access token cannot be read in the given path.
   """
   try:
-    if FLAGS.github_access_token:
-      return github.Github(FLAGS.github_access_token)
-    elif pathlib.Path(FLAGS.github_access_token_path).is_file():
-      with open(FLAGS.github_access_token_path) as f:
-        access_token = f.read().strip()
-      return github.Github(access_token)
-    else:
-      app.Warning(
-        "Using insecure --github_credentials_path to read GitHub "
-        "credentials. Please use token based credentials flags "
-        "--github_access_token or --github_access_token_path."
+    with open(path) as f:
+      for line in f:
+        if not line.startswith("#"):
+          return line.strip()
+  except PermissionError:
+    raise BadCredentials(f"Cannot read file")
+  except IsADirectoryError:
+    raise BadCredentials(f"File is a directory")
+
+  raise BadCredentials(f"Access token not found in file")
+
+
+class AccessToken(NamedTuple):
+  """The source an access token and the token itself."""
+
+  source: str
+  token: str
+
+  def __repr__(self):
+    return self.token
+
+
+def GetDefaultGithubAccessToken(
+  extra_access_token_paths: Optional[Iterable[Union[str, pathlib.Path]]] = None
+) -> AccessToken:
+  """Get a Github access token from environment variables or flags.
+
+  This function provides a uniform means to get a Github access token, resolving
+  the access token in the following order:
+
+    (1) If access token paths are provided, first try and read them, if they
+        exist.
+    (2) If $GITHUB_ACCESS_TOKEN is set, use it.
+    (3) If $GITHUB_ACCESS_TOKEN_PATH is set and points to a file, attempt to
+        read it. If the variable is set but the file does not exist, a warning
+        is printed.
+    (4) If --github_access_token is set, use it.
+    (5) If --github_credentials_path points to a file, use it.
+    (6) If we are in a test environment and ~/.github/access_tokens/test.txt is
+        a file, read the token from that.
+
+  Args:
+    extra_access_token_paths: A sequence of paths to read Github access tokens
+      from. If provided, these paths take precedence over the default locations
+      for access tokens.
+
+  Returns:
+    An AccessToken tuple.
+
+  Raises:
+    BadCredentials: If all of the access token
+      resolution methods failed and --github_credentials_path does not exist,
+      or if reading an access token from a path fails.
+  """
+
+  def _ReadGithubAccessTokenPath(source: str, path: pathlib.Path):
+    try:
+      return AccessToken(source, ReadGithubAccessTokenPath(path))
+    except BadCredentials as e:
+      raise BadCredentials(f"Invalid credentials file {source}: {e}")
+
+  extra_access_token_paths = extra_access_token_paths or []
+  for extra_access_token_path in extra_access_token_paths:
+    extra_access_token_path = pathlib.Path(extra_access_token_path).expanduser()
+    if extra_access_token_path.is_file():
+      return _ReadGithubAccessTokenPath(
+        str(extra_access_token_path), extra_access_token_path
       )
-      github_credentials_path = pathlib.Path(
-        FLAGS.github_credentials_path
-      ).expanduser()
-      if not github_credentials_path.is_file():
-        app.FatalWithoutStackTrace(
-          "Github credentials file not found: %s", github_credentials_path
-        )
-      credentials = ReadGitHubCredentials(github_credentials_path.expanduser())
-      return github.Github(credentials.username, credentials.password)
-  except Exception as e:  # Deliberately broad catch-all.
-    app.FatalWithoutStackTrace("Failed to create GitHub API connection: %s", e)
+
+  access_token = os.environ.get("GITHUB_ACCESS_TOKEN")
+  if access_token:
+    return AccessToken("$GITHUB_ACCESS_TOKEN", access_token)
+
+  access_token_path = os.environ.get("GITHUB_ACCESS_TOKEN_PATH")
+  if access_token_path and pathlib.Path(access_token_path).is_file():
+    return _ReadGithubAccessTokenPath(
+      f"$GITHUB_ACCESS_TOKEN_PATH={access_token_path}",
+      pathlib.Path(access_token_path),
+    )
+  elif access_token_path:
+    app.Warning(
+      "$GITHUB_ACCESS_TOKEN_PATH set but not found: %s", access_token_path
+    )
+
+  if FLAGS.github_access_token:
+    return AccessToken("--github_access_token", FLAGS.github_access_token)
+
+  if FLAGS.github_access_token_path.is_file():
+    return _ReadGithubAccessTokenPath(
+      f"--github_access_token_path={FLAGS.github_access_token_path}",
+      FLAGS.github_access_token_path,
+    )
+
+  if os.environ.get("TEST_TMPDIR") and TEST_ACCESS_TOKEN_PATH.is_file():
+    return _ReadGithubAccessTokenPath(
+      f"test_token=TEST_ACCESS_TOKEN_PATH", TEST_ACCESS_TOKEN_PATH
+    )
+
+  raise BadCredentials(
+    f"--github_access_token_path not found: {FLAGS.github_access_token_path}"
+  )
+
+
+def GetDefaultGithubConnection(
+  extra_access_token_paths: Optional[Iterable[Union[str, pathlib.Path]]] = None,
+  verify: bool = True,
+) -> github.Github:
+  """Construct a Github API connection using default access token resolution.
+
+  See GetDefaultGithubAccessToken() for access token resolution.
+
+  Args:
+    extra_access_token_paths: A sequence of paths to read Github access tokens
+      from. If provided, these paths take precedence over the default locations
+      for access tokens.
+    verify: Whether to check if the connection established works. If False,
+      authentication errors may be deferred until later in program execution
+      when a github.BadCredentialsException is raised. Verifying a connection
+      requires network access.
+
+  Returns:
+    A Github instance.
+
+  Raises:
+    ConnectionFailed: If verify is True and the verification API call fails,
+      such as due to invalid credentials, or a network error.
+  """
+  access_token = GetDefaultGithubAccessToken(
+    extra_access_token_paths=extra_access_token_paths
+  )
+  connection = github.Github(str(access_token))
+  app.Log(2, "Connecting to Github using %s", access_token.source)
+
+  if verify:
+    try:
+      connection.get_rate_limit()
+      app.Log(3, "Github connection verified")
+    except socket.gaierror as e:
+      raise ConnectionFailed(f"Failed to connect to Github API: {e}")
+    except github.BadCredentialsException:
+      raise BadCredentials(
+        "Authentication using the Github access token from "
+        f"{access_token.source} failed"
+      )
+
+  return connection
+
+
+def GetDefaultGithubConnectionOrDie(
+  extra_access_token_paths: Optional[Iterable[Union[str, pathlib.Path]]] = None,
+  verify: bool = True,
+) -> github.Github:
+  """Construct a Github API connection and terminate on failure.
+
+  This is the same as GetDefaultGithubConnection(), except failures result in
+  the process terminating rather than raising a BadCredentials exception. This
+  is a convenience function for scripts which cannot recover from the inability
+  to communicate with Github, use at your own risk.
+
+  Args:
+    extra_access_token_paths: A sequence of paths to read Github access tokens
+      from. If provided, these paths take precedence over the default locations
+      for access tokens.
+    verify: Whether to check if the connection established works. If False,
+      authentication errors may be deferred until later in program execution
+      when a github.BadCredentialsException is raised. Verifying a connection
+      requires network access.
+
+  Returns:
+    A Github instance.
+  """
+  try:
+    return GetDefaultGithubConnection(
+      extra_access_token_paths=extra_access_token_paths, verify=verify
+    )
+  except ConnectionFailed as e:
+    app.FatalWithoutStackTrace("%s", e)
 
 
 class RepoNotFoundError(ValueError):
@@ -171,3 +361,14 @@ def CloneRepoToDestination(repo: github.Repository, destination: pathlib.Path):
     raise RepoCloneFailed(
       f"Cloned repo `{repo.ssh_url}` but `{destination}/.git` not found"
     )
+
+
+def Main():
+  """Main entry point."""
+  access_token = GetDefaultGithubAccessToken()
+  GetDefaultGithubConnectionOrDie()
+  print("Authenticated access to Github API using", access_token.source)
+
+
+if __name__ == "__main__":
+  app.Run(Main)

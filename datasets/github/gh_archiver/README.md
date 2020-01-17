@@ -13,23 +13,20 @@ remote.
 
 ## Setup
 
-Create a Github [personal access token](https://github.com/settings/tokens). If
-you intent to mirror your own private repositories, you should enable private
-repository permissions when creating the token. Else, no permissions are
-required.
+Create a Github [personal access token](https://github.com/settings/tokens/new).
+If you intend to mirror your own private repositories, select "repo" from the
+list of available scopes. To mirror only your public repositories or those
+another user, no scopes are required.
 
-Create a ~/.githubrc file containing your Github username and the personal
-access token you just created::
+Create a ~/.github/access_tokens/gh_archiver.txt file containing your
+the personal access token you just created:
 
 ```sh
-$ cat <<EOF > ~/.githubrc
-[User]
-Username = YourUsername
-
-[Tokens]
-gh_archiver = YourAccessToken
+$ mkdir -p ~/.github/access_tokens
+$ cat <<EOF > ~/.github/access_tokens/gh_archiver.txt
+YourAccessToken
 EOF
-$ chmod 0600 ~/.githubrc
+$ chmod 0600 ~/.github/access_tokens/gh_archiver.txt
 ```
 
 Then build and install the `gh_archiver` program using:
