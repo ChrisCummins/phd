@@ -175,5 +175,30 @@ def test_GetDefaultGithubConnectionOrDie():
   github.get_user("ChrisCummins")
 
 
+@requires_access_token
+@test.Parametrize(
+  "shallow", (False, True), names=("deep_clone", "shallow_clone")
+)
+def test_CloneRepo_valid_repo(tempdir: pathlib.Path, shallow: bool):
+  github = api.GetDefaultGithubConnectionOrDie()
+  repo = github.get_repo("ChrisCummins/empty_repository_for_testing")
+  clone_path = tempdir / "repo"
+
+  assert api.CloneRepo(repo, tempdir / "repo", shallow=shallow) == clone_path
+  assert (clone_path / "HelloWorld.java").is_file()
+
+
+@requires_access_token
+@test.Parametrize(
+  "shallow", (False, True), names=("deep_clone", "shallow_clone")
+)
+def test_CloneRepo_invalid_repo_not_found(tempdir: pathlib.Path, shallow: bool):
+  github = api.GetDefaultGithubConnectionOrDie()
+  repo = github.get_repo("ChrisCummins/not_a_real_repo")
+
+  with test.Raises(FileNotFoundError):
+    api.CloneRepo(repo, tempdir, shallow=shallow)
+
+
 if __name__ == "__main__":
   test.Main()

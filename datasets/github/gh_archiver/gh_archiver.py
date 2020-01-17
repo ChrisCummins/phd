@@ -60,6 +60,7 @@ from github.Repository import Repository as GithubRepository
 
 from datasets.github import api
 from labm8.py import app
+from tools.git import git_clone
 
 FLAGS = app.FLAGS
 
@@ -155,12 +156,8 @@ def main():
       else:
         print(f"cloning {repo.name}:{repo.default_branch}")
         try:
-          Repo.clone_from(
-            repo.clone_url if FLAGS.force_https else repo.git_url,
-            local_path,
-            branch=repo.default_branch,
-          )
-        except Exception as e:
+          api.CloneRepo(repo, local_path)
+        except git_clone.RepoCloneFailed as e:
           errors = True
           print(f"ERROR: {local_path} {type(e).__name__}", file=sys.stderr)
 

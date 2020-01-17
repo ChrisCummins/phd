@@ -43,6 +43,7 @@ from typing import Union
 import github
 
 from labm8.py import app
+from tools.git import git_clone
 
 FLAGS = app.FLAGS
 
@@ -348,19 +349,42 @@ def GetOrCreateUserRepo(
     return GetUserRepo(connection, repo_name)
 
 
-class RepoCloneFailed(OSError):
-  """Error raised if repo fails to clone."""
+def CloneRepo(
+  repo: github.Repository,
+  destination: pathlib.Path,
+  shallow: bool = False,
+  recursive: bool = False,
+  timeout: int = 3600,
+):
+  """Clone a repository from Github.
 
-  pass
+  Args:
+    repo: A repository instance.
+    destination: The output path. If this is already a non-empty directory, this
+      will fail.
+    shallow: Perform a shallow clone if set.
+    recursive: Clone submodules.
+    timeout: The maximum number of seconds to run a clone for before failing.
 
+  Returns:
+    The destination argument.
 
-def CloneRepoToDestination(repo: github.Repository, destination: pathlib.Path):
-  """Clone repo from github."""
-  subprocess.check_call(["git", "clone", repo.ssh_url, str(destination)])
-  if not (destination / ".git").is_dir():
-    raise RepoCloneFailed(
-      f"Cloned repo `{repo.ssh_url}` but `{destination}/.git` not found"
-    )
+  Raises:
+    FileNotFoundError: If the repo is not found.
+    RepoCloneFailed: On error.
+  """
+  try:
+    clone_url = repo.ssh_url
+  except github.UnknownObjectException:
+    raise FileNotFoundError("Repo not found")
+
+  return git_clone.GitClone(
+    clone_url,
+    destination,
+    shallow=shallow,
+    recursive=recursive,
+    timeout=timeout,
+  )
 
 
 def Main():

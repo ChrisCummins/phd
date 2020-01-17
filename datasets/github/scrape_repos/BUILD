@@ -25,6 +25,7 @@ py_binary(
         "//labm8/py:humanize",
         "//labm8/py:pbutil",
         "//third_party/py/progressbar",
+        "//tools/git:git_clone",
     ],
 )
 

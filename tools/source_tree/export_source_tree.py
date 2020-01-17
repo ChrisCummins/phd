@@ -129,7 +129,7 @@ def Export(
       )
       connection = github_lib.Github(credentials.username, credentials.password)
       repo = GetOrCreateRepoOrDie(connection, github_repo)
-      api.CloneRepoToDestination(repo, destination)
+      api.CloneRepo(repo, destination)
       destination_repo = git.Repo(destination)
 
       src_files = source_workspace.GetAllSourceTreeFiles(

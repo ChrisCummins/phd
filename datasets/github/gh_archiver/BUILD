@@ -48,6 +48,7 @@ par_binary(
         "//labm8/py:app",
         "//third_party/py/git",
         "//third_party/py/github",
+        "//tools/git:git_clone",
     ],
 )
 

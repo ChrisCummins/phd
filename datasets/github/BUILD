@@ -23,6 +23,7 @@ py_binary(
     deps = [
         "//labm8/py:app",
         "//third_party/py/github",
+        "//tools/git:git_clone",
     ],
 )
 
