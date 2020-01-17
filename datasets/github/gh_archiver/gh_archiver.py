@@ -79,7 +79,7 @@ app.DEFINE_boolean(
 app.DEFINE_list(
   "repo",
   [],
-  "White list repostories to include. If set, only these repositories will be "
+  "White list repositories to include. If set, only these repositories will be "
   "cloned.",
 )
 app.DEFINE_list("exclude", [], "A list of repositories to exclude.")
