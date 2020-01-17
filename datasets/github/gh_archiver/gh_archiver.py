@@ -72,7 +72,7 @@ app.DEFINE_output_path(
 )
 app.DEFINE_boolean(
   "delete",
-  True,
+  False,
   "Delete all other files in the output directory. Disabling this feature will "
   "cause deleted repositories to accumulate.",
 )
@@ -125,14 +125,13 @@ def main():
 
     FLAGS.outdir.mkdir(exist_ok=True, parents=True)
 
-    # delete any files which are not Github repos first, if necessary
     if FLAGS.delete:
-      if FLAGS.gogs:
-        repo_names = [r.name.lower() + ".git" for r in repos]
-      else:
-        repo_names = [r.name for r in repos]
+      # Delete any directories which are not Github repos.
+      repo_names = [r.name for r in repos]
 
       for path in FLAGS.outdir.iterdir():
+        if not path.is_dir():
+          continue
         local_repo_name = os.path.basename(path)
 
         if local_repo_name not in repo_names:
