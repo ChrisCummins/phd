@@ -122,12 +122,11 @@ def Export(
 
     with tempfile.TemporaryDirectory(prefix=f"phd_export_{github_repo}_") as d:
       destination = pathlib.Path(d)
-      credentials = api.GetDefaultGithubConnectionOrDie(
+      connection = api.GetDefaultGithubConnectionOrDie(
         extra_access_token_paths=[
           "~/.github/access_tokens/export_source_tree.txt"
         ]
       )
-      connection = github_lib.Github(credentials.username, credentials.password)
       repo = GetOrCreateRepoOrDie(connection, github_repo)
       api.CloneRepo(repo, destination)
       destination_repo = git.Repo(destination)
