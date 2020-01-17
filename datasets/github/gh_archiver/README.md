@@ -35,7 +35,7 @@ $ chmod 0600 ~/.githubrc
 Then build and install the `gh_archiver` program using:
 
 ```sh
-$ basel run -c opt //util/gh_archiver:install
+$ basel run -c opt //datasets/github/gh_archiver:install
 ```
 
 Requires Python >= 3.6.

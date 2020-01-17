@@ -1,5 +1,3 @@
-# This package defines a utility script for mirroring a user's GitHub repos.
-#
 # Copyright 2017-2020 Chris Cummins <chrisc.101@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,50 +18,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-load("//tools/bzl:exports.bzl", "exports_repo")
-load("@com_github_chriscummins_rules_bats//:bats.bzl", "bats_test")
-load("@subpar//:subpar.bzl", "par_binary")
+source labm8/sh/test.sh
 
-exports_files([
-    "LICENSE",
-    "README.md",
-    "CNAME",
-])
+BIN="$(DataPath phd/datasets/github/gh_archiver/gh_archiver.par)"
 
-exports_repo(
-    name = "export",
-    github_repo = "gh-archiver",
-    move_file_mapping = {
-        "util/gh_archiver/README.md": "README.md",
-        "util/gh_archiver/LICENSE": "LICENSE",
-    },
-    targets = ["//util/gh_archiver/..."],
-)
+@test "run help" {
+  "$BIN" --help | grep gh_archiver
+  "$BIN" --helpfull | grep gh_archiver
+}
 
-par_binary(
-    name = "gh_archiver",
-    srcs = ["gh_archiver.py"],
-    deps = [
-        "//labm8/py:app",
-        "//third_party/py/git",
-        "//third_party/py/github",
-    ],
-)
-
-bats_test(
-    name = "gh_archiver_par_test",
-    srcs = ["gh_archiver_par_test.bats"],
-    data = [
-        ":gh_archiver.par",
-        "//labm8/sh:test",
-    ],
-)
-
-sh_binary(
-    name = "install",
-    srcs = ["install.sh"],
-    data = [":gh_archiver.par"],
-    deps = [
-        "//labm8/sh:app",
-    ],
-)
+@test "run version" {
+  "$BIN" --version
+}
