@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This module defines a formatter for Python sources."""
+import os
+import reorder_python_imports
 import sys
 
 import black
-import reorder_python_imports
+
 from tools.format.formatters.base import batched_file_formatter
 
 
@@ -24,6 +26,11 @@ class FormatPython(batched_file_formatter.BatchedFileFormatter):
 
   def __init__(self, *args, **kwargs):
     super(FormatPython, self).__init__(*args, **kwargs)
+
+    # Unset the python path for reorder-python-imports to prevent false
+    # orderings of imports.
+    self.reorder_python_imports_env = os.environ.copy()
+    del self.reorder_python_imports_env["PYTHONPATH"]
 
   def RunMany(self, paths):
     str_paths = [str(x) for x in paths]
@@ -61,4 +68,5 @@ class FormatPython(batched_file_formatter.BatchedFileFormatter):
         "--py3-plus",
       ]
       + str_paths,
+      env=self.reorder_python_imports_env,
     )
