@@ -13,9 +13,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 syntax = "proto2";
 
 package phd;
+
+option go_package = "phdpb";
+option java_multiple_files = true;
+option java_outer_classname = "ConfigProto";
+option java_package = "com.phd";
 
 // The root message describing the repository configuration.
 //
@@ -39,7 +45,6 @@ message GlobalConfig {
 message GlobalConfigOptions {
   required bool with_cuda = 1;
   required bool update_git_submodules = 2;
-  required bool install_git_hooks = 4;
 }
 
 // A list of absolute paths to import system files and directories.
@@ -57,14 +62,12 @@ message BuildInfo {
   required string user = 3;
   required string version = 4;
   required bool repo_dirty = 5;
-
   // Git branch and remote are only available if on and tracking a git branch,
   // respectively.
   required string git_commit = 6;
   optional string git_branch = 7;
   optional string git_tracking = 8;
   optional string git_remote_url = 9;
-
   optional string git_commit_author = 10;
   optional int64 git_commit_seconds_since_epoch = 11;
 }
