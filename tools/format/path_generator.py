@@ -47,6 +47,8 @@ class PathGenerator(object):
       4. Check the contents of 'ignore files' to see if the path should be
          excluded. See VisitIgnoreFile() for details.
 
+    Args which do not match files or directories are silently ignored.
+
     Args:
       args: A list of arguments.
 

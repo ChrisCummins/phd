@@ -45,20 +45,29 @@ def test_GeneratePaths_non_existent_path(
 def test_GeneratePaths_single_abspath(
   path_generator: path_generator_lib.PathGenerator, tempdir: pathlib.Path
 ):
-  path = tempdir / "hello.txt"
-  path.touch()
-  paths = list(path_generator.GeneratePaths([str(path)]))
-  assert paths == [path]
+  MakeFiles(
+    [tempdir / "hello.txt",]
+  )
+
+  paths = list(path_generator.GeneratePaths([str(tempdir / "hello.txt")]))
+
+  assert paths == [tempdir / "hello.txt"]
 
 
 def test_GeneratePaths_single_relpath(
   path_generator: path_generator_lib.PathGenerator, tempdir: pathlib.Path
 ):
   os.chdir(tempdir)
-  path = tempdir / "hello.txt"
-  path.touch()
-  paths = list(path_generator.GeneratePaths([path.name]))
-  assert paths == [path]
+
+  MakeFiles(
+    [tempdir / "hello.txt",]
+  )
+
+  paths = list(path_generator.GeneratePaths(["hello.txt"]))
+
+  assert paths == [
+    tempdir / "hello.txt",
+  ]
 
 
 def test_GeneratePaths_empty_directory(
@@ -71,77 +80,87 @@ def test_GeneratePaths_empty_directory(
 def test_GeneratePaths_directory_with_file(
   path_generator: path_generator_lib.PathGenerator, tempdir: pathlib.Path
 ):
-  path = tempdir / "a"
-  path.touch()
+  MakeFiles(
+    [tempdir / "a",]
+  )
+
   paths = list(path_generator.GeneratePaths([str(tempdir)]))
-  assert paths == [path]
+
+  assert paths == [
+    tempdir / "a",
+  ]
 
 
 def test_GeneratePaths_file_in_ignore_list(
   path_generator: path_generator_lib.PathGenerator, tempdir: pathlib.Path
 ):
-  path = tempdir / "a"
-  ignore_file = tempdir / ".formatignore"
-  path.touch()
-  fs.Write(ignore_file, "a".encode("utf-8"))
+  MakeFiles(
+    [tempdir / ".formatignore", tempdir / "a",]
+  )
+  fs.Write(tempdir / ".formatignore", "a".encode("utf-8"))
+
   paths = list(path_generator.GeneratePaths([str(tempdir)]))
-  assert paths == [ignore_file]
+
+  assert paths == [tempdir / ".formatignore"]
 
 
 def test_GeneratePaths_ignore_list_glob(
   path_generator: path_generator_lib.PathGenerator, tempdir: pathlib.Path
 ):
-  path = tempdir / "a"
-  ignore_file = tempdir / ".formatignore"
-  path.touch()
-  fs.Write(ignore_file, "*".encode("utf-8"))
+  MakeFiles(
+    [tempdir / ".formatignore", tempdir / "a",]
+  )
+  fs.Write(tempdir / ".formatignore", "*".encode("utf-8"))
   paths = list(path_generator.GeneratePaths([str(tempdir)]))
-  assert paths == [ignore_file]
+
+  assert paths == [tempdir / ".formatignore"]
 
 
-def test_GeneratePaths_ignore_list_glob_hidden_files(
+def test_GeneratePaths_ignore_list_glob_dot_files(
   path_generator: path_generator_lib.PathGenerator, tempdir: pathlib.Path
 ):
-  path = tempdir / "a"
-  ignore_file = tempdir / ".formatignore"
-  path.touch()
-  fs.Write(ignore_file, ".*".encode("utf-8"))
+  MakeFiles(
+    [tempdir / ".formatignore", tempdir / "a",]
+  )
+  fs.Write(tempdir / ".formatignore", ".*".encode("utf-8"))
+
   paths = list(path_generator.GeneratePaths([str(tempdir)]))
-  assert paths == [path]
+
+  assert paths == [
+    tempdir / "a",
+  ]
 
 
 def test_GeneratePaths_ignore_list_glob_unignored(
   path_generator: path_generator_lib.PathGenerator, tempdir: pathlib.Path
 ):
-  path = tempdir / "a"
-  ignore_file = tempdir / ".formatignore"
-  path.touch()
-  fs.Write(ignore_file, "*\n!a".encode("utf-8"))
-  paths = set(path_generator.GeneratePaths([str(tempdir)]))
-  assert paths == {path, ignore_file}
+  os.chdir(tempdir)
+  MakeFiles(
+    [".formatignore", "a", "b", "c",]
+  )
+  fs.Write(".formatignore", "*\n!a".encode("utf-8"))
+
+  paths = list(path_generator.GeneratePaths(["."]))
+
+  assert paths == [
+    tempdir / ".formatignore",
+    tempdir / "a",
+  ]
 
 
 def test_GeneratePaths_ignore_list_parent_directory(
   path_generator: path_generator_lib.PathGenerator, tempdir: pathlib.Path
 ):
-  """Test ignoring the contents of a directory.
+  """Test ignoring the contents of a directory."""
+  os.chdir(tempdir)
+  MakeFiles(
+    [".formatignore", "src/a", "src/b",]
+  )
+  fs.Write(".formatignore", "src".encode("utf-8"))
 
-  File layout:
+  paths = list(path_generator.GeneratePaths(["."]))
 
-    /.formatignore -> "src"
-    /src
-    /src/a
-
-  Expected outcome is that "a" should be ignored because it belongs in src.
-  """
-  parent = tempdir / "src"
-  parent.mkdir()
-  path = parent / "a"
-  ignore_file = tempdir / ".formatignore"
-  path.touch()
-  fs.Write(ignore_file, "src".encode("utf-8"))
-  paths = list(path_generator.GeneratePaths([str(tempdir)]))
-  assert paths == [ignore_file]
+  assert paths == [tempdir / ".formatignore"]
 
 
 def test_GeneratePaths_ignore_list_glob_parent_directory(
@@ -155,38 +174,34 @@ def test_GeneratePaths_ignore_list_glob_parent_directory(
     /src
     /src/a
   """
-  parent = tempdir / "src"
-  parent.mkdir()
-  path = parent / "a"
-  ignore_file = tempdir / ".formatignore"
-  path.touch()
-  fs.Write(ignore_file, "*".encode("utf-8"))
-  paths = list(path_generator.GeneratePaths([str(tempdir)]))
-  assert paths == [ignore_file]
+  os.chdir(tempdir)
+  MakeFiles(
+    [".formatignore", "src/a", "src/b",]
+  )
+  fs.Write(".formatignore", "*".encode("utf-8"))
+
+  paths = list(path_generator.GeneratePaths(["."]))
+
+  assert paths == [tempdir / ".formatignore"]
 
 
 def test_GeneratePaths_ignore_list_recurisve_glob(
   path_generator: path_generator_lib.PathGenerator, tempdir: pathlib.Path
 ):
-  """Test ignoring files in a subdirectory.
+  """Test ignoring files in a recursive glob."""
+  os.chdir(tempdir)
+  MakeFiles(
+    [".formatignore", "src/a", "src/b", "src/c/a/a", "src/c/a/b",]
+  )
+  fs.Write(".formatignore", "**/a".encode("utf-8"))
 
-  File layout:
+  paths = list(path_generator.GeneratePaths(["."]))
+  print(paths)
 
-    /.formatignore -> "**/a"
-    /src
-    /src/a
-    /src/b
-  """
-  parent = tempdir / "src"
-  parent.mkdir()
-  a = parent / "a"
-  b = parent / "b"
-  ignore_file = tempdir / ".formatignore"
-  a.touch()
-  b.touch()
-  fs.Write(ignore_file, "**/a".encode("utf-8"))
-  paths = set(path_generator.GeneratePaths([str(tempdir)]))
-  assert paths == {ignore_file, b}
+  assert paths == [
+    tempdir / ".formatignore",
+    tempdir / "src/b",
+  ]
 
 
 def test_GeneratePaths_ignore_git_submodule(
@@ -265,12 +280,13 @@ def test_GeneratePaths_ignored_in_glob_expansion(
     ]
   )
 
-  paths = set(path_generator.GeneratePaths(["src/*"]))
-  assert paths == {
+  paths = list(path_generator.GeneratePaths(["src/*"]))
+
+  assert paths == [
     tempdir / "src/a",
     tempdir / "src/b",
     tempdir / "src/c/d",
-  }
+  ]
 
 
 if __name__ == "__main__":
