@@ -27,6 +27,14 @@ def path_generator():
   return path_generator_lib.PathGenerator(".formatignore")
 
 
+def MakeFiles(relpaths):
+  """Create the given list of paths relative to the current directory."""
+  for path in relpaths:
+    path = pathlib.Path(path)
+    path.parent.mkdir(exist_ok=True, parents=True)
+    path.touch()
+
+
 def test_GeneratePaths_non_existent_path(
   path_generator: path_generator_lib.PathGenerator, tempdir: pathlib.Path
 ):
@@ -179,6 +187,90 @@ def test_GeneratePaths_ignore_list_recurisve_glob(
   fs.Write(ignore_file, "**/a".encode("utf-8"))
   paths = set(path_generator.GeneratePaths([str(tempdir)]))
   assert paths == {ignore_file, b}
+
+
+def test_GeneratePaths_ignore_git_submodule(
+  path_generator: path_generator_lib.PathGenerator, tempdir: pathlib.Path
+):
+  """Test that git submodules are not visited."""
+  os.chdir(tempdir)
+  MakeFiles(
+    [
+      ".git/config",  # Fake repo root, should be ignored
+      "README",
+      "src/a",
+      "src/b",
+      "src/c/d",
+      "src/submod/.git",  # Fake submodule, should be ignored
+      "src/submod/a",  # should be ignored
+      "src/submod/b",  # should be ignored
+      "src/submod/c/c",  # should be ignored
+    ]
+  )
+
+  paths = set(path_generator.GeneratePaths(["."]))
+  assert paths == {
+    tempdir / "README",
+    tempdir / "src/a",
+    tempdir / "src/b",
+    tempdir / "src/c/d",
+  }
+
+
+def test_GeneratePaths_explicitly_requested_submodule(
+  path_generator: path_generator_lib.PathGenerator, tempdir: pathlib.Path
+):
+  """Test that a git submodule is visited if it is explicitly asked for."""
+  os.chdir(tempdir)
+  MakeFiles(
+    [
+      ".git/config",  # Fake repo root, should be ignored
+      "README",
+      "src/a",
+      "src/b",
+      "src/c/d",
+      "src/submod/.git",  # Fake submodule, should be ignored
+      "src/submod/a",  # should be ignored
+      "src/submod/b",  # should be ignored
+      "src/submod/c/c",  # should be ignored
+    ]
+  )
+
+  paths = set(path_generator.GeneratePaths(["src/submod"]))
+  assert paths == {
+    tempdir / "src/submod/a",
+    tempdir / "src/submod/b",
+    tempdir / "src/submod/c/c",
+  }
+
+
+def test_GeneratePaths_ignored_in_glob_expansion(
+  path_generator: path_generator_lib.PathGenerator, tempdir: pathlib.Path
+):
+  """Test that a git submodule is not visited if it would only be visited as
+  the result of a glob expansion.
+  """
+  os.chdir(tempdir)
+  MakeFiles(
+    [
+      ".git/config",  # Fake repo root, should be ignored
+      "README",
+      "src/a",
+      "src/b",
+      "src/c/d",
+      "src/submod/.git",  # Fake submodule, should be ignored
+      "src/submod/a",  # should be ignored
+      "src/submod/b",  # should be ignored
+      "src/submod/c/c",  # should be ignored
+    ]
+  )
+
+  paths = set(path_generator.GeneratePaths(["src/*"]))
+  assert paths == {
+    tempdir / "src/a",
+    tempdir / "src/b",
+    tempdir / "src/c/d",
+  }
 
 
 if __name__ == "__main__":

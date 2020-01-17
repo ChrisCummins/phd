@@ -30,8 +30,9 @@ class PathGenerator(object):
   See GeneratePaths() for usage.
   """
 
-  def __init__(self, ignore_file_name: str):
+  def __init__(self, ignore_file_name: str, skip_git_submodules: bool = True):
     self.ignore_file_name = ignore_file_name
+    self.skip_git_submodules = skip_git_submodules
     self.ignored_paths: Set[pathlib.Path] = set()
     self.visited_ignore_files: Set[pathlib.Path] = set()
 
@@ -56,17 +57,30 @@ class PathGenerator(object):
     visited_paths = set()
 
     for arg in args:
+      arg_path = pathlib.Path(arg).absolute()
+
       for path in glob.iglob(arg, recursive=True):
         path = pathlib.Path(path).absolute()
 
         if path.is_dir():
           # Iterate over the contents of directory arguments.
           for root, dirs, files in os.walk(path):
+            root = pathlib.Path(root).absolute()
+
+            if self.skip_git_submodules:
+              # Don't visit a git submodule unless it was explicitly requested
+              # as as argument. This prevents glob expansion from descending
+              # into submodules.
+              if root != arg_path and (root / ".git").is_file():
+                break
+              # Don't descend into git submodules.
+              dirs[:] = [d for d in dirs if not (root / d / ".git").is_file()]
+
             # Only iterate through the directory contents if the directory is
             # not ignored.
-            if not self.IsIgnored(pathlib.Path(root)):
+            if not self.IsIgnored(root):
               for file in files:
-                path = (pathlib.Path(root) / file).absolute()
+                path = root / file
                 if path not in visited_paths and not self.IsIgnored(path):
                   visited_paths.add(path)
                   yield path
@@ -87,6 +101,7 @@ class PathGenerator(object):
     Returns:
       True if the path should be ignored, else False.
     """
+    # Never descend into git directories.
     if ".git" in path.parts:
       return True
 

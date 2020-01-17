@@ -58,6 +58,14 @@ from tools.format.default_suffix_mapping import (
 FLAGS = app.FLAGS
 
 app.DEFINE_boolean(
+  "skip_git_submodules",
+  True,
+  "Check for, and exclude, git submodules from path expansion. This causes the "
+  "formatter to respect git submodule boundaries, so that running format "
+  "from within a git repository won't create dirty submodule states. You can "
+  "still visit git submodules by naming them as arguments.",
+)
+app.DEFINE_boolean(
   "print_cache_path",
   False,
   "Print the path of the persistent filesystem cache and exit.",
@@ -103,7 +111,9 @@ def Main(argv):
     pre_commit.InstallPreCommitHookOrDie()
     return
 
-  path_generator = path_generators.PathGenerator(".formatignore")
+  path_generator = path_generators.PathGenerator(
+    ".formatignore", skip_git_submodules=FLAGS.skip_git_submodules
+  )
 
   args = argv[1:]
 
