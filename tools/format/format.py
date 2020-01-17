@@ -50,6 +50,7 @@ from tools.format import app_paths
 from tools.format import format_paths
 from tools.format import path_generator as path_generators
 from tools.format import pre_commit
+from tools.format import watch
 from tools.format.default_suffix_mapping import (
   mapping as default_suffix_mapping,
 )
@@ -57,6 +58,7 @@ from tools.format.default_suffix_mapping import (
 
 FLAGS = app.FLAGS
 
+app.DEFINE_boolean("watch", False, "Enter into a watch loop.")
 app.DEFINE_boolean(
   "skip_git_submodules",
   True,
@@ -111,23 +113,27 @@ def Main(argv):
     pre_commit.InstallPreCommitHookOrDie()
     return
 
-  path_generator = path_generators.PathGenerator(
-    ".formatignore", skip_git_submodules=FLAGS.skip_git_submodules
-  )
-
   args = argv[1:]
 
-  # Resolve the paths to format.
+  # Run the pre-commit mode.
   if FLAGS.pre_commit:
     if args:
       raise app.UsageError("--pre_commit takes no arguments")
     pre_commit.Main()
     return
-  elif not args:
-    raise app.UsageError("No paths were provided to format.")
-  else:
-    paths = path_generator.GeneratePaths(args)
 
+  # Start the inotify watcher.
+  if FLAGS.watch:
+    watch.Main(args)
+    return
+
+  if not args:
+    raise app.UsageError("No paths were provided to format.")
+
+  path_generator = path_generators.PathGenerator(
+    ".formatignore", skip_git_submodules=FLAGS.skip_git_submodules
+  )
+  paths = path_generator.GeneratePaths(args)
   format_paths.FormatPathsOrDie(paths, dry_run=FLAGS.dry_run)
 
 

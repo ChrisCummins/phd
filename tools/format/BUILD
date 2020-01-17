@@ -78,6 +78,7 @@ py_binary(
         ":format_paths",
         ":path_generator",
         ":pre_commit",
+        ":watch",
         "//labm8/py:app",
     ],
 )
@@ -142,5 +143,16 @@ py_binary(
         "//:build_info",
         "//labm8/py:app",
         "//labm8/py:fs",
+    ],
+)
+
+py_binary(
+    name = "watch",
+    srcs = ["watch.py"],
+    deps = [
+        ":format_paths",
+        ":path_generator",
+        "//labm8/py:app",
+        "//third_party/py/inotify",
     ],
 )
