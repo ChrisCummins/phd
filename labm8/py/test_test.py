@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //labm8/py:test."""
+import os
 import pathlib
 import random
 import sys
@@ -202,6 +203,16 @@ def test_Parameterize(a: int, b: int):
 @test.XFail(reason="Test is designed to fail")
 def test_Fail():
   test.Fail("Force a failed test here.")
+
+
+def test_TemporaryEnv():
+  os.environ["ANIMAL"] = "a dog"
+  with test.TemporaryEnv() as env:
+    assert env["ANIMAL"] == "a dog"
+    env["ANIMAL"] = "a cat"
+    assert os.environ["ANIMAL"] == "a cat"
+
+  assert os.environ["ANIMAL"] == "a dog"
 
 
 if __name__ == "__main__":
