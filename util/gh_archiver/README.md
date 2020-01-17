@@ -5,38 +5,21 @@
   </a>
 </h1>
 
-Clone and update a GitHub user's repositories locally:
+Mirror a GitHub user's repos locally.
 
-```sh
-$ gh-archiver ChrisCummins -o ~/src/GitHub/
-cloning atom
-cloning autoencoder
-updating chriscummins.cc
-...
-```
+This program fetches a GitHub user's repositories and mirrors them to a local
+directory. New repositories are cloned, existing repositories are fetched from
+remote.
 
-Or mirror to a [gogs](https://gogs.io) server:
+## Setup
 
-```sh
-$ gh-archiver ChrisCummins -o ~/gogs/repos/ChrisCummins --gogs --gogs-uid 1
-mirring atom ... 201
-mirroring autoencoder ... 201
-mirroring chriscummins.cc ... 201
-...
-```
+Create a Github [personal access token](https://github.com/settings/tokens). If
+you intent to mirror your own private repositories, you should enable private
+repository permissions when creating the token. Else, no permissions are
+required.
 
-## Installation
-
-```sh
-$ bazel run //util/gh_archiver:install
-```
-
-Requires Python >= 3.6.
-
-**GitHub credentials**
-
-Create a credentials file `~/.githubrc` with your GitHub username and a
-[personal access token](https://github.com/settings/tokens):
+Create a ~/.githubrc file containing your Github username and the personal
+access token you just created::
 
 ```sh
 $ cat <<EOF > ~/.githubrc
@@ -49,25 +32,24 @@ EOF
 $ chmod 0600 ~/.githubrc
 ```
 
-Alternatively, use flag `--githubrc <path>` to specify a path to the credentials file.
-
-**Gogs credentials**
-
-Create a credentials file `~/.gogsrc` with your Gogs server address and [token](https://github.com/gogits/go-gogs-client/wiki#access-token):
+Then build and install the `gh_archiver` program using:
 
 ```sh
-$ cat <<EOF > ~/.gogsrc
-[Server]
-Address = http://example.com:3000
-
-[User]
-Token = YourToken
-EOF
-$ chmod 0600 ~/.gogsrc
+$ basel run -c opt //util/gh_archiver:install
 ```
 
-Alternatively, use flag `--gogsrc <path>` to specify a path to the credentials file.
+Requires Python >= 3.6.
+
+## Usage
+
+Mirror a Github user's repositories to a directory using:
+
+```sh
+$ gh_archiver --user <github_username> --outdir <path>
+```
+
 
 ## License
 
-Made with ❤️ by [Chris Cummins](http://chriscummins.cc). Released under [MIT License](https://tldrlegal.com/license/mit-license).
+Made with ❤️ by [Chris Cummins](http://chriscummins.cc).
+Released under [MIT License](https://tldrlegal.com/license/mit-license).

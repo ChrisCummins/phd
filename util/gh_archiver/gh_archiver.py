@@ -17,8 +17,39 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""
-Clone and update a GitHub user's repos locally.
+"""Mirror a Github user's repos locally.
+
+This program fetches a Github user's repositories and mirrors them to a local
+directory. New repositories are cloned, existing repositories are fetched from
+remote.
+
+Setup:
+
+    Create a Github personal access token by visiting
+    <https://github.com/settings/tokens>. If you intend to mirror your own
+    private repositories, you should enable private repository permissions when
+    creating the token. Else, no permissions are required.
+
+    Create a ~/.githubrc file containing your Github username and the personal
+    access token you just created:
+
+        $ cat <<EOF > ~/.githubrc
+        [User]
+        Username = YourUsername
+
+        [Tokens]
+        gh_archiver = YourAccessToken
+        EOF
+
+    You should restrict multi-user access to this file:
+
+        $ chmod 0600 ~/.githubrc
+
+Usage:
+
+    Mirror a Github user's repositories to a directory using:
+
+        $ gh_archiver --user <github_username> --outdir <path>
 """
 import os
 import pathlib
@@ -26,8 +57,6 @@ import shutil
 import sys
 from configparser import ConfigParser
 from typing import Iterator
-from typing import List
-from typing import TextIO
 from typing import Tuple
 
 import requests
@@ -41,23 +70,29 @@ from labm8.py import app
 
 FLAGS = app.FLAGS
 
-app.DEFINE_string("user", None, "GitHub username")
+app.DEFINE_string("user", None, "Github username")
 app.DEFINE_output_path(
-  "outdir", "gh-archiver", "The directory to clone repositories to."
+  "outdir",
+  pathlib.Path("~/gh_archiver").expanduser(),
+  "The directory to clone repositories to.",
 )
 app.DEFINE_boolean(
-  "delete", False, "Delete all other files in the output directory."
+  "delete",
+  True,
+  "Delete all other files in the output directory. Disabling this feature will "
+  "cause deleted repositories to accumulate.",
 )
 app.DEFINE_list(
-  "include",
+  "repo",
   [],
-  "White list repostories to include. If set, only these repositories will be cloned.",
+  "White list repostories to include. If set, only these repositories will be "
+  "cloned.",
 )
 app.DEFINE_list("exclude", [], "A list of repositories to exclude.")
 app.DEFINE_input_path(
   "githubrc",
   pathlib.Path("~/.githubrc").expanduser(),
-  "File to read GitHub username and password from.",
+  "Path to a file containing Github credentials See --help.",
 )
 app.DEFINE_boolean("gogs", False, "Mirror repositories to gogs instance.")
 app.DEFINE_integer("gogs_uid", 1, "The gogs UID.")
@@ -69,12 +104,12 @@ app.DEFINE_output_path(
 app.DEFINE_boolean(
   "force_https",
   False,
-  "If set, force cloning over HTTPS. By default, SSH is used.",
+  "If set, force using HTTPS git remotes, even when SSH is available.",
 )
 
 
 def get_github_config() -> Github:
-  """ read GitHub config """
+  """ read Github config """
   config = ConfigParser()
   config.read(FLAGS.githubrc)
 
@@ -109,9 +144,9 @@ def get_gogs_config() -> Tuple[str, str]:
 def get_repos(user) -> Iterator[GithubRepository]:
   """ get user repositories """
   excluded = set(FLAGS.exclude)
-  include = set(FLAGS.include)
+  included = set(FLAGS.repo)
   for repo in user.get_repos():
-    if include and repo.name not in include:
+    if included and repo.name not in included:
       continue
     if repo.name not in excluded:
       yield repo
@@ -126,7 +161,7 @@ def truncate(string: str, maxlen: int, suffix=" ...") -> str:
 
 
 def sanitize_description(string) -> str:
-  """ make GitHub repo description compatible with gogs """
+  """ make Github repo description compatible with gogs """
   if string:
     # the decode/encode dance. We need to get from ascii-encoded UTF-8, to
     # plain ascii, with unicode symbols stripped.
@@ -162,7 +197,7 @@ def main():
 
     FLAGS.outdir.mkdir(exist_ok=True, parents=True)
 
-    # delete any files which are not GitHub repos first, if necessary
+    # delete any files which are not Github repos first, if necessary
     if FLAGS.delete:
       if FLAGS.gogs:
         repo_names = [r.name.lower() + ".git" for r in repos]
