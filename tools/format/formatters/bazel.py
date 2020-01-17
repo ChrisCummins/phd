@@ -15,10 +15,10 @@
 import sys
 
 from labm8.py import bazelutil
-from tools.format import formatter
+from tools.format.formatters.base import batched_file_formatter
 
 
-class FormatBuild(formatter.BatchedFormatter):
+class FormatBuild(batched_file_formatter.BatchedFileFormatter):
   """Format Bazel BUILD and WORKSPACE files."""
 
   def __init__(self, *args, **kwargs):
@@ -31,4 +31,4 @@ class FormatBuild(formatter.BatchedFormatter):
     )
 
   def RunMany(self, paths):
-    return formatter.ExecOrError([self.buildifier] + paths)
+    return self._Exec([self.buildifier] + paths)

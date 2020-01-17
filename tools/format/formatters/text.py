@@ -15,15 +15,15 @@
 import subprocess
 import tempfile
 
-from tools.format import formatter
+from tools.format.formatters.base import file_formatter
 
 
-class FormatText(formatter.Formatter):
+class FormatText(file_formatter.FileFormatter):
   """Format text files."""
 
   def __init__(self, *args, **kwargs):
     super(FormatText, self).__init__(*args, **kwargs)
-    self.sed = formatter.WhichOrDie("sed")
+    self.sed = self._Which("sed")
 
   def RunOne(self, path):
     with tempfile.NamedTemporaryFile(dir=self.cache_path) as tmpfile:

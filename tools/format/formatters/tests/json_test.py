@@ -14,16 +14,21 @@
 """Unit tests for //tools/format/formatters:json."""
 from labm8.py import test
 from tools.format.formatters import json
-from tools.format.formatters.tests import testing
 
 FLAGS = test.FLAGS
 
 
+def test_empty_json_file():
+  with test.Raises(json.FormatJson.FormatError):
+    json.FormatJson.Format("")
+
+
 def test_small_json_array():
-  formatted = testing.FormatText(json.FormatJson,
-    '["foo", {"bar":["baz", null, 1.0, 2]}]')
-  print("FORMATTED", formatted)
-  assert formatted == """\
+  text = json.FormatJson.Format('["foo", {"bar":["baz", null, 1.0, 2]}]')
+  print(text)
+  assert (
+    text
+    == """\
 [
   "foo",
   {
@@ -36,6 +41,8 @@ def test_small_json_array():
   }
 ]
 """
+  )
+
 
 if __name__ == "__main__":
   test.Main()

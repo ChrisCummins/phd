@@ -14,19 +14,19 @@
 """Unit tests for //tools/format/formatters:sql."""
 from labm8.py import test
 from tools.format.formatters import sql
-from tools.format.formatters.tests import testing
 
 FLAGS = test.FLAGS
 
 
 def test_format_single_query():
-  assert (
-    testing.FormatText(
-      sql.FormatSql,
-      """
+  text = sql.FormatSql.Format(
+    """
 select * from users;
-""",
-    )
+"""
+  )
+  print(text)
+  assert (
+    text
     == """
 SELECT *
 FROM users;
@@ -35,16 +35,16 @@ FROM users;
 
 
 def test_format_empty_file():
-  assert testing.FormatText(sql.FormatSql, "") == "\n"
+  assert sql.FormatSql.Format("") == "\n"
 
 
 def test_format_hello_world():
-  assert testing.FormatText(sql.FormatSql, "Hello world") == "Hello world\n"
+  assert sql.FormatSql.Format("Hello world") == "Hello world\n"
 
 
 def test_format_sql_query():
   assert (
-    testing.FormatText(sql.FormatSql, "select count(*),foo.bar from foo;")
+    sql.FormatSql.Format("select count(*),foo.bar from foo;")
     == """\
 SELECT count(*),
        foo.bar

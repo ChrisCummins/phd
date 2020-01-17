@@ -14,25 +14,23 @@
 """Unit tests for //tools/format/formatters:bazel."""
 from labm8.py import test
 from tools.format.formatters import bazel
-from tools.format.formatters.tests import testing
 
 FLAGS = test.FLAGS
 
 
 def test_small_build_file():
-  fmt = testing.FormatText(
-    bazel.FormatBuild,
+  text = bazel.FormatBuild.Format(
     """
 py_binary(
 name = "foo",
 srcs = ["foo.py"],
 deps = [":b", ":a", "//third_party/foo",]
 )
-""",
+"""
   )
-  print(fmt)
+  print(text)
   assert (
-    fmt
+    text
     == """\
 py_binary(
     name = "foo",

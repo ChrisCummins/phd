@@ -13,48 +13,50 @@
 # limitations under the License.
 """Unit tests for //tools/format/formatters:shell."""
 from labm8.py import test
-from tools.format.formatters import shell
+from tools.format.formatters import protobuf
 
 FLAGS = test.FLAGS
 
 
-def test_small_shell_program():
-  """Test pre-processing a small shell program."""
-  text = shell.FormatShell.Format(
+def test_invalid_empty_file():
+  with test.Raises(protobuf.FormatProtobuf.FormatError):
+    protobuf.FormatProtobuf.Format("")
+
+
+def test_invalid_proto_file_missing_syntax():
+  with test.Raises(protobuf.FormatProtobuf.FormatError):
+    protobuf.FormatProtobuf.Format(
+      """
+message Foo { optional int32 a = 1; }
+"""
+    )
+
+
+def test_invalid_proto_field_missing_tag_number():
+  with test.Raises(protobuf.FormatProtobuf.FormatError):
+    protobuf.FormatProtobuf.Format(
+      """
+syntax = "proto2"
+message Foo { optional int32 a; }
+"""
+    )
+
+
+def test_small_proto_file():
+  text = protobuf.FormatProtobuf.Format(
     """
-foo() {
-    echo hello; ls
-}
+syntax = "proto2";
+message Foo { optional int32 a = 1; }
 """
   )
   print(text)
   assert (
     text
     == """\
-foo() {
-  echo hello
-  ls
-}
-"""
-  )
+syntax = "proto2";
 
-
-def test_small_bats_program():
-  """Test pre-processing a small bats program."""
-  text = shell.FormatShell.Format(
-    """
-@test "run version" {
-    "$BIN"  --version
-}
-""",
-    assumed_filename="test.bats",
-  )
-  print(text)
-  assert (
-    text
-    == """\
-@test "run version" {
-  "$BIN" --version
+message Foo {
+  optional int32 a = 1;
 }
 """
   )

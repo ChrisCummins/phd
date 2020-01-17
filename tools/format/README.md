@@ -20,7 +20,7 @@ reducing cognitive load and allowing you to focus on what matters.
 ## Features
 
 ☑️ **Consistent** code styling of C/C++, Python, Java, SQL, JavaScript, HTML,
-  CSS, Go, Markdown, plain text, and JSON files.
+  Protocol Buffers, CSS, Go, Markdown, plain text, and JSON files.
 
 ☑️ **Git-aware** pre-commit mode which formats changed files and signs off
   commits.
@@ -62,15 +62,11 @@ that will be formatted without changing them, use:
 $ format --dry_run <path ...>
 ```
 
-If you want to exclude files from formatting, create a `.formatignore` file. It
-has similar rules to `.gitignore` files, e.g.:
+Use the `--watch` flag to watch files or directories and run the formatter on
+them on change:
 
 ```sh
-$ cat .formatignore
-# Everything after '#' character is a comment
-hello.txt  # Name specific files to exclude from formatting
-**/*.json  # Or glob them
-!package.json  # Use '!' character to create un-ignore patterns
+$ format --watch <path ...>
 ```
 
 For git repositories, you can install the formatter to execute as a pre-commit
@@ -83,6 +79,17 @@ $ format --install_pre_commit_hook
 This installs hooks that run the formatter on changelists before commits, and
 adds a "Signed-off-by" footer to commit messages verifying that the commit
 contents passed formatting checks.
+
+If you want to exclude files from formatting, create a `.formatignore` file. It
+has similar rules to `.gitignore` files, e.g.:
+
+```sh
+$ cat .formatignore
+# Everything after '#' character is a comment
+hello.txt  # Name specific files to exclude from formatting
+**/*.json  # Or glob them
+!package.json  # Use '!' character to create un-ignore patterns
+```
 
 This program uses a filesystem cache to store various attributes such as a
 database of file modified times. See `format --print_cache_path` to print the

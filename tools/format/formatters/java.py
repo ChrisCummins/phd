@@ -13,21 +13,21 @@
 # limitations under the License.
 """This module defines a formatter for java sources."""
 from labm8.py import bazelutil
-from tools.format import formatter
+from tools.format.formatters.base import batched_file_formatter
 
 
-class FormatJava(formatter.BatchedFormatter):
+class FormatJava(batched_file_formatter.BatchedFileFormatter):
   """Format Java sources."""
 
   def __init__(self, *args, **kwargs):
     super(FormatJava, self).__init__(*args, **kwargs)
-    self.java = formatter.WhichOrDie("java")
+    self.java = self._Which("java")
 
     self.google_java_format = bazelutil.DataPath(
       "phd/third_party/java/google-java-format-1.7-all-deps.jar"
     )
 
   def RunMany(self, paths):
-    return formatter.ExecOrError(
+    return self._Exec(
       [self.java, "-jar", self.google_java_format, "-i"] + paths
     )
