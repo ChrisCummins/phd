@@ -245,7 +245,9 @@ def main(argv) -> None:
   if len(argv) > 1:
     raise app.UsageError("Too many command-line arguments.")
 
-  connection = github_api.GetGithubConectionFromFlagsOrDie()
+  connection = github_api.GetDefaultGithubConnectionOrDie(
+    extra_access_token_paths=["~/.github/access_tokens/scraper.txt"]
+  )
 
   clone_list_path = pathlib.Path(FLAGS.clone_list or "")
   if not clone_list_path.is_file():

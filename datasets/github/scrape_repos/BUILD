@@ -25,6 +25,7 @@ py_binary(
         "//labm8/py:humanize",
         "//labm8/py:pbutil",
         "//third_party/py/progressbar",
+        "//tools/git:git_clone",
     ],
 )
 
@@ -149,7 +150,6 @@ py_library(
         ":contentfiles",
         ":importer",
         ":scraper",
-        "//datasets/github:api",
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
         "//labm8/py:app",
         "//labm8/py:humanize",

@@ -29,6 +29,7 @@ from labm8.py import app
 from labm8.py import fs
 from labm8.py import humanize
 from labm8.py import pbutil
+from tools.git import git_clone
 
 FLAGS = app.FLAGS
 
@@ -47,7 +48,7 @@ app.DEFINE_integer(
 )
 
 
-def GetCloneDir(metafile: pathlib.Path) -> pathlib.Path:
+def GetCloneDir(metafile: pathlib.Path) -> Optional[pathlib.Path]:
   meta = pbutil.FromFile(metafile, scrape_repos_pb2.GitHubRepoMetadata())
   if not meta.owner and meta.name:
     app.Error("Metafile missing owner and name fields %s", metafile)
@@ -67,23 +68,14 @@ def CloneFromMetafile(metafile: pathlib.Path) -> None:
   # Remove anything left over from a previous attempt.
   subprocess.check_call(["rm", "-rf", str(clone_dir)])
 
-  cmd = [
-    "timeout",
-    f"{FLAGS.repository_clone_timeout_minutes}m",
-    "/usr/bin/git",
-    "clone",
-    meta.clone_from_url,
-    str(clone_dir),
-  ]
-  app.Log(2, "$ %s", " ".join(cmd))
-
   # Try to checkout the repository and submodules.
-  p = subprocess.Popen(
-    cmd + ["--recursive"],
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-    universal_newlines=True,
+  git_clone.GitClone(
+    meta.clone_from_url,
+    clone_dir,
+    shallow=True,
+    timeout=FLAGS.repository_clone_timeout_minutes * 60,
   )
+
   _, stderr = p.communicate()
   if p.returncode and "submodule" in stderr:
     # Remove anything left over from a previous attempt.
