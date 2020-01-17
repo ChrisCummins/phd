@@ -59,7 +59,11 @@ class PathGenerator(object):
     for arg in args:
       arg_path = pathlib.Path(arg).absolute()
 
-      for path in glob.iglob(arg, recursive=True):
+      # Sorting the result of globbing here rather than using the more efficient
+      # glob.iglob() gives us a stable and expected iteration order, but has a
+      # memory overhead as we must fully expand the glob before iterating
+      # through the results.
+      for path in sorted(glob.glob(arg, recursive=True)):
         path = pathlib.Path(path).absolute()
 
         if path.is_dir():
@@ -79,7 +83,11 @@ class PathGenerator(object):
             # Only iterate through the directory contents if the directory is
             # not ignored.
             if not self.IsIgnored(root):
-              for file in files:
+              # As with the glob expansion above, we sort the order of files
+              # when iterating through directories so that we have a sensible
+              # and stable iteration order. This has a performance hit for
+              # very large directories.
+              for file in sorted(files):
                 path = root / file
                 if path not in visited_paths and not self.IsIgnored(path):
                   visited_paths.add(path)
