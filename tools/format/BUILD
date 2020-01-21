@@ -78,9 +78,13 @@ py_binary(
         ":format_paths",
         ":path_generator",
         ":pre_commit",
-        ":watch",
         "//labm8/py:app",
-    ],
+    ] + select({
+        "//:darwin": [],
+        "//conditions:default": [
+            ":watch",
+        ],
+    }),
 )
 
 bats_test(

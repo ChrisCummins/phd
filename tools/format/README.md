@@ -62,8 +62,8 @@ that will be formatted without changing them, use:
 $ format --dry_run <path ...>
 ```
 
-Use the `--watch` flag to watch files or directories and run the formatter on
-them on change:
+Use the `--watch` flag on linux (sorry, no macOS support as of yet) to
+watch files or directories and run the formatter on them on change:
 
 ```sh
 $ format --watch <path ...>
