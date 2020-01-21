@@ -1,79 +1,52 @@
-"""Unit tests for //tools/source_tree."""
+"""Unit tests for //tools/git:export_subtree."""
 import pathlib
 
 import git
 
 from labm8.py import fs
 from labm8.py import test
-from tools.source_tree import source_tree
+from tools.git import export_subtree
+
+pytest_plugins = ["tools.git.test.fixtures"]
 
 FLAGS = test.FLAGS
 
 
-def test_TemporaryGitRemote_remote_is_available(
-  repo_with_history: git.Repo, empty_repo: git.Repo
-):
-  temporary_remote = source_tree.TemporaryGitRemote(
-    empty_repo, repo_with_history.working_tree_dir
-  )
-  with temporary_remote as temporary_remote_name:
-    assert empty_repo.remote(temporary_remote_name)
-
-
-def test_TemporaryGitRemote_remote_fetch(
-  repo_with_history: git.Repo, empty_repo: git.Repo
-):
-  temporary_remote = source_tree.TemporaryGitRemote(
-    empty_repo, repo_with_history.working_tree_dir
-  )
-  with temporary_remote as temporary_remote_name:
-    empty_repo.remote(temporary_remote_name).fetch()
-
-
-def test_TemporaryGitRemote_remote_is_removed_after_scope(
-  repo_with_history: git.Repo, empty_repo: git.Repo
-):
-  temporary_remote = source_tree.TemporaryGitRemote(
-    empty_repo, repo_with_history.working_tree_dir
-  )
-  with temporary_remote as temporary_remote_name:
-    pass
-  assert temporary_remote_name not in empty_repo.remotes
-
-
 def test_GetCommitsInOrder_count(repo_with_history: git.Repo):
-  commits = source_tree.GetCommitsInOrder(repo_with_history)
+  commits = export_subtree.GetCommitsInOrder(repo_with_history)
   assert len(commits) == 3
 
 
 def test_GetCommitsInOrder_empty_repo_count(empty_repo: git.Repo):
-  commits = source_tree.GetCommitsInOrder(empty_repo)
+  commits = export_subtree.GetCommitsInOrder(empty_repo)
   assert len(commits) == 0
 
 
 def test_GetCommitsInOrder_head_is_last(repo_with_history: git.Repo):
-  commits = source_tree.GetCommitsInOrder(repo_with_history)
+  commits = export_subtree.GetCommitsInOrder(repo_with_history)
   head = repo_with_history.commit("HEAD")
   assert commits[-1] == head
 
 
 def test_GetCommitsInOrder_tail_is_first(repo_with_history: git.Repo):
-  commits = source_tree.GetCommitsInOrder(repo_with_history)
+  commits = export_subtree.GetCommitsInOrder(repo_with_history)
   head_offset = len(commits) - 1
   tail = repo_with_history.commit(f"HEAD~{head_offset}")
   assert commits[0] == tail
 
 
 def test_GetCommitsInOrder_head_ref(repo_with_history: git.Repo):
-  all_commits = source_tree.GetCommitsInOrder(repo_with_history)
-  all_except_one_commits = source_tree.GetCommitsInOrder(
+  all_commits = export_subtree.GetCommitsInOrder(repo_with_history)
+  all_except_one_commits = export_subtree.GetCommitsInOrder(
     repo_with_history, head_ref="HEAD~"
   )
   assert len(all_commits) - 1 == len(all_except_one_commits)
 
 
 def test_GetCommitsInOrder_tail_ref(repo_with_history: git.Repo):
-  commits = source_tree.GetCommitsInOrder(repo_with_history, tail_ref="HEAD~")
+  commits = export_subtree.GetCommitsInOrder(
+    repo_with_history, tail_ref="HEAD~"
+  )
   assert len(commits) == 1
 
 
@@ -94,7 +67,7 @@ def test_MaybeExportCommitSubset_interesting_no_interesting_file(
   dst.git.remote("add", "origin", src.working_tree_dir)
   dst.remote("origin").fetch()
 
-  dst_commit = source_tree.MaybeExportCommitSubset(src_commit, dst, [])
+  dst_commit = export_subtree.MaybeExportCommitSubset(src_commit, dst, [])
   assert not dst_commit
 
 
@@ -119,7 +92,7 @@ def test_MaybeExportCommitSubset_interesting_file_added(
   dst.git.remote("add", "origin", src.working_tree_dir)
   dst.remote("origin").fetch()
 
-  dst_commit = source_tree.MaybeExportCommitSubset(
+  dst_commit = export_subtree.MaybeExportCommitSubset(
     src_commit, dst, ["README.txt"]
   )
   assert dst_commit
@@ -160,7 +133,7 @@ def test_MaybeExportCommitSubset_interesting_file_subset(
   dst.git.remote("add", "origin", src.working_tree_dir)
   dst.remote("origin").fetch()
 
-  dst_commit = source_tree.MaybeExportCommitSubset(
+  dst_commit = export_subtree.MaybeExportCommitSubset(
     src_commit, dst, ["README.txt"]
   )
   assert dst_commit
@@ -196,7 +169,7 @@ def test_MaybeExportCommitSubset_uninteresting_file_renamed(
   dst.git.remote("add", "origin", src.working_tree_dir)
   dst.remote("origin").fetch()
 
-  dst_commit = source_tree.MaybeExportCommitSubset(
+  dst_commit = export_subtree.MaybeExportCommitSubset(
     src_commit, dst, ["README.md"]
   )
   assert dst_commit
@@ -236,8 +209,8 @@ def test_MaybeExportCommitSubset_commit_conflict(
   dst.git.remote("add", "origin", src.working_tree_dir)
   dst.remote("origin").fetch()
 
-  dst_commit = source_tree.MaybeExportCommitSubset(
-    src_commit, dst, ["LICENSE.md"]
+  dst_commit = export_subtree.MaybeExportCommitSubset(
+    src_commit, dst, {"LICENSE.md"}
   )
   assert dst_commit
 
@@ -246,129 +219,98 @@ def test_MaybeExportCommitSubset_commit_conflict(
   assert (pathlib.Path(dst.working_tree_dir) / "LICENSE.md").is_file()
 
 
-def test_ExportCommitsThatTouchFiles_integration_test_readme(
+def test_ExportSubtree_integration_test_readme(
   repo_with_history: git.Repo, empty_repo: git.Repo
 ):
   src, dst = repo_with_history, empty_repo
 
-  src_commits = source_tree.GetCommitsInOrder(src)
+  export_subtree.ExportSubtree(src, dst, {"README.txt"})
 
-  # Make commits available to dest.
-  dst.git.remote("add", "origin", src.working_tree_dir)
-  dst.remote("origin").fetch()
-
-  source_tree.ExportCommitsThatTouchFiles(src_commits, dst, ["README.txt"])
-
-  dst_commits = source_tree.GetCommitsInOrder(dst)
+  dst_commits = export_subtree.GetCommitsInOrder(dst)
   assert len(dst_commits) == 1
   assert (pathlib.Path(dst.working_tree_dir) / "README.txt").is_file()
   assert not (pathlib.Path(dst.working_tree_dir) / "src" / "main.c").is_file()
   assert not (pathlib.Path(dst.working_tree_dir) / "src" / "Makefile").is_file()
 
 
-def test_ExportCommitsThatTouchFiles_integration_test_readme_and_makefile(
+def test_ExportSubtree_integration_test_readme_and_makefile(
   repo_with_history: git.Repo, empty_repo: git.Repo
 ):
   src, dst = repo_with_history, empty_repo
 
-  src_commits = source_tree.GetCommitsInOrder(src)
+  export_subtree.ExportSubtree(src, dst, {"README.txt", "src/Makefile"})
 
-  # Make commits available to dest.
-  dst.git.remote("add", "origin", src.working_tree_dir)
-  dst.remote("origin").fetch()
-
-  source_tree.ExportCommitsThatTouchFiles(
-    src_commits, dst, ["README.txt", "src/Makefile"]
-  )
-
-  dst_commits = source_tree.GetCommitsInOrder(dst)
+  dst_commits = export_subtree.GetCommitsInOrder(dst)
   assert (pathlib.Path(dst.working_tree_dir) / "README.txt").is_file()
   assert not (pathlib.Path(dst.working_tree_dir) / "src" / "main.c").is_file()
   assert not (pathlib.Path(dst.working_tree_dir) / "src" / "Makefile").is_file()
   assert len(dst_commits) == 3
 
 
-def test_ExportCommitsThatTouchFiles_integration_test_nothing_interesting(
+def test_ExportSubtree_integration_test_nothing_interesting(
   repo_with_history: git.Repo, empty_repo: git.Repo
 ):
   src, dst = repo_with_history, empty_repo
 
-  src_commits = source_tree.GetCommitsInOrder(src)
+  export_subtree.ExportSubtree(src, dst, {"foo"})
 
-  # Make commits available to dest.
-  dst.git.remote("add", "origin", src.working_tree_dir)
-  dst.remote("origin").fetch()
-
-  source_tree.ExportCommitsThatTouchFiles(src_commits, dst, ["foo"])
-
-  dst_commits = source_tree.GetCommitsInOrder(dst)
+  dst_commits = export_subtree.GetCommitsInOrder(dst)
   assert len(dst_commits) == 0
   assert not (pathlib.Path(dst.working_tree_dir) / "README.txt").is_file()
   assert not (pathlib.Path(dst.working_tree_dir) / "src" / "main.c").is_file()
   assert not (pathlib.Path(dst.working_tree_dir) / "src" / "Makefile").is_file()
 
 
-def test_ExportGitHistoryForFiles_duplicate_exports(
+def test_ExportSubtree_duplicate_exports(
   repo_with_history: git.Repo, empty_repo: git.Repo
 ):
   src, dst = repo_with_history, empty_repo
 
-  source_tree.ExportGitHistoryForFiles(
-    src, dst, ["README.txt", "src/main.c", "src/Makefile"]
+  export_subtree.ExportSubtree(
+    src, dst, {"README.txt", "src/main.c", "src/Makefile"}
   )
-  commits = source_tree.GetCommitsInOrder(dst)
+  commits = export_subtree.GetCommitsInOrder(dst)
 
-  # Do it again. Since we've already exported everything, there should be
-  # nothing more.
-  source_tree.ExportGitHistoryForFiles(
-    src, dst, ["README.txt", "src/main.c", "src/Makefile"]
+  # Do it again.
+  export_subtree.ExportSubtree(
+    src, dst, {"README.txt", "src/main.c", "src/Makefile"}
   )
-  commits2 = source_tree.GetCommitsInOrder(dst)
+  commits2 = export_subtree.GetCommitsInOrder(dst)
 
-  assert len(commits) == len(commits2)
+  assert 2 * len(commits) == len(commits2)
 
 
-def test_ExportGitHistoryForFiles_split_export(
+def test_ExportSubtree_split_export(
   repo_with_history: git.Repo, empty_repo: git.Repo
 ):
   src, dst = repo_with_history, empty_repo
 
-  source_tree.ExportGitHistoryForFiles(
-    src, dst, ["README.txt", "src/main.c", "src/Makefile"], head_ref="HEAD~"
+  export_subtree.ExportSubtree(
+    src, dst, {"README.txt", "src/main.c", "src/Makefile"}, head_ref="HEAD~"
   )
-  commits = source_tree.GetCommitsInOrder(dst)
+  commits = export_subtree.GetCommitsInOrder(dst)
 
-  # Do it again. Since we've already exported everything, there should be
-  # nothing more.
-  source_tree.ExportGitHistoryForFiles(
-    src, dst, ["README.txt", "src/main.c", "src/Makefile"]
+  # Do it again.
+  export_subtree.ExportSubtree(
+    src, dst, {"README.txt", "src/main.c", "src/Makefile"}
   )
-  commits2 = source_tree.GetCommitsInOrder(dst)
+  commits2 = export_subtree.GetCommitsInOrder(dst)
 
-  assert len(commits) + 1 == len(commits2)
-
-
-def test_MaybeGetHexShaOfLastExportedCommit_empty_repo(empty_repo: git.Repo):
-  assert not source_tree.MaybeGetHexShaOfLastExportedCommit(empty_repo)
+  assert (len(commits) * 2) + 1 == len(commits2)
 
 
-def test_MaybeGetHexShaOfLastExportedCommit_empty_repo(empty_repo: git.Repo):
-  assert not source_tree.MaybeGetHexShaOfLastExportedCommit(empty_repo)
-
-
-def test_MaybeGetHexShaOfLastExportedCommit_file(
+@test.XFail(reason="fix me")
+def test_ExportSubtree_dirty_destination(
   repo_with_history: git.Repo, empty_repo: git.Repo
 ):
   src, dst = repo_with_history, empty_repo
-
-  source_tree.ExportGitHistoryForFiles(
-    src, dst, ["README.txt", "src/main.c", "src/Makefile"]
+  fs.Write(
+    pathlib.Path(dst.working_tree_dir) / "README.txt",
+    "I'm dirty".encode("utf-8"),
   )
-  commits = source_tree.GetCommitsInOrder(src)
-
-  assert (
-    source_tree.MaybeGetHexShaOfLastExportedCommit(dst) == commits[-1].hexsha
-  )
+  with test.Raises(OSError) as e_ctx:
+    export_subtree.ExportSubtree(src, dst, {"README.txt"})
+  assert str(e_ctx.value).endswith(" is dirty")
 
 
 if __name__ == "__main__":

@@ -14,7 +14,7 @@ from labm8.py import app
 from labm8.py import bazelutil
 from labm8.py import fs
 from labm8.py import humanize
-from tools.source_tree import source_tree
+from tools.git import export_subtree
 
 FLAGS = app.FLAGS
 
@@ -240,8 +240,7 @@ class PhdWorkspace(bazelutil.Workspace):
     src_files: typing.List[str],
     extra_files: typing.List[str],
     file_move_mapping: typing.Dict[str, str],
-    resume_export: bool = True,
-  ) -> None:
+  ) -> int:
     """Export the requested targets to the destination directory."""
     # The timestamp for the export.
     timestamp = datetime.datetime.utcnow()
@@ -261,14 +260,11 @@ class PhdWorkspace(bazelutil.Workspace):
     for file in src_files:
       print(file)
 
-    exported_commit_count = source_tree.ExportGitHistoryForFiles(
-      source=self.git_repo,
-      destination=repo,
-      files_of_interest=src_files,
-      resume_export=resume_export,
+    exported_commit_count = export_subtree.ExportSubtree(
+      source=self.git_repo, destination=repo, files_of_interest=set(src_files),
     )
     if not exported_commit_count:
-      return
+      return 0
 
     # Make manual adjustments.
     exported_workspace = bazelutil.Workspace(

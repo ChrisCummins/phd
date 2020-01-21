@@ -14,28 +14,6 @@ exports_repo(
     targets = ["//tools/source_tree:export_source_tree"],
 )
 
-py_library(
-    name = "conftest",
-    testonly = 1,
-    srcs = ["conftest.py"],
-    deps = [
-        "//labm8/py:fs",
-        "//labm8/py:test",
-        "//third_party/py/git",
-        "//third_party/py/pytest",
-    ],
-)
-
-py_test(
-    name = "conftest_test",
-    srcs = ["conftest_test.py"],
-    deps = [
-        ":conftest",
-        "//labm8/py:test",
-        "//third_party/py/git",
-    ],
-)
-
 par_binary(
     name = "deploy_pip",
     srcs = ["deploy_pip.py"],
@@ -54,7 +32,6 @@ par_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":phd_workspace",
-        ":source_tree",
         "//:build_info",
         "//datasets/github:api",
         "//labm8/py:app",
@@ -63,6 +40,7 @@ par_binary(
         "//labm8/py:humanize",
         "//third_party/py/git",
         "//third_party/py/github",
+        "//tools/git:export_subtree",
     ],
 )
 
@@ -71,32 +49,10 @@ py_library(
     srcs = ["phd_workspace.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":source_tree",
         "//labm8/py:bazelutil",
         "//labm8/py:fs",
         "//labm8/py:humanize",
         "//third_party/py/git",
-    ],
-)
-
-py_library(
-    name = "source_tree",
-    srcs = ["source_tree.py"],
-    deps = [
-        "//labm8/py:app",
-        "//labm8/py:humanize",
-        "//third_party/py/git",
-    ],
-)
-
-py_test(
-    name = "source_tree_test",
-    srcs = ["source_tree_test.py"],
-    deps = [
-        ":conftest",
-        ":source_tree",
-        "//labm8/py:fs",
-        "//labm8/py:test",
-        "//third_party/py/git",
+        "//tools/git:export_subtree",
     ],
 )

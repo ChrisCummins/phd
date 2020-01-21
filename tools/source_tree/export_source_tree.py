@@ -11,7 +11,8 @@ This script provides a way to export that 10%.
 import pathlib
 import sys
 import tempfile
-import typing
+from typing import Dict
+from typing import List
 
 import git
 import github as github_lib
@@ -89,12 +90,10 @@ def GetOrCreateRepoOrDie(
 def Export(
   workspace_root: pathlib.Path,
   github_repo: str,
-  targets: typing.List[str],
-  excluded_targets: typing.List[str] = None,
-  extra_files: typing.List[str] = None,
-  move_file_mapping: typing.Dict[str, str] = None,
-  resume_export: bool = True,
-  run_handler=app.Run,
+  targets: List[str],
+  excluded_targets: List[str] = None,
+  extra_files: List[str] = None,
+  move_file_mapping: Dict[str, str] = None,
 ) -> None:
   """Custom entry-point to export source-tree.
 
@@ -108,6 +107,7 @@ def Export(
       bazel query, so `/...` and `:all` labels are expanded, e.g.
       `//some/package/to/export/...`. All targets should be absolute, and
       prefixed with '//'.
+    excluded_targets: A list of targets to exlude.
     extra_files: A list of additional files to export.
     move_file_mapping: A dictionary of <src,dst> relative paths listing files
       which should be moved from their respective source location to the
@@ -117,55 +117,45 @@ def Export(
   extra_files = extra_files or []
   move_file_mapping = move_file_mapping or {}
 
-  def _DoExport():
-    source_workspace = phd_workspace.PhdWorkspace(workspace_root)
+  source_workspace = phd_workspace.PhdWorkspace(workspace_root)
 
-    with tempfile.TemporaryDirectory(prefix=f"phd_export_{github_repo}_") as d:
-      destination = pathlib.Path(d)
-      connection = api.GetDefaultGithubConnectionOrDie(
-        extra_access_token_paths=[
-          "~/.github/access_tokens/export_source_tree.txt"
-        ]
-      )
-      repo = GetOrCreateRepoOrDie(connection, github_repo)
-      api.CloneRepo(repo, destination)
-      destination_repo = git.Repo(destination)
+  with tempfile.TemporaryDirectory(prefix=f"phd_export_{github_repo}_") as d:
+    destination = pathlib.Path(d)
+    connection = api.GetDefaultGithubConnectionOrDie(
+      extra_access_token_paths=[
+        "~/.github/access_tokens/export_source_tree.txt"
+      ]
+    )
+    repo = GetOrCreateRepoOrDie(connection, github_repo)
+    api.CloneRepo(repo, destination)
+    destination_repo = git.Repo(destination)
 
-      src_files = source_workspace.GetAllSourceTreeFiles(
-        targets, excluded_targets, extra_files, move_file_mapping
-      )
-      if FLAGS.export_source_tree_print_files:
-        print("\n".join(src_files))
-        sys.exit(0)
+    src_files = source_workspace.GetAllSourceTreeFiles(
+      targets, excluded_targets, extra_files, move_file_mapping
+    )
+    if FLAGS.export_source_tree_print_files:
+      print("\n".join(str(x) for x in src_files))
+      sys.exit(0)
 
-      exported_commit_count = source_workspace.ExportToRepo(
-        repo=destination_repo,
-        targets=targets,
-        src_files=src_files,
-        extra_files=extra_files,
-        file_move_mapping=move_file_mapping,
-        resume_export=resume_export,
-      )
-      if not exported_commit_count:
-        return
-      app.Log(1, "Pushing changes to remote")
+    exported_commit_count = source_workspace.ExportToRepo(
+      repo=destination_repo,
+      targets=targets,
+      src_files=src_files,
+      extra_files=extra_files,
+      file_move_mapping=move_file_mapping,
+    )
+    if not exported_commit_count:
+      return
+    app.Log(1, "Pushing changes to remote")
 
-      push_opts = {}
-      if not resume_export:
-        # Use --force when we are not resuming an export, as we may have
-        # rewritten history.
-        push_opts["force"] = True
-      destination_repo.git.push("origin", **push_opts)
-
-  run_handler(_DoExport)
+    # Force push since we may have rewritten history.
+    destination_repo.git.push("origin", force=True)
 
 
 def main():
   if not FLAGS.targets:
     raise app.UsageError("--targets must be one-or-more bazel targets")
   targets = list(sorted(set(FLAGS.targets)))
-
-  excluded_targets = set(FLAGS.excluded_targets)
 
   def _GetFileMapping(f: str):
     if len(f.split(":")) == 2:
@@ -186,11 +176,9 @@ def main():
     workspace_root=workspace_root,
     github_repo=FLAGS.github_repo,
     targets=targets,
-    excluded_targets=excluded_targets,
+    excluded_targets=FLAGS.excluded_targets,
     extra_files=extra_files,
     move_file_mapping=move_file_mapping,
-    resume_export=not FLAGS.ignore_last_export,
-    run_handler=lambda x: x(),
   )
 
 

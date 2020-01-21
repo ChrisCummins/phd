@@ -1,4 +1,4 @@
-"""Shared test fixtures for //tools/source_tree."""
+"""Pytest fixtures for //tools/git."""
 import pathlib
 
 import git
