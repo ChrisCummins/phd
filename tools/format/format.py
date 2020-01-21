@@ -45,12 +45,16 @@ path of the cache. Included in the cache is a file lock which prevents mulitple
 instances of this program from modifying files at the same time, irrespective
 of the files being formatted.
 """
+import sys
+
 from labm8.py import app
 from tools.format import app_paths
 from tools.format import format_paths
 from tools.format import path_generator as path_generators
 from tools.format import pre_commit
-from tools.format import watch
+
+if sys.platform != "darwin":
+  from tools.format import watch
 from tools.format.default_suffix_mapping import (
   mapping as default_suffix_mapping,
 )
@@ -58,7 +62,9 @@ from tools.format.default_suffix_mapping import (
 
 FLAGS = app.FLAGS
 
-app.DEFINE_boolean("watch", False, "Enter into a watch loop.")
+app.DEFINE_boolean(
+  "watch", False, "Enter into a watch loop (not supported on macOS)."
+)
 app.DEFINE_boolean(
   "skip_git_submodules",
   True,
@@ -124,6 +130,8 @@ def Main(argv):
 
   # Start the inotify watcher.
   if FLAGS.watch:
+    if sys.platform == "darwin":
+      app.FatalWithoutStackTrace("--watch is not supported on macOS")
     watch.Main(args)
     return
 
