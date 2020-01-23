@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/travis/ChrisCummins/phd/master.svg">
 </a>
 
-A monolothic repository for (almost) everything I have done while at the University of Edinburgh. Living an #open life.
+A monolithic repository for (almost) everything I have done while at the University of Edinburgh. Living an #open life.
 
 
 ##  Publications
