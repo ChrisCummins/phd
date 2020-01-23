@@ -147,24 +147,6 @@ def GuessIfCudaIsAvailable():
   return is_available
 
 
-def GetGitRemote():
-  """Get the git remote for this repo."""
-  remotes = subprocess.check_output(
-      ['git', '-C', PHD_ROOT, 'remote', '-v']).decode('utf-8')
-  return remotes.split('\n')[0].split()[1]
-
-
-def RewriteGitSubmodulesToHttps():
-  """Rewrite git@ prefixed submodules to https://."""
-  gitmodules = os.path.join(PHD_ROOT, '.gitmodules')
-  with open(gitmodules) as f:
-    modules = f.read()
-  new_modules = re.sub(r'(url\s*=\s*)git@([^:]+):', r'\1https://\2/', modules)
-  assert 'git@' not in new_modules
-  with open(gitmodules, 'w') as f:
-    f.write(new_modules)
-
-
 def RunAsHomebrewUser(cmd, subprocess_fn=subprocess.check_call):
   if os.path.isdir('/home/linuxbrew'):
     return subprocess_fn(
@@ -231,17 +213,6 @@ def GetConfigurationOptions(argv):
   parser.set_defaults(with_cuda=GuessIfCudaIsAvailable())
   yes_no_prompts.append(
       ('with_cuda', 'Enable CUDA support? (Stricly optional, not required)'))
-
-  # --[no]update_git_submodules.
-  parser.add_argument(
-      '--update_git_submodules', dest='update_git_submodules',
-      action='store_true', help='Checkout and update git submodules.')
-  parser.add_argument(
-      '--noupdate_git_submodules', dest='update_git_submodules',
-      action='store_false', help='Do not checkout and update git submodules.')
-  parser.set_defaults(update_git_submodules=False)
-  if is_git_repo and os.path.isfile('.gitmodules'):
-    yes_no_prompts.append(('update_git_submodules', 'Update git submodules?'))
 
   args = parser.parse_args(argv)
 
@@ -329,25 +300,6 @@ def main(argv):
     uname_path = '/bin/uname'
   uname = subprocess.check_output(
       [uname_path], universal_newlines=True).rstrip().lower()
-
-  # Git submodules are checked in using SSH protocol URLs, but if the user
-  # cloned this repo using the HTTP protocol then there's a good chance they
-  # will want to use that for the submodules too. To support this, we
-  # optionally rewrite git@ to https:// URLs in submodules.
-  if os.path.isdir(os.path.join(PHD_ROOT, '.git')):
-    git_remote = GetGitRemote()
-    logging.info('Git remote: %s', git_remote)
-    gitmodules_file = os.path.join(PHD_ROOT, '.gitmodules')
-    if os.path.isfile(gitmodules_file) and git_remote.startswith('https://'):
-      logging.info('Rewriting .gitmodules to use https://')
-      RewriteGitSubmodulesToHttps()
-
-  # Python2 doesn't have subprocess.DEVNULL defined.
-  DEVNULL = open(os.devnull, 'w')
-  if args.update_git_submodules:
-    subprocess.check_call(
-        ['git', '-C', PHD_ROOT, 'submodule', 'update', '--init', '--recursive'],
-        stdout=DEVNULL)
 
   # Find the path of a supported python binary.
   SUPPORTED_PYTHON_VERSIONS_IN_ORDER_OF_PREFERENCE = ['python3.7', 'python3.6']
