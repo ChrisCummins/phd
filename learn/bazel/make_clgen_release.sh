@@ -7,7 +7,6 @@ set -eux
 source ~/phd/.env
 
 # Requirements: python3.6
-# TODO: homebrew llvm, until config.pbtxt is dropped.
 
 if [[ "$(uname)" == "Darwin" ]]; then
   uname="darwin"

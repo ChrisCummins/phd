@@ -29,14 +29,15 @@ trap cleanup EXIT
 # Do this by adding a equals sign on the first whitespace and quoting the
 # remainder of the line, e.g.
 #   BUILD_TIMESTAMP 1552996705 -> BUILD_TIMESTAMP="1552996705"
-sed 's/ /="/' bazel-out/volatile-status.txt | sed 's/$/"/' > "$workdir"/vars.sh
-sed 's/ /="/' bazel-out/stable-status.txt | sed 's/$/"/' >> "$workdir"/vars.sh
+sed 's/ /="/' bazel-out/volatile-status.txt | sed 's/$/"/' >"$workdir"/vars.sh
+sed 's/ /="/' bazel-out/stable-status.txt | sed 's/$/"/' >>"$workdir"/vars.sh
 source "$workdir"/vars.sh
 
-cat << EOF
+cat <<EOF
 # File: //config.proto
 # Proto: BuildInfo
 seconds_since_epoch: $BUILD_TIMESTAMP
+unsafe_workspace: "$STABLE_UNSAFE_WORKSPACE"
 host: "$STABLE_HOST"
 user: "$STABLE_USER"
 version: "$STABLE_VERSION"

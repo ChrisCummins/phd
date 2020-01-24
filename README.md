@@ -205,22 +205,10 @@ about it and accept patches.
 
 #### Ubuntu/MacOS instructions
 
-Configure the build and answer the yes/no questions. The default answers should
-be fine:
-
-```sh
-$ ./configure
-```
-
-Note that CUDA support requires CUDA to have been installed separately,
-see the [TensorFlow build docs](https://www.tensorflow.org/install/) for
-instructions. CUDA support has only been tested for Linux builds, not macOS or
-Docker containers.
-
-The configure process generates a `bootstrap.sh` script which will install the
-required dependent packages. Since installing these packages will affect the
-global state of your system, and may requires root access, inspect this script
-carefully. Once you're happy to proceed, run it using:
+Run `python3 ./tools/boostrap.py` to generate a `bootstrap.sh` script which will
+install the required dependent packages. Since installing these packages will
+affect the global state of your system, and may requires root access, inspect
+this script carefully. Once you're happy to proceed, run it using:
 
 ```sh
 $ bash ./bootstrap.sh

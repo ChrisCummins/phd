@@ -1,9 +1,9 @@
 """Test that tensorflow can be imported."""
 import sys
 
+import GPUtil
 import numpy as np
 
-import getconfig
 from labm8.py import app
 from labm8.py import test
 
@@ -33,7 +33,7 @@ def test_tensorflow_session():
 
 # If the project has been configured to use CUDA, this test will pin an
 # operation to the GPU and test that it works.
-@test.SkipIf(not getconfig.GetGlobalConfig().with_cuda, reason="No GPU")
+@test.SkipIf(not GPUtil.getGPUs(), reason="No GPU")
 def test_tensorflow_gpu_constant():
   from third_party.py.tensorflow import tf
 
@@ -46,7 +46,7 @@ def test_tensorflow_gpu_constant():
 
 # If the project has been configured to use CUDA, this test will pin an
 # operation to the GPU and test that it works.
-@test.SkipIf(not getconfig.GetGlobalConfig().with_cuda, reason="No GPU")
+@test.SkipIf(not GPUtil.getGPUs(), reason="No GPU")
 def test_tensorflow_gpu_computation():
   from third_party.py.tensorflow import tf
 

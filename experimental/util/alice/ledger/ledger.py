@@ -58,7 +58,6 @@ class LedgerEntry(
   uname: str = sql.Column(sql.String(32))
   configure_id: str = sql.Column(sql.String(64))
   with_cuda: bool = sql.Column(sql.Boolean)
-  repo_root: str = sql.Column(sql.String(255))
 
   repo_remote_url: str = sql.Column(sql.String(255), nullable=False)
   repo_tracking_branch: str = sql.Column(sql.String(128), nullable=False)
@@ -90,10 +89,7 @@ class LedgerEntry(
     return {
       "id": proto.id if proto.id else None,
       "worker_id": proto.worker_id if proto.worker_id else None,
-      "uname": proto.repo_config.uname,
-      "configure_id": proto.repo_config.configure_id,
-      "with_cuda": proto.repo_config.with_cuda,
-      "repo_root": proto.repo_config.paths.repo_root,
+      "uname": proto.uname,
       "repo_remote_url": proto.run_request.repo_state.remote_url,
       "repo_tracking_branch": proto.run_request.repo_state.tracking_branch,
       "repo_head_id": proto.run_request.repo_state.head_id,
@@ -110,17 +106,7 @@ class LedgerEntry(
     return alice_pb2.LedgerEntry(
       id=self.id,
       worker_id=self.worker_id,
-      repo_config=config_pb2.GlobalConfig(
-        uname=self.uname,
-        configure_id=self.configure_id,
-        with_cuda=self.with_cuda,
-        options=config_pb2.GlobalConfigOptions(
-          with_cuda=False, update_git_submodules=False, install_git_hooks=False,
-        ),
-        paths=config_pb2.GlobalConfigPaths(
-          repo_root=self.repo_root, python="",
-        ),
-      ),
+      uname=self.uname,
       # TODO: Run request?
       job_status=self.job_status,
       job_outcome=self.job_outcome,

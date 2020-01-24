@@ -16,7 +16,7 @@ import typing
 import git
 import github as github_lib
 
-import getconfig
+import build_info
 from datasets.github import api
 from labm8.py import app
 from tools.source_tree import phd_workspace
@@ -180,7 +180,7 @@ def main():
   ]
   move_file_mapping = {x[0]: x[1] for x in move_file_tuples}
 
-  workspace_root = pathlib.Path(getconfig.GetGlobalConfig().paths.repo_root)
+  workspace_root = pathlib.Path(build_info.GetBuildInfo().unsafe_workspace)
 
   Export(
     workspace_root=workspace_root,
