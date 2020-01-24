@@ -1,18 +1,24 @@
 // Draft system RPC calls for FreeFocus 1.0.0.
+
 syntax = "proto2";
 
 package freefocus;
+
+option go_package = "freefocuspb";
+option java_multiple_files = true;
+option java_outer_classname = "SystemRpcProto";
+option java_package = "com.freefocus";
+
 import "util/freefocus/freefocus.proto";
 
 service FreeFocusSystem {
-  rpc CreatePersonOrWorkspace (CreatePersonOrWorkspaceRequest) returns (CreatePersonOrWorkspaceResponse);
-  rpc DestroyPersonOrWorkspace (DestroyPersonOrWorkspaceRequest) returns (DestroyPersonOrWorkspaceResponse);
-  rpc UpdatePerson (UpdatePersonRequest) returns (UpdatePersonResponse);
-
-  rpc CreateGroup (CreateGroupRequest) returns (CreateGroupResponse);
+  rpc CreatePersonOrWorkspace(CreatePersonOrWorkspaceRequest) returns (CreatePersonOrWorkspaceResponse);
+  rpc DestroyPersonOrWorkspace(DestroyPersonOrWorkspaceRequest) returns (DestroyPersonOrWorkspaceResponse);
+  rpc UpdatePerson(UpdatePersonRequest) returns (UpdatePersonResponse);
+  rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse);
   // TODO(cec): UpdateGroup
 
-  rpc CreateTask (CreateTaskRequest) returns (CreateTaskRequest);
+  rpc CreateTask(CreateTaskRequest) returns (CreateTaskRequest);
 }
 
 message CreatePersonOrWorkspaceRequest {

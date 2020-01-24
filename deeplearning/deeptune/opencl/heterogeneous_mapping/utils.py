@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with DeepTune.  If not, see <https://www.gnu.org/licenses/>.
 """Utility code for heterogeneous mapping experiment."""
+import json
 import pathlib
 import pickle
 import typing
@@ -23,123 +24,16 @@ from sklearn import model_selection
 
 from deeplearning.clgen.corpuses import atomizers
 from labm8.py import app
+from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 
-# Taken from the C99 spec, OpenCL spec 1.2, and bag-of-words analysis of
-# GitHub corpus:
-OPENCL_ATOMS = set(
-  [
-    "  ",
-    "__assert",
-    "__attribute",
-    "__builtin_astype",
-    "__clc_fabs",
-    "__clc_fma",
-    "__constant",
-    "__global",
-    "__inline",
-    "__kernel",
-    "__local",
-    "__private",
-    "__read_only",
-    "__read_write",
-    "__write_only",
-    "*/",
-    "/*",
-    "//",
-    "abs",
-    "alignas",
-    "alignof",
-    "atomic_add",
-    "auto",
-    "barrier",
-    "bool",
-    "break",
-    "case",
-    "char",
-    "clamp",
-    "complex",
-    "const",
-    "constant",
-    "continue",
-    "default",
-    "define",
-    "defined",
-    "do",
-    "double",
-    "elif",
-    "else",
-    "endif",
-    "enum",
-    "error",
-    "event_t",
-    "extern",
-    "fabs",
-    "false",
-    "float",
-    "for",
-    "get_global_id",
-    "get_global_size",
-    "get_local_id",
-    "get_local_size",
-    "get_num_groups",
-    "global",
-    "goto",
-    "half",
-    "if",
-    "ifdef",
-    "ifndef",
-    "image1d_array_t",
-    "image1d_buffer_t",
-    "image1d_t",
-    "image2d_array_t",
-    "image2d_t",
-    "image3d_t",
-    "imaginary",
-    "include",
-    "inline",
-    "int",
-    "into",
-    "kernel",
-    "line",
-    "local",
-    "long",
-    "noreturn",
-    "pragma",
-    "private",
-    "quad",
-    "read_only",
-    "read_write",
-    "register",
-    "restrict",
-    "return",
-    "sampler_t",
-    "short",
-    "shuffle",
-    "signed",
-    "size_t",
-    "sizeof",
-    "sqrt",
-    "static",
-    "struct",
-    "switch",
-    "true",
-    "typedef",
-    "u32",
-    "uchar",
-    "uint",
-    "ulong",
-    "undef",
-    "union",
-    "unsigned",
-    "void",
-    "volatile",
-    "while",
-    "wide",
-    "write_only",
-  ]
+# The set of multichar tokens for the OpenCL programming language.
+TOKEN_LISTS = json.loads(
+  bazelutil.DataString("phd/deeplearning/clgen/corpuses/token_lists.json")
 )
+
+OPENCL_ATOMS = TOKEN_LISTS["opencl"]["tokens"]
 
 
 def GetAtomizerFromOpenClSources(

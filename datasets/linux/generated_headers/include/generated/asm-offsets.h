@@ -51,7 +51,7 @@
 #define TASK_threadsp 2712 /* offsetof(struct task_struct, thread.sp) */
 #define TASK_stack_canary                            \
   1232 /* offsetof(struct task_struct, stack_canary) \
-          */
+        */
 
 #define TASK_TI_flags 0 /* offsetof(struct task_struct, thread_info.flags) */
 #define TASK_addr_limit \
@@ -102,10 +102,10 @@
 #define BP_init_size 608 /* offsetof(struct boot_params, hdr.init_size) */
 #define BP_pref_address                                 \
   600 /* offsetof(struct boot_params, hdr.pref_address) \
-         */
+       */
 #define BP_code32_start                                 \
   532 /* offsetof(struct boot_params, hdr.code32_start) \
-         */
+       */
 
 #define PTREGS_SIZE 168 /* sizeof(struct pt_regs) */
 #define TLB_STATE_user_pcid_flush_mask \

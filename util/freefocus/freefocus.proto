@@ -1,6 +1,13 @@
 // Draft message protocol for FreeFocus 1.0.0.
+
 syntax = "proto2";
+
 package freefocus;
+
+option go_package = "freefocuspb";
+option java_multiple_files = true;
+option java_outer_classname = "FreefocusProto";
+option java_package = "com.freefocus";
 
 // Core Building Blocks.
 
@@ -25,7 +32,6 @@ message Person {
   // The number of milliseconds since the Unix epoch that the Person was
   // most recently modified.
   optional int64 most_recently_modified_at_unix_epoch_ms = 6;
-
   // A list of Groups and the Workspace they belong to. This is required because
   // a Group's ID is unique only to a Workspace. Groups do not need to be
   // top-level in that Workspace.

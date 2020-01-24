@@ -18,6 +18,7 @@ py_library(
         requirement("Werkzeug"),
         requirement("jinja2"),
         "//third_party/py/click",
+        "//third_party/py/sqlalchemy",
         requirement("itsdangerous"),
         requirement("chardet"),
         requirement("certifi"),

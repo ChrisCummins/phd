@@ -8,10 +8,10 @@
 # choice for the specific tool / language you would use.
 
 echo "Departures:"
-awk '{print $1;}' < flight-information-test.txt | uniq -c | sort -rn
+awk '{print $1;}' <flight-information-test.txt | uniq -c | sort -rn
 echo
 echo "Arrivals:"
-awk '{print $2;}' < flight-information-test.txt | uniq -c | sort -rn
+awk '{print $2;}' <flight-information-test.txt | uniq -c | sort -rn
 
 # Justification:
 #

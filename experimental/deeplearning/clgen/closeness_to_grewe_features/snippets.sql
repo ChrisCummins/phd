@@ -97,4 +97,3 @@ SELECT distinct(src)
 FROM dynamic_features AS df
 LEFT JOIN static_features AS sf ON df.static_features_id=sf.id
 WHERE outcome = 'UNSUPPORTED_ARGUMENTS';
-

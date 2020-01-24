@@ -57,15 +57,14 @@
 
 // debugging print out
 #ifdef DEBUG
-# define DEBUG_OUT(x) llvm::errs() << x;
+#define DEBUG_OUT(x) llvm::errs() << x;
 #else
-# define DEBUG_OUT(x)
+#define DEBUG_OUT(x)
 #endif
 
-
 #ifndef REWRITE_STYLE
-# warning "use -DREWRITE_STYLE to define a rewrite style"
-# define REWRITE_STYLE 0
+#warning "use -DREWRITE_STYLE to define a rewrite style"
+#define REWRITE_STYLE 0
 #endif
 
 #if REWRITE_STYLE == 0
@@ -92,7 +91,6 @@ const std::string gb_prefix = "gb_";
 #error "unknown rewrite style"
 #endif
 
-
 namespace rewriter {
 
 // global state
@@ -108,7 +106,6 @@ static unsigned int _fn_call_rewrites_counter = 0;
 static unsigned int _var_decl_rewrites_counter = 0;
 static unsigned int _var_use_rewrites_counter = 0;
 
-
 // determine if rewriter has done any rewriting
 //
 static bool isRewritten() {
@@ -118,7 +115,6 @@ static bool isRewritten() {
           rewriter::_var_use_rewrites_counter);
 }
 
-
 // character types
 enum ctype { AZ, az };
 
@@ -126,24 +122,16 @@ enum ctype { AZ, az };
 // are many reserved words, but we select only the short ones, which are
 // plausible to occur in the real world.
 //
-std::set<std::string> reserved_names {
-  "do",
-  "if",
-  "abs",
-  "for",
-  "int"
-};
-
+std::set<std::string> reserved_names{"do", "if", "abs", "for", "int"};
 
 typedef std::map<std::string, std::string> rewrite_table_t;
-
 
 // generate a new identifier name
 //
 // Takes an existing rewrite table and inserts a.
 //
-std::string get_next_name(rewrite_table_t& rewrites,
-                          const std::string& name, const char& base_char,
+std::string get_next_name(rewrite_table_t& rewrites, const std::string& name,
+                          const char& base_char,
                           const std::string& prefix = "") {
   auto i = rewrites.size();
 
@@ -173,7 +161,6 @@ std::string get_next_name(rewrite_table_t& rewrites,
   return s;
 }
 
-
 class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
  private:
   std::unique_ptr<clang::ASTContext> _context;  // additional AST info
@@ -202,7 +189,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
   //
   std::string get_var_rewrite(rewrite_table_t& rewrites,
                               const std::string& name,
-                              const std::string& prefix="") {
+                              const std::string& prefix = "") {
     if (rewrites.find(name) == rewrites.end()) {
       // New variable:
       auto replacement = get_next_name(rewrites, name, var_base_char, prefix);
@@ -220,8 +207,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
     const auto fn_it = _local_vars.find(fn_name);
 
     // if there's no existing table, create one
-    if (fn_it == _local_vars.end())
-      _local_vars[fn_name] = rewrite_table_t();
+    if (fn_it == _local_vars.end()) _local_vars[fn_name] = rewrite_table_t();
 
     return _local_vars[fn_name];
   }
@@ -236,7 +222,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
   }
 
  public:
-  explicit RewriterVisitor(clang::CompilerInstance *ci)
+  explicit RewriterVisitor(clang::CompilerInstance* ci)
       : _context(&(ci->getASTContext())) {
     rewriter.setSourceMgr(_context->getSourceManager(),
                           _context->getLangOpts());
@@ -244,25 +230,25 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
 
   virtual ~RewriterVisitor() {}
 
-  void rewrite_fn_name(clang::FunctionDecl *const func,
+  void rewrite_fn_name(clang::FunctionDecl* const func,
                        const std::string& replacement) {
-   rewriter.ReplaceText(func->getLocation(), replacement);
-   ++_fn_call_rewrites_counter;
+    rewriter.ReplaceText(func->getLocation(), replacement);
+    ++_fn_call_rewrites_counter;
   }
 
-  void rewrite_fn_name(clang::CallExpr *const call,
+  void rewrite_fn_name(clang::CallExpr* const call,
                        const std::string& replacement) {
-   rewriter.ReplaceText(call->getLocStart(), replacement);
-   ++_fn_call_rewrites_counter;
+    rewriter.ReplaceText(call->getLocStart(), replacement);
+    ++_fn_call_rewrites_counter;
   }
 
-  void rewrite_var_name(clang::DeclRefExpr *const ref,
+  void rewrite_var_name(clang::DeclRefExpr* const ref,
                         const std::string& replacement) {
     rewriter.ReplaceText(ref->getLocStart(), replacement);
     ++_var_use_rewrites_counter;
   }
 
-  void rewrite_var_name(clang::VarDecl *const decl,
+  void rewrite_var_name(clang::VarDecl* const decl,
                         const std::string& replacement) {
     rewriter.ReplaceText(decl->getLocation(), replacement);
     ++_var_decl_rewrites_counter;
@@ -270,7 +256,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
 
   // rewrite function declarations
   //
-  bool VisitFunctionDecl(clang::FunctionDecl *func) {
+  bool VisitFunctionDecl(clang::FunctionDecl* func) {
     // only re-write functions declared in the main file
     if (isMainFile(func->getLocation())) {
       const auto name = func->getNameInfo().getName().getAsString();
@@ -284,7 +270,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
 
   // rewrite function calls
   //
-  bool VisitCallExpr(clang::CallExpr *call) {
+  bool VisitCallExpr(clang::CallExpr* call) {
     if (isMainFile(call->getLocStart())) {
       // rewrite function calls
       const auto callee = call->getDirectCallee();
@@ -299,34 +285,32 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
           DEBUG_OUT("CallExpr " << name << " -> " << replacement << '\n');
         }
       }  // else not a direct callee (do we need to handle that?)
-    }  // else not in main file
+    }    // else not in main file
 
     return true;
   }
 
   // rewrite variable declarations
   //
-  bool VisitVarDecl(clang::VarDecl *decl) {
+  bool VisitVarDecl(clang::VarDecl* decl) {
     // only re-write variables declared in the main file
-    if (!isMainFile(decl->getLocation()))
-      return true;
+    if (!isMainFile(decl->getLocation())) return true;
 
     if (auto d = clang::dyn_cast<clang::NamedDecl>(decl)) {
       const auto name = d->getNameAsString();
 
       // variables can be declared without a name (e.g. in function
       // declarations). Do not rewrite these
-      if (name.empty())
-        return true;
+      if (name.empty()) return true;
 
       // get the parent function
       const auto* parent = d->getParentFunctionOrMethod();
       if (parent == nullptr) {
         // if there's no parent, then it's a global variable
-        const auto replacement = get_var_rewrite(
-            _global_vars,  // rewrite table
-            name,  // original name
-            gb_prefix);  // prefix for new name
+        const auto replacement =
+            get_var_rewrite(_global_vars,  // rewrite table
+                            name,          // original name
+                            gb_prefix);    // prefix for new name
 
         // rewrite variable name
         rewrite_var_name(decl, replacement);
@@ -334,18 +318,18 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
       } else if (auto fn = clang::dyn_cast<clang::FunctionDecl>(parent)) {
         // if it's in function scope, get the rewrite table
         auto& rewrite_table = get_fn_var_rewrite_table(fn);
-        const auto replacement = get_var_rewrite(
-            rewrite_table, // rewrite table
-            name,  // original name
-            var_prefix);  // prefix for new name
+        const auto replacement =
+            get_var_rewrite(rewrite_table,  // rewrite table
+                            name,           // original name
+                            var_prefix);    // prefix for new name
 
         // rewrite variable name
         rewrite_var_name(decl, replacement);
         DEBUG_OUT("VarDecl " << name << " -> " << replacement << '\n');
       } else {
         // this shouldn't happen
-        llvm::errs() << "warning: cannot determine scope of variable '"
-                     << name << "'\n";
+        llvm::errs() << "warning: cannot determine scope of variable '" << name
+                     << "'\n";
       }
     }
 
@@ -382,7 +366,8 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
           DEBUG_OUT("DeclRefExpr " << name << " -> " << replacement << '\n');
         }
       } else {
-        llvm::errs() << "warning: cannot determine scope of variable '" << name << "'\n";
+        llvm::errs() << "warning: cannot determine scope of variable '" << name
+                     << "'\n";
       }
     }  // else not in main file
 
@@ -390,25 +375,22 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
   }
 };
 
-
 class RewriterASTConsumer : public clang::ASTConsumer {
  private:
-  RewriterVisitor *visitor;
+  RewriterVisitor* visitor;
 
  public:
   // override the constructor in order to pass CI
-  explicit RewriterASTConsumer(clang::CompilerInstance *ci)
-      : visitor(new RewriterVisitor(ci))
-  { }
+  explicit RewriterASTConsumer(clang::CompilerInstance* ci)
+      : visitor(new RewriterVisitor(ci)) {}
 
   // override this to call our RewriterVisitor on the entire source file
-  virtual void HandleTranslationUnit(clang::ASTContext &Context) {
+  virtual void HandleTranslationUnit(clang::ASTContext& Context) {
     // use ASTContext to get the TranslationUnitDecl, which is
     // a single Decl that collectively represents the entire source file
     visitor->TraverseDecl(Context.getTranslationUnitDecl());
   }
 };
-
 
 class RewriterFrontendAction : public clang::ASTFrontendAction {
  public:
@@ -418,9 +400,7 @@ class RewriterFrontendAction : public clang::ASTFrontendAction {
   }
 };
 
-
 }  // namespace rewriter
-
 
 // let's get shit done!
 //
@@ -428,9 +408,9 @@ int main(int argc, const char** argv) {
   clang::tooling::CommonOptionsParser op(argc, argv, rewriter::_tool_category);
   clang::tooling::ClangTool tool(op.getCompilations(), op.getSourcePathList());
 
-  const auto result = tool.run(
-      clang::tooling::newFrontendActionFactory<
-        rewriter::RewriterFrontendAction>().get());
+  const auto result = tool.run(clang::tooling::newFrontendActionFactory<
+                                   rewriter::RewriterFrontendAction>()
+                                   .get());
 
   const auto& id = rewriter::rewriter.getSourceMgr().getMainFileID();
 
@@ -448,9 +428,8 @@ int main(int argc, const char** argv) {
                << " variable declarations\n"
                << "Rewrote " << rewriter::_var_use_rewrites_counter
                << " variable uses\n";
-#else  // not VERBOSE
-  if (!rewriter::isRewritten())
-    return E_NO_INPUT;
+#else   // not VERBOSE
+  if (!rewriter::isRewritten()) return E_NO_INPUT;
 #endif  // VERBOSE
 
   rewriter::rewriter.getEditBuffer(id).write(llvm::outs());

@@ -23,8 +23,8 @@
 package datasets.github.scrape_repos.preprocessors;
 
 import com.google.common.io.ByteStreams;
-import datasets.github.scrape_repos.ScrapeReposProtos.ListOfListOfStrings;
-import datasets.github.scrape_repos.ScrapeReposProtos.ListOfStrings;
+import com.scrape_repos.ListOfListOfStrings;
+import com.scrape_repos.ListOfStrings;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import org.eclipse.jdt.core.dom.AST;

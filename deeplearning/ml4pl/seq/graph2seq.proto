@@ -20,6 +20,11 @@ syntax = "proto2";
 
 package ml4pl;
 
+option go_package = "ml4plpb";
+option java_multiple_files = true;
+option java_outer_classname = "Graph2seqProto";
+option java_package = "com.ml4pl";
+
 import "deeplearning/ml4pl/graphs/programl.proto";
 
 // An graph that has been serialized and encoded to a concatenated sequence of

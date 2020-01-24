@@ -11,11 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 syntax = "proto2";
 
-import "gpu/libcecl/proto/libcecl.proto";
-
 package datasets.benchmarks.gpgpu;
+
+option go_package = "gpgpupb";
+option java_multiple_files = true;
+option java_outer_classname = "GpgpuProto";
+option java_package = "com.datasets.benchmarks.gpgpu";
+
+import "gpu/libcecl/proto/libcecl.proto";
 
 // Recording of a single GPGPU benchmark execution.
 message GpgpuBenchmarkRun {

@@ -86,4 +86,3 @@ FROM speedup_regression_results;
 
 DELETE
 FROM speedup_classification_results;
-

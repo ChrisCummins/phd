@@ -45,6 +45,11 @@ syntax = "proto2";
 
 package me;
 
+option go_package = "mepb";
+option java_multiple_files = true;
+option java_outer_classname = "MeProto";
+option java_package = "com.me";
+
 // A container for Series messages. The series contained in this message do not
 // need to be related.
 message SeriesCollection {

@@ -12,19 +12,23 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with DeepSmith.  If not, see <https://www.gnu.org/licenses/>.
+
 syntax = "proto2";
+
 package deepsmith;
+
+option go_package = "deepsmithpb";
+option java_multiple_files = true;
+option java_outer_classname = "DeepsmithProto";
+option java_package = "com.deepsmith";
 
 message ProfilingEvent {
   // A unique client name. A good starting point would be the hostname.
   optional string client = 1;
-
   // The type of profiling event. E.g. "overhead", "generation", "warmup", etc.
   optional string type = 2;
-
   // The duration of the event, expressed in milliseconds.
   optional int64 duration_ms = 3;
-
   // The start of the profiling event, expressed in milliseconds since the
   // epoch.
   optional int64 event_start_epoch_ms = 4;
@@ -34,12 +38,9 @@ message Testcase {
   optional string toolchain = 1;
   optional Generator generator = 2;
   optional Harness harness = 3;
-
   // <input_name, input_value>
   map<string, string> inputs = 4;
-
   map<string, string> invariant_opts = 5;
-
   repeated ProfilingEvent profiling_events = 6;
 }
 
@@ -77,7 +78,6 @@ message Result {
     // The testcase compiled, and the binary terminated gracefully.
     PASS = 6;
   }
-
   optional Testcase testcase = 1;
   optional Testbed testbed = 2;
   optional int32 returncode = 3;
@@ -107,12 +107,10 @@ message DifferentialTest {
     // Outcome and outputs agrees with majority.
     PASS = 7;
   }
-
   // The testcase to apply the differential test to. This supercedes the
   // 'testcase' fields of the differential test's results - all results are
   // assumed to be of this testcase.
   optional Testcase testcase = 1;
-
   // The results to differential test. The 'testcase' field of these results
   // is ignored.
   repeated Result result = 2;

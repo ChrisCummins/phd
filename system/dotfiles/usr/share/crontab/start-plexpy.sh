@@ -17,8 +17,8 @@ PLEXPY="$PLEXPY_DIR/PlexPy.py"
 set -eux
 
 if [[ -z "${1:-}" ]]; then
-    $LMK "$0 --porcelain"
+  $LMK "$0 --porcelain"
 else
-    cd "$PLEXPY_DIR"
-    "$PLEXPY"
+  cd "$PLEXPY_DIR"
+  "$PLEXPY"
 fi

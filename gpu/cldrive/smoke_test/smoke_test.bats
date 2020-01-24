@@ -8,7 +8,7 @@ OCLGRIND="$(DataPath phd/third_party/oclgrind/oclgrind)"
 CLDRIVE="$(DataPath phd/gpu/cldrive/cldrive)"
 
 setup() {
-  cat << EOF > "$BATS_TMPDIR/kernel.cl"
+  cat <<EOF >"$BATS_TMPDIR/kernel.cl"
 kernel void A(global int* a) {
   a[get_global_id(0)] *= 3;
 }

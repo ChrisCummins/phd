@@ -11,6 +11,7 @@
 // redundant copies of the data. A directory used for storing generated
 // temporary files may have a tier value of 1, since there is no need to
 // backup something which can be generated.
+
 syntax = "proto2";
 
 // A container for a list of directories.

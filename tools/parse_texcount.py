@@ -48,8 +48,6 @@ towards the total.
       chap/conclusions     0
                  Total  7363
 """
-from __future__ import print_function
-
 from os import environ
 from re import compile
 from re import search

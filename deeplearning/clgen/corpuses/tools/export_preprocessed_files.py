@@ -7,13 +7,13 @@ import tarfile
 from typing import Optional
 
 import sqlalchemy as sql
+
+from deeplearning.clgen.corpuses import preprocessed
 from labm8.py import app
 from labm8.py import fs
 from labm8.py import humanize
 from labm8.py import ppar
 from labm8.py import sqlutil
-
-from deeplearning.clgen.corpuses import preprocessed
 
 FLAGS = app.FLAGS
 

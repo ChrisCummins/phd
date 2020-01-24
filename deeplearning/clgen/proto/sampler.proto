@@ -22,9 +22,13 @@
 // along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 
 syntax = "proto2";
+
 package clgen;
 
-option java_package = "deeplearning.clgen";
+option go_package = "clgenpb";
+option java_multiple_files = true;
+option java_outer_classname = "SamplerProto";
+option java_package = "com.clgen";
 
 // The specification of a CLgen sampler.
 message Sampler {

@@ -15,4 +15,3 @@ OCLGRIND="$(DataPath phd/third_party/oclgrind/oclgrind)"
   run "$OCLGRIND" "$(DataPath phd/gpu/oclgrind/test/data/oclgrind_working)"
   [ "$status" -eq 0 ]
 }
-

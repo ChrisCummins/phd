@@ -23,84 +23,77 @@
 # SOFTWARE.
 #
 usage() {
-    echo "usage: $0 [-v|--verbose] [outdated]"
+  echo "usage: $0 [-v|--verbose] [outdated]"
 }
-
 
 version() {
-    echo "dotfiles $(git rev-parse --short HEAD)"
+  echo "dotfiles $(git rev-parse --short HEAD)"
 }
-
 
 # path to this repo
 dotfiles="$HOME/.dotfiles"
 # path to private files
 private="$HOME/Dropbox/Shared"
 
-
 echo_ok() {
-    local msg="$@"
-    echo -e "$(tput bold)$@$(tput sgr0)"
+  local msg="$@"
+  echo -e "$(tput bold)$@$(tput sgr0)"
 }
-
 
 echo_error() {
-    local msg="$@"
-    echo -e "$(tput bold)$(tput setaf 1)$@$(tput sgr0)" >&2
+  local msg="$@"
+  echo -e "$(tput bold)$(tput setaf 1)$@$(tput sgr0)" >&2
 }
-
 
 update_brew() {
-    if [[ "$(uname)" == "Darwin" ]]; then
-        brew update &>/dev/null
+  if [[ "$(uname)" == "Darwin" ]]; then
+    brew update &>/dev/null
 
-        if [[ -n "$OUTDATED" ]]; then
-            echo_ok "\nbrew:"
-            brew outdated | sed 's/^/  /'
-            echo_ok "\nbrew casks:"
-            brew cask outdated | sed 's/^/  /'
-        else
-            brew upgrade
-            brew cask upgrade
-            brew cleanup
-            brew cask cleanup
-        fi
+    if [[ -n "$OUTDATED" ]]; then
+      echo_ok "\nbrew:"
+      brew outdated | sed 's/^/  /'
+      echo_ok "\nbrew casks:"
+      brew cask outdated | sed 's/^/  /'
+    else
+      brew upgrade
+      brew cask upgrade
+      brew cleanup
+      brew cask cleanup
     fi
+  fi
 }
-
 
 parse_args() {
-    set -e
-    if [[ "$1" == "-v" ]] || [[ "$1" == "--verbose" ]]; then
-        set -x
-        shift
-    elif [[ "$1" == "--version" ]]; then
-        version
-        exit 0
-    elif [[ "$1" == "outdated" ]]; then
-        export OUTDATED="1"
-    elif [[ -n "$1" ]]; then
-        usage >&2
-        exit 1
-    fi
+  set -e
+  if [[ "$1" == "-v" ]] || [[ "$1" == "--verbose" ]]; then
+    set -x
+    shift
+  elif [[ "$1" == "--version" ]]; then
+    version
+    exit 0
+  elif [[ "$1" == "outdated" ]]; then
+    export OUTDATED="1"
+  elif [[ -n "$1" ]]; then
+    usage >&2
+    exit 1
+  fi
 
-    if [[ "$OUTDATED" != "1" ]]; then
-        export OUTDATED=""
-    fi
+  if [[ "$OUTDATED" != "1" ]]; then
+    export OUTDATED=""
+  fi
 
-    set -u
+  set -u
 }
 
-
 main() {
-    parse_args $@
-    echo_ok "dotfiles $(git rev-parse --short HEAD)"
+  parse_args $@
+  echo_ok "dotfiles $(git rev-parse --short HEAD)"
 
-    if ! [[ "$(uname)" == "Darwin" ]]; then
-        echo_error "Only macOS is supported"
-        exit 1
-    fi
+  if ! [[ "$(uname)" == "Darwin" ]]; then
+    echo_error "Only macOS is supported"
+    exit 1
+  fi
 
-    update_brew
+  update_brew
 }
 main $@

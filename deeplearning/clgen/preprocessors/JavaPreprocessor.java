@@ -1,10 +1,10 @@
 // Pre-process java files.
 package deeplearning.clgen.preprocessors;
 
+import com.clgen.PreprocessorWorkerJobOutcome;
+import com.clgen.PreprocessorWorkerJobOutcomes;
 import com.google.common.io.ByteStreams;
-import datasets.github.scrape_repos.ScrapeReposProtos.ListOfStrings;
-import deeplearning.clgen.InternalProtos.PreprocessorWorkerJobOutcome;
-import deeplearning.clgen.InternalProtos.PreprocessorWorkerJobOutcomes;
+import com.scrape_repos.ListOfStrings;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;

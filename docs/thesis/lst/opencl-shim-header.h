@@ -8,7 +8,7 @@ typedef float FLOAT_T;
 typedef float FLOAT_TYPE;
 typedef float FPTYPE;
 typedef unsigned int INDEX_TYPE;
-... (34 more)
+...(34 more)
 
 /* Inferred constants */
 #define M_PI 3.14025
@@ -19,4 +19,4 @@ typedef unsigned int INDEX_TYPE;
 #define INPUT_WIDTH 1024
 #define ZERO 0
 #define ONE 1
-... (177 more)
+    ...(177 more)

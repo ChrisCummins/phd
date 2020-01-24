@@ -36,86 +36,85 @@
 set -eu
 
 usage() {
-    echo "$0 <source-files ...>"
-    echo
-    echo "Rewrite OpenCL calls to use libcecl."
+  echo "$0 <source-files ...>"
+  echo
+  echo "Rewrite OpenCL calls to use libcecl."
 }
 
 file_is_source() {
-    local path="$1"
+  local path="$1"
 
-    if [[ "$path" == *.cpp ]]; then
-        return 0
-    elif [[ "$path" == *.cc ]]; then
-        return 0
-    elif [[ "$path" == *.cxx ]]; then
-        return 0
-    elif [[ "$path" == *.c ]]; then
-        return 0
-    elif [[ "$path" == *.h ]]; then
-        return 0
-    elif [[ "$path" == *.hpp ]]; then
-        return 0
-    else
-        return 1
-    fi
+  if [[ "$path" == *.cpp ]]; then
+    return 0
+  elif [[ "$path" == *.cc ]]; then
+    return 0
+  elif [[ "$path" == *.cxx ]]; then
+    return 0
+  elif [[ "$path" == *.c ]]; then
+    return 0
+  elif [[ "$path" == *.h ]]; then
+    return 0
+  elif [[ "$path" == *.hpp ]]; then
+    return 0
+  else
+    return 1
+  fi
 }
 
 rewritefile() {
-    local path="$1"
+  local path="$1"
 
-    local tmp="$path.tmp"
-    local backup="$path.bkp"
-    cp "$path" "$tmp"
-    cp "$path" "$backup"
+  local tmp="$path.tmp"
+  local backup="$path.bkp"
+  cp "$path" "$tmp"
+  cp "$path" "$backup"
 
-    local start_checksum="$(md5sum "$path" | awk '{print $1}')"
+  local start_checksum="$(md5sum "$path" | awk '{print $1}')"
 
-    sed -i 's/clBuildProgram/CECL_PROGRAM/g' "$tmp"
-    sed -i 's/clCreateBuffer/CECL_BUFFER/g' "$tmp"
-    sed -i 's/clCreateCommandQueue/CECL_CREATE_COMMAND_QUEUE/g' "$tmp"
-    sed -i 's/clCreateKernel/CECL_KERNEL/g' "$tmp"
-    sed -i 's/clCreateProgramWithSource/CECL_PROGRAM_WITH_SOURCE/g' "$tmp"
-    sed -i 's/clEnqueueMapBuffer/CECL_MAP_BUFFER/g' "$tmp"
-    sed -i 's/clEnqueueNDRangeKernel/CECL_ND_RANGE_KERNEL/g' "$tmp"
-    sed -i 's/clEnqueueReadBuffer/CECL_READ_BUFFER/g' "$tmp"
-    sed -i 's/clEnqueueTask/CECL_TASK/g' "$tmp"
-    sed -i 's/clEnqueueWriteBuffer/CECL_WRITE_BUFFER/g' "$tmp"
-    sed -i 's/clSetKernelArg/CECL_SET_KERNEL_ARG/g' "$tmp"
-    sed -i 's/clCreateContextFromType/CECL_CREATE_CONTEXT_FROM_TYPE/g' "$tmp"
-    sed -i 's/clCreateContext/CECL_CREATE_CONTEXT/g' "$tmp"
-    sed -i 's/clGetKernelWorkGroupInfo/CECL_GET_KERNEL_WORK_GROUP_INFO/g' "$tmp"
+  sed -i 's/clBuildProgram/CECL_PROGRAM/g' "$tmp"
+  sed -i 's/clCreateBuffer/CECL_BUFFER/g' "$tmp"
+  sed -i 's/clCreateCommandQueue/CECL_CREATE_COMMAND_QUEUE/g' "$tmp"
+  sed -i 's/clCreateKernel/CECL_KERNEL/g' "$tmp"
+  sed -i 's/clCreateProgramWithSource/CECL_PROGRAM_WITH_SOURCE/g' "$tmp"
+  sed -i 's/clEnqueueMapBuffer/CECL_MAP_BUFFER/g' "$tmp"
+  sed -i 's/clEnqueueNDRangeKernel/CECL_ND_RANGE_KERNEL/g' "$tmp"
+  sed -i 's/clEnqueueReadBuffer/CECL_READ_BUFFER/g' "$tmp"
+  sed -i 's/clEnqueueTask/CECL_TASK/g' "$tmp"
+  sed -i 's/clEnqueueWriteBuffer/CECL_WRITE_BUFFER/g' "$tmp"
+  sed -i 's/clSetKernelArg/CECL_SET_KERNEL_ARG/g' "$tmp"
+  sed -i 's/clCreateContextFromType/CECL_CREATE_CONTEXT_FROM_TYPE/g' "$tmp"
+  sed -i 's/clCreateContext/CECL_CREATE_CONTEXT/g' "$tmp"
+  sed -i 's/clGetKernelWorkGroupInfo/CECL_GET_KERNEL_WORK_GROUP_INFO/g' "$tmp"
 
-    local end_checksum=$(md5sum "$tmp" | awk '{print $1}')
+  local end_checksum=$(md5sum "$tmp" | awk '{print $1}')
 
-    if [[ "$start_checksum" == "$end_checksum" ]]; then
-        rm "$tmp"
+  if [[ "$start_checksum" == "$end_checksum" ]]; then
+    rm "$tmp"
+  else
+    if ! grep '#include <libcecl.h>' "$tmp" &>/dev/null; then
+      echo '#include <libcecl.h>' >"$path"
+      cat "$tmp" >>"$path"
+      rm "$tmp"
     else
-        if ! grep '#include <libcecl.h>' "$tmp" &> /dev/null; then
-            echo '#include <libcecl.h>' >"$path"
-            cat "$tmp" >>"$path"
-            rm "$tmp"
-        else
-            mv "$tmp" "$path"
-        fi
+      mv "$tmp" "$path"
     fi
+  fi
 }
 
 main() {
-    if [[ $# -eq 0 ]]; then
-        usage >&2
-        exit 1
-    fi
+  if [[ $# -eq 0 ]]; then
+    usage >&2
+    exit 1
+  fi
 
-    for arg in "$@"
-    do
-        if file_is_source "$arg" &> /dev/null; then
-            echo "$arg"
-            rewritefile "$arg"
-        else
-            echo "ignored: $arg" >&2
-        fi
-    done
+  for arg in "$@"; do
+    if file_is_source "$arg" &>/dev/null; then
+      echo "$arg"
+      rewritefile "$arg"
+    else
+      echo "ignored: $arg" >&2
+    fi
+  done
 }
 
 main $@

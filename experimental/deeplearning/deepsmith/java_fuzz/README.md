@@ -6,11 +6,11 @@ This is the home for work on extending DeepSmith to fuzzing JVM implementations.
 
 ### Scraping Java files from Github
 
-1. Create a [personal access token](https://github.com/settings/tokens) on 
+1. Create a [personal access token](https://github.com/settings/tokens) on
    Github and make a note of it. When creating the access token, Github will
    present a bunch of checkboxes for permissions. Don't tick any of them.
 2. Launch/find a MySQL server to store the database of scraped files.
-3. Run the docker scraper image, providing the access token and address of the 
+3. Run the docker scraper image, providing the access token and address of the
    MySQL server:
 ```
 $ docker run --memory=4g chriscummins/java_fuzz_scraper:latest \
@@ -25,8 +25,8 @@ Alternatively, SQLite or PostgreSQL can be used in place of MySQL, see [here](ht
 
 It can be useful for development and debugging to work with a small database of
 scraped files. The `java_fuzz_split_contentfiles` image will duplicate
-content files from a random subset of scraped repositories. E.g. to duplicate 
-the content files from 10 random repos with a minimum Github star count of 5 
+content files from a random subset of scraped repositories. E.g. to duplicate
+the content files from 10 random repos with a minimum Github star count of 5
 in a MySQL database to an SQLite database `/tmp/fuzz/java_subset.db`:
 
 ```sh

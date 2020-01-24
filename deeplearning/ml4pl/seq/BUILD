@@ -219,6 +219,7 @@ py_binary(
     srcs = ["lexers.py"],
     data = [
         ":string_encoder_worker",
+        "//deeplearning/clgen/corpuses:token_lists",
     ],
     deps = [
         ":ir2seq_pb_py",

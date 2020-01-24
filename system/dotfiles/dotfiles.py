@@ -497,10 +497,6 @@ class Dropbox(Task):
   def __init__(self):
     self.installed_on_ubuntu = False
 
-  def _install_common(self):
-    mkdir("~/.local/bin")
-    symlink(usr_share("Dropbox/dropbox.py"), "~/.local/bin/dropbox")
-
   def install_osx(self):
     Homebrew().install_cask("dropbox")
     self._install_common()

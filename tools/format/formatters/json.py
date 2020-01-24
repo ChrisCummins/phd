@@ -30,15 +30,15 @@ class FormatJson(file_formatter.FileFormatter):
     # JSON output because otherwise the mtime of this file would always change
     # with every call to this function, even if the file contents remain the
     # same. This would create unnecessary mtime cache misses.
-    with open(path, "r+") as f:
+    with open(path, "r") as f:
       text = f.read()
-      try:
-        data = json.loads(text)
-      except json.decoder.JSONDecodeError as e:
-        raise self.FormatError(
-          f"Failed to parse JSON: {path}\n    Parser error: {e}"
-        )
-      formatted_text = json.dumps(data, indent=2, sort_keys=True) + "\n"
-      if text != formatted_text:
-        f.seek(0)
+    try:
+      data = json.loads(text)
+    except json.decoder.JSONDecodeError as e:
+      raise self.FormatError(
+        f"Failed to parse JSON: {path}\n    Parser error: {e}"
+      )
+    formatted_text = json.dumps(data, indent=2, sort_keys=True) + "\n"
+    if text != formatted_text:
+      with open(path, "w") as f:
         f.write(formatted_text)

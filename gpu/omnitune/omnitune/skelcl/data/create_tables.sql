@@ -202,4 +202,3 @@ CREATE TABLE speedup_classification_results (job TEXT, -- Key for ml_jobs
  speedup_he REAL, -- Speedup over human expert
  speedup_mo REAL, -- Speedup over mode param
  TIME REAL);
-

@@ -40,4 +40,3 @@ WHERE results.id >= 0
        AND driver = '3.6.2' )
 ORDER BY results.id
 LIMIT 100;
-

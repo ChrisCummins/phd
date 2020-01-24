@@ -111,4 +111,3 @@ SELECT scenario,
 FROM rhs.runtimes
 GROUP BY scenario,
          params;
-

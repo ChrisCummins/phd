@@ -16,6 +16,7 @@
 """This module defines a lexer interface as described in PACT'17 paper."""
 import copy
 import enum
+import json
 from typing import Dict
 from typing import List
 
@@ -36,6 +37,10 @@ STRING_ENCODER_WORKER = bazelutil.DataPath(
   "phd/deeplearning/ml4pl/seq/string_encoder_worker"
 )
 
+TOKEN_LISTS = json.loads(
+  bazelutil.DataString("phd/deeplearning/clgen/corpuses/token_lists.json")
+)
+
 
 class LexerType(enum.Enum):
   """The type of lexer."""
@@ -44,213 +49,8 @@ class LexerType(enum.Enum):
   LLVM = 2
 
 
-# The OpenCL vocabulary used in PACT'17 work.
-OPENCL_TOKENS = [
-  "__assert",
-  "__attribute",
-  "__builtin_astype",
-  "__clc_fabs",
-  "__clc_fma",
-  "__constant",
-  "__global",
-  "__inline",
-  "__kernel",
-  "__local",
-  "__private",
-  "__read_only",
-  "__read_write",
-  "__write_only",
-  "abs",
-  "alignas",
-  "alignof",
-  "atomic_add",
-  "auto",
-  "barrier",
-  "bool",
-  "break",
-  "case",
-  "char",
-  "clamp",
-  "complex",
-  "const",
-  "constant",
-  "continue",
-  "default",
-  "define",
-  "defined",
-  "do",
-  "double",
-  "elif",
-  "else",
-  "endif",
-  "enum",
-  "error",
-  "event_t",
-  "extern",
-  "fabs",
-  "false",
-  "float",
-  "for",
-  "get_global_id",
-  "get_global_size",
-  "get_local_id",
-  "get_local_size",
-  "get_num_groups",
-  "global",
-  "goto",
-  "half",
-  "if",
-  "ifdef",
-  "ifndef",
-  "image1d_array_t",
-  "image1d_buffer_t",
-  "image1d_t",
-  "image2d_array_t",
-  "image2d_t",
-  "image3d_t",
-  "imaginary",
-  "include",
-  "inline",
-  "int",
-  "into",
-  "kernel",
-  "line",
-  "local",
-  "long",
-  "noreturn",
-  "pragma",
-  "private",
-  "quad",
-  "read_only",
-  "read_write",
-  "register",
-  "restrict",
-  "return",
-  "sampler_t",
-  "short",
-  "shuffle",
-  "signed",
-  "size_t",
-  "sizeof",
-  "sqrt",
-  "static",
-  "struct",
-  "switch",
-  "true",
-  "typedef",
-  "u32",
-  "uchar",
-  "uint",
-  "ulong",
-  "undef",
-  "union",
-  "unsigned",
-  "void",
-  "volatile",
-  "while",
-  "wide",
-  "write_only",
-]
-
-# Tokens of LLVM intermediate representation.
-LLVM_TOKENS = [
-  # Primitive types
-  "void",
-  "half",
-  "float",
-  "double",
-  "fp128",
-  "x86_fp80",
-  "ppc_fp128",
-  # Note that ints can have any bit width up to 2^23 - 1, so this is
-  # non-exhaustive.
-  "i32",
-  "i64",
-  "i128",
-  # Terminator ops
-  "ret",
-  "br",
-  "switch",
-  "indirectbr",
-  "invoke",
-  "callbr",
-  "resume",
-  "catchswitch",
-  "catchret",
-  "cleanupret",
-  "unreachable",
-  "unreachable",
-  # Unary ops
-  "fneg",
-  # Binary ops
-  "add",
-  "fadd",
-  "sub",
-  "fsub",
-  "mul",
-  "fmul",
-  "udiv",
-  "sdiv",
-  "fdiv",
-  "urem",
-  "srem",
-  "frem",
-  # Bitwise binary ops
-  "shl",
-  "lshr",
-  "ashr",
-  "and",
-  "or",
-  "xor",
-  # Vector ops
-  "extractelement",
-  "insertelement",
-  "shufflevector",
-  # Aggregate ops
-  "extractvalue",
-  "insertvalue",
-  # Memory Access
-  "alloca",
-  "load",
-  "store",
-  "fence",
-  "cmpxchg",
-  "atomicrmw",
-  "getelementptr",
-  # Conversion ops
-  "trunc",
-  "to",
-  "zext",
-  "sext",
-  "fptrunc",
-  "fpext",
-  "fptoui",
-  "fptose",
-  "uitofp",
-  "sitofp",
-  "ptrtoint",
-  "inttoptr",
-  "bitcast",
-  "addrspacecast",
-  # Other ops
-  "icmp",
-  "fcmp",
-  "phi",
-  "select",
-  "call",
-  "va_arg",
-  "landingpad",
-  "catchpad",
-  "cleanuppad",
-  # Misc keywords
-  "define",
-  "declare",
-  "private",
-  "unnamed_addr",
-  "constant",
-  "nounwind",
-  "nocapture",
-]
+OPENCL_TOKENS = TOKEN_LISTS["opencl"]["tokens"]
+LLVM_TOKENS = TOKEN_LISTS["llvm"]["tokens"]
 
 
 class Lexer(object):

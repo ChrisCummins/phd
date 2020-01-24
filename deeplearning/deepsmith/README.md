@@ -11,21 +11,21 @@ differential testing methodologies on them to expose bugs in compilers.
 
 ## Getting Started
 
-Pull a docker image containing a pre-trained neural network and OpenCL 
+Pull a docker image containing a pre-trained neural network and OpenCL
 environment for fuzz testing Oclgrind:
 
 ```sh
 $ docker run chriscummins/opencl_fuzz
 ```
 
-See 
+See
 [//docs/2018_07_issta/artifact_evaluation](/docs/2018_07_issta/artifact_evaluation)
 for the supporting artifact of the original DeepSmith publication.
 
 ## Resources
 
-Publication 
-"[Compiler Fuzzing through Deep Learning](https://chriscummins.cc/pub/2018-issta.pdf)" 
+Publication
+"[Compiler Fuzzing through Deep Learning](https://chriscummins.cc/pub/2018-issta.pdf)"
 (ISSTA'18).
 
 ## License

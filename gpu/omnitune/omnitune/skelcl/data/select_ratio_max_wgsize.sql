@@ -19,4 +19,3 @@ SELECT
                           FROM scenarios
                           LEFT JOIN kernels ON scenarios.kernel=kernels.id
                           WHERE scenarios.id=? ) AS real) AS ratio_max_wgsize;
-

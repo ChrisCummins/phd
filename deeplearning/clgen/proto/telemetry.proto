@@ -16,7 +16,13 @@
 // along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 
 syntax = "proto2";
+
 package clgen;
+
+option go_package = "clgenpb";
+option java_multiple_files = true;
+option java_outer_classname = "TelemetryProto";
+option java_package = "com.clgen";
 
 // Records telemetry data about a single epoch of model training.
 message ModelEpochTelemetry {

@@ -1,6 +1,6 @@
 // A DataPackage is a structured collection of data files.
 
-syntax = 'proto2';
+syntax = "proto2";
 
 // A data package is a structured collection of data files.
 message DataPackage {
@@ -42,4 +42,4 @@ enum ChecksumHash {
   MD5 = 1;
   SHA1 = 2;
   SHA256 = 3;
-};
+}

@@ -4,9 +4,14 @@ syntax = "proto2";
 
 package phd.experimental.compilers.random_opt;
 
+option go_package = "random_optpb";
+option java_multiple_files = true;
+option java_outer_classname = "RandomOptProto";
+option java_package = "com.phd.experimental.compilers.random_opt";
+
 // A random optimization environment.
 message Environment {
-  /////////////////////////////////////////////////////////////////////////////
+  //
   // TARGET PROGRAM:
 
   // A list of input sources to compile into LLVM bitcode files, which will be
@@ -18,7 +23,6 @@ message Environment {
   // A list of additional flags to pass to llvm-link when linking bitcode files
   // to produce a bytecode target.
   repeated string linkopt = 3;
-
   // Target program execution:
   // Each of these fields is a string passed to `bash -c`. The following make
   // variables are substituted: $@ is the compiled target binary, $< is the
@@ -35,8 +39,7 @@ message Environment {
   // command should return a non-zero returncode if the binary is not behaving
   // correctly.
   optional string eval_cmd = 7;
-
-  /////////////////////////////////////////////////////////////////////////////
+  //
   // ACTION AND OBSERVATION SPACE:
 
   // The list of candidate opt passes to run. This specifies the action space
@@ -50,32 +53,27 @@ message Step {
   optional int64 start_time_epoch_ms = 1;
   // The total number of milliseconds during step execution.
   optional int32 total_step_runtime_ms = 2;
-
   // The input LLVM bytecode source.
   optional string input_src = 3;
   // The names of opt passes run during the step.
   repeated string opt_pass = 4;
-
   enum Status {
     PASS = 0;
     OPT_FAILED = 1;
     COMPILE_FAILED = 2;
     EXEC_FAILED = 3;
     EVAL_FAILED = 4;
-  };
+  }
   optional Status status = 5;
   // An optional message providing additional information about non-PASS
   // statuses.
   optional string status_msg = 6;
-
   // Whether the bytecode and binary have changed since the last step,
   // respectively.
   optional bool bytecode_changed = 8;
   optional bool binary_changed = 9;
-
   // The runtimes of the binary.
   repeated int32 binary_runtime_ms = 10;
-
   optional float reward = 11;
   optional float total_reward = 12;
   optional float speedup = 13;
@@ -120,7 +118,7 @@ message DelayedRewardEpisode {
     COMPILE_FAILED = 1;
     EXEC_FAILED = 2;
     EVAL_FAILED = 3;
-  };
+  }
   optional Outcome outcome = 2;
   // An optional message providing additional information about non-PASS
   // statuses.

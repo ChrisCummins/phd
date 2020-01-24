@@ -9,12 +9,12 @@ main() {
 
   # Test that it works.
   docker run \
-      -v/etc/OpenCL/vendors:/etc/OpenCL/vendors \
-      -v/opt/intel/:/opt/intel/ \
-      -v/etc/OpenCL/vendors/intel64.icd:/etc/OpenCL/vendors/intel64.icd \
-      -v$PWD:/cwd \
-      bazel/gpu/cldrive:cldrive_image \
-      --clinfo
+    -v/etc/OpenCL/vendors:/etc/OpenCL/vendors \
+    -v/opt/intel/:/opt/intel/ \
+    -v/etc/OpenCL/vendors/intel64.icd:/etc/OpenCL/vendors/intel64.icd \
+    -v$PWD:/cwd \
+    bazel/gpu/cldrive:cldrive_image \
+    --clinfo
 
   docker tag bazel/gpu/cldrive:cldrive_image chriscummins/cldrive:latest
   docker push chriscummins/cldrive:latest

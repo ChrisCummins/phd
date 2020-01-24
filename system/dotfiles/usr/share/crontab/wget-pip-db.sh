@@ -5,7 +5,7 @@
 # ****************************************************************************
 # *                               Configuration                              *
 # ****************************************************************************
-JOB_TIMEOUT=60  # 1 min
+JOB_TIMEOUT=60 # 1 min
 LMK="/usr/local/bin/lmk -e"
 LMK_TO="chrisc.101@gmail.com"
 
@@ -18,7 +18,7 @@ WGET="wget"
 set -eux
 
 if [[ -z "${1:-}" ]]; then
-    $LMK "timeout $JOB_TIMEOUT $0 --porcelain"
+  $LMK "timeout $JOB_TIMEOUT $0 --porcelain"
 else
-    $WGET $PIP_DB -O /dev/null
+  $WGET $PIP_DB -O /dev/null
 fi

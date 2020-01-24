@@ -32,36 +32,35 @@ publish_docker_image() {
   docker push "$export_image_name"
 }
 
-
 main() {
   publish_docker_image \
-      "experimental/deeplearning/deepsmith/java_fuzz" \
-      "scrape_java_files_image" \
-      "java_fuzz_scraper"
+    "experimental/deeplearning/deepsmith/java_fuzz" \
+    "scrape_java_files_image" \
+    "java_fuzz_scraper"
 
   publish_docker_image \
-      "experimental/deeplearning/deepsmith/java_fuzz" \
-      "mask_contentfiles_image" \
-      "java_fuzz_mask_contentfiles"
+    "experimental/deeplearning/deepsmith/java_fuzz" \
+    "mask_contentfiles_image" \
+    "java_fuzz_mask_contentfiles"
 
   publish_docker_image \
-      "experimental/deeplearning/deepsmith/java_fuzz" \
-      "export_java_corpus_image" \
-      "java_fuzz_export_corpus"
+    "experimental/deeplearning/deepsmith/java_fuzz" \
+    "export_java_corpus_image" \
+    "java_fuzz_export_corpus"
 
   publish_docker_image \
-      "experimental/deeplearning/deepsmith/java_fuzz" \
-      "preprocess_java_corpus_image" \
-      "java_fuzz_preprocess"
+    "experimental/deeplearning/deepsmith/java_fuzz" \
+    "preprocess_java_corpus_image" \
+    "java_fuzz_preprocess"
 
   publish_docker_image \
-      "experimental/deeplearning/deepsmith/java_fuzz" \
-      "encode_java_corpus_image" \
-      "java_fuzz_encode"
+    "experimental/deeplearning/deepsmith/java_fuzz" \
+    "encode_java_corpus_image" \
+    "java_fuzz_encode"
 
   publish_docker_image \
-      "experimental/deeplearning/deepsmith/java_fuzz" \
-      "sample_java_model" \
-      "java_fuzz_sample"
+    "experimental/deeplearning/deepsmith/java_fuzz" \
+    "sample_java_model" \
+    "java_fuzz_sample"
 }
 main $@

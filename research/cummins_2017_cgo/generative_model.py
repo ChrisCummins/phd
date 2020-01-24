@@ -21,6 +21,7 @@ Note this is neither the same implementation as was used to generate the data
 for the paper, nor the same model hyper-parameters. For that, see the paper's
 artifact in //docs/2017_02_cgo/code.
 """
+import json
 import pathlib
 import typing
 
@@ -31,9 +32,14 @@ from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
 from labm8.py import app
+from labm8.py import bazelutil
 from labm8.py import pbutil
 
 FLAGS = app.FLAGS
+
+TOKEN_LISTS = json.loads(
+  bazelutil.DataString("phd/deeplearning/clgen/corpuses/token_lists.json")
+)
 
 app.DEFINE_string(
   "clgen_instance",
@@ -123,102 +129,7 @@ def CreateCorpusProtoFromFlags() -> corpus_pb2.Corpus:
   )
   if FLAGS.clgen_multichar_tokenizer:
     corpus.greedy_multichar_atomizer.CopyFrom(
-      corpus_pb2.GreedyMulticharAtomizer(
-        tokens=[
-          "  ",
-          "__assert",
-          "__attribute",
-          "__builtin_astype",
-          "__clc_fabs",
-          "__clc_fma",
-          "__inline",
-          "abs",
-          "alignas",
-          "alignof",
-          "atomic_add",
-          "auto",
-          "barrier",
-          "bool",
-          "break",
-          "case",
-          "char",
-          "clamp",
-          "complex",
-          "const",
-          "constant",
-          "continue",
-          "default",
-          "defined",
-          "do",
-          "double",
-          "else",
-          "enum",
-          "error",
-          "event_t",
-          "extern",
-          "fabs",
-          "false",
-          "float",
-          "for",
-          "get_global_id",
-          "get_global_size",
-          "get_local_id",
-          "get_local_size",
-          "get_num_groups",
-          "global",
-          "goto",
-          "half",
-          "if",
-          "image1d_array_t",
-          "image1d_buffer_t",
-          "image1d_t",
-          "image2d_array_t",
-          "image2d_t",
-          "image3d_t",
-          "imaginary",
-          "include",
-          "inline",
-          "int",
-          "into",
-          "kernel",
-          "line",
-          "local",
-          "long",
-          "noreturn",
-          "pragma",
-          "private",
-          "quad",
-          "read_only",
-          "read_write",
-          "register",
-          "restrict",
-          "return",
-          "sampler_t",
-          "short",
-          "shuffle",
-          "signed",
-          "size_t",
-          "sizeof",
-          "sqrt",
-          "static",
-          "struct",
-          "switch",
-          "true",
-          "typedef",
-          "u32",
-          "uchar",
-          "uint",
-          "ulong",
-          "undef",
-          "union",
-          "unsigned",
-          "void",
-          "volatile",
-          "while",
-          "wide",
-          "write_only",
-        ]
-      )
+      corpus_pb2.GreedyMulticharAtomizer(tokens=TOKEN_LISTS["opencl"]["tokens"])
     )
   else:
     corpus.ascii_character_atomizer = True

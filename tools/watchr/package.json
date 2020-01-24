@@ -1,25 +1,25 @@
 {
-  "name": "watchr",
-  "description": "Automatic source builder",
-  "version": "0.0.2",
   "author": {
-    "name": "Chris Cummins",
-    "email": "chrisc.101@gmail.com"
+    "email": "chrisc.101@gmail.com",
+    "name": "Chris Cummins"
   },
-  "license": "GPL v3",
-  "engines": {
-    "node": ">= 0.8.0"
-  },
-  "private": true,
   "bin": {
     "pip-db-watchr": "watchr.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ChrisCummins/phd"
   },
   "dependencies": {
     "colors": "~0.6.2",
     "node-watch": "~0.3.4"
-  }
+  },
+  "description": "Automatic source builder",
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "license": "GPL v3",
+  "name": "watchr",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ChrisCummins/phd"
+  },
+  "version": "0.0.2"
 }

@@ -223,4 +223,3 @@ LEFT JOIN kernels ON scenarios.kernel=kernels.id
 LEFT JOIN devices ON scenarios.device=devices.id
 ORDER BY random()
 LIMIT 50000;
-

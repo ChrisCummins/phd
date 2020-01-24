@@ -23,11 +23,13 @@ load("@com_github_chriscummins_rules_bats//:bats.bzl", "bats_test")
 py_binary(
     name = "generative_model",
     srcs = ["generative_model.py"],
+    data = ["//deeplearning/clgen/corpuses:token_lists"],
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/clgen",
         "//deeplearning/clgen/proto:clgen_pb_py",
         "//labm8/py:app",
+        "//labm8/py:bazelutil",
         "//labm8/py:pbutil",
     ],
 )

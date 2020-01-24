@@ -12,7 +12,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-cat <<EOF > "$TMP_CORPUS/good.txt"
+cat <<EOF >"$TMP_CORPUS/good.txt"
 kernel void A(global int* a) {
   if (get_global_id(0) < 10000) {
     a[get_global_id(0)] = 0;
@@ -20,7 +20,7 @@ kernel void A(global int* a) {
 }
 EOF
 
-cat <<EOF > "$TMP_CORPUS/bad.txt"
+cat <<EOF >"$TMP_CORPUS/bad.txt"
 This
 file
 contains

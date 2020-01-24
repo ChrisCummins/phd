@@ -146,7 +146,10 @@ py_library(
 py_binary(
     name = "opt",
     srcs = ["opt.py"],
-    data = ["//third_party/llvm:opt"],
+    data = [
+        ":opt_transform_passes",
+        "//third_party/llvm:opt",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
@@ -164,6 +167,11 @@ py_test(
         "//labm8/py:app",
         "//labm8/py:test",
     ],
+)
+
+filegroup(
+    name = "opt_transform_passes",
+    srcs = ["opt_transform_passes.json"],
 )
 
 py_library(

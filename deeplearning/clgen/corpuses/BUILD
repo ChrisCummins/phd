@@ -30,10 +30,12 @@ py_library(
 py_test(
     name = "atomizers_test",
     srcs = ["atomizers_test.py"],
+    data = [":token_lists"],
     deps = [
         ":atomizers",
         "//deeplearning/clgen/tests:fixtures",
         "//labm8/py:app",
+        "//labm8/py:bazelutil",
         "//labm8/py:test",
     ],
 )
@@ -131,4 +133,10 @@ py_library(
         "//third_party/py/progressbar",
         "//third_party/py/sqlalchemy",
     ],
+)
+
+filegroup(
+    name = "token_lists",
+    srcs = ["token_lists.json"],
+    visibility = ["//visibility:public"],
 )

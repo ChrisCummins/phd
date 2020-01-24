@@ -25,16 +25,13 @@ message MirroredDirectory {
   // A list of exclude patterns passed to rsync when push or pulling changes
   // between local and remote machines.
   repeated string rsync_exclude = 4;
-
   // Set either of these flags to mark that the mirrored directory can only be
   // pushed or pulled to/from, respectively. Attempting to pull when push_only
   // or push when pull_only will error.
   optional bool push_only = 5;
   optional bool pull_only = 6;
-
   // Set this to the relative file of a path to use as a timestamp file.
   optional string timestamp_relpath = 7;
-
   // If set, disable error if the local_path does not exist.
   optional bool skip_if_not_present = 8 [default = false];
 }

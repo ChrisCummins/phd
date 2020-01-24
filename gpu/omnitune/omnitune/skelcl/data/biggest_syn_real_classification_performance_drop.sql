@@ -20,4 +20,3 @@ GROUP BY synthetic_real.classifier,
          synthetic_real.err_fn
 ORDER BY performance_diff DESC -- Rank by worst.
 LIMIT 1;
-

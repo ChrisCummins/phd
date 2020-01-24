@@ -23,4 +23,3 @@ SELECT id AS params,
    LEFT JOIN oracle_params AS oracle ON stats.scenario=oracle.scenario
    WHERE stats.params=id ) AS performance
 FROM params;
-

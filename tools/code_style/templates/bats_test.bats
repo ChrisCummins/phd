@@ -3,5 +3,5 @@
 source labm8/sh/test.sh
 
 @test "TODO" {
-  run ls  # TODO: Implement!
+  run ls # TODO: Implement!
 }
