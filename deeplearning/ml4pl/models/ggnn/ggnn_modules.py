@@ -266,10 +266,7 @@ class NodeEmbeddings(nn.Module):
     else:
       raise NotImplementedError(config.inst2vec_embeddings)
 
-    if (
-      hasattr(config, "use_selector_embeddings")
-      and config.use_selector_embeddings
-    ):
+    if config.use_selector_embeddings:
       selector_init = torch.tensor(
         # TODO(github.com/ChrisCummins/ProGraML/issues/27): x50 is maybe a
         # problem for unrolling (for selector_embs)?

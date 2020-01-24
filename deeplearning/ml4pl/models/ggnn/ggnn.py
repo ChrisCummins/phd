@@ -154,6 +154,13 @@ app.DEFINE_boolean(
   True,
   "If set, apply a log(x + 1) transformation to incoming auxiliary graph-level features.",
 )
+app.DEFINE_boolean(
+  "use_selector_embeddings",
+  True,
+  "Whether to treat the second node feature value as a binary selector. Use "
+  "this for dataflow problems with a 'root' node. This should be turned off on "
+  "devmap.",
+)
 
 
 ####### DEBBUGING HELPERS ##########################
