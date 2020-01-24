@@ -26,11 +26,13 @@ class GGNNConfig(object):
     self, num_classes: int, has_graph_labels: bool, edge_type_count: int = 3
   ):
     self.lr: float = FLAGS.learning_rate
-    self.clip_grad_norm: bool = FLAGS.clamp_gradient_norm  # use 6.0 as default! Set to 0.0 for no clipping.
+    self.clip_grad_norm: bool = FLAGS.clamp_gradient_norm  # use 6.0 as default when clipping! Set to 0.0 for no clipping.
 
     self.vocab_size: int = 8568
     self.inst2vec_embeddings = FLAGS.inst2vec_embeddings
     self.emb_size: int = 200
+    
+    # TODO This should be turned off on devmap!
     self.use_selector_embeddings: bool = True
     self.selector_size: int = 2 if self.use_selector_embeddings else 0
     # TODO(github.com/ChrisCummins/ProGraML/issues/27):: Maybe refactor non-rectangular edge passing matrices for independent hidden size.
@@ -55,6 +57,7 @@ class GGNNConfig(object):
     ###############
 
     self.has_graph_labels: bool = has_graph_labels
+    self.has_aux_input: bool = FLAGS.has_aux_input
     self.log1p_graph_x = FLAGS.log1p_graph_x
 
     self.intermediate_loss_weight: float = FLAGS.intermediate_loss_weight

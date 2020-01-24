@@ -55,20 +55,23 @@ app.DEFINE_integer(
 
 app.DEFINE_list(
   "layer_timesteps",
-  ["2", "2", "2"],
+  # 4x[2] is a good default!
+  ["2", "2", "2", "2"],
   "A list of layers, and the number of steps for each layer.",
 )
-app.DEFINE_float("learning_rate", 0.001, "The initial learning rate.")
+# 0.00025 is a good default!
+app.DEFINE_float("learning_rate", 0.00025, "The initial learning rate.")
 
-
-app.DEFINE_float("clamp_gradient_norm", 6.0, "Clip gradients to L-2 norm.")
+# not clamping, i.e. setting to 0.0 is a good default.
+app.DEFINE_float("clamp_gradient_norm", 0.0, "Clip gradients to L-2 norm.")
 
 
 app.DEFINE_integer("hidden_size", 200, "The size of hidden layer(s).")
 app.DEFINE_string(
   "inst2vec_embeddings",
   "random",
-  "The type of per-node inst2vec embeddings to use. One of {zero, constant, random, random_const, finetune}",
+  "The type of per-node inst2vec embeddings to use. One of {zero, constant, random, random_const, finetune, none}"
+  "'none' maps all statements to a single token, so overall there exist only !ID and a !STMT tokens.",
 )
 app.DEFINE_string(
   "unroll_strategy",
@@ -100,6 +103,7 @@ app.DEFINE_boolean(
 
 app.DEFINE_boolean(
   "position_embeddings",
+  # False shall be a good default for small datasets.
   True,
   "Whether to use position embeddings as signals for edge order."
   "We expect them to be part of the ds anyway, but you can toggle off their effect.",
@@ -113,12 +117,15 @@ app.DEFINE_boolean(
   "If true, normalize incoming messages by the number of incoming messages.",
 )
 app.DEFINE_float(
-  "graph_state_dropout", 0.0, "Graph state dropout rate.",
+  # 0.2 is a good default
+  "graph_state_dropout", 0.2, "Graph state dropout rate.",
 )
 app.DEFINE_float(
+  # 0.0 is a good default
   "edge_weight_dropout", 0.0, "Edge weight dropout rate.",
 )
 app.DEFINE_float(
+  # 0.0 is a good default, found without aux input. 
   "output_layer_dropout", 0.0, "Dropout rate on the output layer.",
 )
 app.DEFINE_float(
@@ -134,7 +141,13 @@ app.DEFINE_integer(
 app.DEFINE_boolean(
   "log1p_graph_x",
   True,
-  "If set, apply a log(x + 1) transformation to incoming graph-level features.",
+  "If set, apply a log(x + 1) transformation to incoming auxiliary graph-level features.",
+)
+
+app.DEFINE_boolean(
+  "has_aux_input",
+  False,
+  "Indicates if auxiliary input shall be mixed in to the graph-wise readout or not."
 )
 
 ####### DEBBUGING HELPERS ##########################
@@ -186,14 +199,7 @@ class Ggnn(classifier_base.ClassifierBase):
 
     # set some global config values
 
-    self.dev = (
-      torch.device("cuda")
-      if gpu_scheduler.LockExclusiveProcessGpuAccess()
-      else torch.device("cpu")
-    )
-    app.Log(
-      1, "Using device %s with dtype %s", self.dev, torch.get_default_dtype()
-    )
+    
 
     # Instantiate model
     config = GGNNConfig(
@@ -210,12 +216,15 @@ class Ggnn(classifier_base.ClassifierBase):
       pretrained_embeddings=inst2vec_embeddings,
       test_only=FLAGS.test_only,
     )
+    app.Log(
+      1, "Using device %s with dtype %s", self.model.dev, torch.get_default_dtype()
+    )
 
     if DEBUG:
       for submodule in self.model.modules():
         submodule.register_forward_hook(nan_hook)
 
-    self.model.to(self.dev)
+    self.model.to(self.model.dev)
 
   def MakeBatch(
     self,
@@ -393,10 +402,10 @@ class Ggnn(classifier_base.ClassifierBase):
     # from the database, where smaller i/o size (int32) is more important.
     with ctx.Profile(5, "Sent data to GPU"):
       vocab_ids = torch.from_numpy(disjoint_graph.node_x[:, 0]).to(
-        self.dev, torch.long
+        self.model.dev, torch.long
       )
       selector_ids = torch.from_numpy(disjoint_graph.node_x[:, 1]).to(
-        self.dev, torch.long
+        self.model.dev, torch.long
       )
       # we need those as a result on cpu and can save device i/o
       cpu_labels = (
@@ -404,18 +413,23 @@ class Ggnn(classifier_base.ClassifierBase):
         if disjoint_graph.has_node_y
         else disjoint_graph.graph_y
       )
-      labels = torch.from_numpy(cpu_labels).to(self.dev)
+      labels = torch.from_numpy(cpu_labels).to(self.model.dev)
       edge_lists = [
-        torch.from_numpy(x).to(self.dev, torch.long)
+        torch.from_numpy(x).to(self.model.dev, torch.long)
         for x in disjoint_graph.adjacencies
       ]
 
       edge_positions = [
-        torch.from_numpy(x).to(self.dev, torch.long)
+        torch.from_numpy(x).to(self.model.dev, torch.long)
         for x in disjoint_graph.edge_positions
       ]
 
-    model_inputs = (vocab_ids, selector_ids, labels, edge_lists, edge_positions)
+    model_inputs = {'vocab_ids': vocab_ids,
+                    'selector_ids': selector_ids,
+                    'labels': labels,
+                    'edge_lists': edge_lists,
+                    'pos_lists': edge_positions,
+                    }
 
     # maybe fetch more inputs.
     if disjoint_graph.has_graph_y:
@@ -424,16 +438,20 @@ class Ggnn(classifier_base.ClassifierBase):
         or disjoint_graph.disjoint_graph_count > 1
       ), f"graph_count is {disjoint_graph.disjoint_graph_count}"
       num_graphs = torch.tensor(disjoint_graph.disjoint_graph_count).to(
-        self.dev, torch.long
+        self.model.dev, torch.long
       )
       graph_nodes_list = torch.from_numpy(
         disjoint_graph.disjoint_nodes_list
-      ).to(self.dev, torch.long)
+      ).to(self.model.dev, torch.long)
 
       aux_in = torch.from_numpy(disjoint_graph.graph_x).to(
-        self.dev, torch.get_default_dtype()
+        self.model.dev, torch.get_default_dtype()
       )
-      model_inputs = model_inputs + (num_graphs, graph_nodes_list, aux_in,)
+      model_inputs.update({
+        'num_graphs': num_graphs,
+        'graph_nodes_list': graph_nodes_list,
+        'aux_in': aux_in,
+      })
 
     # maybe calculate manual timesteps
     if epoch_type != epoch.Type.TRAIN and FLAGS.unroll_strategy in [
@@ -446,7 +464,7 @@ class Ggnn(classifier_base.ClassifierBase):
         self.get_unroll_steps(epoch_type, batch, FLAGS.unroll_strategy),
         dtype=np.int64,
       )
-      time_steps_gpu = torch.from_numpy(time_steps_cpu).to(self.dev)
+      time_steps_gpu = torch.from_numpy(time_steps_cpu).to(self.model.dev)
     else:
       time_steps_cpu = 0
       time_steps_gpu = None
@@ -456,13 +474,13 @@ class Ggnn(classifier_base.ClassifierBase):
     if epoch_type == epoch.Type.TRAIN:
       if not self.model.training:
         self.model.train()
-      outputs = self.model(*model_inputs, test_time_steps=time_steps_gpu)
+      outputs = self.model(**model_inputs, test_time_steps=time_steps_gpu)
     else:  # not TRAIN
       if self.model.training:
         self.model.eval()
         self.model.opt.zero_grad()
       with torch.no_grad():  # don't trace computation graph!
-        outputs = self.model(*model_inputs, test_time_steps=time_steps_gpu)
+        outputs = self.model(**model_inputs, test_time_steps=time_steps_gpu)
 
     (
       logits,
