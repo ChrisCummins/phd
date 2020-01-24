@@ -23,7 +23,11 @@ FLAGS = app.FLAGS
 
 class GGNNConfig(object):
   def __init__(
-    self, num_classes: int, has_graph_labels: bool, edge_type_count: int = 3
+    self,
+    num_classes: int,
+    has_graph_labels: bool,
+    edge_type_count: int = 3,
+    has_aux_input: bool = False,
   ):
     # not implemented here, because not relevant:
     # train_subset, random_seed,
@@ -48,6 +52,9 @@ class GGNNConfig(object):
     self.edge_type_count: int = edge_type_count
     self.layer_timesteps: List[int] = [int(x) for x in FLAGS.layer_timesteps]
     self.use_edge_bias: bool = FLAGS.use_edge_bias
+    # NB: This is currently unused as the only way of differentiating the type
+    # of node is by looking at the encoded 'x' value, but may be added in the
+    # future.
     self.use_node_types: bool = False
     self.msg_mean_aggregation: bool = FLAGS.msg_mean_aggregation
     self.backward_edges: bool = True
@@ -62,7 +69,7 @@ class GGNNConfig(object):
     ###############
 
     self.has_graph_labels: bool = has_graph_labels
-    self.has_aux_input: bool = FLAGS.has_aux_input
+    self.has_aux_input: bool = has_aux_input
     self.log1p_graph_x = FLAGS.log1p_graph_x
 
     self.intermediate_loss_weight: float = FLAGS.intermediate_loss_weight

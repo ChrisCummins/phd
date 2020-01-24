@@ -75,6 +75,7 @@ py_library(
     deps = [
         ":ggnn_config",
         "//labm8/py:app",
+        "//labm8/py:gpu_scheduler",
         "//third_party/py/torch",
     ],
 )

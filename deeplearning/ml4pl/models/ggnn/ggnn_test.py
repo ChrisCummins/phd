@@ -104,7 +104,7 @@ def log1p_graph_x(request) -> bool:
 
 @test.Fixture(
   scope="session",
-  params=("zero", "constant", "constant_random", "random", "finetune"),
+  params=("zero", "constant", "constant_random", "random", "finetune", "none"),
   namer=lambda x: f"inst2vec_embeddings:{str(x).lower()}",
 )
 def node_text_embedding_type(request):

@@ -118,15 +118,21 @@ app.DEFINE_boolean(
 )
 app.DEFINE_float(
   # 0.2 is a good default
-  "graph_state_dropout", 0.2, "Graph state dropout rate.",
+  "graph_state_dropout",
+  0.2,
+  "Graph state dropout rate.",
 )
 app.DEFINE_float(
   # 0.0 is a good default
-  "edge_weight_dropout", 0.0, "Edge weight dropout rate.",
+  "edge_weight_dropout",
+  0.0,
+  "Edge weight dropout rate.",
 )
 app.DEFINE_float(
-  # 0.0 is a good default, found without aux input. 
-  "output_layer_dropout", 0.0, "Dropout rate on the output layer.",
+  # 0.0 is a good default, found without aux input.
+  "output_layer_dropout",
+  0.0,
+  "Dropout rate on the output layer.",
 )
 app.DEFINE_float(
   "intermediate_loss_weight",
@@ -144,11 +150,6 @@ app.DEFINE_boolean(
   "If set, apply a log(x + 1) transformation to incoming auxiliary graph-level features.",
 )
 
-app.DEFINE_boolean(
-  "has_aux_input",
-  False,
-  "Indicates if auxiliary input shall be mixed in to the graph-wise readout or not."
-)
 
 ####### DEBBUGING HELPERS ##########################
 DEBUG = False
@@ -199,12 +200,11 @@ class Ggnn(classifier_base.ClassifierBase):
 
     # set some global config values
 
-    
-
     # Instantiate model
     config = GGNNConfig(
       num_classes=self.y_dimensionality,
       has_graph_labels=self.graph_db.graph_y_dimensionality > 0,
+      has_aux_input=self.graph_db.graph_x_dimensionality > 0,
     )
 
     inst2vec_embeddings = node_encoder.GraphNodeEncoder().embeddings_tables[0]
@@ -217,7 +217,10 @@ class Ggnn(classifier_base.ClassifierBase):
       test_only=FLAGS.test_only,
     )
     app.Log(
-      1, "Using device %s with dtype %s", self.model.dev, torch.get_default_dtype()
+      1,
+      "Using device %s with dtype %s",
+      self.model.dev,
+      torch.get_default_dtype(),
     )
 
     if DEBUG:
@@ -424,12 +427,13 @@ class Ggnn(classifier_base.ClassifierBase):
         for x in disjoint_graph.edge_positions
       ]
 
-    model_inputs = {'vocab_ids': vocab_ids,
-                    'selector_ids': selector_ids,
-                    'labels': labels,
-                    'edge_lists': edge_lists,
-                    'pos_lists': edge_positions,
-                    }
+    model_inputs = {
+      "vocab_ids": vocab_ids,
+      "selector_ids": selector_ids,
+      "labels": labels,
+      "edge_lists": edge_lists,
+      "pos_lists": edge_positions,
+    }
 
     # maybe fetch more inputs.
     if disjoint_graph.has_graph_y:
@@ -447,11 +451,13 @@ class Ggnn(classifier_base.ClassifierBase):
       aux_in = torch.from_numpy(disjoint_graph.graph_x).to(
         self.model.dev, torch.get_default_dtype()
       )
-      model_inputs.update({
-        'num_graphs': num_graphs,
-        'graph_nodes_list': graph_nodes_list,
-        'aux_in': aux_in,
-      })
+      model_inputs.update(
+        {
+          "num_graphs": num_graphs,
+          "graph_nodes_list": graph_nodes_list,
+          "aux_in": aux_in,
+        }
+      )
 
     # maybe calculate manual timesteps
     if epoch_type != epoch.Type.TRAIN and FLAGS.unroll_strategy in [

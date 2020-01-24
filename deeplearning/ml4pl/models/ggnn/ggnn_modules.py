@@ -20,6 +20,7 @@ from torch import nn
 from torch import optim
 
 from labm8.py import app
+from labm8.py import gpu_scheduler
 
 FLAGS = app.FLAGS
 SMALL_NUMBER = 1e-8
@@ -50,21 +51,21 @@ class GGNNModel(nn.Module):
 
     # Readout layer
     self.readout = Readout(config)
-    
+
     # maybe tack on the aux readout
-    self.has_aux_input = getattr(self.config, 'has_aux_input', False)
+    self.has_aux_input = getattr(self.config, "has_aux_input", False)
 
     if self.has_aux_input:
       self.aux_readout = AuxiliaryReadout(config)
-    
-
 
     # make readout available to label_convergence tests in GGNN Proper (at runtime)
     if (
       hasattr(self.config, "unroll_strategy")
       and self.config.unroll_strategy == "label_convergence"
     ):
-      assert not getattr(self.config.has_aux_input), "aux_input is not supported with label_convergence"
+      assert not getattr(
+        self.config.has_aux_input
+      ), "aux_input is not supported with label_convergence"
       self.ggnn.readout = self.readout
 
     # eval and training
@@ -75,9 +76,10 @@ class GGNNModel(nn.Module):
     # carries two momentum params per trainable model parameter.
 
     # move model to device before making optimizer!
-    # TODO unused gpu_scheduler.LockExclusiveProcessGpuAccess() to determine device :/
     self.dev = (
-      torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+      torch.device("cuda")
+      if gpu_scheduler.LockExclusiveProcessGpuAccess()
+      else torch.device("cpu")
     )
 
     self.to(self.dev)
@@ -90,7 +92,7 @@ class GGNNModel(nn.Module):
       self.opt = self.get_optimizer(config)
 
   def get_optimizer(self, config):
-    return optim.AdamW(self.parameters(), lr=config.lr)  # NB: AdamW
+    return optim.AdamW(self.parameters(), lr=config.lr)
 
   def forward(
     self,
@@ -119,22 +121,28 @@ class GGNNModel(nn.Module):
       raw_in, raw_out, graph_nodes_list=graph_nodes_list, num_graphs=num_graphs
     )
 
-    logits = graphwise_readout if self.config.has_graph_labels else nodewise_readout
-    
+    logits = (
+      graphwise_readout if self.config.has_graph_labels else nodewise_readout
+    )
+
     if self.has_aux_input:
       logits, graphwise_readout = self.aux_readout(logits, aux_in)
-    
+
     # accuracy, pred_targets, correct, targets
     metrics_tuple = self.metrics(logits, labels)
 
-    outputs = (logits,) + metrics_tuple + (graphwise_readout,) + tuple(unroll_stats)
+    outputs = (
+      (logits,) + metrics_tuple + (graphwise_readout,) + tuple(unroll_stats)
+    )
 
     return outputs
 
   def num_parameters(self) -> int:
     """Compute the number of trainable parameters in this nn.Module and its children."""
     return sum(
-      param.numel() for param in self.parameters(recurse=True) if param.requires_grad
+      param.numel()
+      for param in self.parameters(recurse=True)
+      if param.requires_grad
     )
 
 
@@ -162,7 +170,9 @@ class Loss(nn.Module):
     """inputs: (predictions) or (predictions, intermediate_predictions)"""
     loss = self.loss(inputs[0], targets)
     if getattr(self.config, "has_aux_input", False):
-      loss += self.config.intermediate_loss_weight * self.loss(inputs[1], targets)
+      loss += self.config.intermediate_loss_weight * self.loss(
+        inputs[1], targets
+      )
     return loss
 
 
@@ -237,7 +247,9 @@ class NodeEmbeddings(nn.Module):
     if config.inst2vec_embeddings == "constant":
       app.Log(1, "Using pre-trained inst2vec embeddings frozen.")
       assert pretrained_embeddings is not None
-      self.node_embs = nn.Embedding.from_pretrained(pretrained_embeddings, freeze=True)
+      self.node_embs = nn.Embedding.from_pretrained(
+        pretrained_embeddings, freeze=True
+      )
     elif config.inst2vec_embeddings == "zero":
       init = torch.zeros(config.vocab_size, config.emb_size)
       self.node_embs = nn.Embedding.from_pretrained(init, freeze=True)
@@ -247,24 +259,33 @@ class NodeEmbeddings(nn.Module):
     elif config.inst2vec_embeddings == "finetune":
       app.Log(1, "Fine-tuning inst2vec embeddings")
       assert pretrained_embeddings is not None
-      self.node_embs = nn.Embedding.from_pretrained(pretrained_embeddings, freeze=False)
+      self.node_embs = nn.Embedding.from_pretrained(
+        pretrained_embeddings, freeze=False
+      )
     elif config.inst2vec_embeddings == "random":
       app.Log(1, "Initializing with random embeddings")
       self.node_embs = nn.Embedding(config.vocab_size, config.emb_size)
     elif config.inst2vec_embeddings == "none":
-      app.Log(1, "Initializing with a embedding for statements and identifiers each.")
+      app.Log(
+        1, "Initializing with a embedding for statements and identifiers each."
+      )
       self.node_embs = nn.Embedding(2, config.emb_size)
     else:
       raise NotImplementedError(config.inst2vec_embeddings)
 
-    if hasattr(config, "use_selector_embeddings") and config.use_selector_embeddings:
+    if (
+      hasattr(config, "use_selector_embeddings")
+      and config.use_selector_embeddings
+    ):
       selector_init = torch.tensor(
         # TODO(github.com/ChrisCummins/ProGraML/issues/27): x50 is maybe a
         # problem for unrolling (for selector_embs)?
         [[0, 50.0], [50.0, 0]],
         dtype=torch.get_default_dtype(),
       )
-      self.selector_embs = nn.Embedding.from_pretrained(selector_init, freeze=True)
+      self.selector_embs = nn.Embedding.from_pretrained(
+        selector_init, freeze=True
+      )
     else:
       self.selector_embs = None
 
@@ -296,7 +317,9 @@ class GGNNProper(nn.Module):
 
     # optional eval time unrolling parameter
     self.test_layer_timesteps = (
-      config.test_layer_timesteps if hasattr(config, "test_layer_timesteps") else 0
+      config.test_layer_timesteps
+      if hasattr(config, "test_layer_timesteps")
+      else 0
     )
     self.unroll_strategy = (
       config.unroll_strategy if hasattr(config, "unroll_strategy") else "none"
@@ -305,7 +328,9 @@ class GGNNProper(nn.Module):
       config.max_timesteps if hasattr(config, "max_timesteps") else 1000
     )
     self.label_conv_threshold = (
-      config.label_conv_threshold if hasattr(config, "label_conv_threshold") else 0.995
+      config.label_conv_threshold
+      if hasattr(config, "label_conv_threshold")
+      else 0.995
     )
     self.label_conv_stable_steps = (
       config.label_conv_stable_steps
@@ -323,7 +348,12 @@ class GGNNProper(nn.Module):
       self.update.append(GGNNLayer(config))
 
   def forward(
-    self, edge_lists, node_states, pos_lists=None, node_types=None, test_time_steps=None
+    self,
+    edge_lists,
+    node_states,
+    pos_lists=None,
+    node_types=None,
+    test_time_steps=None,
   ):
     old_node_states = node_states.clone()
 
@@ -358,7 +388,6 @@ class GGNNProper(nn.Module):
       edge_lists.extend(back_edge_lists)
 
       # For backward edges we keep the positions of the forward edge!
-      # NB(CHRIS): Here I fixed a bug that will break the old code.
       if self.position_embeddings:
         pos_lists.extend(pos_lists)
 
@@ -381,12 +410,16 @@ class GGNNProper(nn.Module):
       edge_lists.extend(back_edge_lists)
 
     stable_steps, i = 0, 0
-    old_tentative_labels = self.tentative_labels(initial_node_states, node_states)
+    old_tentative_labels = self.tentative_labels(
+      initial_node_states, node_states
+    )
 
     while True:
       messages = self.message[0](edge_lists, node_states, pos_lists)
       node_states = self.update[0](messages, node_states, node_types)
-      new_tentative_labels = self.tentative_labels(initial_node_states, node_states)
+      new_tentative_labels = self.tentative_labels(
+        initial_node_states, node_states
+      )
       i += 1
 
       # return the new node states if their predictions match the old node states' predictions.
@@ -424,7 +457,9 @@ class MessagingLayer(nn.Module):
   def __init__(self, config):
     super().__init__()
     self.forward_and_backward_edge_type_count = (
-      config.edge_type_count * 2 if config.backward_edges else config.edge_type_count
+      config.edge_type_count * 2
+      if config.backward_edges
+      else config.edge_type_count
     )
     self.msg_mean_aggregation = config.msg_mean_aggregation
     self.dim = config.hidden_size
@@ -470,9 +505,10 @@ class MessagingLayer(nn.Module):
     messages_by_targets = torch.zeros_like(node_states)
     if self.msg_mean_aggregation:
       device = node_states.device
-      bincount = torch.zeros(node_states.size()[0], dtype=torch.long, device=device)
+      bincount = torch.zeros(
+        node_states.size()[0], dtype=torch.long, device=device
+      )
 
-    # NB(CHRIS): Here I fixed a bug that will break the old code.
     for i, edge_list in enumerate(edge_lists):
       edge_targets = edge_list[:, 1]
       edge_sources = edge_list[:, 0]
@@ -481,8 +517,6 @@ class MessagingLayer(nn.Module):
         edge_sources, propagated_states[i].transpose(0, 1)
       )
 
-      # NB(CHRIS): Here I fixed a bug that will break the old code.
-      # i.e. if pos_lists=None, in case it is turned off
       if self.pos_transform:
         pos_list = pos_lists[i]
         pos_by_source = F.embedding(pos_list, pos_gating)
@@ -509,7 +543,9 @@ class GGNNLayer(nn.Module):
     # GRU size: make hidden GRU size larger and EdgeTrafo size non-square
     # instead? Or implement stacking gru layers between message passing steps.
 
-    self.gru = nn.GRUCell(input_size=config.hidden_size, hidden_size=config.hidden_size)
+    self.gru = nn.GRUCell(
+      input_size=config.hidden_size, hidden_size=config.hidden_size
+    )
 
     # currently only admits node types 0 and 1 for statements and identifiers.
     self.use_node_types = (
@@ -521,13 +557,6 @@ class GGNNLayer(nn.Module):
       )
 
   def forward(self, messages, node_states, node_types=None):
-    # NB(CHRIS): Here I fixed a bug that will break the old code.
-    # The dropout shouldn't be applied twice.
-    # (Even though the old tf implementation did that too.)
-    
-    # if self.dropout > 0.0:
-    #  F.dropout_(messages, p=self.dropout, training=self.training, inplace=True)
-
     if self.use_node_types:
       assert (
         node_types is not None
@@ -541,7 +570,6 @@ class GGNNLayer(nn.Module):
       output = self.gru(messages, node_states)
 
     if self.dropout > 0.0:
-      # NB(CHRIS): Here I fixed a bug that will break the old code.
       F.dropout(output, p=self.dropout, training=self.training, inplace=True)
     return output
 
@@ -559,7 +587,9 @@ class PositionEmbeddings(nn.Module):
     inv_freq = 1 / (10000 ** (torch.arange(0.0, demb, 2.0) / demb))
 
     sinusoid_inp = torch.ger(positions, inv_freq)
-    pos_emb = torch.cat((torch.sin(sinusoid_inp), torch.cos(sinusoid_inp)), dim=1)
+    pos_emb = torch.cat(
+      (torch.sin(sinusoid_inp), torch.cos(sinusoid_inp)), dim=1
+    )
 
     if dpad > 0:
       in_length = positions.size()[0]
@@ -603,8 +633,9 @@ class Readout(nn.Module):
       config.hidden_size, self.num_classes, dropout=config.output_dropout,
     )
 
-
-  def forward(self, raw_node_in, raw_node_out, graph_nodes_list=None, num_graphs=None):
+  def forward(
+    self, raw_node_in, raw_node_out, graph_nodes_list=None, num_graphs=None
+  ):
     gate_input = torch.cat((raw_node_in, raw_node_out), dim=-1)
     gating = torch.sigmoid(self.regression_gate(gate_input))
     nodewise_readout = gating * self.regression_transform(raw_node_out)
@@ -617,7 +648,9 @@ class Readout(nn.Module):
       # aggregate via sums over graphs
       device = raw_node_out.device
       graph_readout = torch.zeros(num_graphs, self.num_classes, device=device)
-      graph_readout.index_add_(dim=0, index=graph_nodes_list, source=nodewise_readout)
+      graph_readout.index_add_(
+        dim=0, index=graph_nodes_list, source=nodewise_readout
+      )
     return nodewise_readout, graph_readout
 
 
@@ -688,20 +721,26 @@ class AuxiliaryReadout(nn.Module):
   def __init__(self, config):
     super().__init__()
     self.num_classes = config.num_classes
-    self.log1p_graph_x = getattr(config, 'log1p_graph_x', False)
-    assert config.has_graph_labels, 'We expect aux readout in combination with graph labels, not node labels'
+    self.log1p_graph_x = getattr(config, "log1p_graph_x", False)
+    assert (
+      config.has_graph_labels
+    ), "We expect aux readout in combination with graph labels, not node labels"
     self.feed_forward = None
 
     self.batch_norm = nn.BatchNorm1d(config.num_classes + config.aux_in_len)
     self.feed_forward = nn.Sequential(
-        nn.Linear(config.num_classes + config.aux_in_len, config.aux_in_layer_size,),
-        nn.ReLU(),
-        nn.Dropout(1 - config.output_dropout),
-        nn.Linear(config.aux_in_layer_size, config.num_classes),
-      )
+      nn.Linear(
+        config.num_classes + config.aux_in_len, config.aux_in_layer_size,
+      ),
+      nn.ReLU(),
+      nn.Dropout(1 - config.output_dropout),
+      nn.Linear(config.aux_in_layer_size, config.num_classes),
+    )
 
   def forward(self, graph_features, auxiliary_features):
-    assert graph_features.size()[0] == auxiliary_features.size()[0], "every graph needs aux_features. Dimension mismatch."
+    assert (
+      graph_features.size()[0] == auxiliary_features.size()[0]
+    ), "every graph needs aux_features. Dimension mismatch."
     if self.log1p_graph_x:
       auxiliary_features.log1p_()
 
