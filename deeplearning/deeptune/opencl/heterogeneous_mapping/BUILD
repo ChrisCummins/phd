@@ -57,10 +57,12 @@ py_test(
 py_library(
     name = "utils",
     srcs = ["utils.py"],
+    data = ["//deeplearning/clgen/corpuses:token_lists"],
     visibility = ["//deeplearning/deeptune/opencl/heterogeneous_mapping:__subpackages__"],
     deps = [
         "//deeplearning/clgen/corpuses:atomizers",
         "//labm8/py:app",
+        "//labm8/py:bazelutil",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
         "//third_party/py/scikit_learn",
