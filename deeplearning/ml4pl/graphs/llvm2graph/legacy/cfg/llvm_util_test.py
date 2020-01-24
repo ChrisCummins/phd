@@ -13,11 +13,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Unit tests for //deeplearning/ml4pl/graphs/unlabelled/llvm2graph/cfg:llvm_util."""
+"""Unit tests for //deeplearning/ml4pl/graphs/llvm2graph/legacy/cfg:llvm_util."""
 import pyparsing
 
 from compilers.llvm import opt
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import llvm_util
+from deeplearning.ml4pl.graphs.llvm2graph.legacy.cfg import llvm_util
 from labm8.py import app
 from labm8.py import test
 

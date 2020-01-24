@@ -21,7 +21,7 @@ from labm8.py import test
 
 FLAGS = test.FLAGS
 
-MODULE_UNDER_TEST = "deeplearning.ml4pl.graphs.unlabelled.llvm2graph"
+MODULE_UNDER_TEST = "deeplearning.ml4pl.graphs.llvm2graph.legacy"
 
 REGRESSION_TESTS = bazelutil.DataPath(
   "phd/deeplearning/ml4pl/testing/data/bytecode_regression_tests"

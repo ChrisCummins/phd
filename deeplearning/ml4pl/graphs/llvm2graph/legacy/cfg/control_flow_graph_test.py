@@ -13,12 +13,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Unit tests for //deeplearning/ml4pl/graphs/unlabelled/llvm2graph/cfg:control_flow_graph."""
+"""Unit tests for //deeplearning/ml4pl/graphs/llvm2graph/legacy/cfg:control_flow_graph."""
 import pytest
 
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import (
-  control_flow_graph,
-)
+from deeplearning.ml4pl.graphs.llvm2graph.legacy.cfg import control_flow_graph
 from labm8.py import app
 from labm8.py import test
 

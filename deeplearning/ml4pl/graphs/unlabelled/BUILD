@@ -25,7 +25,7 @@
 #        "//deeplearning/ml4pl/ir:ir_database",
 #        "//deeplearning/ml4pl/graphs:database_exporters",
 #        "//deeplearning/ml4pl/graphs:graph_database",
-#        "//deeplearning/ml4pl/graphs/unlabelled/llvm2graph:graph_builder",
+#        "//deeplearning/ml4pl/graphs/llvm2graph/legacy:graph_builder",
 #        "//labm8/py:app",
 #        "//labm8/py:prof",
 #    ],

@@ -33,13 +33,13 @@ Create an LLVM intermediate representation:
 
 Generate a program graph proto from this IR:
 
-    $ bazel run //deeplearning/ml4pl/graphs/unlabelled/llvm2graph -- \\
+    $ bazel run //deeplearning/ml4pl/graphs/llvm2graph/legacy -- \\
         < /tmp/foo.ll
 """
 import sys
 
 from deeplearning.ml4pl.graphs import programl
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import graph_builder
+from deeplearning.ml4pl.graphs.llvm2graph.legacy import graph_builder
 from labm8.py import app
 
 FLAGS = app.FLAGS

@@ -13,9 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for //deeplearning/ml4pl/graphs/unlabelled/llvm2graph:llvm_statements."""
+"""Tests for //deeplearning/ml4pl/graphs/llvm2graph/legacy:llvm_statements."""
 from deeplearning.ml4pl.graphs import programl
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import llvm_statements
+from deeplearning.ml4pl.graphs.llvm2graph.legacy import llvm_statements
 from labm8.py import test
 
 FLAGS = test.FLAGS

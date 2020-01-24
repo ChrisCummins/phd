@@ -13,12 +13,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Unit tests for //deeplearning/ml4pl/graphs/unlabelled/llvm2graph:graph_builder."""
+"""Unit tests for //deeplearning/ml4pl/graphs/llvm2graph/legacy:graph_builder."""
 import networkx as nx
 
 from deeplearning.ml4pl.graphs import nx_utils
 from deeplearning.ml4pl.graphs import programl_pb2
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import graph_builder
+from deeplearning.ml4pl.graphs.llvm2graph.legacy import graph_builder
 from labm8.py import app
 from labm8.py import test
 

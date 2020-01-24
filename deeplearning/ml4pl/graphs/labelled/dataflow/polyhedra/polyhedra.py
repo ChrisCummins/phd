@@ -22,8 +22,8 @@ import pydot
 
 from compilers.llvm import opt
 from compilers.llvm import opt_util
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import graph_builder
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import llvm_util
+from deeplearning.ml4pl.graphs.llvm2graph.legacy import graph_builder
+from deeplearning.ml4pl.graphs.llvm2graph.legacy.cfg import llvm_util
 from labm8.py import app
 from labm8.py import decorators
 

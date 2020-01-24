@@ -23,7 +23,7 @@ import pydot
 import pyparsing
 
 from compilers.llvm import opt_util
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import (
+from deeplearning.ml4pl.graphs.llvm2graph.legacy.cfg import (
   control_flow_graph as cfg,
 )
 from labm8.py import app

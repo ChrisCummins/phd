@@ -31,10 +31,10 @@ from datasets.opencl.device_mapping import (
   opencl_device_mapping_dataset as ocl_dataset,
 )
 from deeplearning.clgen.preprocessors import opencl
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import (
+from deeplearning.ml4pl.graphs.llvm2graph.legacy.cfg import (
   control_flow_graph as cfg,
 )
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import llvm_util
+from deeplearning.ml4pl.graphs.llvm2graph.legacy.cfg import llvm_util
 from deeplearning.ml4pl.ir import ir_database
 from labm8.py import app
 from labm8.py import decorators

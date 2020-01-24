@@ -1,4 +1,6 @@
-# This package constructs program graphs from LLVM intermediate representations.
+# Old python + opt graph construction implementation.
+# The functionality here has been superceded by the parent package. Use
+# //deeplearning/ml4pl/graphs/llvm2graph instead.
 #
 # Copyright 2019 the ProGraML authors.
 #
@@ -15,8 +17,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
 
 py_library(
     name = "call_graph",
@@ -42,7 +42,7 @@ py_library(
         "//deeplearning/ml4pl/graphs:nx_utils",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//deeplearning/ml4pl/graphs/llvm2graph:node_encoder",
-        "//deeplearning/ml4pl/graphs/unlabelled/llvm2graph/cfg:llvm_util",
+        "//deeplearning/ml4pl/graphs/llvm2graph/legacy/cfg:llvm_util",
         "//labm8/py:app",
         "//third_party/py/networkx",
     ],
@@ -84,14 +84,6 @@ py_binary(
     ],
 )
 
-py3_image(
-    name = "llvm2graph_image",
-    srcs = ["llvm2graph.py"],
-    base = "@phd_base//image",
-    main = "llvm2graph.py",
-    deps = [":llvm2graph"],
-)
-
 py_library(
     name = "llvm_statements",
     srcs = ["llvm_statements.py"],
@@ -99,7 +91,7 @@ py_library(
         "//compilers/llvm:opt_util",
         "//deeplearning/ml4pl/graphs:nx_utils",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
-        "//deeplearning/ml4pl/graphs/unlabelled/llvm2graph/cfg:llvm_util",
+        "//deeplearning/ml4pl/graphs/llvm2graph/legacy/cfg:llvm_util",
         "//deeplearning/ncc:rgx_utils",
         "//deeplearning/ncc/inst2vec:inst2vec_preprocess",
         "//labm8/py:app",
