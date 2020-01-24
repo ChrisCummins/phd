@@ -332,6 +332,11 @@ class GGNNProper(nn.Module):
       else 1
     )
 
+    assert (
+      self.unroll_strategy != "label_convergence"
+      or len(self.layer_timesteps) == 1
+    ), f"Label convergence only supports one-layer GGNNs, but {len(self.layer_timesteps)} are configured in layer_timesteps: {self.layer_timesteps}"
+
     # Message and update layers
     self.message = nn.ModuleList()
     for i in range(len(self.layer_timesteps)):
@@ -394,10 +399,6 @@ class GGNNProper(nn.Module):
   def label_convergence_forward(
     self, edge_lists, node_states, pos_lists, node_types, initial_node_states
   ):
-    assert (
-      len(self.layer_timesteps) == 1
-    ), f"Label convergence only supports one-layer GGNNs, but {len(self.layer_timesteps)} are configured in layer_timesteps: {self.layer_timesteps}"
-
     stable_steps, i = 0, 0
     old_tentative_labels = self.tentative_labels(
       initial_node_states, node_states
