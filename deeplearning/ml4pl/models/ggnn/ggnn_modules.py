@@ -389,6 +389,11 @@ class GGNNProper(nn.Module):
         initial_node_states=old_node_states,
       )
       return node_states, old_node_states, unroll_steps, converged
+    else:
+      raise TypeError(
+        "Unreachable! "
+        f"Unroll strategy: {self.unroll_strategy}, training: {self.training}"
+      )
 
     for (layer_idx, num_timesteps) in enumerate(layer_timesteps):
       for t in range(num_timesteps):
