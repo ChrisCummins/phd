@@ -1,6 +1,6 @@
 # You Need A Budget
 
-[You Need A Budget](https://www.youneedabudget.com/) (YNAB) is a macOS app for 
+[You Need A Budget](https://www.youneedabudget.com/) (YNAB) is a macOS app for
 budgeting and tracking transactions from bank accounts. *(Actually YNAB is now
 moving towards a SAAS model with a rolling subscription and cloud-based apps,
 but I haven't made the upgrade yet. I use YNAB 4).

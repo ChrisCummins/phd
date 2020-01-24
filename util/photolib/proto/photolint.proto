@@ -1,20 +1,17 @@
 // This file defines the protocol buffers used for photolint.
+
 syntax = "proto2";
 
 // A message describing a linter error for a file.
 message PhotolintFileError {
   // The path to the root of the workspace.
   optional string workspace_root = 1;
-
   // The path of the file, relative to the root of the workspace.
   optional string workspace_relative_path = 2;
-
   // The name of the error category.
   optional string category = 3;
-
   // A message describing the error.
   optional string message = 4;
-
   // A shell command to fix the rror.
   optional string shell_command_to_fix_it = 5;
 }

@@ -85,4 +85,3 @@ FROM speedup_regression_results;
 .out "speedup_classification_results.csv"
 SELECT *
 FROM speedup_classification_results;
-

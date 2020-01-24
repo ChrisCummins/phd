@@ -5,4 +5,3 @@ ALTER TABLE `dynamic_features` ADD COLUMN `driver` enum('CLDRIVE', 'LIBCECL') NO
 
 UPDATE `dynamic_features`
 SET `driver` = 'CLDRIVE';
-

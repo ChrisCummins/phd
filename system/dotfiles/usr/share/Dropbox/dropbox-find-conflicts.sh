@@ -9,7 +9,7 @@
 #    DROPBOX_DIR=/tmp/dropbox ./find-dropbox-conflicts.sh  # custom dropbox location
 #
 usage() {
-        echo "usage: $0 [--rm]" >&2
+  echo "usage: $0 [--rm]" >&2
 }
 
 DROPBOX_DIR=${DROPBOX_DIR:-"$HOME/Dropbox"}
@@ -17,12 +17,12 @@ DROPBOX_DIR=${DROPBOX_DIR:-"$HOME/Dropbox"}
 set -e
 
 if [[ "$1" == "--help" ]]; then
-        usage
+  usage
 elif [[ "$1" == "--rm" ]]; then
-        find "$DROPBOX_DIR" -name '*conflicted copy*' -exec rm -v {} \;
+  find "$DROPBOX_DIR" -name '*conflicted copy*' -exec rm -v {} \;
 elif [[ -n "$1" ]]; then
-        usage
-        exit 1
+  usage
+  exit 1
 else
-        find "$DROPBOX_DIR" -name '*conflicted copy*'
+  find "$DROPBOX_DIR" -name '*conflicted copy*'
 fi

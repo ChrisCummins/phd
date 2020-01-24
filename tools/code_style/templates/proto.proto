@@ -1,7 +1,13 @@
 // The file defines protos for TODO: one line summary.
 
 syntax = "proto2";
+
 package tools.code_style.templates; // TODO: ${PACKAGE}
+
+option go_package = "templatespb";
+option java_multiple_files = true;
+option java_outer_classname = "ProtoProto";
+option java_package = "com.tools.code_style.templates";
 
 // TODO: Detailed desription of message purpose and usage.
 message Todo {

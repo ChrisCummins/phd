@@ -17,7 +17,6 @@
 # limitations under the License.
 source labm8/sh/test.sh
 
-
 @test "run gpgpu" {
   run datasets/benchmarks/gpgpu/gpgpu \
     --gpgpu_benchmark_suites=dummy_just_for_testing \

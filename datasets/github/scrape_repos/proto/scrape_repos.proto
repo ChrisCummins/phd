@@ -13,11 +13,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 syntax = "proto2";
+
 package scrape_repos;
 
-option java_package = "datasets.github.scrape_repos";
-option java_outer_classname = "ScrapeReposProtos";
+option go_package = "scrape_repospb";
+option java_multiple_files = true;
+option java_outer_classname = "ScrapeReposProto";
+option java_package = "com.scrape_repos";
 
 // The schema for "clone lists", which are used to determine the GitHub queries
 // to run and repos to clone.

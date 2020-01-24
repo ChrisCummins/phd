@@ -9,6 +9,6 @@ DIR="$HOME/.cache/phd/tools/py/venv/phd"
 rm -rf "$DIR"
 mkdir -pv "$(dirname $DIR)"
 python3 -m venv "$DIR"
-set +u  # The virtualenv activation script references potentially unbound variables.
+set +u # The virtualenv activation script references potentially unbound variables.
 source "$DIR/bin/activate"
 python -m pip install -r requirements.txt

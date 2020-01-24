@@ -27,10 +27,11 @@ import sys
 import tempfile
 import typing
 
+import sqlparse
+
 from labm8.py import app
 from labm8.py import fs
 from labm8.py import text
-import sqlparse
 from util.lmk import lmk
 
 FLAGS = app.FLAGS
@@ -90,9 +91,10 @@ def getQueryFromUserOrDie(
       [x.rstrip() for x in query.split("\n") if x.strip()]
     ).strip()
 
-    query = sqlparse.format(
-        query, reindent=True, keyword_case="upper"
-    ).rstrip() + "\n"
+    query = (
+      sqlparse.format(query, reindent=True, keyword_case="upper").rstrip()
+      + "\n"
+    )
 
   if not query:
     print("No query to execute, aborting.", file=sys.stderr)

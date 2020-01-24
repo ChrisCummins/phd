@@ -28,7 +28,7 @@ To run the testlogs viewer:
 $ docker run -p8011:8011 chriscummins/bazel_testlogs_viewer \
     --db=DATABASE --port=8011 \
      --buildbot_url='http://BUILDBOT:8010/#/builders/2' \
-     --hostname=$(hostname) 
+     --hostname=$(hostname)
 ```
 
 To update the dockerhub testlogs import image:

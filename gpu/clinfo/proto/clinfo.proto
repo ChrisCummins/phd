@@ -13,21 +13,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 syntax = "proto2";
 
 package gpu.clinfo;
+
+option go_package = "clinfopb";
+option java_multiple_files = true;
+option java_outer_classname = "ClinfoProto";
+option java_package = "com.gpu.clinfo";
 
 message OpenClDevice {
   // The name of the device, which is a concatenation of the device type,
   // platform, device, and driver versions.
   optional string name = 1;
-
   optional string platform_name = 2;
   optional string device_name = 3;
   optional string driver_version = 4;
   optional string opencl_version = 5;
   optional string device_type = 6;
-
   optional int32 platform_id = 10;
   optional int32 device_id = 11;
   // If true, OpenCL optimizations are enabled (default). If false, OpenCL

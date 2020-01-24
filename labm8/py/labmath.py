@@ -15,9 +15,6 @@
 """
 # Use absolute paths for imports so as to prevent a conflict with the
 # system "math" module.
-from __future__ import absolute_import
-from __future__ import division
-
 import math
 
 import numpy as np

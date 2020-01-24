@@ -17,7 +17,6 @@ import importlib
 import pathlib
 import typing
 from importlib import util as importlib_util
-from io import open
 
 from datasets.github.scrape_repos.preprocessors import secrets
 from deeplearning.clgen import errors

@@ -10,7 +10,7 @@ stats() {
 
   num_contributors=$(git shortlog -s -n | awk '{$1=""}1' | sort -u | wc -l)
   # Wage estimate using 2019 USA software developer salary from Glassdoor.
-  sloccount --personcost 103035 . 2>&1 > .git_stats_sloc.txt
+  sloccount --personcost 103035 . 2>&1 >.git_stats_sloc.txt
   loc=$(grep 'Total Physical Source Lines of Code (SLOC)' .git_stats_sloc.txt | cut -d'=' -f2)
   cost=$(grep 'Total Estimated Cost to Develop' .git_stats_sloc.txt | cut -d'=' -f2)
   first_commit_year=$(git show -s --format=%ci $(git rev-list HEAD | tail -n 1) | cut -d'-' -f1)

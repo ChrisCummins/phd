@@ -1,16 +1,22 @@
 {
-  "name": "phd",
-  "description": "My PhD.",
   "author": {
-    "name": "Chris Cummins",
     "email": "chrisc.101@gmail.com",
+    "name": "Chris Cummins",
     "url": "https://chriscummins.cc"
   },
-  "homepage": "https://github.com/ChrisCummins/phd",
   "bugs": {
     "url": "https://github.com/ChrisCummins/phd/issues"
   },
+  "dependencies": {
+    "npm": "^6.13.4"
+  },
+  "description": "My PhD.",
+  "devDependencies": {
+    "husky": "^0.14.3"
+  },
+  "homepage": "https://github.com/ChrisCummins/phd",
   "license": "UNLICENSED",
+  "name": "phd",
   "repository": {
     "type": "git",
     "url": "https://github.com/ChrisCummins/phd.git"
@@ -20,11 +26,5 @@
     "postrebase": "./tools/git/post-rebase.sh",
     "precommit": "./tools/git/pre-commit.sh",
     "prepush": "./tools/git/pre-push.sh"
-  },
-  "devDependencies": {
-    "husky": "^0.14.3"
-  },
-  "dependencies": {
-    "npm": "^6.13.4"
   }
 }

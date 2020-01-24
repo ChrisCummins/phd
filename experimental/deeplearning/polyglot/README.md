@@ -14,7 +14,7 @@ Prepare a corpus:
 
 ```sh
 $ bazel build //datasets/github/scrape_repos/...
-  
+
 $ bazel-bin/datasets/github/scrape_repos/scraper \
     --clone_list experimental/deeplearning/polyglot/$POLYGLOT_LANGUAGE/clone_list.pbtxt
 $ bazel-bin/datasets/github/scrape_repos/cloner \

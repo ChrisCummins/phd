@@ -3,7 +3,7 @@
 source labm8/sh/test.sh
 
 setup() {
-  echo "Hello, bats!" > "$BATS_TMPDIR/foo"
+  echo "Hello, bats!" >"$BATS_TMPDIR/foo"
 }
 
 teardown() {

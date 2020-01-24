@@ -16,10 +16,13 @@
 // along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 
 syntax = "proto2";
+
 package clgen;
 
-option java_package = "deeplearning.clgen";
-option java_outer_classname = "InternalProtos";
+option go_package = "clgenpb";
+option java_multiple_files = true;
+option java_outer_classname = "InternalProto";
+option java_package = "com.clgen";
 
 import "deeplearning/clgen/proto/corpus.proto";
 import "deeplearning/clgen/proto/model.proto";
@@ -63,7 +66,6 @@ message PreprocessorWorkerJobOutcome {
     TOO_FEW_LINES = 4;
     REWRITER_FAIL = 5;
   }
-
   optional string contentfile_id = 1;
   optional string contents = 2;
   optional Status status = 3;
@@ -81,7 +83,6 @@ message PreprocessorWorker {
   repeated string preprocessors = 3;
 }
 
-
 message EncoderWorker {
   optional int64 id = 1;
   optional string text = 3;
@@ -89,13 +90,11 @@ message EncoderWorker {
   optional bytes pickled_atomizer = 5;
 }
 
-
 message JavaRewriterJob {
   enum Status {
     OK = 0;
     FAIL = 1;
   }
-
   // The path of the source file.
   optional string file_path = 1;
   // The string source code.
@@ -104,7 +103,6 @@ message JavaRewriterJob {
   // A string description of the status. Only set if status != OK.
   optional string status_msg = 4;
 }
-
 
 message LexerJob {
   // The string to tokenize.

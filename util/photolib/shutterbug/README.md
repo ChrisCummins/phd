@@ -23,7 +23,7 @@ strategies:
 
 ### Archiving to disc
 
-To backup your photo library in `~/Pictures/2016` to 4.7GB DVDs, split the 
+To backup your photo library in `~/Pictures/2016` to 4.7GB DVDs, split the
 folder into "chunks" using shutterbug:
 
 ```

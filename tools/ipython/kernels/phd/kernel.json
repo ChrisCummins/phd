@@ -6,6 +6,6 @@
     "-f",
     "{connection_file}"
   ],
-  "language": "python",
-  "display_name": "phd"
+  "display_name": "phd",
+  "language": "python"
 }

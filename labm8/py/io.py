@@ -13,8 +13,6 @@
 # limitations under the License.
 """Logging interface.
 """
-from __future__ import print_function
-
 import json
 
 from labm8.py import system

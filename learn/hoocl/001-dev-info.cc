@@ -6,7 +6,7 @@
  *
  * History: C++ version written by Tom Deakin, 2012
  *          Updated by Tom Deakin, August 2013
-*/
+ */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wreserved-id-macro"
 #pragma GCC diagnostic pop

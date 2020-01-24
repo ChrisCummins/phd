@@ -22,9 +22,13 @@
 // along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 
 syntax = "proto2";
+
 package clgen;
 
-option java_package = "deeplearning.clgen";
+option go_package = "clgenpb";
+option java_multiple_files = true;
+option java_outer_classname = "CorpusProto";
+option java_package = "com.clgen";
 
 // The specification of a training corpus.
 message Corpus {
@@ -40,13 +44,11 @@ message Corpus {
     // The path to a database of encoded files.
     string pre_encoded_corpus_url = 4;
   }
-
   // The atomizer to use to encode the corpus.
   oneof atomizer {
     bool ascii_character_atomizer = 20;
     GreedyMulticharAtomizer greedy_multichar_atomizer = 21;
   }
-
   // A list of preprocessor passes to run on each contentfile in the corpus
   // prior to training, in the order in which they are run.
   repeated string preprocessor = 30;

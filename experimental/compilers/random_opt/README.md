@@ -1,6 +1,6 @@
 # Experiments in Random Optimization
 
-This is an [OpenAI Gym](https://gym.openai.com) environment for the LLVM 
+This is an [OpenAI Gym](https://gym.openai.com) environment for the LLVM
 optimizer.
 
 Example usage:

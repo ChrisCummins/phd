@@ -16,7 +16,7 @@ bazel build -c opt //experimental/deeplearning/deepsmith/opencl_fuzz:opencl_fuzz
 
 rm -f "$PHD/experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz_image-layer.tar"
 cp "$PHD/bazel-bin/experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz_image-layer.tar" \
-    "$PHD/experimental/deeplearning/deepsmith/opencl_fuzz"
+  "$PHD/experimental/deeplearning/deepsmith/opencl_fuzz"
 
 cd "$PHD/experimental/deeplearning/deepsmith/opencl_fuzz"
 # Note that the --squash argument requires experimental features. See:

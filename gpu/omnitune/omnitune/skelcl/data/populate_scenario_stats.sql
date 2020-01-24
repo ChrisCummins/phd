@@ -48,4 +48,3 @@ SELECT scenarios.id AS scenario,
    FROM runtime_stats
    WHERE scenario=scenarios.id ) AS mean_runtime
 FROM scenarios;
-

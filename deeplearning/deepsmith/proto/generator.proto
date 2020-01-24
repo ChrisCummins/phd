@@ -16,15 +16,21 @@
 // along with DeepSmith.  If not, see <https://www.gnu.org/licenses/>.
 
 syntax = "proto2";
+
 package deepsmith;
 
+option go_package = "deepsmithpb";
+option java_multiple_files = true;
+option java_outer_classname = "GeneratorProto";
+option java_package = "com.deepsmith";
+
+import "deeplearning/clgen/proto/clgen.proto";
 import "deeplearning/deepsmith/proto/deepsmith.proto";
 import "deeplearning/deepsmith/proto/service.proto";
-import "deeplearning/clgen/proto/clgen.proto";
 
 service GeneratorService {
-  rpc GetGeneratorCapabilities (GetGeneratorCapabilitiesRequest) returns (GetGeneratorCapabilitiesResponse);
-  rpc GenerateTestcases (GenerateTestcasesRequest) returns (GenerateTestcasesResponse);
+  rpc GetGeneratorCapabilities(GetGeneratorCapabilitiesRequest) returns (GetGeneratorCapabilitiesResponse);
+  rpc GenerateTestcases(GenerateTestcasesRequest) returns (GenerateTestcasesResponse);
 }
 
 message GetGeneratorCapabilitiesRequest {

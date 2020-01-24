@@ -166,8 +166,11 @@ def DotGraphsFromBytecode(
       # Propagate failures from opt as OptExceptions.
       if process.returncode:
         print("STDOUT", process.stdout)
-        raise opt.OptException(stderr=stderr, returncode=process.returncode,
-                               command=['opt'] + opt_args)
+        raise opt.OptException(
+          stderr=stderr,
+          returncode=process.returncode,
+          command=["opt"] + opt_args,
+        )
 
       for file in output_dir.iterdir():
         # Opt pass prints the name of the dot files it generates, e.g.:

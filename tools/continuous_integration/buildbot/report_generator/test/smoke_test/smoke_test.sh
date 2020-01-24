@@ -11,7 +11,6 @@ cleanup() {
 }
 trap cleanup EXIT
 
-
 # Main entry point.
 main() {
   mkdir "$workdir"/repo
@@ -21,17 +20,17 @@ main() {
   git -C "$workdir"/repo commit --allow-empty -m "Hello, world"
 
   tools/continuous_integration/buildbot/report_generator/report_generator \
-      --db="sqlite:///$workdir/db" \
-      --host=testbed \
-      --testlogs=tools/continuous_integration/buildbot/report_generator/test/data/testlogs \
-      --repo="$workdir/repo" \
-      || true
+    --db="sqlite:///$workdir/db" \
+    --host=testbed \
+    --testlogs=tools/continuous_integration/buildbot/report_generator/test/data/testlogs \
+    --repo="$workdir/repo" ||
+    true
 
   # Run again to produce a second set of inputs.
   tools/continuous_integration/buildbot/report_generator/report_generator \
-      --db="sqlite:///$workdir/db" \
-      --host=testbed \
-      --testlogs=tools/continuous_integration/buildbot/report_generator/test/data/testlogs \
-      --repo="$workdir/repo"
+    --db="sqlite:///$workdir/db" \
+    --host=testbed \
+    --testlogs=tools/continuous_integration/buildbot/report_generator/test/data/testlogs \
+    --repo="$workdir/repo"
 }
 main $@

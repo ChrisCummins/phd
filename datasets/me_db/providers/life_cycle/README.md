@@ -1,10 +1,10 @@
 # Life Cycle
 
-[Life Cycle](https://itunes.apple.com/us/app/life-cycle-track-your-time/id1064955217?mt=8) 
-is an iOS app for passive time tracking based on a phone's geolocation. By 
+[Life Cycle](https://itunes.apple.com/us/app/life-cycle-track-your-time/id1064955217?mt=8)
+is an iOS app for passive time tracking based on a phone's geolocation. By
 sampling your phone's location periodically and grouping data into a series
-of durations spent in different areas, it let's you label the areas with 
-categories, obtaining pretty minimal effort passive time tracking. 
+of durations spent in different areas, it let's you label the areas with
+categories, obtaining pretty minimal effort passive time tracking.
 
 ## Exported Data
 
@@ -32,7 +32,7 @@ Lines are delimited using Windows-style '\r\n' returns.
 From what I can see, there is no quoting in the CSV, but I haven't tested what
 happens if if `NAME`/`LOCATION`/`NOTE` fields contain commas.
 
-The `START DATE` and `END DATE` for entries can be on different dates, and 
+The `START DATE` and `END DATE` for entries can be on different dates, and
 durations can exceed 24 hours.
 
 ## Imported Data

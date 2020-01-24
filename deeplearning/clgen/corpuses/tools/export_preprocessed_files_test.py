@@ -15,12 +15,11 @@
 """Unit tests for //deeplearning/clgen/corpuses:preprocessed."""
 import pathlib
 
+from deeplearning.clgen.corpuses import preprocessed
+from deeplearning.clgen.corpuses.tools import export_preprocessed_files
 from labm8.py import app
 from labm8.py import fs
 from labm8.py import test
-
-from deeplearning.clgen.corpuses import preprocessed
-from deeplearning.clgen.corpuses.tools import export_preprocessed_files
 
 FLAGS = test.FLAGS
 

@@ -13,20 +13,20 @@ more details.
 
 ## 1. Artifact Contents
 
- * [01_evaluate_generator](01_evaluate_generator.py): A demonstration of 
+ * [01_evaluate_generator](01_evaluate_generator.py): A demonstration of
    training a neural network model to generate programs.
 
  * [02_evaluate_harness](02_evaluate_harness.py): A demonstration which executes
    test cases on an OpenCL test bed.
 
- * [03_evaluate_results](03_evaluate_results.py): A demonstration of our 
-   differential testing approach. The results from the prior demonstration are 
+ * [03_evaluate_results](03_evaluate_results.py): A demonstration of our
+   differential testing approach. The results from the prior demonstration are
    combined with our own data from the paper to perform differential testing.
 
 
 ## 2. Installation
 
-Please see the top level [README.md](/README.md) file for instructions on how 
+Please see the top level [README.md](/README.md) file for instructions on how
 to prepare the bazel build environment.
 
 
@@ -48,19 +48,19 @@ preprocessed corpus, and generates 1024 new OpenCL testcases.
 
 We have reduced the size of the corpus and network so that it takes around 2
 hours to train on a CPU. The model we used to generate the programs used in the
-review copy of our paper is much larger (512 nodes per layer rather than 256), 
-is trained on more data (30 million tokens instead of 4.5 million), and is 
+review copy of our paper is much larger (512 nodes per layer rather than 256),
+is trained on more data (30 million tokens instead of 4.5 million), and is
 trained for longer (50 epochs rather than 20). As such, the quality of output
 of this small model is much lower, with very few syntactically correct programs
-being generated. 
+being generated.
 
 Training the model can be interrupted and resumed at any time. Once trained, the
-model does not need to be re-trained. The trained model is stored in 
+model does not need to be re-trained. The trained model is stored in
 `/tmp/phd/docs/2018_07_issta/artifact_evaluation/clgen`.
 
 Generated programs are written to the
-directory `/tmp/phd/docs/2018_07_issta/artifact_evaluation/generated_kernels`. 
-Two Testcases are generated for each kernels, one single threaded, one 
+directory `/tmp/phd/docs/2018_07_issta/artifact_evaluation/generated_kernels`.
+Two Testcases are generated for each kernels, one single threaded, one
 multi-threaded. Generated testcases are written to
 `/tmp/phd/docs/2018_07_issta/artifact_evaluation/generated_testcases`.
 
@@ -81,7 +81,7 @@ files and training on only a subset, etc.
 *(approximate runtime: 30 minutes)*
 
 
-Evaluate the DeepSmith harness by running a set of test cases using an 
+Evaluate the DeepSmith harness by running a set of test cases using an
 Oclgrind testbed:
 
 ```sh
@@ -89,9 +89,9 @@ $ bazel run //docs/2018_07_issta/artifact_evaluation/02_evaluate_harness
 ```
 
 The program runs the 1024 generated testcases from the previous program, plus
-a nuber of test cases taken from the experimental data we used in the paper, 
-located in the directory 
-`//docs/2018_07_issta/artifact_evaluation/data/testcases`. We include 
+a nuber of test cases taken from the experimental data we used in the paper,
+located in the directory
+`//docs/2018_07_issta/artifact_evaluation/data/testcases`. We include
 pre-generated test cases so that we can differential test the results in the
 next stage of the evaluation.
 
@@ -136,8 +136,8 @@ The evaluation program difftests all results files from these directories:
 ```
 
 You could add new results to these directories by repeatedly running the first
-two programs. Alternatively you could modify individual results files, such as 
-by changing the returncode to simulate different test case outcomes, and 
+two programs. Alternatively you could modify individual results files, such as
+by changing the returncode to simulate different test case outcomes, and
 observe how that influences the classification of results.
 
 

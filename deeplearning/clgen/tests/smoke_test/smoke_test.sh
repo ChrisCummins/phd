@@ -16,7 +16,7 @@ set -eux
 
 # Create a corpus of a single file.
 mkdir "$working_dir/corpus"
-cat <<EOF > "$working_dir/corpus/file.txt"
+cat <<EOF >"$working_dir/corpus/file.txt"
 kernel void A(global int* a, const int b) {
   if (get_global_id(0) < b) {
     a[get_global_id(0)] *= 2;
@@ -25,7 +25,7 @@ kernel void A(global int* a, const int b) {
 EOF
 
 # Create a config.
-cat <<EOF > "$working_dir/config.pbtxt"
+cat <<EOF >"$working_dir/config.pbtxt"
 # File: //deeplearning/deepsmith/proto/clgen.proto
 # Proto: clgen.Instance
 working_dir: "$working_dir/cache"
@@ -71,5 +71,5 @@ sampler {
 EOF
 
 deeplearning/clgen/clgen \
-    --config="$working_dir/config.pbtxt" \
-    --min_samples=1
+  --config="$working_dir/config.pbtxt" \
+  --min_samples=1

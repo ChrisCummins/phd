@@ -13,13 +13,18 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
-syntax = "proto2";
 
-import "gpu/clinfo/proto/clinfo.proto";
-import "gpu/libcecl/proto/libcecl.proto";
+syntax = "proto2";
 
 package gpu.cldrive;
 
+option go_package = "cldrivepb";
+option java_multiple_files = true;
+option java_outer_classname = "CldriveProto";
+option java_package = "com.gpu.cldrive";
+
+import "gpu/clinfo/proto/clinfo.proto";
+import "gpu/libcecl/proto/libcecl.proto";
 
 message CldriveInstances {
   repeated CldriveInstance instance = 1;
@@ -34,11 +39,10 @@ message CldriveInstance {
   // '-cl-kernel-arg-info', is always enabled. For other valid options, see:
   // https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clBuildProgram.html
   optional string build_opts = 5;
-
   // Output fields:
 
   enum InstanceOutcome {
-    UNKNOWN_ERROR = 0;  // Default value is an error.
+    UNKNOWN_ERROR = 0; // Default value is an error.
     PASS = 1;
     PROGRAM_COMPILATION_FAILURE = 2;
     NO_KERNELS_IN_PROGRAM = 3;
@@ -49,19 +53,16 @@ message CldriveInstance {
 
 message CldriveKernelInstance {
   repeated CldriveKernelRun run = 1;
-
   // Per-work-item memory requirements of the kernel.
   optional string name = 2;
-
   enum KernelInstanceOutcome {
-    UNKNOWN_ERROR = 0;  // Default error value.
+    UNKNOWN_ERROR = 0; // Default error value.
     PASS = 1;
     NO_ARGUMENTS = 2;
     NO_MUTABLE_ARGUMENTS = 3;
     UNSUPPORTED_ARGUMENTS = 4;
   }
   optional KernelInstanceOutcome outcome = 3;
-
   optional int64 work_item_local_mem_size_in_bytes = 4;
   optional int64 work_item_private_mem_size_in_bytes = 5;
 }
@@ -74,7 +75,6 @@ message DynamicParams {
 message CldriveKernelRun {
   optional KernelRunOutcome outcome = 1;
   repeated gpu.libcecl.OpenClKernelInvocation log = 2;
-
   enum KernelRunOutcome {
     // The default (uninitialized) value is an error.
     UNKNOWN_ERROR = 0;

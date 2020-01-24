@@ -36,8 +36,6 @@ E_CFG : int
 E_SMTP : int
     Non-zero return code for fatal SMTP errors.
 """
-from __future__ import print_function
-
 import argparse
 import cgi
 import os

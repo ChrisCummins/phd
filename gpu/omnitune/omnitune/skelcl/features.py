@@ -1,6 +1,3 @@
-from __future__ import division
-from __future__ import print_function
-
 from omnitune import llvm
 
 from labm8.py import system

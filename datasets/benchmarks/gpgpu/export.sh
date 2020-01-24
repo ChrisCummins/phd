@@ -22,7 +22,7 @@ if [[ ! -d "$destination" ]]; then
 fi
 
 bazel run //tools/source_tree:export_source_tree -- \
-    --targets=//datasets/benchmarks/gpgpu,//datasets/benchmarks/gpgpu:gpgpu_test \
-    --destination="$destination"
+  --targets=//datasets/benchmarks/gpgpu,//datasets/benchmarks/gpgpu:gpgpu_test \
+  --destination="$destination"
 
 cd $destination

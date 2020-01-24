@@ -15,4 +15,3 @@ SELECT scenario,
 FROM runtimes
 GROUP BY scenario,
          params;
-

@@ -16,4 +16,3 @@ SELECT scenario,
 FROM runtimes
 WHERE scenario=?
   AND params=?;
-

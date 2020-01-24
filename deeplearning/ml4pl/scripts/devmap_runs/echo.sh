@@ -1,4 +1,4 @@
 #!/bin/bash
 
-echo thisXX;
-echo $APP;
+echo thisXX
+echo $APP

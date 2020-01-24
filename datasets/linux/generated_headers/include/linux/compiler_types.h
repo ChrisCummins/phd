@@ -267,8 +267,8 @@ struct ftrace_likely_data {
  */
 #if !defined(CONFIG_ARCH_SUPPORTS_OPTIMIZED_INLINING) || \
     !defined(CONFIG_OPTIMIZE_INLINING)
-#define inline inline __attribute__((always_inline, \
-                                     unused)) notrace __gnu_inline
+#define inline inline __attribute__((always_inline, unused)) \
+    notrace __gnu_inline
 #else
 #define inline inline __attribute__((unused)) notrace __gnu_inline
 #endif

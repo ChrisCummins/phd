@@ -5,7 +5,7 @@ GitHub.
 
 ## Pre-requisites
 
-See [//datasets/github](/datasets/github) for instructions on how to 
+See [//datasets/github](/datasets/github) for instructions on how to
 set up your GitHub credentials.
 
 

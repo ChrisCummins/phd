@@ -13,8 +13,6 @@
 # limitations under the License.
 """Utilities for generating LaTeX.
 """
-from __future__ import print_function
-
 import re
 from io import StringIO
 

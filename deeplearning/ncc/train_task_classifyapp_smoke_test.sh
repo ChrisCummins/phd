@@ -9,8 +9,8 @@ set -eux
 # but with all other parameters reduced to small values to minimize execution
 # time.
 deeplearning/ncc/train_task_classifyapp \
-    --v=1 \
-    --num_epochs=1 \
-    --train_samples=10 \
-    --embeddings_file=deeplearning/ncc/published_results/emb.p \
-    --vocabulary_zip_path=deeplearning/ncc/published_results/vocabulary.zip
+  --v=1 \
+  --num_epochs=1 \
+  --train_samples=10 \
+  --embeddings_file=deeplearning/ncc/published_results/emb.p \
+  --vocabulary_zip_path=deeplearning/ncc/published_results/vocabulary.zip

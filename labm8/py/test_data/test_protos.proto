@@ -13,13 +13,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 syntax = "proto2";
+
 package labm8;
+
+option go_package = "labm8pb";
+option java_multiple_files = true;
+option java_outer_classname = "TestProtosProto";
+option java_package = "com.labm8";
 
 message TestMessage {
   required string string = 1;
   optional int32 number = 2;
-
   oneof union_field {
     int32 option_a = 3;
     int32 option_b = 4;

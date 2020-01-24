@@ -21,7 +21,7 @@ main() {
   # Compile bitcode for all sources.
   for src in $SOURCES; do
     bazel run //compilers/llvm:clang -- -- \
-        "$WORKDIR/src/$src" -o "$WORKDIR/bc/$src" -S -emit-llvm -c -O0 -g
+      "$WORKDIR/src/$src" -o "$WORKDIR/bc/$src" -S -emit-llvm -c -O0 -g
   done
 
   BITCODES=""

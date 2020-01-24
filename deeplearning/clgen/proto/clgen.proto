@@ -16,7 +16,13 @@
 // along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 
 syntax = "proto2";
+
 package clgen;
+
+option go_package = "clgenpb";
+option java_multiple_files = true;
+option java_outer_classname = "ClgenProto";
+option java_package = "com.clgen";
 
 import "deeplearning/clgen/proto/model.proto";
 import "deeplearning/clgen/proto/sampler.proto";

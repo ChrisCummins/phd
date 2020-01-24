@@ -4,8 +4,6 @@
 Usage:
   $ python run_filters.py <results_dir>
 """
-from __future__ import print_function
-
 import os
 import pkgutil
 import sys

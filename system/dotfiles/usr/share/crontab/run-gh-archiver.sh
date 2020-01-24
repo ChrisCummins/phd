@@ -5,7 +5,7 @@
 # ****************************************************************************
 # *                               Configuration                              *
 # ****************************************************************************
-export JOB_TIMEOUT=1800  # 30 minutes
+export JOB_TIMEOUT=1800 # 30 minutes
 export LMK="/usr/local/bin/lmk -e"
 export LMK_TO="chrisc.101@gmail.com"
 

@@ -11,7 +11,6 @@ set -eu
 # The root of the repository.
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-
 main() {
   cd "$ROOT"
   for file in $(git ls-files | grep '_test.py$'); do

@@ -22,7 +22,7 @@ for file in $(find "$ROOT" -name '*.proto' -type f | grep '\.proto'); do
   rm -f ${no_extension}_pb2.py
   rm -f ${no_extension}_pb2_grpc.py
   "$PYTHON" -m grpc_tools.protoc -I"$ROOT" \
-      --python_out="$ROOT" --grpc_python_out="$ROOT" "$file"
+    --python_out="$ROOT" --grpc_python_out="$ROOT" "$file"
   # Fix the imports of generated GRPC code. This is a workaround for issue
   # https://github.com/grpc/grpc/issues/9575#issuecomment-293934506
   sed -i 's/^import /from . import /' ${no_extension}_pb2_grpc.py

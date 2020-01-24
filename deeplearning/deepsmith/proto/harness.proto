@@ -16,14 +16,20 @@
 // along with DeepSmith.  If not, see <https://www.gnu.org/licenses/>.
 
 syntax = "proto2";
+
 package deepsmith;
+
+option go_package = "deepsmithpb";
+option java_multiple_files = true;
+option java_outer_classname = "HarnessProto";
+option java_package = "com.deepsmith";
 
 import "deeplearning/deepsmith/proto/deepsmith.proto";
 import "deeplearning/deepsmith/proto/service.proto";
 
 service HarnessService {
-  rpc GetHarnessCapabilities (GetHarnessCapabilitiesRequest) returns (GetHarnessCapabilitiesResponse);
-  rpc RunTestcases (RunTestcasesRequest) returns (RunTestcasesResponse);
+  rpc GetHarnessCapabilities(GetHarnessCapabilitiesRequest) returns (GetHarnessCapabilitiesResponse);
+  rpc RunTestcases(RunTestcasesRequest) returns (RunTestcasesResponse);
 }
 
 message GetHarnessCapabilitiesRequest {

@@ -15,8 +15,8 @@ typedef unsigned __int64 uint64_t;
 #include <unistd.h>
 #endif
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string>
 
 #include <cstdlib>
@@ -39,17 +39,17 @@ class Timer {
  private:
 #if defined(_WIN32)
   LARGE_INTEGER frequency_;
-  DWORD         startTick_;
-  LONGLONG      prevElapsedTime_;
+  DWORD startTick_;
+  LONGLONG prevElapsedTime_;
   LARGE_INTEGER startTime_;
 #elif defined(__APPLE__) || defined(__MACOSX)
   struct timeval startTime_;
 #else
   struct timespec startTime_;
-#endif //_WIN32
+#endif  //_WIN32
 
   template <typename T>
-  T _max(T a,T b) {
+  T _max(T a, T b) {
     return (a > b ? a : b);
   }
 
@@ -71,17 +71,15 @@ class Timer {
     signed long msecOff = (signed long)(msecTicks - elapsedTicks);
     if (msecOff < -100 || msecOff > 100) {
       // Adjust the starting time forwards.
-      LONGLONG msecAdjustment =
-          _max(msecOff *
-               frequency_.QuadPart / 1000, elapsedTime -
-               prevElapsedTime_);
+      LONGLONG msecAdjustment = _max(msecOff * frequency_.QuadPart / 1000,
+                                     elapsedTime - prevElapsedTime_);
       startTime_.QuadPart += msecAdjustment;
       elapsedTime -= msecAdjustment;
     }
     // Store the current elapsed time for adjustments next time.
     prevElapsedTime_ = elapsedTime;
 
-    ticks = (uint64_t)(scale*elapsedTime / frequency_.QuadPart);
+    ticks = (uint64_t)(scale * elapsedTime / frequency_.QuadPart);
 #elif defined(__APPLE__) || defined(__MACOSX)
     // WARNING: THIS IS PROBABLY BROKEN
     struct timeval tv;
@@ -91,14 +89,14 @@ class Timer {
       // Remove a second from the second field and add it to the
       // microseconds fields to prevent overflow.
       // Then scale.
-      ticks = (uint64_t) (tv.tv_sec - startTime_.tv_sec - 1) * scale
-              + (uint64_t) ((1000ULL * 1000ULL) + tv.tv_usec
-                            - startTime_.tv_usec)
-              * scale / (1000ULL * 1000ULL);
+      ticks =
+          (uint64_t)(tv.tv_sec - startTime_.tv_sec - 1) * scale +
+          (uint64_t)((1000ULL * 1000ULL) + tv.tv_usec - startTime_.tv_usec) *
+              scale / (1000ULL * 1000ULL);
     } else {
-      ticks = (uint64_t) (tv.tv_sec - startTime_.tv_sec) * scale
-              + (uint64_t) (tv.tv_usec - startTime_.tv_usec) * scale
-              / (1000ULL * 1000ULL);
+      ticks = (uint64_t)(tv.tv_sec - startTime_.tv_sec) * scale +
+              (uint64_t)(tv.tv_usec - startTime_.tv_usec) * scale /
+                  (1000ULL * 1000ULL);
     }
 #else
     struct timespec tp;
@@ -108,16 +106,16 @@ class Timer {
       // Remove a second from the second field and add it to the
       // nanoseconds field to prevent overflow.
       // Then scale
-      ticks = (uint64_t) (tp.tv_sec - startTime_.tv_sec - 1) * scale
-              + (uint64_t) ((1000ULL * 1000ULL * 1000ULL) + tp.tv_nsec
-                            - startTime_.tv_nsec)
-              * scale / (1000ULL * 1000ULL * 1000ULL);
+      ticks = (uint64_t)(tp.tv_sec - startTime_.tv_sec - 1) * scale +
+              (uint64_t)((1000ULL * 1000ULL * 1000ULL) + tp.tv_nsec -
+                         startTime_.tv_nsec) *
+                  scale / (1000ULL * 1000ULL * 1000ULL);
     } else {
-      ticks = (uint64_t) (tp.tv_sec - startTime_.tv_sec) * scale
-              + (uint64_t) (tp.tv_nsec - startTime_.tv_nsec) * scale /
-              (1000ULL * 1000ULL * 1000ULL);
+      ticks = (uint64_t)(tp.tv_sec - startTime_.tv_sec) * scale +
+              (uint64_t)(tp.tv_nsec - startTime_.tv_nsec) * scale /
+                  (1000ULL * 1000ULL * 1000ULL);
     }
-#endif //_WIN32
+#endif  //_WIN32
     return ticks;
   }
 
@@ -153,9 +151,7 @@ class Timer {
    * \brief Calculates the time since the last reset.
    * \returns The time in milli seconds since the last reset.
    */
-  uint64_t getTimeMilliseconds(void) {
-    return getTime(1000ULL);
-  }
+  uint64_t getTimeMilliseconds(void) { return getTime(1000ULL); }
 
   /*!
    * \brief Calculates the time since the last reset.
@@ -169,16 +165,12 @@ class Timer {
    * \brief Calculates the time since the last reset.
    * \returns The time in micro seconds since the last reset.
    */
-  uint64_t getTimeMicroseconds(void) {
-    return getTime(1000ULL * 1000ULL);
-  }
+  uint64_t getTimeMicroseconds(void) { return getTime(1000ULL * 1000ULL); }
 
   /*!
    * \brief Calculates the tick rate for millisecond counter.
    */
-  float getMillisecondsTickRate(void) {
-    return 1000.f;
-  }
+  float getMillisecondsTickRate(void) { return 1000.f; }
 
   /*!
    * \brief Calculates the tick rate for nanosecond counter.
@@ -196,8 +188,8 @@ class Timer {
 };
 #endif
 
-} // namespace util
+}  // namespace util
 
 #pragma GCC diagnostic pop  // Chris edit
 
-#endif // UTIL_H
+#endif  // UTIL_H
