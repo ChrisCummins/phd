@@ -1,4 +1,4 @@
-# Annotating graphs with alias sets.
+# This package defines common fixtures for python tests.
 #
 # Copyright 2019 the ProGraML authors.
 #
@@ -16,26 +16,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+package(default_visibility = ["//visibility:public"])
+
 py_library(
-    name = "alias_set",
-    srcs = ["alias_set.py"],
-    visibility = ["//deeplearning/ml4pl/graphs:__subpackages__"],
+    name = "llvm_ir",
+    testonly = 1,
+    srcs = ["llvm_ir.py"],
+    data = ["//deeplearning/ml4pl/testing/data:llvm_ir"],
     deps = [
-        "//compilers/llvm:opt_util",
-        "//labm8/py:app",
-        "//labm8/py:decorators",
+        "//labm8/py:bazelutil",
+        "//labm8/py:test",
     ],
 )
 
-py_test(
-    name = "alias_set_test",
-    srcs = ["alias_set_test.py"],
+py_library(
+    name = "llvm_program_graph",
+    testonly = 1,
+    srcs = ["llvm_program_graph.py"],
     deps = [
-        ":alias_set",
-        "//compilers/llvm:clang",
+        ":llvm_ir",
+        "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//deeplearning/ml4pl/graphs/llvm2graph:llvm2graph_py",
         "//labm8/py:test",
         "//third_party/py/networkx",
-        "//third_party/py/pytest",
     ],
 )

@@ -15,14 +15,14 @@
 # limitations under the License.
 """Test graph builder on bytecodes that were found to exposure bugs."""
 from deeplearning.ml4pl.graphs import programl
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import graph_builder
+from deeplearning.ml4pl.graphs.llvm2graph.legacy import graph_builder
 from labm8.py import bazelutil
 from labm8.py import fs
 from labm8.py import test
 
 FLAGS = test.FLAGS
 
-MODULE_UNDER_TEST = "deeplearning.ml4pl.graphs.unlabelled.llvm2graph"
+MODULE_UNDER_TEST = "deeplearning.ml4pl.graphs.llvm2graph.legacy"
 
 REGRESSION_TESTS = bazelutil.DataPath(
   "phd/deeplearning/ml4pl/testing/data/bytecode_regression_tests"

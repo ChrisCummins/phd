@@ -13,9 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Unit tests for //deeplearning/ml4pl/graphs/unlabelled/llvm2graph:node_encoder."""
+"""Unit tests for //deeplearning/ml4pl/graphs/llvm2graph:node_encoder."""
 from deeplearning.ml4pl.graphs import programl
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import node_encoder
+from deeplearning.ml4pl.graphs.llvm2graph import node_encoder
 from labm8.py import test
 
 

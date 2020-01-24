@@ -29,7 +29,7 @@ from deeplearning.ml4pl.graphs.labelled import graph_batcher
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import node_encoder
+from deeplearning.ml4pl.graphs.llvm2graph import node_encoder
 from deeplearning.ml4pl.models import batch as batches
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import epoch

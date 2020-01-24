@@ -15,9 +15,6 @@
 # limitations under the License.
 """Unit tests for //deeplearning/ml4pl/graphs:programl."""
 import random
-from typing import List
-
-import networkx as nx
 
 from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
@@ -25,20 +22,13 @@ from deeplearning.ml4pl.testing import random_programl_generator
 from labm8.py import decorators
 from labm8.py import test
 
+pytest_plugins = ["deeplearning.ml4pl.testing.fixtures.llvm_program_graph"]
 
 FLAGS = test.FLAGS
 
 ###############################################################################
 # Fixtures.
 ###############################################################################
-
-
-@test.Fixture(
-  scope="function", params=list(random_programl_generator.EnumerateTestSet()),
-)
-def random_100_proto(request) -> programl_pb2.ProgramGraph:
-  """A test fixture which returns one of 100 "real" graph protos."""
-  return request.param
 
 
 @test.Fixture(scope="session", params=(1, 2))
@@ -82,39 +72,47 @@ def fmt(request) -> programl.InputOutputFormat:
 ###############################################################################
 
 
+def test_graphviz_converter(llvm_program_graph: programl_pb2.ProgramGraph):
+  """Black-box test ProgramGraphToGraphviz()."""
+  assert programl.ProgramGraphToGraphviz(llvm_program_graph)
+
+
 def test_proto_networkx_equivalence(
-  random_100_proto: programl_pb2.ProgramGraph,
+  llvm_program_graph: programl_pb2.ProgramGraph,
 ):
-  """Test proto -> networkx -> proto on 100 "real" graphs."""
+  """Test proto -> networkx -> proto equivalence."""
   # proto -> networkx
-  g = programl.ProgramGraphToNetworkX(random_100_proto)
-  assert g.number_of_nodes() == len(random_100_proto.node)
-  assert g.number_of_edges() == len(random_100_proto.edge)
+  g = programl.ProgramGraphToNetworkX(llvm_program_graph)
+  assert g.number_of_nodes() == len(llvm_program_graph.node)
+  assert g.number_of_edges() == len(llvm_program_graph.edge)
 
   # networkx -> proto
   proto_out = programl.NetworkXToProgramGraph(g)
-  assert proto_out.function == random_100_proto.function
-  assert proto_out.node == random_100_proto.node
-  assert proto_out.edge == random_100_proto.edge
+  assert set(fn.name for fn in proto_out.function) == set(
+    fn.name for fn in llvm_program_graph.function
+  )
+  assert len(llvm_program_graph.node) == len(proto_out.node)
+  assert len(llvm_program_graph.edge) == len(proto_out.edge)
 
 
 def test_proto_networkx_equivalence_with_preallocated_proto(
-  random_100_proto: programl_pb2.ProgramGraph,
+  llvm_program_graph: programl_pb2.ProgramGraph,
 ):
-  """Test proto -> networkx -> proto on 100 "real" graphs using the same
-  proto instance."""
+  """Test proto -> networkx -> proto equivalent using pre-allocated protos."""
   # proto -> networkx
-  g = programl.ProgramGraphToNetworkX(random_100_proto)
-  assert g.number_of_nodes() == len(random_100_proto.node)
-  assert g.number_of_edges() == len(random_100_proto.edge)
+  g = programl.ProgramGraphToNetworkX(llvm_program_graph)
+  assert g.number_of_nodes() == len(llvm_program_graph.node)
+  assert g.number_of_edges() == len(llvm_program_graph.edge)
 
   # networkx -> proto
   # Allocate the proto ahead of time:
   proto_out = programl_pb2.ProgramGraph()
   programl.NetworkXToProgramGraph(g, proto=proto_out)
-  assert proto_out.function == random_100_proto.function
-  assert proto_out.node == random_100_proto.node
-  assert proto_out.edge == random_100_proto.edge
+  assert set(fn.name for fn in proto_out.function) == set(
+    fn.name for fn in llvm_program_graph.function
+  )
+  assert len(llvm_program_graph.node) == len(proto_out.node)
+  assert len(llvm_program_graph.edge) == len(proto_out.edge)
 
 
 ###############################################################################
@@ -122,7 +120,7 @@ def test_proto_networkx_equivalence_with_preallocated_proto(
 ###############################################################################
 
 
-@decorators.loop_for(seconds=30)
+@decorators.loop_for(seconds=10)
 def test_fuzz_GraphBuilder():
   """Test that graph construction doesn't set on fire."""
   builder = programl.GraphBuilder()
@@ -137,7 +135,7 @@ def test_fuzz_GraphBuilder():
   assert builder.proto
 
 
-@decorators.loop_for(seconds=5)
+@decorators.loop_for(seconds=3)
 def test_fuzz_proto_bytes_equivalence(fmt: programl.InputOutputFormat):
   """Test that conversion to and from bytes does not change the proto."""
   input = random_programl_generator.CreateRandomProto()
@@ -145,7 +143,7 @@ def test_fuzz_proto_bytes_equivalence(fmt: programl.InputOutputFormat):
   assert input == output
 
 
-@decorators.loop_for(seconds=5)
+@decorators.loop_for(seconds=3)
 def test_fuzz_proto_networkx_equivalence(
   node_x_dimensionality: int,
   node_y_dimensionality: int,
@@ -184,60 +182,6 @@ def test_fuzz_proto_networkx_equivalence(
   assert proto_out.node == proto_in.node
   # Randomly generated graphs don't have a stable edge order.
   assert len(proto_out.edge) == len(proto_in.edge)
-
-
-###############################################################################
-# Benchmarks.
-###############################################################################
-
-
-@test.Fixture(scope="session")
-def benchmark_protos(
-  node_x_dimensionality: int,
-  node_y_dimensionality: int,
-  graph_x_dimensionality: int,
-  graph_y_dimensionality: int,
-  node_count: int,
-) -> List[programl_pb2.ProgramGraph]:
-  """A fixture which returns 10 protos for benchmarking."""
-  return [
-    random_programl_generator.CreateRandomProto(
-      node_x_dimensionality=node_x_dimensionality,
-      node_y_dimensionality=node_y_dimensionality,
-      graph_x_dimensionality=graph_x_dimensionality,
-      graph_y_dimensionality=graph_y_dimensionality,
-      node_count=node_count,
-    )
-    for _ in range(10)
-  ]
-
-
-@test.Fixture(scope="session")
-def benchmark_networkx(
-  benchmark_protos: List[programl_pb2.ProgramGraph],
-) -> List[nx.MultiDiGraph]:
-  """A fixture which returns 10 graphs for benchmarking."""
-  return [programl.ProgramGraphToNetworkX(p) for p in benchmark_protos]
-
-
-def Benchmark(fn, inputs):
-  """A micro-benchmark which calls the given function over all inputs."""
-  for element in inputs:
-    fn(element)
-
-
-def test_benchmark_proto_to_networkx(
-  benchmark, benchmark_protos: List[programl_pb2.ProgramGraph]
-):
-  """Benchmark proto -> networkx."""
-  benchmark(Benchmark, programl.ProgramGraphToNetworkX, benchmark_protos)
-
-
-def test_benchmark_networkx_to_proto(
-  benchmark, benchmark_networkx: List[nx.MultiDiGraph]
-):
-  """Benchmark networkx -> proto."""
-  benchmark(Benchmark, programl.NetworkXToProgramGraph, benchmark_networkx)
 
 
 if __name__ == "__main__":

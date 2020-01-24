@@ -22,7 +22,7 @@ import numpy as np
 from compilers.llvm import clang
 from compilers.llvm import opt
 from deeplearning.ml4pl.graphs.labelled.dataflow.alias_set import alias_set
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import graph_builder
+from deeplearning.ml4pl.graphs.llvm2graph import llvm2graph
 from labm8.py import app
 from labm8.py import test
 
@@ -51,8 +51,7 @@ def CSourceToInputPair(source: str) -> InputPair:
   it is because graph construction or clang is broken.
   """
   bytecode = CSourceToBytecode(source)
-  builder = graph_builder.ProGraMLGraphBuilder()
-  graph = builder.Build(bytecode)
+  graph = llvm2graph.BuildProgramGraphNetworkX(bytecode)
   return InputPair(graph=graph, bytecode=bytecode)
 
 

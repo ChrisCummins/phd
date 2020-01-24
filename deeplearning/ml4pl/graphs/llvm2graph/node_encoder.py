@@ -30,10 +30,10 @@ from labm8.py import decorators
 FLAGS = app.FLAGS
 
 DICTIONARY = bazelutil.DataPath(
-  "phd/deeplearning/ml4pl/graphs/unlabelled/llvm2graph/node_embeddings/inst2vec_augmented_dictionary.pickle"
+  "phd/deeplearning/ml4pl/graphs/llvm2graph/node_embeddings/inst2vec_augmented_dictionary.pickle"
 )
 AUGMENTED_INST2VEC_EMBEDDINGS = bazelutil.DataPath(
-  "phd/deeplearning/ml4pl/graphs/unlabelled/llvm2graph/node_embeddings/inst2vec_augmented_embeddings.pickle"
+  "phd/deeplearning/ml4pl/graphs/llvm2graph/node_embeddings/inst2vec_augmented_embeddings.pickle"
 )
 
 
@@ -81,7 +81,7 @@ class GraphNodeEncoder(object):
       else:
         data["preprocessed_text"] = "!UNK"
         data["type"] = programl_pb2.Node.STATEMENT
-        data["x"] = [self.dictionary.get(text, self.dictionary["!UNK"])]
+        data["x"] = [self.dictionary["!UNK"]]
         data["y"] = []
 
   @decorators.memoized_property

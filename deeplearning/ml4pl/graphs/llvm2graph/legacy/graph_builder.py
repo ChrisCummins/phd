@@ -20,16 +20,17 @@ data flow, and call graphs.
 """
 import signal
 import typing
+import warnings
 
 import networkx as nx
 
 from compilers.llvm import opt_util
 from deeplearning.ml4pl.graphs import nx_utils
 from deeplearning.ml4pl.graphs import programl_pb2
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import call_graph as cg
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import llvm_statements
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import node_encoder
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import llvm_util
+from deeplearning.ml4pl.graphs.llvm2graph import node_encoder
+from deeplearning.ml4pl.graphs.llvm2graph.legacy import call_graph as cg
+from deeplearning.ml4pl.graphs.llvm2graph.legacy import llvm_statements
+from deeplearning.ml4pl.graphs.llvm2graph.legacy.cfg import llvm_util
 from labm8.py import app
 
 
@@ -75,6 +76,9 @@ class ProGraMLGraphBuilder(object):
     Returns:
       A networkx graph.
     """
+    warnings.warn(
+      "Use deeplearning.ml4pl.graphs.llvm2graph.llvm2graph.BuildProgramGraphNetworkX() instead"
+    )
 
     def _RaiseTimoutError(signum, frame):
       del signum
