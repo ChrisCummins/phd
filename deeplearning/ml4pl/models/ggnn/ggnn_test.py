@@ -15,8 +15,7 @@
 # limitations under the License.
 """Unit tests for //deeplearning/ml4pl/models/ggnn."""
 import math
-import os
-import random
+from typing import List
 
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch_iterator as batch_iterator_lib
@@ -87,14 +86,6 @@ def node_y_dimensionality(request) -> int:
 
 
 @test.Fixture(
-  scope="session", params=list(epoch.Type), namer=lambda x: x.name.lower()
-)
-def epoch_type(request) -> epoch.Type:
-  """A test fixture which enumerates epoch types."""
-  return request.param
-
-
-@test.Fixture(
   scope="session",
   params=(False, True),
   namer=lambda x: f"log1p_graph_x:{str(x).lower()}",
@@ -110,6 +101,24 @@ def log1p_graph_x(request) -> bool:
   namer=lambda x: f"inst2vec_embeddings:{str(x).lower()}",
 )
 def node_text_embedding_type(request):
+  return request.param
+
+
+@test.Fixture(
+  scope="session",
+  params="none constant edge_count data_flow_max_steps label_convergence".split(),
+  namer=lambda x: f"unroll_strategy:{str(x).lower()}",
+)
+def unroll_strategy(request) -> str:
+  return request.param
+
+
+@test.Fixture(
+  scope="session",
+  params=(["2", "2", "2", "2"], ["10"]),
+  namer=lambda x: f"layer_timesteps:{','.join(str(y) for y in x)}",
+)
+def layer_timesteps(request) -> List[str]:
   return request.param
 
 
@@ -131,6 +140,7 @@ def node_y_graph_db(
       node_y_dimensionality=node_y_dimensionality,
       node_x_dimensionality=2,
       graph_y_dimensionality=0,
+      with_data_flow=True,
       split_count=3,
     )
     yield db
@@ -155,6 +165,7 @@ def graph_y_graph_db(
       node_y_dimensionality=0,
       graph_x_dimensionality=2,
       graph_y_dimensionality=graph_y_dimensionality,
+      with_data_flow=True,
       split_count=3,
     )
     yield db
@@ -226,19 +237,34 @@ def CheckResultsProperties(
   assert results.graph_count == graph_db.split_counts[epoch_type.value]
 
 
+@test.Parametrize("epoch_type", list(epoch.Type))
 @test.Parametrize("limit_max_data_flow_steps_during_training", (False, True))
 def test_node_classifier_call(
   epoch_type: epoch.Type,
   logger: logging.Logger,
+  layer_timesteps: List[str],
   node_y_graph_db: graph_tuple_database.Database,
   node_text_embedding_type,
+  unroll_strategy: str,
   limit_max_data_flow_steps_during_training: bool,
 ):
   """Test running a node classifier."""
   FLAGS.inst2vec_embeddings = node_text_embedding_type
+  FLAGS.unroll_strategy = unroll_strategy
+  FLAGS.layer_timesteps = layer_timesteps
+  FLAGS.log1p_graph_x = log1p_graph_x
   FLAGS.limit_max_data_flow_steps_during_training = (
     limit_max_data_flow_steps_during_training
   )
+
+  # Test to handle the unsupported combination of config values.
+  if (
+    unroll_strategy == "label_convergence"
+    and node_y_graph_db.graph_x_dimensionality
+  ) or (unroll_strategy == "label_convergence" and len(layer_timesteps) > 1):
+    with test.Raises(AssertionError):
+      ggnn.Ggnn(logger, node_y_graph_db)
+    return
 
   # Create and initialize an untrained model.
   model = ggnn.Ggnn(logger, node_y_graph_db)
@@ -259,16 +285,35 @@ def test_node_classifier_call(
   CheckResultsProperties(results, node_y_graph_db, epoch_type)
 
 
+@test.Parametrize("epoch_type", list(epoch.Type))
+@test.Parametrize("limit_max_data_flow_steps_during_training", (False, True))
 def test_graph_classifier_call(
   epoch_type: epoch.Type,
   logger: logging.Logger,
+  layer_timesteps: List[str],
   graph_y_graph_db: graph_tuple_database.Database,
-  node_text_embedding_type,
+  limit_max_data_flow_steps_during_training: bool,
+  node_text_embedding_type: str,
+  unroll_strategy: str,
   log1p_graph_x: bool,
 ):
-  """Test running a graph classifier."""
+  """Run test epoch on a graph classifier."""
   FLAGS.inst2vec_embeddings = node_text_embedding_type
+  FLAGS.unroll_strategy = unroll_strategy
+  FLAGS.layer_timesteps = layer_timesteps
   FLAGS.log1p_graph_x = log1p_graph_x
+  FLAGS.limit_max_data_flow_steps_during_training = (
+    limit_max_data_flow_steps_during_training
+  )
+
+  # Test to handle the unsupported combination of config values.
+  if (
+    unroll_strategy == "label_convergence"
+    and graph_y_graph_db.graph_x_dimensionality
+  ) or (unroll_strategy == "label_convergence" and len(layer_timesteps) > 1):
+    with test.Raises(AssertionError):
+      ggnn.Ggnn(logger, graph_y_graph_db)
+    return
 
   # Create and initialize an untrained model.
   model = ggnn.Ggnn(logger, graph_y_graph_db)

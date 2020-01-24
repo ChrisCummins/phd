@@ -42,9 +42,9 @@ py_binary(
 py_test(
     name = "ggnn_test",
     size = "enormous",
-    timeout = "eternal",
+    timeout = "long",
     srcs = ["ggnn_test.py"],
-    shard_count = 8,
+    shard_count = 16,
     deps = [
         ":ggnn",
         ":ggnn_config",
