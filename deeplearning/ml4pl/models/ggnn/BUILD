@@ -33,7 +33,6 @@ py_binary(
         "//deeplearning/ml4pl/models:epoch",
         "//deeplearning/ml4pl/models:run",
         "//labm8/py:app",
-        "//labm8/py:gpu_scheduler",
         "//labm8/py:progress",
         "//third_party/py/numpy",
         "//third_party/py/torch",

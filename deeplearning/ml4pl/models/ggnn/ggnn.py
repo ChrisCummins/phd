@@ -37,7 +37,6 @@ from deeplearning.ml4pl.models import run
 from deeplearning.ml4pl.models.ggnn.ggnn_config import GGNNConfig
 from deeplearning.ml4pl.models.ggnn.ggnn_modules import GGNNModel
 from labm8.py import app
-from labm8.py import gpu_scheduler
 from labm8.py import progress
 
 FLAGS = app.FLAGS
