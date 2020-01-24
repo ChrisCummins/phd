@@ -26,6 +26,7 @@ _ALWAYS_EXPORTED_FILES = [
   "BUILD",  # Top-level BUILD file is always needed.
   "WORKSPACE",  # Implicit dependency of everything.
   "README.md",
+  "requirements.txt",  # Needed by WORKSPACE.
   "tools/Brewfile.travis",  # Needed by Travis CI.
   "tools/bzl/*",  # Implicit dependency of WORKSPACE file.
   "tools/BUILD",  # Needed by //tools/bzl:maven_jar.bzl.
@@ -36,7 +37,6 @@ _ALWAYS_EXPORTED_FILES = [
   "tools/flaky_bazel.sh",  # Needed by Travis CI.
   "third_party/py/tensorflow/BUILD.in",  # Needed by ./configure
   "tools/workspace_status.sh",  # Needed by .bazelrc
-  # tools/requirements.txt is always needed, but is handled separately.
 ]
 
 # A list of relative paths to files which are excluded from export. Glob
@@ -150,14 +150,14 @@ class PhdWorkspace(bazelutil.Workspace):
       if output:
         dependencies = dependencies.union(set(output.split("\n")))
 
-    with open(self.workspace_root / "tools/requirements.txt") as f:
+    with open(self.workspace_root / "requirements.txt") as f:
       all_requirements = set(f.readlines())
 
     needed = []
     all_dependencies = set()
     # This is a pretty hacky approach that tries to match the package component
     # of the generated @pypi__<package>_<vesion> package to the name as it
-    # appears in tools/requirements.txt.
+    # appears in requirements.txt.
     for dependency in dependencies:
       if not dependency.startswith("@pypi__"):
         continue
@@ -193,7 +193,7 @@ class PhdWorkspace(bazelutil.Workspace):
     self, workspace: bazelutil.Workspace, targets: typing.List[str]
   ) -> None:
     # Export the subset of python requirements that are needed.
-    print("tools/requirements.txt")
+    print("requirements.txt")
     requirements = self.GetPythonRequirementsForTarget(targets)
     requirements_path = workspace.workspace_root / "tools" / "requirements.txt"
     with open(requirements_path, "w") as f:
