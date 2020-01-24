@@ -33,7 +33,7 @@ py_test(
     deps = [
         ":alias_set",
         "//compilers/llvm:clang",
-        "//deeplearning/ml4pl/graphs/unlabelled/llvm2graph:graph_builder",
+        "//deeplearning/ml4pl/graphs/llvm2graph:llvm2graph_py",
         "//labm8/py:test",
         "//third_party/py/networkx",
         "//third_party/py/pytest",
