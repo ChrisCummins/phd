@@ -51,6 +51,12 @@ app.DEFINE_integer(
   1,
   "required number of consecutive steps within the convergence interval",
 )
+app.DEFINE_integer(
+  "label_conv_max_timesteps",
+  1000,
+  "The maximum number of iterations to attempt to reach label convergence. "
+  "No effect when --unroll_strategy is not label_convergence.",
+)
 
 app.DEFINE_list(
   "layer_timesteps",

@@ -34,6 +34,8 @@ FLAGS = test.FLAGS
 # For testing models, always use --strict_graph_segmentation.
 FLAGS.strict_graph_segmentation = True
 
+FLAGS.label_conv_max_timesteps = 20
+
 ###############################################################################
 # Fixtures.
 ###############################################################################
