@@ -46,11 +46,7 @@ class GGNNModel(nn.Module):
     # input layer
     self.node_embeddings = NodeEmbeddings(config, pretrained_embeddings)
 
-    # GNN
     self.ggnn = GGNNProper(config)
-
-    # Readout layer
-    self.readout = Readout(config)
 
     # maybe tack on the aux readout
     self.has_aux_input = getattr(self.config, "has_aux_input", False)
@@ -59,14 +55,10 @@ class GGNNModel(nn.Module):
       self.aux_readout = AuxiliaryReadout(config)
 
     # make readout available to label_convergence tests in GGNN Proper (at runtime)
-    if (
-      hasattr(self.config, "unroll_strategy")
-      and self.config.unroll_strategy == "label_convergence"
-    ):
-      assert not getattr(
-        self.config.has_aux_input
+    if self.config.unroll_strategy == "label_convergence":
+      assert (
+        not self.config.has_aux_input
       ), "aux_input is not supported with label_convergence"
-      self.ggnn.readout = self.readout
 
     # eval and training
     self.loss = Loss(config)
@@ -117,7 +109,8 @@ class GGNNModel(nn.Module):
       assert (
         graph_nodes_list is not None and num_graphs is not None
       ), "has_graph_labels requires graph_nodes_list and num_graphs tensors."
-    nodewise_readout, graphwise_readout = self.readout(
+
+    nodewise_readout, graphwise_readout = self.ggnn.readout(
       raw_in, raw_out, graph_nodes_list=graph_nodes_list, num_graphs=num_graphs
     )
 
@@ -311,6 +304,7 @@ class NodeEmbeddings(nn.Module):
 class GGNNProper(nn.Module):
   def __init__(self, config):
     super().__init__()
+    self.readout = Readout(config)
     self.backward_edges = config.backward_edges
     self.layer_timesteps = config.layer_timesteps
     self.position_embeddings = config.position_embeddings
@@ -357,6 +351,14 @@ class GGNNProper(nn.Module):
   ):
     old_node_states = node_states.clone()
 
+    if self.backward_edges:
+      back_edge_lists = [x.flip([1]) for x in edge_lists]
+      edge_lists.extend(back_edge_lists)
+
+      # For backward edges we keep the positions of the forward edge!
+      if self.position_embeddings:
+        pos_lists.extend(pos_lists)
+
     # we allow for some fancy unrolling strategies.
     # Currently only at eval time, but there is really no good reason for this.
     if self.training or self.unroll_strategy == "none":
@@ -383,14 +385,6 @@ class GGNNProper(nn.Module):
       )
       return node_states, old_node_states, unroll_steps, converged
 
-    if self.backward_edges:
-      back_edge_lists = [x.flip([1]) for x in edge_lists]
-      edge_lists.extend(back_edge_lists)
-
-      # For backward edges we keep the positions of the forward edge!
-      if self.position_embeddings:
-        pos_lists.extend(pos_lists)
-
     for (layer_idx, num_timesteps) in enumerate(layer_timesteps):
       for t in range(num_timesteps):
         messages = self.message[layer_idx](edge_lists, node_states, pos_lists)
@@ -403,11 +397,6 @@ class GGNNProper(nn.Module):
     assert (
       len(self.layer_timesteps) == 1
     ), f"Label convergence only supports one-layer GGNNs, but {len(self.layer_timesteps)} are configured in layer_timesteps: {self.layer_timesteps}"
-    assert self.nodewise_readout is not None
-
-    if self.backward_edges:
-      back_edge_lists = [x.flip([1]) for x in edge_lists]
-      edge_lists.extend(back_edge_lists)
 
     stable_steps, i = 0, 0
     old_tentative_labels = self.tentative_labels(
@@ -443,8 +432,7 @@ class GGNNProper(nn.Module):
     raise ValueError("Serious Design Error: Unreachable code!")
 
   def tentative_labels(self, initial_node_states, node_states):
-    assert self.nodewise_readout is not None
-    logits = self.nodewise_readout(initial_node_states, node_states)
+    logits, _ = self.readout(initial_node_states, node_states)
     preds = F.softmax(logits, dim=1)
     predicted_labels = torch.argmax(preds, dim=1)
     return predicted_labels
