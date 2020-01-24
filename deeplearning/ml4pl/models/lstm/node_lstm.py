@@ -325,7 +325,7 @@ class NodeLstm(lstm_base.LstmBase):
       node_offset += graph.node_count
 
     # Pad and truncate encoded sequences.
-    encoded_sequences = tf.keras.preprocessing.sequence.pad_sequences(
+    encoded_sequences = tf.compat.v1.keras.preprocessing.sequence.pad_sequences(
       encoded_sequences,
       maxlen=self.padded_sequence_length,
       dtype="int32",
@@ -339,7 +339,7 @@ class NodeLstm(lstm_base.LstmBase):
       max(max(s) if s.size else 0 for s in segment_ids) + 1
     )
 
-    segment_ids = tf.keras.preprocessing.sequence.pad_sequences(
+    segment_ids = tf.compat.v1.keras.preprocessing.sequence.pad_sequences(
       segment_ids,
       maxlen=self.padded_sequence_length,
       dtype="int32",
@@ -353,7 +353,7 @@ class NodeLstm(lstm_base.LstmBase):
     )
 
     # Pad the selector vectors to the same shape as the segment IDs.)
-    selector_vectors = tf.keras.preprocessing.sequence.pad_sequences(
+    selector_vectors = tf.compat.v1.keras.preprocessing.sequence.pad_sequences(
       selector_vectors,
       maxlen=padded_node_sequence_length,
       dtype="int32",
@@ -362,7 +362,7 @@ class NodeLstm(lstm_base.LstmBase):
       value=np.array((0, 0), dtype=np.int32),
     )
 
-    node_y = tf.keras.preprocessing.sequence.pad_sequences(
+    node_y = tf.compat.v1.keras.preprocessing.sequence.pad_sequences(
       node_y,
       maxlen=padded_node_sequence_length,
       dtype="int32",
@@ -371,7 +371,7 @@ class NodeLstm(lstm_base.LstmBase):
       value=np.zeros(self.graph_db.node_y_dimensionality, dtype=np.int64),
     )
 
-    all_node_indices = tf.keras.preprocessing.sequence.pad_sequences(
+    all_node_indices = tf.compat.v1.keras.preprocessing.sequence.pad_sequences(
       all_node_indices,
       maxlen=padded_node_sequence_length,
       dtype="int32",

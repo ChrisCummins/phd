@@ -83,7 +83,7 @@ class LstmBase(classifier_base.ClassifierBase):
 
     # Reset any previous Tensorflow session. This is required when running
     # consecutive LSTM models in the same process.
-    tf.keras.backend.clear_session()
+    tf.compat.v1.keras.backend.clear_session()
 
     # Set by Initialize() and LoadModelData().
     self.session = None
@@ -226,7 +226,7 @@ class LstmBase(classifier_base.ClassifierBase):
 
       with self.graph.as_default():
         tf.compat.v1.keras.backend.set_session(self.session)
-        self.model = tf.keras.models.load_model(path)
+        self.model = tf.compat.v1.keras.models.load_model(path)
 
     self.FinalizeKerasModel()
 

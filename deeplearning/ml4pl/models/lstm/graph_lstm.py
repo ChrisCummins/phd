@@ -227,7 +227,7 @@ class GraphLstm(lstm_base.LstmBase):
       graph_y.append(graph.tuple.graph_y)
 
     # Pad and truncate encoded sequences.
-    encoded_sequences = tf.keras.preprocessing.sequence.pad_sequences(
+    encoded_sequences = tf.compat.v1.keras.preprocessing.sequence.pad_sequences(
       encoded_sequences,
       maxlen=self.padded_sequence_length,
       dtype="int32",
