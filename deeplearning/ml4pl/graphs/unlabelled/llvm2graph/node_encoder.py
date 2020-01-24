@@ -76,12 +76,12 @@ class GraphNodeEncoder(object):
       if text:
         data["preprocessed_text"] = text
         data["type"] = programl_pb2.Node.STATEMENT
-        data["x"] = [self.dictionary.get(data["text"], self.dictionary["!UNK"])]
+        data["x"] = [self.dictionary.get(text, self.dictionary["!UNK"])]
         data["y"] = []
       else:
         data["preprocessed_text"] = "!UNK"
         data["type"] = programl_pb2.Node.STATEMENT
-        data["x"] = [self.dictionary.get(data["text"], self.dictionary["!UNK"])]
+        data["x"] = [self.dictionary.get(text, self.dictionary["!UNK"])]
         data["y"] = []
 
   @decorators.memoized_property
