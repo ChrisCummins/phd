@@ -19,7 +19,6 @@ import sys
 
 import argparse
 import hashlib
-import re
 import subprocess
 
 
@@ -78,21 +77,6 @@ def YesNoPrompt(question, default, noninteractive):
                        "(or 'y' or 'n').\n")
 
 
-def Mkdir(path):
-  """Create a directory, including any parent directories.
-
-  Args:
-    path: The directory to create.
-  """
-  try:
-    os.makedirs(path)
-  except OSError as exc:  # Python >2.5
-    if exc.errno == errno.EEXIST and os.path.isdir(path):
-      pass
-    else:
-      raise
-
-
 def GetConfigId(args):
   """Get the ID of the configuration.
 
@@ -147,23 +131,6 @@ def GuessIfCudaIsAvailable():
   return is_available
 
 
-def RunAsHomebrewUser(cmd, subprocess_fn=subprocess.check_call):
-  if os.path.isdir('/home/linuxbrew'):
-    return subprocess_fn(
-        ['sudo', '-H', '-u', 'linuxbrew', 'bash', '-c', ' '.join(cmd)])
-  else:
-    return subprocess_fn(cmd)
-
-
-def Symlink(src, dst):
-  """Create symlink if it doesn't already exist."""
-  if not os.path.islink(dst):
-    if os.path.isfile(dst):
-      os.unlink(dst)
-    print('Symlink {} -> {}'.format(src, dst))
-    os.symlink(src, dst)
-
-
 def GetConfigurationOptions(argv):
   """Parse command line arguments and ask yes/no questions.
 
@@ -173,8 +140,6 @@ def GetConfigurationOptions(argv):
   Returns:
      The arguments namespace.
   """
-  is_git_repo = os.path.isdir(os.path.join(PHD_ROOT, '.git'))
-
   yes_no_prompts = []
   parser = argparse.ArgumentParser(
       description='Configure this project for building.',
