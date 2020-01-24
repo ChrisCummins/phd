@@ -77,8 +77,6 @@ py_test(
     srcs = ["git_repo_test.py"],
     deps = [
         ":git_repo",
-        "//:getconfig",
-        "//labm8/py:pbutil",
         "//labm8/py:test",
         "//third_party/py/git",
         "//third_party/py/pytest",

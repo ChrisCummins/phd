@@ -17,11 +17,7 @@ import pathlib
 import subprocess
 import typing
 
-import pytest
-
-import getconfig
 from experimental.util.alice import git_repo
-from labm8.py import pbutil
 from labm8.py import test
 
 
@@ -46,17 +42,13 @@ def mock_repo(tempdir: pathlib.Path, tempdir2: pathlib.Path) -> MockRepo:
   repo_root.mkdir()
   _Git(repo_root, "init")
 
-  config = getconfig.GetGlobalConfig()
-  pbutil.ToFile(config, repo_root / "config.pbtxt")
-
-  with open(repo_root / ".gitignore", "w") as f:
-    f.write("config.pbtxt\n")
-
-  _Git(repo_root, "add", ".gitignore")
   _Git(repo_root, "config", "user.email", "test@example.com")
   _Git(repo_root, "config", "user.name", "Test Man")
 
+  (repo_root / ".gitignore").touch()
+  _Git(repo_root, "add", ".gitignore")
   _Git(repo_root, "commit", "-m", "Add git ignore")
+
   _Git(repo_root, "remote", "add", "origin", str(remote_root))
   _Git(repo_root, "push", "-u", "origin", "master")
 

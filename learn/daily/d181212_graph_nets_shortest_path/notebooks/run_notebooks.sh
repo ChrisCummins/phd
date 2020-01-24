@@ -11,7 +11,7 @@ set -eu
 #   $1 (str): The starting
 get_source_tree_root() {
   # Check for the presence of files we expect in the source root.
-  if [[ -f "$1/config.pbtxt" ]] && [[ -f "$1/WORKSPACE" ]]; then
+  if [[ -f "$1/WORKSPACE" ]]; then
     echo "$1"
   else
     if [[ "$1" == "/" ]]; then

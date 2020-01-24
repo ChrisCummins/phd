@@ -192,12 +192,7 @@ sqlparse==0.3.0
 statistics==1.0.3.5
 subprocess32==3.5.0
 tabulate==0.8.5
-# If ./configure detects CUDA, tensorflow-gpu is used.
-# Maintenance note: If changing the version of tensorflow, you must check the
-# TensorFlow release notes for the required version of CUDA, and if necessary
-# update the hardcoded $CUDA_HOME default in GetCudaHome() of the configure
-# script.
-tensorflow==1.14.0
+tensorflow==1.14.0  # NOTE: Must be installed manually with `pip install`.
 terminado==0.8.1
 testpath==0.3.1
 TogglPy==0.1.1

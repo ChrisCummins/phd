@@ -8,7 +8,7 @@ install:
   - chmod -R 777 $TRAVIS_BUILD_DIR
 
 script:
-  - docker run -v$TRAVIS_BUILD_DIR:/phd chriscummins/phd_build:latest -c "./configure --noninteractive && ./tools/flaky_bazel.sh test --config=travis //tools/format/..."
+  - docker run -v$TRAVIS_BUILD_DIR:/phd chriscummins/phd_build:latest -c "./tools/flaky_bazel.sh test --config=travis //tools/format/..."
 
 notifications:
   email:

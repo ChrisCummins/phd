@@ -42,7 +42,7 @@ par_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":phd_workspace",
-        "//:getconfig",
+        "//:build_info",
         "//labm8/py:app",
         "//labm8/py:fs",
     ],
@@ -55,7 +55,7 @@ par_binary(
     deps = [
         ":phd_workspace",
         ":source_tree",
-        "//:getconfig",
+        "//:build_info",
         "//datasets/github:api",
         "//labm8/py:app",
         "//labm8/py:bazelutil",

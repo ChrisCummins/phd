@@ -10,7 +10,7 @@ import shutil
 import subprocess
 import typing
 
-import getconfig
+import build_info
 from labm8.py import app
 from labm8.py import fs
 from tools.source_tree import phd_workspace
@@ -121,7 +121,7 @@ def _DoDeployPip(
 
   pypi_username, pypi_password = GetPypiCredentials()
 
-  source_path = pathlib.Path(getconfig.GetGlobalConfig().paths.repo_root)
+  source_path = pathlib.Path(build_info.GetBuildInfo().unsafe_workspace)
   workspace = phd_workspace.PhdWorkspace(source_path)
 
   if url is None:

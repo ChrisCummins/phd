@@ -52,7 +52,6 @@ RUN apt-get remove -y ca-certificates
 # Build project.
 WORKDIR /root/phd
 RUN apt-get install --no-install-recommends -y python
-# RUN ./configure --noninteractive
 
 # WORKDIR $PHD
 # CMD [clinfo]
