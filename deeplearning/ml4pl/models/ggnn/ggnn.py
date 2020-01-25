@@ -16,10 +16,12 @@
 """A gated graph neural network classifier."""
 import typing
 from typing import Callable
+from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import NamedTuple
 from typing import Optional
+from typing import Tuple
 
 import numpy as np
 import torch
@@ -399,43 +401,47 @@ class Ggnn(classifier_base.ClassifierBase):
     else:
       raise app.UsageError(f"Unknown unroll strategy '{unroll_strategy}'")
 
-  def RunBatch(
-    self,
-    epoch_type: epoch.Type,
-    batch: batches.Data,
-    ctx: progress.ProgressContext = progress.NullContext,
-  ) -> batches.Results:
+  def PrepareModelInputs(
+    self, epoch_type: epoch.Type, batch: batches.Data
+  ) -> Tuple[np.array, Dict[str, torch.Tensor]]:
+    """RunBatch() helper method to prepare inputs to model.
+
+    Args:
+      epoch_type: The type of epoch the model is performing.
+      batch: A batch of data to prepare inputs from:
+
+    Returns:
+      A tuple of <expected outcomes, model inputs>.
+    """
     disjoint_graph: graph_tuple.GraphTuple = batch.data.disjoint_graph
 
-    # Batch to model-inputs
-    # torch.from_numpy() shares memory with numpy!
+    # Batch to model-inputs. torch.from_numpy() shares memory with numpy.
     # TODO(github.com/ChrisCummins/ProGraML/issues/27): maybe we can save
     # memory copies in the training loop if we can turn the data into the
     # required types (np.int64 and np.float32) once they come off the network
     # from the database, where smaller i/o size (int32) is more important.
-    with ctx.Profile(5, "Sent data to GPU"):
-      vocab_ids = torch.from_numpy(disjoint_graph.node_x[:, 0]).to(
-        self.model.dev, torch.long
-      )
-      selector_ids = torch.from_numpy(disjoint_graph.node_x[:, 1]).to(
-        self.model.dev, torch.long
-      )
-      # we need those as a result on cpu and can save device i/o
-      cpu_labels = (
-        disjoint_graph.node_y
-        if disjoint_graph.has_node_y
-        else disjoint_graph.graph_y
-      )
-      labels = torch.from_numpy(cpu_labels).to(self.model.dev)
-      edge_lists = [
-        torch.from_numpy(x).to(self.model.dev, torch.long)
-        for x in disjoint_graph.adjacencies
-      ]
+    vocab_ids = torch.from_numpy(disjoint_graph.node_x[:, 0]).to(
+      self.model.dev, torch.long
+    )
+    selector_ids = torch.from_numpy(disjoint_graph.node_x[:, 1]).to(
+      self.model.dev, torch.long
+    )
+    # we need those as a result on cpu and can save device i/o
+    cpu_labels = (
+      disjoint_graph.node_y
+      if disjoint_graph.has_node_y
+      else disjoint_graph.graph_y
+    )
+    labels = torch.from_numpy(cpu_labels).to(self.model.dev)
+    edge_lists = [
+      torch.from_numpy(x).to(self.model.dev, torch.long)
+      for x in disjoint_graph.adjacencies
+    ]
 
-      edge_positions = [
-        torch.from_numpy(x).to(self.model.dev, torch.long)
-        for x in disjoint_graph.edge_positions
-      ]
+    edge_positions = [
+      torch.from_numpy(x).to(self.model.dev, torch.long)
+      for x in disjoint_graph.edge_positions
+    ]
 
     model_inputs = {
       "vocab_ids": vocab_ids,
@@ -469,13 +475,33 @@ class Ggnn(classifier_base.ClassifierBase):
         }
       )
 
+    return cpu_labels, model_inputs
+
+  def RunBatch(
+    self,
+    epoch_type: epoch.Type,
+    batch: batches.Data,
+    ctx: progress.ProgressContext = progress.NullContext,
+  ) -> batches.Results:
+    """Process a mini-batch of data through the GGNN.
+
+    Args:
+      epoch_type: The type of epoch being run.
+      batch: The batch data returned by MakeBatch().
+      ctx: A logging context.
+
+    Returns:
+      A batch results instance.
+    """
+    cpu_labels, model_inputs = self.PrepareModelInputs(epoch_type, batch)
+
     # maybe calculate manual timesteps
-    if epoch_type != epoch.Type.TRAIN and FLAGS.unroll_strategy in [
+    if epoch_type != epoch.Type.TRAIN and FLAGS.unroll_strategy in {
       "constant",
       "edge_count",
       "data_flow_max_steps",
       "label_convergence",
-    ]:
+    }:
       time_steps_cpu = np.array(
         self.get_unroll_steps(epoch_type, batch, FLAGS.unroll_strategy),
         dtype=np.int64,
@@ -512,11 +538,11 @@ class Ggnn(classifier_base.ClassifierBase):
 
     if epoch_type == epoch.Type.TRAIN:
       loss.backward()
-      # TODO(github.com/ChrisCummins/ProGraML/issues/27):: Clip gradients
+      # TODO(github.com/ChrisCummins/ProGraML/issues/27): Clip gradients
       # (done). NB, pytorch clips by norm of the gradient of the model, while
       # tf clips by norm of the grad of each tensor separately. Therefore we
       # change default from 1.0 to 6.0.
-      # TODO(github.com/ChrisCummins/ProGraML/issues/27):: Anyway: Gradients
+      # TODO(github.com/ChrisCummins/ProGraML/issues/27): Anyway: Gradients
       # shouldn't really be clipped if not necessary?
       if self.model.config.clip_grad_norm > 0.0:
         nn.utils.clip_grad_norm_(
@@ -524,10 +550,6 @@ class Ggnn(classifier_base.ClassifierBase):
         )
       self.model.opt.step()
       self.model.opt.zero_grad()
-
-    # tg = targets.numpy()
-    # tg = np.vstack(((tg + 1) % 2, tg)).T
-    # assert np.all(labels.numpy() == tg), f"labels sanity check failed: labels={labels.numpy()},  tg={tg}"
 
     # TODO(github.com/ChrisCummins/ProGraML/issues/27): Learning rate schedule
     # will change this value.
