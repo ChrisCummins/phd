@@ -24,8 +24,6 @@ FLAGS = test.FLAGS
 
 MODULE_UNDER_TEST = None
 
-PYTEST_ARGS = ["--benchmark-warmup-iterations=2"]
-
 # Real programs to test over.
 PROTOS = list(random_programl_generator.EnumerateTestSet(n=20))
 
