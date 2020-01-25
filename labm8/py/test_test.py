@@ -18,8 +18,6 @@ import random
 import sys
 import tempfile
 
-import pytest
-
 from labm8.py import app
 from labm8.py import test
 
@@ -85,12 +83,6 @@ def test_mark_flaky_with_expected_exception():
 def test_mark_flaky_with_invalid_expected_exception():
   """Test that only expected_exception triggers a re-run."""
   raise TypeError("woops!")
-
-
-@pytest.mark.custom_marker
-def test_custom_marker():
-  """A test with a custom pytest marker that does nothing."""
-  pass
 
 
 @test.LinuxTest()
