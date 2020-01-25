@@ -46,8 +46,6 @@ class PhdWorkspace(bazelutil.Workspace):
   def __init__(self, *args, **kwargs):
     super(PhdWorkspace, self).__init__(*args, **kwargs)
     self._repo = git.Repo(self.workspace_root)
-    if not (self.workspace_root / "tools" / "requirements.txt").is_file():
-      raise OSError("Expected file toos/requirements.txt not found")
 
   @property
   def git_repo(self) -> git.Repo:
@@ -190,7 +188,7 @@ class PhdWorkspace(bazelutil.Workspace):
     # Export the subset of python requirements that are needed.
     print("requirements.txt")
     requirements = self.GetPythonRequirementsForTarget(targets)
-    requirements_path = workspace.workspace_root / "tools" / "requirements.txt"
+    requirements_path = workspace.workspace_root / "requirements.txt"
     with open(requirements_path, "w") as f:
       print("\n".join(requirements), file=f)
 
