@@ -1,9 +1,11 @@
-"""Unit tests for //tools/source_tree:conftest."""
+"""Unit tests for //tools/git/test:fixtures."""
 import pathlib
 
 import git
 
 from labm8.py import test
+
+pytest_plugins = ["tools.git.test.fixtures"]
 
 FLAGS = test.FLAGS
 
