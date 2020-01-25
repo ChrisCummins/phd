@@ -143,6 +143,11 @@ class RunError(OSError):
   pass
 
 
+def GetRunNamePrefix(model: classifier_base.ClassifierBase) -> str:
+  """Get the prefix name for a model run."""
+  return FLAGS.tag[:28] or str(model.run_id)
+
+
 def SplitStringsToInts(split_strings: List[str]):
   """Convert string split names to integers."""
 
@@ -174,6 +179,7 @@ def RunEpoch(
   batch_iterator: batchs.BatchIterator,
   epoch_type: epoch.Type,
   logger: logger_lib.Logger,
+  epoch_name_prefix: str = "",
 ) -> Tuple[epoch.Results, int]:
   """Run a single epoch.
 
@@ -198,7 +204,9 @@ def RunEpoch(
     )
 
   with logger.ctx.Profile(2, lambda t: GetEpochLabel(results)):
-    results = model(epoch_type, batch_iterator, logger)
+    results = model(
+      epoch_type, batch_iterator, logger, epoch_name_prefix=epoch_name_prefix
+    )
 
   # Check if the model has improved.
   improved = model.best_results[epoch_type].epoch_num == model.epoch_num
@@ -232,7 +240,7 @@ class TrainValTestLoop(progress.Progress):
     self.logger = logger
     self.splits = splits
     super(TrainValTestLoop, self).__init__(
-      str(self.model.run_id),
+      name=GetRunNamePrefix(self.model),
       i=self.model.epoch_num,
       n=FLAGS.epoch_count,
       unit="epoch",
@@ -486,6 +494,7 @@ def RunOne(
         batch_iterator=batch_iterator,
         epoch_type=epoch.Type.TEST,
         logger=logger,
+        epoch_name_prefix=FLAGS.tag[:28] if FLAGS.tag else "",
       )
     else:
       train = TrainValTestLoop(
@@ -550,7 +559,7 @@ class KFoldCrossValidation(progress.Progress):
         f"{self.graph_db.splits}"
       )
     super(KFoldCrossValidation, self).__init__(
-      f"{self.graph_db.split_count}-fold xval",
+      name=f"{GetRunNamePrefix(model)} {self.graph_db.split_count}-fold xval",
       i=0,
       n=self.graph_db.split_count,
       unit="split",
