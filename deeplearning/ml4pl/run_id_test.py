@@ -16,6 +16,8 @@
 """Unit tests for //deeplearning/ml4pl:run_id."""
 import datetime
 import multiprocessing
+import subprocess
+import sys
 import time
 
 import sqlalchemy as sql
@@ -104,7 +106,16 @@ def test_SqlStringColumn_no_default():
     assert table.run_id == "foo"
 
 
-def test_ComputeRunId_unique_timestamps():
+def test_GenerateGlobalUnique_with_forced_run_id():
+  """TEst that $RUN_ID environment variable forces the global run ID."""
+  with test.TemporaryEnv() as env:
+    env["RUN_ID"] = "foo"
+    assert run_id.RunId.GenerateGlobalUnique() == "foo"
+    assert run_id.RunId.GenerateGlobalUnique() == "foo"
+    assert run_id.RunId.GenerateGlobalUnique() == "foo"
+
+
+def test_GenerateGlobalUnique_unique_timestamps():
   """Compute multiple run IDs and check that they change."""
   previous_run_id = None
   end_time = time.time() + 10
@@ -122,12 +133,36 @@ def _MakeARunId(*args):
   return run_id.RunId.GenerateGlobalUnique()
 
 
+def test_GenerateGlobalUnique_subprocess():
+  """Run IDs should be unique when running as subprocesses."""
+  unique_run_ids = set()
+
+  for _ in range(30):
+    run_id_ = subprocess.check_output(
+      [
+        sys.executable,
+        "-c",
+        "from deeplearning.ml4pl import run_id; "
+        "print(run_id.RunId.GenerateGlobalUnique())",
+      ],
+      universal_newlines=True,
+    )
+
+    if run_id_ in unique_run_ids:
+      test.Fail("Non-unique run ID generated")
+    unique_run_ids.add(run_id_)
+
+
 def test_GenerateGlobalUnique_multiprocessed():
   """Generate a bunch of run IDs concurrently and check that they are unique."""
-  with multiprocessing.Pool() as p:
-    run_ids = list(p.map(_MakeARunId, range(50)))
+  unique_run_ids = set()
 
-  assert len(run_ids) == len(set(run_ids))
+  with multiprocessing.Pool() as p:
+    for run_id_ in p.imap_unordered(_MakeARunId, range(30)):
+      print("Generated run ID:", run_id)
+      if run_id_ in unique_run_ids:
+        test.Fail("Non-unique run ID generated")
+      unique_run_ids.add(run_id_)
 
 
 if __name__ == "__main__":
