@@ -1,4 +1,4 @@
-"""Repo-wide pytest configuration and test fixtures."""
+"""This module defines a pytest plugin for labm8."""
 import pathlib
 import socket
 import sys
