@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/github/repo-size/ChrisCummins/phd.svg">
 </a>
 <!-- commit counter -->
-<a href="https://github.com/ChrisCummins/phd">
+<a href="github.com/ChrisCummins/phd/commits/master">
   <img src="https://img.shields.io/github/commit-activity/y/ChrisCummins/phd.svg?color=yellow">
 </a>
 <!-- Better code -->
@@ -13,7 +13,7 @@
   <img src="https://bettercodehub.com/edge/badge/ChrisCummins/phd?branch=master">
 </a>
 <!-- Travis CI -->
-<a href="https://github.com/ChrisCummins/phd">
+<a href="https://travis-ci.org/ChrisCummins/phd">
   <img src="https://img.shields.io/travis/ChrisCummins/phd/master.svg">
 </a>
 
