@@ -239,8 +239,6 @@ class Ggnn(classifier_base.ClassifierBase):
       for submodule in self.model.modules():
         submodule.register_forward_hook(nan_hook)
 
-    self.model.to(self.model.dev)
-
   def MakeBatch(
     self,
     epoch_type: epoch.Type,

@@ -75,7 +75,7 @@ class GGNNModel(nn.Module):
     )
 
     self.to(self.dev)
-    print(f"Moved model to {self.dev}")
+    app.Log(2, f"Moved model to %s", self.dev)
 
     if test_only:
       self.opt = None
