@@ -400,7 +400,7 @@ class ClassifierBase(object):
       )
     )
     return checkpoints.CheckpointReference(
-      run_id=self.run_id, epoch_num=self.epoch_num
+      run_id=self.run_id, tag=None, epoch_num=self.epoch_num
     )
 
   @decorators.memoized_property

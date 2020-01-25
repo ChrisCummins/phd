@@ -88,7 +88,7 @@ app.DEFINE_boolean(
 
 class Logger(object):
   """An object for writing logs to a database.
-  
+
   This class exposes callbacks for recording logging events during the execution
   of a model. Logging callbacks are asychronous, each callback buffers the data
   to be written, which is periodically flushed to the database in a separate
@@ -353,7 +353,9 @@ class Logger(object):
       A checkpoint instance.
 
     Raises:
-      ValueError: If no corresponding entry in the checkpoints table is found.
+      ValueError: If no corresponding entry in the checkpoints table is found,
+        or if a specific epoch number was requested using a tag which resolves
+        to multiple IDs.
     """
     # A previous Save() call from this logger might still be buffered. Flush the
     # buffer before loading from the database.
@@ -362,26 +364,40 @@ class Logger(object):
     with self.db.Session() as session:
       epoch_num = checkpoint_ref.epoch_num
 
+      # Resolve the run IDs from the checkpoint reference.
+      run_ids = [
+        run_id_lib.RunId.FromString(run_id)
+        for run_id in self.db.SelectRunIds(
+          run_ids=[checkpoint_ref.run_id] if checkpoint_ref.run_id else [],
+          tags=[checkpoint_ref.tag] if checkpoint_ref.tag else [],
+          session=session,
+        )
+      ]
+      if not run_ids:
+        raise ValueError(f"No runs found for checkpoint: {checkpoint_ref}")
+
       # If no epoch number was provided, select the best epoch from the log
       # database.
       if epoch_num is None:
         # Get the per-epoch summary table of model results.
-        tables = {
-          name: df
-          for name, df in self.db.GetTables(run_ids=[checkpoint_ref.run_id])
-        }
+        tables = {name: df for name, df in self.db.GetTables(run_ids=run_ids)}
         # Select the epoch with the best validation accuracy.
         epochs = tables["epochs"][tables["epochs"]["val_accuracy"].notnull()]
         if not len(epochs):
-          raise ValueError("No epochs found!")
+          raise ValueError(f"No epochs found for checkpoint: {checkpoint_ref}")
         best_epoch_idx = epochs["val_accuracy"].idxmax()
         best_epoch = epochs.iloc[best_epoch_idx]
         epoch_num = best_epoch["epoch_num"]
+      elif epoch_num and len(run_ids):
+        tables = {name: df for name, df in self.db.GetTables(run_ids=run_ids)}
+        epochs = tables["epochs"]
+        if len(epochs[epochs["epoch_num"] == epoch_num]) > 1:
+          raise ValueError(f"Multiple runs found for tag: {checkpoint_ref}")
 
       checkpoint_entry = (
         session.query(log_database.Checkpoint)
         .filter(
-          log_database.Checkpoint.run_id == str(checkpoint_ref.run_id),
+          log_database.Checkpoint.run_id.in_(str(s) for s in run_ids),
           log_database.Checkpoint.epoch_num == int(epoch_num),
         )
         .options(sql.orm.joinedload(log_database.Checkpoint.data))
@@ -397,7 +413,7 @@ class Logger(object):
           .order_by(log_database.Checkpoint.epoch_num)
         ]
         raise ValueError(
-          f"Checkpoint not found: {checkpoint_ref}. "
+          f"Checkpoint not found: {checkpoint_ref} (runs: {run_ids}). "
           f"Available checkpoints: {available_checkpoints}"
         )
 
@@ -405,7 +421,7 @@ class Logger(object):
         run_id=run_id_lib.RunId.FromString(checkpoint_entry.run_id),
         epoch_num=checkpoint_entry.epoch_num,
         best_results=self.db.GetBestResults(
-          run_id=checkpoint_ref.run_id, session=session
+          run_id=checkpoint_entry.run_id, session=session
         ),
         model_data=checkpoint_entry.model_data,
       )
