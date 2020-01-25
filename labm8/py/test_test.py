@@ -215,5 +215,13 @@ def test_TemporaryEnv():
   assert os.environ["ANIMAL"] == "a dog"
 
 
+def test_XML_OUTPUT_FILE_is_not_set():
+  """Test that XML_OUTPUT_FILE is unset, either because:
+  * we're not in a bazel test environment.
+  * it has been unset by test.RunPytestOnFileOrDie().
+  """
+  assert not os.environ.get("XML_OUTPUT_FILE")
+
+
 if __name__ == "__main__":
   test.Main()
