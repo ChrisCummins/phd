@@ -15,7 +15,6 @@
 # limitations under the License.
 """Unit tests for //deeplearning/ml4pl:run_id."""
 import datetime
-import multiprocessing
 import time
 
 import sqlalchemy as sql
@@ -104,7 +103,16 @@ def test_SqlStringColumn_no_default():
     assert table.run_id == "foo"
 
 
-def test_ComputeRunId_unique_timestamps():
+def test_GenerateGlobalUnique_with_forced_run_id():
+  """TEst that $RUN_ID environment variable forces the global run ID."""
+  with test.TemporaryEnv() as env:
+    env["RUN_ID"] = "foo"
+    assert run_id.RunId.GenerateGlobalUnique() == "foo"
+    assert run_id.RunId.GenerateGlobalUnique() == "foo"
+    assert run_id.RunId.GenerateGlobalUnique() == "foo"
+
+
+def test_GenerateGlobalUnique_unique_timestamps():
   """Compute multiple run IDs and check that they change."""
   previous_run_id = None
   end_time = time.time() + 10
@@ -115,19 +123,6 @@ def test_ComputeRunId_unique_timestamps():
     # Check that run ID has changed.
     assert run_id_ != previous_run_id
     previous_run_id = run_id_
-
-
-def _MakeARunId(*args):
-  """Generate a run ID."""
-  return run_id.RunId.GenerateGlobalUnique()
-
-
-def test_GenerateGlobalUnique_multiprocessed():
-  """Generate a bunch of run IDs concurrently and check that they are unique."""
-  with multiprocessing.Pool() as p:
-    run_ids = list(p.map(_MakeARunId, range(50)))
-
-  assert len(run_ids) == len(set(run_ids))
 
 
 if __name__ == "__main__":

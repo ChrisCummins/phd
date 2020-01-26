@@ -1,4 +1,5 @@
-"""Repo-wide pytest configuration and test fixtures."""
+"""This module defines a pytest plugin for labm8."""
+import os
 import pathlib
 import socket
 import sys
@@ -63,6 +64,17 @@ PLATFORM_NAMES = set("darwin linux win32".split())
 HOST_NAMES = set("diana florence".split())
 
 
+def pytest_configure(config):
+  """Programatic configuration of pytest."""
+  # Register the custom markers used by labm8.
+  config.addinivalue_line("markers", "slow")
+  config.addinivalue_line("markers", "darwin")
+  config.addinivalue_line("markers", "linux")
+  config.addinivalue_line("markers", "win32")
+  config.addinivalue_line("markers", "diana")
+  config.addinivalue_line("markers", "florence")
+
+
 def pytest_collection_modifyitems(config, items):
   """A pytest hook to modify the configuration and items to run."""
   del config
@@ -82,8 +94,34 @@ def pytest_collection_modifyitems(config, items):
   this_host = socket.gethostname()
   slow_skip_marker = pytest.mark.skip(reason="Use --notest_skip_slow to run")
 
+  # Optionally rewrite the file path determined by the pytest collector.
+  # The conditions for rewriting the file paths are:
+  #   * We are running in a bazel environment.
+  #   * The workspace directory determined by build_info exists.
+  #
+  # The reason for rewriting the file path is that bazel's containerized test
+  # execution means that the location of the pytest root directory is not the
+  # same as the root directory of the sources being tested. Further, I don't
+  # want to set --root_dir to the real workspace root as that seems too invasive
+  # of a change to bazel's testing strategy.
+  #
+  # NOTE: Since this plugin is intended to be used only by labm8.py.test.Main(),
+  # it is assumed that all test items come from the same location, so we need
+  # only determine the "real" location of a single item.
+  #
+  # WARNING: It is unclear to me whether rewriting the location will have some
+  # unexpected sideffects for bits of pytest that depend on the location. In
+  # my experience so far, this rewriting has not caused any problems.
+  rewriten_path = None
+  workspace = build_info.GetBuildInfo().unsafe_workspace
+  if items and os.environ.get("TEST_TARGET") and os.path.isdir(workspace):
+    rewriten_path = os.path.relpath(items[0].location[0], workspace)
+
   for item in items:
     # TODO(cec): Skip benchmarks by default.
+
+    if rewriten_path:
+      item.location = (rewriten_path, *item.location[1:])
 
     # Skip tests if they been marked for an incompatible platform. To mark a
     # test for a platform, wrap the test function with a decorator. Example:
@@ -96,7 +134,7 @@ def pytest_collection_modifyitems(config, items):
     supported_platforms = PLATFORM_NAMES.intersection(item.keywords)
     if supported_platforms and this_platform not in supported_platforms:
       skip_msg = f"Skipping `{item.name}` for platforms: {supported_platforms}"
-      app.Log(1, skip_msg)
+      print(skip_msg)
       item.add_marker(pytest.mark.skip(reason=skip_msg))
       continue
 
@@ -104,7 +142,7 @@ def pytest_collection_modifyitems(config, items):
     supported_hosts = HOST_NAMES.intersection(item.keywords)
     if supported_hosts and this_host not in supported_hosts:
       skip_msg = f"Skipping `{item.name}` for hosts: {supported_hosts}"
-      app.Log(1, skip_msg)
+      print(skip_msg)
       item.add_marker(pytest.mark.skip(reason=skip_msg))
       continue
 

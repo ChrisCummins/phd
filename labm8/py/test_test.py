@@ -18,8 +18,6 @@ import random
 import sys
 import tempfile
 
-import pytest
-
 from labm8.py import app
 from labm8.py import test
 
@@ -85,12 +83,6 @@ def test_mark_flaky_with_expected_exception():
 def test_mark_flaky_with_invalid_expected_exception():
   """Test that only expected_exception triggers a re-run."""
   raise TypeError("woops!")
-
-
-@pytest.mark.custom_marker
-def test_custom_marker():
-  """A test with a custom pytest marker that does nothing."""
-  pass
 
 
 @test.LinuxTest()
@@ -213,6 +205,14 @@ def test_TemporaryEnv():
     assert os.environ["ANIMAL"] == "a cat"
 
   assert os.environ["ANIMAL"] == "a dog"
+
+
+def test_XML_OUTPUT_FILE_is_not_set():
+  """Test that XML_OUTPUT_FILE is unset, either because:
+  * we're not in a bazel test environment.
+  * it has been unset by test.RunPytestOnFileOrDie().
+  """
+  assert not os.environ.get("XML_OUTPUT_FILE")
 
 
 if __name__ == "__main__":
