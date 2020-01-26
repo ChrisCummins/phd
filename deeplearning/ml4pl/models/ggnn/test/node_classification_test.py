@@ -56,7 +56,7 @@ def CheckResultsProperties(
 
 
 @test.Parametrize("epoch_type", list(epoch.Type))
-@test.Parametrize("limit_max_data_flow_steps_during_training", (False, True))
+@test.Parametrize("limit_max_data_flow_steps", (False, True))
 def test_node_classifier_call(
   epoch_type: epoch.Type,
   logger: logging.Logger,
@@ -65,16 +65,14 @@ def test_node_classifier_call(
   node_text_embedding_type,
   unroll_strategy: str,
   log1p_graph_x: bool,
-  limit_max_data_flow_steps_during_training: bool,
+  limit_max_data_flow_steps: bool,
 ):
   """Test running a node classifier."""
   FLAGS.inst2vec_embeddings = node_text_embedding_type
   FLAGS.unroll_strategy = unroll_strategy
   FLAGS.layer_timesteps = layer_timesteps
   FLAGS.log1p_graph_x = log1p_graph_x
-  FLAGS.limit_max_data_flow_steps_during_training = (
-    limit_max_data_flow_steps_during_training
-  )
+  FLAGS.limit_max_data_flow_steps = limit_max_data_flow_steps
 
   # Test to handle the unsupported combination of config values.
   if (

@@ -56,13 +56,13 @@ def CheckResultsProperties(
 
 
 @test.Parametrize("epoch_type", list(epoch.Type))
-@test.Parametrize("limit_max_data_flow_steps_during_training", (False, True))
+@test.Parametrize("limit_max_data_flow_steps", (False, True))
 def test_graph_classifier_call(
   epoch_type: epoch.Type,
   logger: logging.Logger,
   layer_timesteps: List[str],
   graph_y_graph_db: graph_tuple_database.Database,
-  limit_max_data_flow_steps_during_training: bool,
+  limit_max_data_flow_steps: bool,
   node_text_embedding_type: str,
   unroll_strategy: str,
   log1p_graph_x: bool,
@@ -72,9 +72,7 @@ def test_graph_classifier_call(
   FLAGS.unroll_strategy = unroll_strategy
   FLAGS.layer_timesteps = layer_timesteps
   FLAGS.log1p_graph_x = log1p_graph_x
-  FLAGS.limit_max_data_flow_steps_during_training = (
-    limit_max_data_flow_steps_during_training
-  )
+  FLAGS.limit_max_data_flow_steps = limit_max_data_flow_steps
 
   # Test to handle the unsupported combination of config values.
   if (

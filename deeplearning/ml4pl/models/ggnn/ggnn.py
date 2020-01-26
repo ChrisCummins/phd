@@ -97,12 +97,11 @@ app.DEFINE_list(
 )
 
 app.DEFINE_boolean(
-  "limit_max_data_flow_steps_during_training",
-  True,
-  "If set, limit the size of dataflow-annotated graphs used to train and "
-  "validate models to only those with data_flow_steps <= sum(layer_timesteps). "
-  "This has no effect for graph databases with no dataflow annotations, or "
-  "for testing epochs.",
+  "limit_max_data_flow_steps",
+  False,
+  "If set, limit the size of dataflow-annotated graphs used to only those with "
+  "data_flow_steps <= sum(layer_timesteps). This has no effect for graph "
+  "databases with no dataflow annotations.",
 )
 # We assume that position_embeddings exist in every dataset.
 # the flag now only controls whether they are used or not.
@@ -331,13 +330,8 @@ class Ggnn(classifier_base.ClassifierBase):
     filters = filters or []
 
     # Only read graphs with data_flow_steps <= message_passing_step_count if
-    # --limit_max_data_flow_steps_during_training is set and we are not
-    # in a test epoch.
-    if (
-      FLAGS.limit_max_data_flow_steps_during_training
-      and self.graph_db.has_data_flow
-      and (epoch_type == epoch.Type.TRAIN or epoch_type == epoch.Type.VAL)
-    ):
+    # --limit_max_data_flow_steps is set.
+    if FLAGS.limit_max_data_flow_steps and self.graph_db.has_data_flow:
       filters.append(
         lambda: graph_tuple_database.GraphTuple.data_flow_steps
         <= self.message_passing_step_count
