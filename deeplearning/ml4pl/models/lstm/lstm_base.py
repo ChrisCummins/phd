@@ -18,6 +18,7 @@ import io
 import pathlib
 import tempfile
 from typing import Any
+from typing import Callable
 from typing import Iterable
 from typing import List
 from typing import Optional
@@ -49,6 +50,13 @@ app.DEFINE_integer(
   "batch_size",
   64,
   "The number of padded sequences to concatenate into a batch.",
+)
+app.DEFINE_integer(
+  "max_data_flow_steps",
+  0,
+  "If set to a positive value, limit the size of dataflow-annotated graphs "
+  "used to only those with data_flow_steps <= --max_data_flow_steps. "
+  "This has no effect for graph databases with no dataflow annotations.",
 )
 
 
@@ -88,6 +96,43 @@ class LstmBase(classifier_base.ClassifierBase):
     # Set by Initialize() and LoadModelData().
     self.session = None
     self.graph = None
+
+  def GraphReader(
+    self,
+    epoch_type: epoch.Type,
+    graph_db: graph_tuple_database.Database,
+    filters: Optional[List[Callable[[], bool]]] = None,
+    limit: Optional[int] = None,
+    ctx: progress.ProgressContext = progress.NullContext,
+  ) -> graph_database_reader.BufferedGraphReader:
+    """Construct a buffered graph reader.
+
+    Args:
+      epoch_type: The type of graph reader to return a graph reader for.
+      graph_db: The graph database to read graphs from.
+      filters: A list of filters to impose on the graph database reader.
+      limit: The maximum number of rows to read.
+      ctx: A logging context.
+
+    Returns:
+      A buffered graph reader instance.
+    """
+    filters = filters or []
+
+    # Optionally limit graphs to data_flow_steps <= --max_data_flow_steps.
+    if FLAGS.max_data_flow_steps and self.graph_db.has_data_flow:
+      filters.append(
+        lambda: graph_tuple_database.GraphTuple.data_flow_steps
+        <= FLAGS.max_data_flow_steps
+      )
+
+    return super(LstmBase, self).GraphReader(
+      epoch_type=epoch_type,
+      graph_db=graph_db,
+      filters=filters,
+      limit=limit,
+      ctx=ctx,
+    )
 
   def CreateModelData(self) -> None:
     """Initialize an LSTM model. This """
