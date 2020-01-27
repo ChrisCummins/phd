@@ -12,6 +12,8 @@
 // 1, 1, 2
 // 2, 2
 
+#include "labm8/cpp/test.h"
+
 #include <iostream>
 #include <unordered_set>
 #include <vector>
@@ -29,14 +31,17 @@ int fn(const int n) {
   return c;
 }
 
-void Solve(const int n, const int expected) {
-  const int actual = fn(n);
-  std::cout << "f(" << n << ") = " << actual;
-  if (actual != expected) {
-    std::cout << " <- wrong! Expected " << expected;
-  }
-  std::cout << std::endl;
-}
+TEST(StaircaseCounts, Zero) { EXPECT_EQ(fn(0), 0); }
+
+TEST(StaircaseCounts, One) { EXPECT_EQ(fn(1), 1); }
+
+TEST(StaircaseCounts, Two) { EXPECT_EQ(fn(2), 2); }
+
+TEST(StaircaseCounts, Three) { EXPECT_EQ(fn(3), 3); }
+
+TEST(StaircaseCounts, Four) { EXPECT_EQ(fn(4), 5); }
+
+TEST(StaircaseCounts, Five) { EXPECT_EQ(fn(5), 8); }
 
 // What if, instead of being able to climb 1 or 2 steps at a time, you could
 // climb any number from a set of positive integers X? For example, if X = {1,
@@ -58,29 +63,8 @@ int fn(const int n, const std::unordered_set<int>& A) {
   return r[n - 1];
 }
 
-void Solve(const int n, const int expected, const std::unordered_set<int>& A) {
-  const int actual = fn(n, A);
-  std::cout << "f(" << n << ", { ";
-  for (const auto& a : A) {
-    std::cout << a << ", ";
-  }
-  std::cout << "}) = " << actual;
-  if (actual != expected) {
-    std::cout << " <- wrong! Expected " << expected;
-  }
-  std::cout << std::endl;
-}
+TEST(StaircaseNCounts, Five) { EXPECT_EQ(fn(5, {1, 2}), 8); }
 
-int main(int argc, char** argv) {
-  Solve(0, 0);
-  Solve(1, 1);
-  Solve(2, 2);
-  Solve(3, 3);
-  Solve(4, 5);
-  Solve(5, 8);
+TEST(StaircaseNCounts, FiveThree) { EXPECT_EQ(fn(5, {1, 3, 5}), 5); }
 
-  Solve(5, 8, {1, 2});
-  Solve(5, 5, {1, 3, 5});
-
-  return 0;
-}
+TEST_MAIN();

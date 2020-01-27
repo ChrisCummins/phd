@@ -68,11 +68,11 @@ int main(int argc, char** argv) {
   A.add(&B);
   B.add(&C);
 
-  XorLinkedList::Print(&A);
-  XorLinkedList::Print(A.get(0));
-  XorLinkedList::Print(A.get(1));
-  XorLinkedList::Print(&B);
-  XorLinkedList::Print(&C);
+  //  XorLinkedList::Print(&A);
+  //  XorLinkedList::Print(A.get(0));
+  //  XorLinkedList::Print(A.get(1));
+  //  XorLinkedList::Print(&B);
+  //  XorLinkedList::Print(&C);
 
   return 0;
 }
