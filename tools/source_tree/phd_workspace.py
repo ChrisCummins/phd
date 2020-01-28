@@ -28,6 +28,7 @@ _ALWAYS_EXPORTED_FILES = [
   "README.md",
   "requirements.txt",  # Needed by WORKSPACE.
   "tools/Brewfile.travis",  # Needed by Travis CI.
+  "tools/bazel",  # Optional, but useful.
   "tools/bzl/*",  # Implicit dependency of WORKSPACE file.
   "third_party/bazel/*",  # Needed by WORKSPACE.
   "third_party/*.BUILD",  # Implicit dependencies of WORKSPACE file.
