@@ -23,9 +23,12 @@ from deeplearning.deeptune.opencl.heterogeneous_mapping import (
 )
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import models
 from labm8.py import app
+from labm8.py import gpu_scheduler
 from labm8.py import test
 
 FLAGS = app.FLAGS
+
+gpu_scheduler.LockExclusiveProcessGpuAccess()
 
 
 @test.Fixture(scope="session")
@@ -85,7 +88,11 @@ def test_PrintResultsSummary_smoke_test(
   heterogeneous_mapping.HeterogeneousMappingExperiment.PrintResultsSummary(df)
 
 
-@test.SlowTest(reason="Takes several hours to train full model")
+# The following tests are marked as skipped due to their cost, though they
+# may be ran by explicitly requesting them.
+
+
+@test.Skip(reason="Takes several hours to train full model")
 def test_deeptune_accuracy(
   r: heterogeneous_mapping.HeterogeneousMappingExperiment,
 ):
@@ -95,7 +102,7 @@ def test_deeptune_accuracy(
   ].mean() == pytest.approx(0.819853)
 
 
-@test.SlowTest(reason="Takes several hours to train full model")
+@test.Skip(reason="Takes several hours to train full model")
 def test_deeptune_speedup(
   r: heterogeneous_mapping.HeterogeneousMappingExperiment,
 ):
@@ -105,7 +112,7 @@ def test_deeptune_speedup(
   )
 
 
-@test.SlowTest(reason="Takes several hours to train full model")
+@test.Skip(reason="Takes several hours to train full model")
 def test_deeptune_inst2vec_accuracy(
   r: heterogeneous_mapping.HeterogeneousMappingExperiment,
 ):
@@ -116,7 +123,7 @@ def test_deeptune_inst2vec_accuracy(
   ].mean() == pytest.approx(0)
 
 
-@test.SlowTest(reason="Takes several hours to train full model")
+@test.Skip(reason="Takes several hours to train full model")
 def test_deeptune_inst2vec_speedup(
   r: heterogeneous_mapping.HeterogeneousMappingExperiment,
 ):
