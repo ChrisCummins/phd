@@ -33,22 +33,37 @@ FLAGS = app.FLAGS
 
 
 class CheckpointReference(NamedTuple):
-  """Reference to a checkpoint."""
+  """Reference to a checkpoint.
 
-  run_id: run_id_lib.RunId
+  This is used to store the information that is required to resolve a concrete
+  instance of the Checkpoint class. Unlike a Checkpoint, which references a
+  specific epoch number of a single run, a CheckpointReference can defer of:
+    * run_id by using a tag.
+    * epoch_num by using using None value to indicate "give me the best".
+
+  The resolution of a Checkpoint from a CheckpointReference is handled in:
+      deeplearning.ml4pl.models.logger.Logger.Load()
+  """
+
+  run_id: Optional[run_id_lib.RunId]
+  tag: Optional[str]
   # If epoch_num is None, then load the best epoch.
   epoch_num: Optional[int]
 
   def __eq__(self, rhs: Union["CheckpointReference", "Checkpoint"]) -> bool:
     """Equality check for checkpoints / checkpoint references."""
-    return rhs.run_id == self.run_id and rhs.epoch_num == self.epoch_num
+    if rhs.run_id:
+      return rhs.run_id == self.run_id and rhs.epoch_num == self.epoch_num
+    else:
+      return rhs.tag == self.tag and rhs.epoch_num == self.epoch_num
 
   def __repr__(self) -> str:
     """Return the string representation of a checkpoint ref, suitable for
     parsing with FromString().
     """
     return (
-      f"{self.run_id}@{'best' if self.epoch_num is None else self.epoch_num}"
+      f"{self.run_id or self.tag}@"
+      f"{'best' if self.epoch_num is None else self.epoch_num}"
     )
 
   @classmethod
@@ -57,7 +72,7 @@ class CheckpointReference(NamedTuple):
 
     The format for a checkpoint reference is:
 
-      <run_id>[@<epoch_num|"best">]
+      <run_id|tag>[@<epoch_num|"best">]
 
     If the "@<epoch_num>" suffix is omitted, the best checkpoint is selected.
     This is the same as using the "@best" suffix.
@@ -66,7 +81,7 @@ class CheckpointReference(NamedTuple):
       string: A checkpoint reference string.
 
     Returns:
-      A CheckpointRefernece instance.
+      A CheckpointReference instance.
 
     Raises:
       ValueError: If the string is malformed.
@@ -75,20 +90,27 @@ class CheckpointReference(NamedTuple):
       if "@" in string:
         components = string.split("@")
         assert len(components) == 2
-        run_id_string, epoch_num_string = components
+        run_id_or_tag, epoch_num_string = components
         if epoch_num_string == "best":
           epoch_num = None
         else:
           epoch_num = int(epoch_num_string)
       else:
-        run_id_string = string
+        run_id_or_tag = string
         epoch_num = None
 
-      run_id = run_id_lib.RunId.FromString(run_id_string)
+      # Try to construct a run ID by parsing the string. If this fails, assume
+      # it is a tag.
+      try:
+        run_id = run_id_lib.RunId.FromString(run_id_or_tag)
+        tag = None
+      except ValueError:
+        run_id = None
+        tag = run_id_or_tag
 
-      return CheckpointReference(run_id, epoch_num)
+      return CheckpointReference(run_id, tag, epoch_num)
     except Exception:
-      raise ValueError(f"Invalid run ID and epoch format: {string}")
+      raise ValueError(f"Invalid checkpoint format: {string}")
 
 
 class Checkpoint(NamedTuple):

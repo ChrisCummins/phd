@@ -312,6 +312,47 @@ def test_load_restore_model_from_checkpoint(
   assert restored_model.model_data == 15
 
 
+@test.Parametrize("tag_suffix", ("", "@5", "@best"))
+def test_load_restore_model_from_checkpoint_using_tag(
+  logger: logging.Logger,
+  graph_db: graph_tuple_database.Database,
+  has_loss: bool,
+  has_learning_rate: bool,
+  batch_iterator: batches.BatchIterator,
+  tag_suffix: str,
+):
+  """Test creating and restoring model from checkpoint."""
+  # Generate a random tag to prevent multiple runs with the same tag in the
+  # session-level logger.
+  FLAGS.tag = f"t{random.random()}"
+
+  model = MockModel(logger, graph_db)
+  model.Initialize()
+
+  # Mutate model state.
+  model.epoch_num = 5
+  # We need to create some validation results so that when we load an unknown
+  # epoch number, we can select this epoch.
+  model(epoch_type=epoch.Type.VAL, batch_iterator=batch_iterator, logger=logger)
+
+  # Create the checkpoint to restore from.
+  model.SaveCheckpoint()
+
+  # Create a new model a tagged checkpoint.
+  tag_checkpoint_ref = checkpoints.CheckpointReference.FromString(
+    f"{FLAGS.tag}{tag_suffix}"
+  )
+
+  restored_model = MockModel(
+    logger, graph_db, has_loss=has_loss, has_learning_rate=has_learning_rate,
+  )
+  restored_model.RestoreFrom(tag_checkpoint_ref)
+
+  # Check that mutated model state was restored.
+  assert restored_model.epoch_num == 5
+  assert restored_model.model_data == model.model_data
+
+
 def test_call(
   model: MockModel,
   epoch_type: epoch.Type,

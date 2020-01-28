@@ -22,6 +22,27 @@ from labm8.py import test
 FLAGS = test.FLAGS
 
 
+def CheckpointReference_from_tag_without_epoch_num():
+  c = checkpoints.CheckpointReference.FromString("my_tag")
+  assert c.run_id is None
+  assert c.tag == "my_tag"
+  assert c.epoch_num is None
+
+
+def CheckpointReference_from_tag_with_epoch_num():
+  c = checkpoints.CheckpointReference.FromString("my_tag@5")
+  assert c.run_id is None
+  assert c.tag == "my_tag"
+  assert c.epoch_num == 5
+
+
+def CheckpointReference_from_tag_with_best_epoch_num():
+  c = checkpoints.CheckpointReference.FromString("my_tag@best")
+  assert c.run_id is None
+  assert c.tag == "my_tag"
+  assert c.epoch_num is None
+
+
 def CheckpointReference_without_epoch_num():
   """Check construction of a checkpoint reference without epoch number."""
   run_id = run_id_lib.RunId.GenerateUnique("reftest")

@@ -230,6 +230,7 @@ class ClassifierBase(object):
     epoch_type: epoch.Type,
     batch_iterator: batches.BatchIterator,
     logger: logging.Logger,
+    epoch_name_prefix: str = "",
   ) -> epoch.Results:
     """Run the model for over the input batches.
 
@@ -246,6 +247,7 @@ class ClassifierBase(object):
       epoch_type: The type of epoch to run.
       batch_iterator: The batches to process.
       logger: A logger instance to log results to.
+      epoch_name_prefix: An optional prefix for the name of the epoch.
 
     Returns:
       An epoch results instance.
@@ -259,7 +261,13 @@ class ClassifierBase(object):
     if epoch_type == epoch.Type.TRAIN:
       self.epoch_num += 1
 
-    thread = EpochThread(self, epoch_type, batch_iterator, logger)
+    thread = EpochThread(
+      self,
+      epoch_type,
+      batch_iterator,
+      logger,
+      epoch_name_prefix=epoch_name_prefix,
+    )
     progress.Run(thread)
 
     # Check that there were batches.
@@ -400,7 +408,7 @@ class ClassifierBase(object):
       )
     )
     return checkpoints.CheckpointReference(
-      run_id=self.run_id, epoch_num=self.epoch_num
+      run_id=self.run_id, tag=None, epoch_num=self.epoch_num
     )
 
   @decorators.memoized_property
@@ -421,6 +429,7 @@ class EpochThread(progress.Progress):
     epoch_type: epoch.Type,
     batch_iterator: batches.BatchIterator,
     logger: logging.Logger,
+    epoch_name_prefix: str = "",
   ):
     """Constructor.
 
@@ -441,9 +450,12 @@ class EpochThread(progress.Progress):
     self.graph_ids = set()
 
     super(EpochThread, self).__init__(
-      f"{epoch_type.name.capitalize()} epoch {model.epoch_num}",
-      0,
-      batch_iterator.graph_count,
+      name=(
+        f"{epoch_name_prefix}{epoch_type.name.capitalize()} "
+        f"epoch {model.epoch_num}"
+      ),
+      i=0,
+      n=batch_iterator.graph_count,
       unit="graph",
       vertical_position=0,
       leave=False,
