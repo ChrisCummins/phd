@@ -91,15 +91,13 @@ def getQueryFromUserOrDie(
       [x.rstrip() for x in query.split("\n") if x.strip()]
     ).strip()
 
-    query = (
-      sqlparse.format(query, reindent=True, keyword_case="upper").rstrip()
-      + "\n"
-    )
+    query = sqlparse.format(query, reindent=True, keyword_case="upper").rstrip()
 
   if not query:
     print("No query to execute, aborting.", file=sys.stderr)
     sys.exit(1)
-  return query
+
+  return query + "\n"
 
 
 def execMysqlQuery(query: str, host: str) -> None:
