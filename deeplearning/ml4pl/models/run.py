@@ -558,8 +558,9 @@ class KFoldCrossValidation(progress.Progress):
         "Graph database splits are not a contiguous sequence: "
         f"{self.graph_db.splits}"
       )
+    name_prefix = f"{FLAGS.tag[:28]} " if FLAGS.tag else ""
     super(KFoldCrossValidation, self).__init__(
-      name=f"{GetRunNamePrefix(model)} {self.graph_db.split_count}-fold xval",
+      name=f"{name_prefix}{self.graph_db.split_count}-fold xval",
       i=0,
       n=self.graph_db.split_count,
       unit="split",
