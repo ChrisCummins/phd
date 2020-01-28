@@ -30,7 +30,7 @@ def test_getQueryFromUserOrDie_with_change():
     jasper.getQueryFromUserOrDie(_mock_edit_callback_with_query)
     == """\
 SELECT COUNT(*)
-FROM database.table\
+FROM database.table
 """
   )
 
