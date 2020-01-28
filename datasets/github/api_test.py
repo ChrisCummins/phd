@@ -184,7 +184,12 @@ def test_CloneRepo_valid_repo(tempdir: pathlib.Path, shallow: bool):
   repo = github.get_repo("ChrisCummins/empty_repository_for_testing")
   clone_path = tempdir / "repo"
 
-  assert api.CloneRepo(repo, tempdir / "repo", shallow=shallow) == clone_path
+  # Note forced https because test runner may not have access to SSH
+  # keys in ~/.ssh.
+  assert (
+    api.CloneRepo(repo, tempdir / "repo", shallow=shallow, force_https=True)
+    == clone_path
+  )
   assert (clone_path / "HelloWorld.java").is_file()
 
 
