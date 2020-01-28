@@ -15,6 +15,8 @@ using std::pair;
 using std::sort;
 using std::vector;
 
+// Time: O(n log n)
+// Space: O(n)
 int f(const vector<pair<int, int>>& in) {
   vector<int> rooms;
 

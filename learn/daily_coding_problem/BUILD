@@ -79,8 +79,41 @@ cc_test(
 )
 
 cc_test(
+    name = "014",
+    srcs = ["014.cc"],
+    deps = [
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
     name = "018",
     srcs = ["018.cc"],
+    deps = [
+        "//labm8/cpp:test",
+    ],
+)
+
+py_test(
+    name = "019",
+    srcs = ["019.py"],
+    deps = [
+        "//labm8/py:test",
+    ],
+)
+
+cc_test(
+    name = "064",
+    srcs = ["064.cc"],
+    deps = [
+        "//labm8/cpp:port",
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "335",
+    srcs = ["335.cc"],
     deps = [
         "//labm8/cpp:test",
     ],
@@ -89,6 +122,30 @@ cc_test(
 cc_test(
     name = "364",
     srcs = ["364.cc"],
+    deps = [
+        "//labm8/cpp:test",
+    ],
+)
+
+py_test(
+    name = "371",
+    srcs = ["371.py"],
+    deps = [
+        "//labm8/py:test",
+    ],
+)
+
+py_test(
+    name = "373",
+    srcs = ["373.py"],
+    deps = [
+        "//labm8/py:test",
+    ],
+)
+
+cc_test(
+    name = "374",
+    srcs = ["374.cc"],
     deps = [
         "//labm8/cpp:test",
     ],
