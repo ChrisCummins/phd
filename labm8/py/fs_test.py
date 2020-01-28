@@ -17,8 +17,6 @@ import pathlib
 import stat
 import tempfile
 
-import pytest
-
 from labm8.py import app
 from labm8.py import fs
 from labm8.py import system
