@@ -146,12 +146,12 @@ class GraphLstm(lstm_base.LstmBase):
       output_dim=FLAGS.lang_model_hidden_size,
       name="embedding",
     )(sequence_input)
-    lang_model = utils.LstmLayer(
+    lang_model = self.MakeLstmLayer(
       FLAGS.lang_model_hidden_size, return_sequences=True, name="lstm_1"
     )(lang_model)
-    lang_model = utils.LstmLayer(FLAGS.lang_model_hidden_size, name="lstm_2")(
-      lang_model
-    )
+    lang_model = self.MakeLstmLayer(
+      FLAGS.lang_model_hidden_size, name="lstm_2"
+    )(lang_model)
 
     # An auxiliary output used for tuning the language model independently of
     # the graph features.
