@@ -16,50 +16,55 @@
 """Multi-processing tests for //deeplearning/ml4pl:run_id."""
 import multiprocessing
 import subprocess
-import sys
+import time
 
 from deeplearning.ml4pl import run_id
+from labm8.py import bazelutil
 from labm8.py import test
+
+RUN_ID_PATH = bazelutil.DataPath("phd/deeplearning/ml4pl/run_id")
 
 
 FLAGS = test.FLAGS
 
 
-def _MakeARunId(*args):
-  """Generate a run ID."""
-  return run_id.RunId.GenerateGlobalUnique()
-
-
-def test_GenerateGlobalUnique_subprocess():
-  """Run IDs should be unique when running as subprocesses."""
-  unique_run_ids = set()
-
-  for _ in range(30):
-    run_id_ = subprocess.check_output(
-      [
-        sys.executable,
-        "-c",
-        "from deeplearning.ml4pl import run_id; "
-        "print(run_id.RunId.GenerateGlobalUnique())",
-      ],
-      universal_newlines=True,
-    )
-
-    if run_id_ in unique_run_ids:
-      test.Fail("Non-unique run ID generated")
-    unique_run_ids.add(run_id_)
+def GetRunId(*args):
+  """Get a run ID by running //deeplearning/ml4pl:run_id."""
+  return subprocess.check_output([str(RUN_ID_PATH)], universal_newlines=True)
 
 
 def test_GenerateGlobalUnique_multiprocessed():
-  """Generate a bunch of run IDs concurrently and check that they are unique."""
+  """Generate a bunch of run IDs concurrently and check that they are unique.
+
+  Do this by spawning a bunch of //deeplearning/ml4pl:run_id processes, which
+  each print a global run ID. When spanwing multiple procsses simultaneously,
+  they will block on the system-wide ID lockfile to produce unique run IDs.
+  """
+  # The number of run IDs to produce in this test.
+  run_id_count = 30
+
   unique_run_ids = set()
 
-  with multiprocessing.Pool() as p:
-    for run_id_ in p.imap_unordered(_MakeARunId, range(30)):
-      print("Generated run ID:", run_id)
+  start_time = time.time()
+
+  with multiprocessing.Pool(processes=8) as p:
+    for run_id_ in p.imap_unordered(GetRunId, range(run_id_count)):
+      print("Generated run ID:", run_id_)
+
+      # Check that the process produced a valid run ID:
+      run_id.RunId.FromString(run_id_)
+
       if run_id_ in unique_run_ids:
         test.Fail("Non-unique run ID generated")
       unique_run_ids.add(run_id_)
+
+  elapsed_time = time.time() - start_time
+  # Because the locking ensures that a single run ID is produced per second,
+  # we know that it must take at least 'n-2' seconds to produce 'n' unique run
+  # IDs. Any additional time is spent in the overhead of spawning processes,
+  # which shouldn't be too great.
+  assert elapsed_time >= run_id_count - 2
+  assert elapsed_time < run_id_count * 2
 
 
 if __name__ == "__main__":
