@@ -23,5 +23,6 @@ py_library(
         requirement("chardet"),
         requirement("certifi"),
         requirement("retrying"),
+        requirement("MarkupSafe"),
     ],
 )
