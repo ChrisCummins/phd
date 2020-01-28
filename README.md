@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/github/repo-size/ChrisCummins/phd.svg">
 </a>
 <!-- commit counter -->
-<a href="github.com/ChrisCummins/phd/commits/master">
+<a href="https://github.com/ChrisCummins/phd/commits/master">
   <img src="https://img.shields.io/github/commit-activity/y/ChrisCummins/phd.svg?color=yellow">
 </a>
 <!-- Better code -->
