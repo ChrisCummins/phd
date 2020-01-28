@@ -13,11 +13,12 @@ py_library(
     deps = [
         "//:build_info",
         "//labm8/py:app",
-        "//labm8/py:bazelutil",
         "//labm8/py:decorators",
-        "//labm8/py:humanize",
+        "//labm8/py:labdate",
+        "//labm8/py:sqlutil",
         "//third_party/py/flask",
         "//third_party/py/portpicker",
+        "//third_party/py/sqlalchemy",
     ],
 )
 
@@ -32,11 +33,9 @@ py_library(
     deps = [
         "//:build_info",
         "//labm8/py:app",
-        "//labm8/py:bazelutil",
         "//labm8/py:decorators",
-        "//labm8/py:humanize",
         "//labm8/py:labdate",
-        "//third_party/py/flask",
-        "//third_party/py/portpicker",
+        "//labm8/py:sqlutil",
+        "//third_party/py/sqlalchemy",
     ],
 )
