@@ -29,9 +29,7 @@ _ALWAYS_EXPORTED_FILES = [
   "requirements.txt",  # Needed by WORKSPACE.
   "tools/Brewfile.travis",  # Needed by Travis CI.
   "tools/bzl/*",  # Implicit dependency of WORKSPACE file.
-  "tools/BUILD",  # Needed by //tools/bzl:maven_jar.bzl.
-  "tools/download_file.py",  # Needed by //tools/bzl:maven_jar.bzl.
-  "tools/util.py",  # Needed by //tools:download_file.py.
+  "third_party/bazel/*",  # Needed by WORKSPACE.
   "third_party/*.BUILD",  # Implicit dependencies of WORKSPACE file.
   "tools/flaky_bazel.sh",  # Needed by Travis CI.
   "tools/workspace_status.sh",  # Needed by .bazelrc

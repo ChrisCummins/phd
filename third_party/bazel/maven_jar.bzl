@@ -9,7 +9,7 @@ def _maven_release(ctx, parts):
   if len(parts) not in [3, 4]:
     fail(
       '%s:\nexpected id="groupId:artifactId:version[:classifier]"'
-      % ctx.attr.artifact
+      % ctx.attr.artifact,
     )
   if len(parts) == 4:
     group, artifact, version, classifier = parts
@@ -25,7 +25,7 @@ def _maven_release(ctx, parts):
       artifact,
       version,
       artifact + "-" + file_version,
-    ]
+    ],
   )
   return jar, url
 
@@ -105,9 +105,10 @@ java_import(
     jars = ['{srcjar}'],
 )
 """.format(
-      srcjar=srcjar
+      srcjar=srcjar,
     )
   ctx.file("%s/BUILD" % ctx.path("jar"), contents, False)
+
   # Compatibility layer for java_import_external from rules_closure
   contents = """
 {header}
@@ -117,7 +118,7 @@ alias(
     actual = "@{rule_name}//jar",
 )
 \n""".format(
-    rule_name=ctx.name, header=header
+    rule_name=ctx.name, header=header,
   )
   ctx.file("BUILD", contents, False)
 
@@ -128,6 +129,7 @@ def _maven_jar_impl(ctx):
   name = ctx.name
   sha1 = ctx.attr.sha1
   parts = ctx.attr.artifact.split(":")
+
   # TODO(davido): Only releases for now, implement handling snapshots
   jar, url = _maven_release(ctx, parts)
   binjar = jar + ".jar"
@@ -144,7 +146,7 @@ def _maven_jar_impl(ctx):
     args.extend(["-x", x])
   out = ctx.execute(args)
   if out.return_code:
-    fail("failed %s: %s" % (" ".join(args), out.stderr))
+    fail("failed %s: %s" % (" ".join([str(x) for x in args]), out.stderr))
   srcjar = None
   if ctx.attr.src_sha1 or ctx.attr.attach_source:
     srcjar = jar + "-src.jar"
@@ -164,7 +166,9 @@ maven_jar = repository_rule(
     "artifact": attr.string(mandatory=True),
     "sha1": attr.string(),
     "src_sha1": attr.string(),
-    "_download_script": attr.label(default=Label("//tools:download_file.py")),
+    "_download_script": attr.label(
+      default=Label("//third_party/bazel:download_file.py")
+    ),
     "repository": attr.string(default=MAVEN_CENTRAL),
     "attach_source": attr.bool(default=True),
     "unsign": attr.bool(default=False),
