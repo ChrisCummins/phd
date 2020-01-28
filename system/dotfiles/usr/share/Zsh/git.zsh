@@ -1,20 +1,20 @@
 # Git configuration
 
+# In conjunction with ohmyzsh git plugin
+# https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/git/
+
 # No arguments: `git status`. With arguments: acts like `git`
 # Extended from: https://github.com/thoughtbot/dotfiles
 unalias g
 g() {
-    GIT=/usr/local/bin/git
-    test -f /usr/bin/git && GIT=/usr/bin/git
-
     if [ -n "$1" ]; then
-        $GIT "$@"
+        git "$@"
     else
-        $GIT status
+        git status
     fi
 }
 
-alias ga='git add'
+# alias ga='git add'
 alias gap='git add -p'
 alias gc='git commit -v'
 alias gca='git commit --amend'

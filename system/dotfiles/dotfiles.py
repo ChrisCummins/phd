@@ -701,8 +701,8 @@ class Zsh(Task):
   __osx_genfiles__ = ["/usr/local/bin/zsh"]
   __linux_genfiles__ = ["/bin/zsh"]
   __versions__ = {
-    "oh-my-zsh": "c3b072eace1ce19a48e36c2ead5932ae2d2e06d9",
-    "zsh-syntax-highlighting": "b07ada1255b74c25fbc96901f2b77dc4bd81de1a",
+    "oh-my-zsh": "4e45e12dc355e3ba34e7e40ce4936fb222f0155c",
+    "zsh-syntax-highlighting": "0e51046b19b4f01d57c7953c8053d707b51a54d1",
   }
 
   def install_osx(self):

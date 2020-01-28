@@ -25,7 +25,6 @@ if [[ -x $(which rbenv) ]]; then
 fi
 
 # Pagers and editors.
-export VIEW=/usr/bin/elinks
 export PAGER="less"
 export LESS="--ignore-case --LONG-PROMPT --QUIET --chop-long-lines -Sm \
              --RAW-CONTROL-CHARS --quit-if-one-screen --no-init"
@@ -34,13 +33,7 @@ if [[ -x $(which lesspipe.sh) ]]; then
 fi
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
-# sublime for local shell, rsub if on a remote machine
-# arguments: --wait block until closed, -n open a new window
-if [[ -f /usr/local/bin/subl ]]; then
-    export EDITOR='subl -n --wait'
-else
-    export EDITOR='vim'
-fi
+export EDITOR="emacs -nw"
 export ALTERNATE_EDITOR=''
 export USE_EDITOR=$EDITOR
 export VISUAL=$EDITOR

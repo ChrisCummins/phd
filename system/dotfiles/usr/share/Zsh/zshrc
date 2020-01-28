@@ -65,22 +65,27 @@ unsetopt histverify         # Don't reload history lines
 # Plugins.
 # --------------------------------------------------------------------------
 
-# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
+# Ohmyzsh plugins, found in ~/.oh-my-zsh/plugins/*
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-plugins=(    \
-    ant      \
-    debian   \
-    extract  \
-    git      \
-    git-flow \
-    github   \
-    perl     \
-    python   \
-    rails    \
-    ruby     \
-    zsh-syntax-highlighting \
-    )
+plugins=(
+    autoenv
+    debian    # https://github.com/ohmyzsh/ohmyzsh/wiki/Plugins#debian
+    docker    # https://github.com/ohmyzsh/ohmyzsh/wiki/Plugins#docker
+    emacs     # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/emacs
+    extract   # https://github.com/ohmyzsh/ohmyzsh/wiki/Plugins#extract
+    git       # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/git/
+    git-extras  # https://github.com/ohmyzsh/ohmyzsh/wiki/Plugins#git-extras
+    git-flow  # https://github.com/ohmyzsh/ohmyzsh/wiki/Plugins#git-flow
+    github    # https://github.com/ohmyzsh/ohmyzsh/wiki/Plugins#github
+    jsontools # https://github.com/ohmyzsh/ohmyzsh/wiki/Plugins#jsontools
+    history   # https://github.com/ohmyzsh/ohmyzsh/wiki/Plugins#history
+    pyenv     # https://github.com/ohmyzsh/ohmyzsh/wiki/Plugins#pyenv
+    python    # https://github.com/ohmyzsh/ohmyzsh/wiki/Plugins#python
+    sudo      # Press esc twice to insert sudo
+    tmux      # https://github.com/ohmyzsh/ohmyzsh/wiki/Plugins#tmux
+    z         # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/z
+    zsh-syntax-highlighting
+)
 
 # --------------------------------------------------------------------------
 # Key bindings.
@@ -173,6 +178,8 @@ source ~/.oh-my-zsh/oh-my-zsh.sh
 # Aliases.
 # --------------------------------------------------------------------------
 
+alias zshrc="$EDITOR ~/.zshrc"
+
 # Don't kill forked jobs on shell exit.
 alias exit='disown &>/dev/null; exit'
 
@@ -212,9 +219,6 @@ alias ls_alias="alias | sed 's/=/\t/' | sed -r 's/'"'"(.*)"'"'/\1/' | column -t 
 # Open an emacs terminal to magit in the current directory
 alias magit="emacs -nw --eval '(progn (magit-status) (delete-other-windows))'"
 alias mg=magit
-
-# Go away "rails generate".
-unalias rg
 
 
 # --------------------------------------------------------------------------
@@ -609,9 +613,6 @@ fi
 # updating $PATH.
 # --------------------------------------------------------------------------
 
-# autoenv cd script. https://github.com/kennethreitz/autoenv
-which activate.sh &>/dev/null && source $(which activate.sh)
-
 setopt nullglob
 
 # Custom zsh scripts
@@ -627,3 +628,8 @@ if test -d ~/.zsh; then
 fi
 
 unsetopt nullglob
+
+fpath[1,0]=~/.zsh/
+
+autoload -Uz manydots-magic
+manydots-magic
