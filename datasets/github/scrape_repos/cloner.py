@@ -21,6 +21,7 @@ import random
 import subprocess
 import threading
 import typing
+from typing import Optional
 
 import progressbar
 
@@ -69,31 +70,31 @@ def CloneFromMetafile(metafile: pathlib.Path) -> None:
   subprocess.check_call(["rm", "-rf", str(clone_dir)])
 
   # Try to checkout the repository and submodules.
-  git_clone.GitClone(
-    meta.clone_from_url,
-    clone_dir,
-    shallow=True,
-    timeout=FLAGS.repository_clone_timeout_minutes * 60,
-  )
-
-  _, stderr = p.communicate()
-  if p.returncode and "submodule" in stderr:
+  try:
+    git_clone.GitClone(
+      meta.clone_from_url,
+      clone_dir,
+      shallow=True,
+      recursive=True,
+      timeout=FLAGS.repository_clone_timeout_minutes * 60,
+    )
+  except git_clone.RepoCloneFailed:
     # Remove anything left over from a previous attempt.
     subprocess.check_call(["rm", "-rf", str(clone_dir)])
     # Try again, but this time without cloning submodules.
-    p = subprocess.Popen(
-      cmd,
-      stdout=subprocess.PIPE,
-      stderr=subprocess.PIPE,
-      universal_newlines=True,
-    )
-    _, stderr = p.communicate()
-
-  if p.returncode:
-    # Give up.
-    app.Warning("\nClone failed %s:\n%s", meta.clone_from_url, stderr)
-    # Remove anything left over.
-    subprocess.check_call(["rm", "-rf", str(clone_dir)])
+    try:
+      git_clone.GitClone(
+        meta.clone_from_url,
+        clone_dir,
+        shallow=True,
+        recursive=False,
+        timeout=FLAGS.repository_clone_timeout_minutes * 60,
+      )
+    except git_clone.RepoCloneFailed:
+      # Give up.
+      app.Warning("\nClone failed %s:\n%s", meta.clone_from_url)
+      # Remove anything left over.
+      subprocess.check_call(["rm", "-rf", str(clone_dir)])
 
 
 def IsRepoMetaFile(f: str):

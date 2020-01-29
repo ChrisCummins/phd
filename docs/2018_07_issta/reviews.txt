@@ -1,0 +1,107 @@
+ISSTA 2018 Paper #2 Reviews and Comments
+===========================================================================
+Paper #4 Compiler Fuzzing through Deep Learning
+
+
+Review #4A
+===========================================================================
+
+Overall merit
+-------------
+A. Accept
+
+Paper summary
+-------------
+Generating test inputs for compilers is a challenge - most notably because the code to be generated has several lexical, syntactical, and semantical properties that need to be satisfied.  In the absence of a formal description (e.g., a grammar), one can attempt to learn the input structure given a set of samples.  This paper applies a Deep Learning technique for the task of learning the structure of OpenCL inputs.  After a simple lexical encoding, a deep learner is trained on a set of samples, which then are used for production.  Compared to a state of the art OpenCL fuzzer, CLSmith, the DeepSmith tool achieves similar results, but at a fraction of the effort, and detected dozens of bugs in OpenCL compilers.  The approach can be very easily adapted to similar languages and compilers.
+
+Comments for author
+-------------------
+This is a nice paper with a lot of potential.  I like the fact that only a relatively simple lexical encoding is required to train the deep learner, and that the resulting inputs cover syntax and semantics, as well as common coding conventions; the results show that this makes for effective and efficient fuzzing.  My primary question about this work is the amount of regular build failures (parser errors) due to invalid inputs (Figure 2); since the percentage of parseable inputs is a quality indicator, I would like to see a much deeper discussion on these: Which percentage of the DeepSmith-generated inputs could not be parsed, and how does this compare to CLSmith?  I would suggest to list the number of build failures (not only anomalous ones) in Table 2.
+
+My secondary concern about this work would be stated in [11]: By learning from given input samples, one generates "more of the same", which is great to produce valid inputs, but may not help in covering features that hardly ever or even never occur in the sample inputs.  However, OpenCL and Solidity compilers obviously do not have this level of maturity yet, so the success of the approach speaks for itself.
+
+The writeup of the paper is excellent; I only have a number of minor concerns:
+
+* In your code examples (Figure 3 and later), I'd prefer if you used a font designed for monospace.
+
+* Learn&Fuzz [11] has been published at ASE 2017.
+
+* More related work: "Synthesizing program input grammars" https://dl.acm.org/citation.cfm?id=3062349.  This work can also infer grammars from samples, including languages like JavaScript or Python; and these authors also use their grammars for fuzzing.  Yet, in contrast to you, they do not report bugs found; and I think that your work is sufficiently original still.  Please cite and relate.
+
+* At the end of Section 5, you conclude: "no work so far has succeeded in finding compiler bugs by exploiting mined source code for test case generation"; yet, The LANGFUZZ tool [17] also mines source code, namely for " inserting code segments which have previously exposed bugs", as you say yourself.  Please be more specific here - e.g. replace "exploiting" by "learning input structure", which should be accurate.
+
+Questions to authors, for author response
+-----------------------------------------
+* Which percentage of the DeepSmith-generated inputs would be invalid (i.e., could not be parsed), and how does this compare to CLSmith?
+
+
+
+Review #4B
+===========================================================================
+
+Overall merit
+-------------
+B. Weak accept
+
+Paper summary
+-------------
+This paper proposed a compiler fuzzing approach DeepSmith. It first leverages deep learning to infer a generative model based a large corpus of real-world programs. Then it uses the inferred model to generate programs and applies differential testing on them to expose compiler bugs. Extensive experiments were done to fuzz OpenCL compilers, and 67 bug reports were submitted. Besides, preliminary experiments were also conducted on Solidity compilers.
+
+Comments for author
+-------------------
+In general, the paper targets an important topic, and is well-written except for some part of the evaluation section.
+
+Specifically, in Section 2, the author claimed that rewriting simplifications could speed up the learning. Did you have any empirical results to support that?
+
+The parameters were selected based on prior works in other domains, which seems arbitrary as such parameter are often domain-specific. The authors should at least discuss this.
+
+It is not clear why the generated programs are small in size. As one of the main advantages over CLSmith is the small size, this is an important point that lacks any explanation. Is it related to the size of the programs in the corpus? What is the size of the programs in the corpus?
+
+For the voting heuristics, how is runtime timeout evaluated?
+
+Some heuristics are used during the generation ti minimize false positives for anomalous runtime behaviors. However, such heuristics are often language-dependent, which makes DeepSmith less language-agnostic. Did you have any empirical results about the efforts to summarize such heuristics?
+
+In Section 4, bc, bto, abf, arc and awo can be first explicitly classified into compile-time and runtime defects, and Table 1 can be introduced in Section 4.1, which will make Section 4.1 and 4.2 much easier to follow.
+
+Besides, it is not clear how many bug reports have been confirmed and fixed for the submitted 67 bug reports.
+
+The time comparison of DeepSmith over CLSmith seems unfair because DeepSmith needs 12 hours to train while CLSmith does not.
+
+Some typos:
+
+Line 203: which which
+Line 520: to on
+Line 784: what does CLgen mean?
+Line 845: what does Testbeds 4-7 mean?
+Line 1007: the either the
+
+Questions to authors, for author response
+-----------------------------------------
+1. What is the size of the programs in the corpus? Is the small size of generated programs related to the size of the programs in the corpus?
+
+2. How is runtime timeout evaluated in the voting heuristics?
+
+3. How many bug reports have been confirmed and fixed for the submitted 67 bug reports?
+
+
+
+Review #4C
+===========================================================================
+
+Overall merit
+-------------
+A. Accept
+
+Paper summary
+-------------
+The paper introduces DeepSmith, a novel approach to generate OpenCL code to test OpenCL compilers. DeepSmith relies on a Long Short-Term Memory Recurrent Neural Network. The network was trained with a large corpus of open source OpenCL code obtained from Github. After the training step, the network is used to generate code samples. These generated code samples are used for the actual compiler testing. The system looks both for crashing bugs in the compilation process as well as for incorrect executables. For the compilation, the OpenCL code is embedded in a test harness, which is adapted to the code's kernel signature. For all test code for which the compilation process did terminate successfully, the system tries to generate test input. If such input could be found, the binary is executed for the differential testing step, in which the results of the execution are compared between the individual compilers. DeepSmith outperforms the current state of the art (CLSmith) in every aspect. The sample generation is faster, resulting in more generated test cases. The samples are smaller, thus, they compile and execute faster. The code generation mechanism is able to generate a more diverse code base, as the CLSmith is limited to OpenCL kernels without input. In the practical evaluation, DeepSmith detects a significant higher number of defects compared to CLSmith. Furthermore, the authors demonstrate, that the underlying approach and technique can be adapted to other programming languages, shown by a preliminary code generator for the Solidity language.
+
+Comments for author
+-------------------
+This is a well written and well structured paper. All necessary information is provided and the overall approach of the system is easy to follow and comprehend. While it has been demonstrated before, that RNNs can be trained to generated syntactical correct source code, the application to compiler fuzzing is clever and well done. Given the results of the paper, the authors provide strong evidence, that their approach towards compiler testing has significant merit and it worth further exploration.
+
+The comparison with CLSmith is very convincing, as DeepSmith apparently outperforms the competition on all relevant aspects. Still, I am wondering if in selected aspects the comparison is completely fair. As discusses in Section 2.2, CLSmith is limited to OpenCL kernels without input, while DeepSmith also generates kernels, that accept kernels. Hence, the overall code diversity that can be reached with DeepSmith is probably much higher. I would have been interested to see a comparison between CLSmith and a all DeepSmith samples, that had input-less kernels. Such a comparison would have provided some better direct comparison. I am also not familiar with CLSmith, hence, I cannot assess how difficult it would be to extend this code generation approach toward kernels that take input.
+
+Having said this, even if in the limited settings it turns out that CLSmith and DeepSmith expose a similar power-level, DeepSmith has the undeniable advantage of much shorter development time and easier extensibility.
+
+Finally, I am not convinced that all aspects of DeepSmith are directly applicable for other programming languages. Apparently, generating test input for a generated OpenCL kernel can be achieved, probably due to the limited nature of the kernel interface. How would this translate for general purpose languages? Compared to CLSmith, CSmith seems to be a much more mature testing infrastructure for a more flexible programming environment. Extending DeepSmith to compete with CSmith appears to be a compelling target for future work.

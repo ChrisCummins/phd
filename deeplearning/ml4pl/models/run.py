@@ -374,7 +374,7 @@ class TrainValTestLoop(progress.Progress):
 
       # Restore the model to the state at the best validation accuracy.
       checkpoint = checkpoints.CheckpointReference(
-        run_id=self.model.run_id, epoch_num=None
+        run_id=self.model.run_id, tag=None, epoch_num=None
       )
       self.ctx.Log(
         1, "Restoring model to best validation results",

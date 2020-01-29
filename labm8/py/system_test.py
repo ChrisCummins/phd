@@ -151,7 +151,7 @@ def test_sed_fail_no_file(tempdir: pathlib.Path):
 
 # which()
 def test_which():
-  assert "/bin/sh" == system.which("sh")
+  assert system.which("sh") in {"/bin/sh", "/usr/bin/sh"}
   assert not system.which("not-a-real-command")
 
 

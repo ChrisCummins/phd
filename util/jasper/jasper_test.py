@@ -1,8 +1,6 @@
 """Unit tests for //util/jasper."""
 import pathlib
 
-import pytest
-
 from labm8.py import app
 from labm8.py import test
 from util.jasper import jasper
@@ -32,7 +30,7 @@ def test_getQueryFromUserOrDie_with_change():
     jasper.getQueryFromUserOrDie(_mock_edit_callback_with_query)
     == """\
 SELECT COUNT(*)
-FROM database.table\
+FROM database.table
 """
   )
 

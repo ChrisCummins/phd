@@ -188,10 +188,10 @@ class NodeLstm(lstm_base.LstmBase):
     )([segmented_input, selector_vector],)
 
     # Make the language model.
-    lang_model = utils.LstmLayer(
+    lang_model = self.MakeLstmLayer(
       FLAGS.lang_model_hidden_size, return_sequences=True, name="lstm_1"
     )(lang_model_input)
-    lang_model = utils.LstmLayer(
+    lang_model = self.MakeLstmLayer(
       FLAGS.lang_model_hidden_size,
       return_sequences=True,
       return_state=False,

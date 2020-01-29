@@ -19,7 +19,7 @@ import pytest
 
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import lda
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import testlib
-from deeplearning.ml4pl.graphs.unlabelled.llvm2graph.cfg import llvm_util
+from deeplearning.ml4pl.graphs.llvm2graph.legacy.cfg import llvm_util
 from labm8.py import app
 from labm8.py import test
 

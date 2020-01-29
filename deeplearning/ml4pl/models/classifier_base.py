@@ -73,7 +73,7 @@ class ClassifierBase(object):
   def __init__(
     self,
     logger: logging.Logger,
-    graph_db: graph_tuple_database,
+    graph_db: graph_tuple_database.Database,
     run_id: Optional[run_id_lib.RunId] = None,
   ):
     """Constructor.
@@ -89,7 +89,11 @@ class ClassifierBase(object):
     Raises:
       NotImplementedError: If both node and graph labels are set.
       TypeError: If neither graph or node labels are set.
+      ValueError: If graph_db is empty.
     """
+    if not graph_db.graph_count:
+      raise ValueError(f"Database contains no graphs: {graph_db}")
+
     # Sanity check the dimensionality of input graphs.
     if (
       not graph_db.node_y_dimensionality and not graph_db.graph_y_dimensionality

@@ -1,8 +1,6 @@
 """Unit tests for //datasets/github/scrape_repos:pipelined_scraper."""
 import pathlib
 
-import pytest
-
 from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos import pipelined_scraper
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
@@ -13,7 +11,7 @@ FLAGS = app.FLAGS
 
 
 @test.Fixture(scope="function")
-def query(tempdir: pathlib.Path) -> scrape_repos_pb2.GitHubRepositoryQuery:
+def query() -> scrape_repos_pb2.GitHubRepositoryQuery:
   return scrape_repos_pb2.GitHubRepositoryQuery(
     string="test query", max_results=10,
   )

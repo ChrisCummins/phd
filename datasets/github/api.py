@@ -355,6 +355,7 @@ def CloneRepo(
   shallow: bool = False,
   recursive: bool = False,
   timeout: int = 3600,
+  force_https: bool = False,
 ):
   """Clone a repository from Github.
 
@@ -374,7 +375,7 @@ def CloneRepo(
     RepoCloneFailed: On error.
   """
   try:
-    clone_url = repo.ssh_url
+    clone_url = repo.clone_url if force_https else repo.ssh_url
   except github.UnknownObjectException:
     raise FileNotFoundError("Repo not found")
 

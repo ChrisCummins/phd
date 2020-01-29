@@ -52,6 +52,7 @@ def test_GetBatchOfKernelsToDrive_overlap(
   assert len(set(b.src for b in batch)) == 2
 
 
+@test.XFail(reason="github.com/ChrisCummins/phd/issues/69")
 @test.Parametrize("num_runs", [3, 5, 10])
 @test.Parametrize(
   "dynamic_params",
@@ -105,6 +106,7 @@ def test_DriveKernelAndRecordResults(
       assert record.kernel_time_ns >= 100  # Flaky but likely.
 
 
+@test.XFail(reason="github.com/ChrisCummins/phd/issues/69")
 @test.Parametrize("num_runs", [3, 5, 10])
 @test.Parametrize(
   "dynamic_params",
@@ -145,6 +147,7 @@ def test_DriveKernelAndRecordResults_broken_kernel(
     assert record.kernel_time_ns is None
 
 
+@test.XFail(reason="github.com/ChrisCummins/phd/issues/69")
 @test.Parametrize("num_runs", [3, 5, 10])
 @test.Parametrize(
   "dynamic_params",
@@ -188,6 +191,7 @@ def test_DriveKernelAndRecordResults_no_output(
       assert record.kernel_time_ns is None
 
 
+@test.XFail(reason="github.com/ChrisCummins/phd/issues/69")
 @test.Parametrize("num_runs", [3, 5, 10])
 @test.Parametrize(
   "dynamic_params",

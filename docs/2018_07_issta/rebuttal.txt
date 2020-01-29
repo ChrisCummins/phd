@@ -1,0 +1,41 @@
+Thank you for the positive reviews.
+
+# Review.4A
+
+A.1.Build failure rate is higher in DeepSmith (51%) than CLSmith (26%). Great catch, we should have included this. We will add more discussion about this and add to Table 2. We're also considering techniques to reduce our failure rate.
+
+A.2.Our DNN learns the distribution of common code patterns, but stochastic sampling allows sufficient exploration of the neighbourhood of the space that new, interesting parts of the space are probed. Will add a discussion.
+
+A.3.Will fix the listing font, thanks.
+
+A.4.Thank you for the related work suggestions and corrections. Will cite the PLDI'17 paper and clarify our claim.
+
+# Review.4B
+
+B.1.We didn't think to test without code rewriter, thanks. We'll see if we can get the numbers by the next rebuttal.
+
+B.2.We found the neural network parameters worked great without tuning. We will try a tuning run to see its effect. We will add a discussion.
+
+B.3.Yes, small program size flows from the corpus. Median line count in the corpus is 14, DeepSmith is 11, CLSmith is 1152. Will discuss and add corpus kernel sizes to Figure 7b.
+
+B.4.We excluded runtime timeouts from voting because we weren't sure if breaching an arbitrary threshold would be a bug. We now think we should look at anomalous runtime ratios to see if we can find more bugs this way.
+
+B.5.You are right, runtime heuristics may be language-dependent. Ours were very lightweight and only took one dev-day to create, to reduce identifiable false positives to 0%. Will add a discussion, and empirical results.
+
+B.6.Will restructure Sec 4.1 and Table 1 as per your suggestion, thanks.
+
+B.7.Open source vendors have fixed 19% of reported bugs to date, all others still under investigation. All open source drivers now ship with fixes for bugs discovered by DeepSmith. Commercial vendors gave insufficient information, though in at least one case we have found the issue is fixed in latest release. Will include final numbers for camera ready.
+
+B.8.We thought the one off training cost was better bundled with the development cost. Once trained, any number of testbeds can be run for as long as needed.
+
+B.9.Thanks for the typos! Will fix.
+
+# Review.4C
+
+C.1.Great idea. We can force DeepSmith to match CLSmith's signature. We'll look into it. In the data we have, the signature is too rare for a comparison - 0.22% in corpus, 0.21% from DeepSmith.
+
+C.2.The lack of inputs is a limitation that CLSmith inherits from CSmith. Extending CSmith to accept inputs would likely be expensive; the validity decision logic is "buried in a small mountain of C++" [46].
+
+C.3.Extending to structured inputs will be interesting. Won't affect the program generator, just harness (currently only supports scalars and arrays). We are thinking about ways to extend ML model to generate inputs. We hope it will make good future work.
+
+C.4.Targeting C is also a great idea. Our industrial contacts want this a lot. What has held it up is the main author going on an internship.  Will include in open-source release.

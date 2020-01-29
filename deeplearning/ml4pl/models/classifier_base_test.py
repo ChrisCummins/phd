@@ -15,6 +15,7 @@
 # limitations under the License.
 """Unit tests for //deeplearning/ml4pl/models:classifier_base."""
 import copy
+import pathlib
 import random
 from typing import Iterable
 from typing import Tuple
@@ -267,6 +268,14 @@ def epoch_num(request) -> int:
 ###############################################################################
 # Tests.
 ###############################################################################
+
+
+def test_empty_graph_database(logger: logging.Logger, tempdir: pathlib.Path):
+  """Test that an empty graph database raises an error."""
+  with test.Raises(ValueError):
+    MockModel(
+      logger, graph_tuple_database.Database(f"sqlite:///{tempdir}/empty.db")
+    )
 
 
 def test_load_restore_model_from_checkpoint(

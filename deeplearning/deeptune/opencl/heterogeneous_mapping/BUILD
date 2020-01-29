@@ -50,6 +50,7 @@ py_test(
         ":conftest",
         ":heterogeneous_mapping",
         "//labm8/py:app",
+        "//labm8/py:gpu_scheduler",
         "//labm8/py:test",
     ],
 )

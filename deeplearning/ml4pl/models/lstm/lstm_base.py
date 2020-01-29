@@ -58,6 +58,14 @@ app.DEFINE_integer(
   "used to only those with data_flow_steps <= --max_data_flow_steps. "
   "This has no effect for graph databases with no dataflow annotations.",
 )
+app.DEFINE_boolean(
+  "cudnn_lstm",
+  True,
+  "If set, use CuDNNLSTM implementation when a GPU is available. Else use "
+  "default Keras implementation. Note that the two implementations are "
+  "incompatible - a model saved using one LSTM type cannot be restored using "
+  "the other LSTM type.",
+)
 
 
 class LstmBase(classifier_base.ClassifierBase):
@@ -96,6 +104,18 @@ class LstmBase(classifier_base.ClassifierBase):
     # Set by Initialize() and LoadModelData().
     self.session = None
     self.graph = None
+
+  def MakeLstmLayer(self, *args, **kwargs):
+    """Construct an LSTM layer.
+
+    If a GPU is available and --cudnn_lstm, this will use NVIDIA's fast
+    CuDNNLSTM implementation. Else it will use Keras' builtin LSTM, which is
+    much slower but works on CPU.
+    """
+    if self.gpu and FLAGS.cudnn_lstm and tf.compat.v1.test.is_gpu_available():
+      return tf.compat.v1.keras.layers.CuDNNLSTM(*args, **kwargs)
+    else:
+      return tf.compat.v1.keras.layers.LSTM(*args, **kwargs, implementation=1)
 
   def GraphReader(
     self,
