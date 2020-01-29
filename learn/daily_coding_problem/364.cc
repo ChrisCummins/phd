@@ -7,6 +7,13 @@
 
 #include "labm8/cpp/test.h"
 
+// Constraints:
+// * Input: i32, fits in memory, immutable
+// * Input is sorted (if not then need to perform an O(n log n) in-place sort).
+// * An empty list is a valid input.
+// * Input values can be negative, positive, zero.
+// * Input can contain duplicates.
+
 // Time: O(n)
 // Space: O(1)
 size_t f(const std::vector<int>& V) {
