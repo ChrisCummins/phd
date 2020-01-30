@@ -8,7 +8,6 @@ from typing import Dict
 import flask
 import portpicker
 
-import build_info
 from deeplearning.clgen import samplers
 from experimental.deeplearning.clgen.backtracking import backtracking_model
 from experimental.deeplearning.clgen.backtracking import logger
@@ -42,7 +41,7 @@ flask_app = flask.Flask(
 def index():
   with prof.Profile("Render /"):
     template_args = {
-      "build_info": build_info.FormatShortBuildDescription(html=True),
+      "build_info": app.FormatShortBuildDescription(html=True),
       "urls": {
         "cache_tag": 1,
         "styles_css": flask.url_for("static", filename="bootstrap.css"),

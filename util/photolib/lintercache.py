@@ -17,7 +17,6 @@ from sqlalchemy import UniqueConstraint
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
-import build_info
 from labm8.py import app
 from labm8.py import shell
 from labm8.py import sqlutil
@@ -132,7 +131,7 @@ class LinterCache(sqlutil.Database):
     )
     cached_version_str = cached_version.value if cached_version else ""
 
-    actual_version = Meta(key=meta_key, value=build_info.Version())
+    actual_version = Meta(key=meta_key, value=app.VERSION)
 
     if cached_version_str != actual_version.value:
       app.Log(1, "Version has changed, emptying cache ...")

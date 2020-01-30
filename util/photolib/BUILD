@@ -109,7 +109,6 @@ py_library(
     deps = [
         ":common",
         ":workspace",
-        "//:build_info",
         "//labm8/py:app",
         "//labm8/py:shell",
         "//labm8/py:sqlutil",
@@ -122,7 +121,6 @@ py_library(
     srcs = ["xmp_cache.py"],
     deps = [
         ":common",
-        "//:build_info",
         "//labm8/py:app",
         "//labm8/py:sqlutil",
         "//third_party/py/libxmp",

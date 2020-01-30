@@ -16,7 +16,7 @@ import os
 import pathlib
 
 import appdirs
-import build_info
+
 from labm8.py import app
 
 FLAGS = app.FLAGS
@@ -29,9 +29,7 @@ def GetCacheDir() -> pathlib.Path:
     cache_dir = pathlib.Path(os.environ["TEST_TMPDIR"]) / "cache"
   else:
     cache_dir = pathlib.Path(
-      appdirs.user_cache_dir(
-        "phd_format", "Chris Cummins", version=build_info.GetBuildInfo().version
-      )
+      appdirs.user_cache_dir("phd_format", "Chris Cummins", version=app.VERSION)
     )
   cache_dir.mkdir(parents=True, exist_ok=True)
   return cache_dir

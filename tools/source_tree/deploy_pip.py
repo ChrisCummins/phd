@@ -10,9 +10,9 @@ import shutil
 import subprocess
 import typing
 
-import build_info
 from labm8.py import app
 from labm8.py import fs
+from labm8.py.internal import workspace_status
 from tools.source_tree import phd_workspace
 
 FLAGS = app.FLAGS
@@ -121,7 +121,7 @@ def _DoDeployPip(
 
   pypi_username, pypi_password = GetPypiCredentials()
 
-  source_path = pathlib.Path(build_info.GetBuildInfo().unsafe_workspace)
+  source_path = pathlib.Path(workspace_status.STABLE_UNSAFE_WORKSPACE)
   workspace = phd_workspace.PhdWorkspace(source_path)
 
   if url is None:

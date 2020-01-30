@@ -8,7 +8,6 @@ import flask
 import portpicker
 import sqlalchemy as sql
 
-import build_info
 from labm8.py import app
 from labm8.py import bazelutil
 from labm8.py import humanize
@@ -141,7 +140,7 @@ def RenderInvocation(host, session, invocation):
     invocation_datetime=invocation,
     invocation_delta=humanize.Time(datetime.datetime.now() - invocation),
     urls=urls,
-    build_info=build_info.FormatShortBuildDescription(html=True),
+    build_info=app.FormatShortBuildDescription(html=True),
   )
 
 

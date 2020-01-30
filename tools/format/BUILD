@@ -43,7 +43,6 @@ py_library(
     srcs = ["app_paths.py"],
     visibility = ["//tools/format:__subpackages__"],
     deps = [
-        "//:build_info",
         "//labm8/py:app",
         "//third_party/py/appdirs",
     ],
@@ -144,7 +143,6 @@ py_binary(
         ":format_paths",
         ":git_util",
         ":path_generator",
-        "//:build_info",
         "//labm8/py:app",
         "//labm8/py:fs",
     ],
