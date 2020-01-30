@@ -8,7 +8,6 @@ import flask_sqlalchemy
 import portpicker
 import sqlalchemy as sql
 
-import build_info
 from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.dashboard import dashboard_db
 from labm8.py import app
@@ -51,14 +50,14 @@ db = flask_sqlalchemy.SQLAlchemy(flask_app)
 def GetBaseTemplateArgs():
   return {
     "urls": {
-      "cache_tag": build_info.BuildTimestamp(),
+      "cache_tag": str(int(app.TIMESTAMP.timestamp())),
       "styles_css": flask.url_for("static", filename="bootstrap.css"),
       "site_css": flask.url_for("static", filename="site.css"),
       "site_js": flask.url_for("static", filename="site.js"),
     },
     "build_info": {
-      "html": build_info.FormatShortBuildDescription(html=True),
-      "version": build_info.Version(),
+      "html": app.FormatShortBuildDescription(html=True),
+      "version": app.VERSION,
     },
     "dashboard_info": {"db": flask_app.config["SQLALCHEMY_DATABASE_URI"],},
   }

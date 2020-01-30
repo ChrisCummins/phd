@@ -22,7 +22,6 @@ import time
 import typing
 from concurrent import futures
 
-import config_pb2
 import grpc
 import sqlalchemy as sql
 from sqlalchemy.ext import declarative

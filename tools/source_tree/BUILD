@@ -17,10 +17,10 @@ exports_repo(
 par_binary(
     name = "deploy_pip",
     srcs = ["deploy_pip.py"],
+    data = ["//labm8/py/internal:workspace_status"],
     visibility = ["//visibility:public"],
     deps = [
         ":phd_workspace",
-        "//:build_info",
         "//labm8/py:app",
         "//labm8/py:fs",
     ],
@@ -29,10 +29,10 @@ par_binary(
 par_binary(
     name = "export_source_tree",
     srcs = ["export_source_tree.py"],
+    data = ["//labm8/py/internal:workspace_status"],
     visibility = ["//visibility:public"],
     deps = [
         ":phd_workspace",
-        "//:build_info",
         "//datasets/github:api",
         "//labm8/py:app",
         "//labm8/py:bazelutil",

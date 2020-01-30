@@ -28,7 +28,6 @@ exports_files([
 proto_library(
     name = "alice_pb",
     srcs = [":alice.proto"],
-    deps = ["//:config_pb"],
 )
 
 python_grpc_library(

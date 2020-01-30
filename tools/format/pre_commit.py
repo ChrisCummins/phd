@@ -16,7 +16,6 @@ import os
 import sys
 from typing import Iterable
 
-import build_info
 from labm8.py import app
 from labm8.py import fs
 from tools.format import app_paths
@@ -128,7 +127,6 @@ def InstallPreCommitHookOrDie():
   if prepare_commit_msg.is_file():
     os.unlink(prepare_commit_msg)
 
-  version = build_info.GetBuildInfo().version
   with open(prepare_commit_msg, "w") as f:
     commit_message_changelist = (
       app_paths.GetCacheDir() / "commit_message_changelist.txt"
@@ -140,7 +138,7 @@ def InstallPreCommitHookOrDie():
 set -e
 if [[ -z "$2" ]]; then
   cp "$1" "{tmp_commit_message_path}"
-  echo -e "\\n\\nSigned-off-by: format {version} <github.com/ChrisCummins/format>" > "$1"
+  echo -e "\\n\\nSigned-off-by: format {app.VERSION} <github.com/ChrisCummins/format>" > "$1"
   cat "{commit_message_changelist}" "{tmp_commit_message_path}" >> "$1"
   rm -f "{tmp_commit_message_path}"
 fi

@@ -17,9 +17,9 @@ from typing import List
 import git
 import github as github_lib
 
-import build_info
 from datasets.github import api
 from labm8.py import app
+from labm8.py.internal import workspace_status
 from tools.source_tree import phd_workspace
 
 FLAGS = app.FLAGS
@@ -170,7 +170,7 @@ def main():
   ]
   move_file_mapping = {x[0]: x[1] for x in move_file_tuples}
 
-  workspace_root = pathlib.Path(build_info.GetBuildInfo().unsafe_workspace)
+  workspace_root = pathlib.Path(workspace_status.STABLE_UNSAFE_WORKSPACE)
 
   Export(
     workspace_root=workspace_root,

@@ -14,7 +14,6 @@ from sqlalchemy import orm
 from sqlalchemy import String
 from sqlalchemy.ext import declarative
 
-import build_info
 from labm8.py import app
 from labm8.py import sqlutil
 from util.photolib import common
@@ -107,7 +106,7 @@ class XmpCache(sqlutil.Database):
     )
     cached_version_str = cached_version.value if cached_version else ""
 
-    actual_version = Meta(key=meta_key, value=build_info.Version())
+    actual_version = Meta(key=meta_key, value=app.VERSION)
 
     if cached_version_str != actual_version.value:
       app.Log(1, "Version has changed, emptying cache ...")
