@@ -83,7 +83,7 @@ My documentation sucks. Don't be afraid to get stuck in and start
 
 ## License
 
-Copyright 2016, 2017, 2018, 2019 Chris Cummins <chrisc.101@gmail.com>.
+Copyright 2016-2020 Chris Cummins <chrisc.101@gmail.com>.
 
 Released under the terms of the GPLv3 license. See
 [LICENSE](/deeplearning/clgen/LICENSE) for details.

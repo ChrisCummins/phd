@@ -7,7 +7,7 @@
  * If environment variable $JAVA_METHOD_EXTRACTOR_STATIC_ONLY is set, only
  * static methods are returned.
  */
-// Copyright 2018, 2019 Chris Cummins <chrisc.101@gmail.com>.
+// Copyright 2018-2020 Chris Cummins <chrisc.101@gmail.com>.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.

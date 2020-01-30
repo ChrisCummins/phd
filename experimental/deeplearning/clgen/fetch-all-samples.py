@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
+# Copyright 2016-2020 Chris Cummins <chrisc.101@gmail.com>.
 #
 # This file is part of CLgen.
 #

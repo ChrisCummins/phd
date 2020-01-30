@@ -2,7 +2,7 @@
 # The functionality here has been superceded by the parent package. Use
 # //deeplearning/ml4pl/graphs/llvm2graph instead.
 #
-# Copyright 2019 the ProGraML authors.
+# Copyright 2019-2020 the ProGraML authors.
 #
 # Contact Chris Cummins <chrisc.101@gmail.com>.
 #

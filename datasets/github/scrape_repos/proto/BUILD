@@ -1,6 +1,6 @@
 # Protos for mining programming language datasets from GitHub.
 #
-# Copyright 2018, 2019 Chris Cummins <chrisc.101@gmail.com>.
+# Copyright 2018-2020 Chris Cummins <chrisc.101@gmail.com>.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

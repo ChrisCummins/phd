@@ -1,7 +1,7 @@
 # Integration tests that verify the values imported by me.db after processing
 # the //datasets/me_db/tests/test_inbox dataset.
 #
-# Copyright 2018, 2019 Chris Cummins <chrisc.101@gmail.com>
+# Copyright 2018-2020 Chris Cummins <chrisc.101@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in

@@ -1,7 +1,7 @@
 // Protocol buffer processing binary for extracting me.Series protos from a
 // YNAB JSON file.
 //
-// Copyright 2018, 2019 Chris Cummins <chrisc.101@gmail.com>
+// Copyright 2018-2020 Chris Cummins <chrisc.101@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal

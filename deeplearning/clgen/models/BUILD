@@ -1,6 +1,6 @@
 # This package implements the machine learning models for CLgen.
 #
-# Copyright (c) 2016, 2017, 2018, 2019 Chris Cummins.
+# Copyright (c) 2016-2020 Chris Cummins.
 #
 # clgen is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
