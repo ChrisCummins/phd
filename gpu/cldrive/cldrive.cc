@@ -6,7 +6,7 @@
 //
 // Run with `--help` argument to see full usage options.
 //
-// Copyright (c) 2016, 2017, 2018, 2019 Chris Cummins.
+// Copyright (c) 2016-2020 Chris Cummins.
 // This file is part of cldrive.
 //
 // cldrive is free software: you can redistribute it and/or modify

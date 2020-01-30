@@ -1,4 +1,4 @@
-# Copyright (c) 2016, 2017, 2018, 2019 Chris Cummins.
+# Copyright (c) 2016-2020 Chris Cummins.
 # This file is part of clgen.
 #
 # clgen is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@ the programs it learns from.
 """
 
 __author__ = "Chris Cummins"
-__copyright__ = "Copyright 2016, 2017, 2018 Chris Cummins"
+__copyright__ = "Copyright 2016-2020 Chris Cummins"
 __license__ = "GPL v3"
 __maintainer__ = __author__
 __email__ = "chrisc.101@gmail.com"

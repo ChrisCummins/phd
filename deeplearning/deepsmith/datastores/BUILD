@@ -1,6 +1,6 @@
 # Datastore implementations.
 #
-# Copyright (c) 2017, 2018, 2019 Chris Cummins.
+# Copyright (c) 2017-2020 Chris Cummins.
 #
 # DeepSmith is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

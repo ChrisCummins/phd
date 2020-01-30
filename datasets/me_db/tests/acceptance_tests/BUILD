@@ -8,7 +8,7 @@
 #     bazel test //datasets/me_db/tests/acceptance_tests --test_output=streamed \
 #         --test_flag=--me_db_acceptance_tests_inbox=/path/to/inbox
 #
-# Copyright 2018, 2019 Chris Cummins <chrisc.101@gmail.com>
+# Copyright 2018-2020 Chris Cummins <chrisc.101@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in

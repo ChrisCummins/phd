@@ -1,4 +1,4 @@
-# Copyright 2017, 2018, 2019 Chris Cummins <chrisc.101@gmail.com>.
+# Copyright 2017-2020 Chris Cummins <chrisc.101@gmail.com>.
 #
 # This file is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

@@ -157,7 +157,7 @@ available at:
 
 ## 5. License
 
-Copyright 2017, 2018 Chris Cummins <chrisc.101@gmail.com>.
+Copyright 2017-2020 Chris Cummins <chrisc.101@gmail.com>.
 
 Released under the terms of the GPLv3 license. See
 [LICENSE](/docs/2018_07_issta/artifact_evaluation/LICENSE) for details.

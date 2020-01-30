@@ -3,7 +3,7 @@
 // See //datasets/me_db/providers/life_cycle:README.md for an overview of the
 // schema that is processed, and the measurements produced.
 //
-// Copyright 2018, 2019 Chris Cummins <chrisc.101@gmail.com>
+// Copyright 2018-2020 Chris Cummins <chrisc.101@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal

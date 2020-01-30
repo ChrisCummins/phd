@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (C) 2015, 2016 Chris Cummins.
+# Copyright (C) 2015-2020 Chris Cummins.
 #
 # This file is part of rt.
 #

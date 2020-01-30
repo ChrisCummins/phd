@@ -9,7 +9,7 @@
 #   bazel run //deeplearning/ml4pl/graphs/labelled/dataflow:flaky_make_data_flow_analysis -- \
 #       <make_data_flow_analysis_args...>
 #
-# Copyright 2019 the ProGraML authors.
+# Copyright 2019-2020 the ProGraML authors.
 #
 # Contact Chris Cummins <chrisc.101@gmail.com>.
 #

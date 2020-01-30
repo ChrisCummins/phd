@@ -3,7 +3,7 @@
 /*
  * watchr.js - Automatically rebuild sources.
  *
- * Copyright 2014,2015 Chris Cummins.
+ * Copyright 2014-2020 Chris Cummins.
  *
  * Forked from pip-db <https://github.com/ChrisCummins/pip-db>.
  *
