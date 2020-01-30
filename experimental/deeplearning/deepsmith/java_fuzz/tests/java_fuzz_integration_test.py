@@ -1,14 +1,15 @@
 """Integration test for Java fuzz pipeline."""
 import pathlib
 
+from datasets.github.testing.access_token import ACCESS_TOKEN
+from datasets.github.testing.requires_access_token import requires_access_token
 from labm8.py import dockerutil
 from labm8.py import test
 
 FLAGS = test.FLAGS
 
-MODULE_UNDER_TEST = None  # Disable coverage.
 
-
+@requires_access_token
 def test_end_to_end_pipeline(tempdir: pathlib.Path):
   scrape_java_files_image = dockerutil.BazelPy3Image(
     "experimental/deeplearning/deepsmith/java_fuzz/scrape_java_files_image"
@@ -33,15 +34,12 @@ def test_end_to_end_pipeline(tempdir: pathlib.Path):
   with scrape_java_files_image.RunContext() as ctx:
     ctx.CheckCall(
       [],
-      {"n": 1, "db": "sqlite:////workdir/java.db",},
-      volumes={
-        tempdir: "/workdir",
-        # We need to map /var/phd so that the github scraper can
-        # access the local GitHub access key file. This
-        # introduces an untracked dependency on a file outside
-        # of this repo. Bad idea!
-        "/var/phd": "/var/phd",
+      {
+        "n": 1,
+        "db": "sqlite:////workdir/java.db",
+        "--github_access_token": ACCESS_TOKEN,
       },
+      volumes={tempdir: "/workdir",},
       timeout=600,
     )
 

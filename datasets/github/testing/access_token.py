@@ -1,5 +1,3 @@
-# Helpers for for writing tests that interface with Github API.
-#
 # Copyright 2018, 2019 Chris Cummins <chrisc.101@gmail.com>.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,24 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""This module exposes the path of an access token for testing, the access token
+contents, if it exists.
+"""
+from datasets.github import api
+from labm8.py import fs
 
-py_library(
-    name = "access_token",
-    testonly = 1,
-    srcs = ["access_token.py"],
-    deps = [
-        "//datasets/github:api",
-        "//labm8/py:fs",
-    ],
-)
+ACCESS_TOKEN_PATH = api.TEST_ACCESS_TOKEN_PATH
 
-py_library(
-    name = "requires_access_token",
-    testonly = 1,
-    srcs = ["requires_access_token.py"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":access_token",
-        "//labm8/py:test",
-    ],
-)
+if ACCESS_TOKEN_PATH.is_file():
+  ACCESS_TOKEN = fs.Read(ACCESS_TOKEN_PATH)
+else:
+  ACCESS_TOKEN = None

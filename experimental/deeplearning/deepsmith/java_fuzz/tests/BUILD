@@ -5,6 +5,8 @@ py_test(
     timeout = "eternal",
     srcs = ["java_fuzz_integration_test.py"],
     data = [
+        "//datasets/github/testing:access_token",
+        "//datasets/github/testing:requires_access_token",
         "//experimental/deeplearning/deepsmith/java_fuzz:encode_java_corpus_image.tar",
         "//experimental/deeplearning/deepsmith/java_fuzz:export_java_corpus_image.tar",
         "//experimental/deeplearning/deepsmith/java_fuzz:mask_contentfiles_image.tar",
