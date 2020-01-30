@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This module defines a decorator for marking skippable tests."""
-from datasets.github import api
+from datasets.github.testing import access_token
 from labm8.py import test
 
 # Mark a test as skippable if there is no test access token for it to use. E.g.
@@ -25,5 +25,6 @@ from labm8.py import test
 #       # go nuts ...
 #
 requires_access_token = test.SkipIf(
-  not api.TEST_ACCESS_TOKEN_PATH, reason="Test requires a Github access token",
+  not access_token.ACCESS_TOKEN_PATH.is_file(),
+  reason="Test requires a Github access token",
 )

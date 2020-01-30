@@ -84,7 +84,7 @@ TEST(TicTacToe, VerticalColumnWin) {
   b[1][2] = 'y';
   b[2][2] = 'y';
 
-  ASSERT_EQ(tru, player_won(b, 'x'));
+  ASSERT_EQ(true, player_won(b, 'x'));
   ASSERT_EQ(false, player_won(b, 'y'));
 }
 

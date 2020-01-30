@@ -169,3 +169,29 @@ cc_binary(
     name = "030_reverse_words_in_sentence",
     srcs = ["030_reverse_words_in_sentence.cc"],
 )
+
+cc_test(
+    name = "031_matrix_diagonal",
+    srcs = ["031_matrix_diagonal.cc"],
+    copts = ["-fopenmp"],
+    linkopts = ["-fopenmp"],
+    deps = [
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "032_offset_date",
+    srcs = ["032_offset_date.cc"],
+    deps = [
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "033_tree_sibling",
+    srcs = ["033_tree_sibling.cc"],
+    deps = [
+        "//labm8/cpp:test",
+    ],
+)

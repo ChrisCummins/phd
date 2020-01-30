@@ -45,3 +45,8 @@ cc_test(
         "//labm8/cpp:logging",
     ],
 )
+
+cc_test(
+    name = "019_counting_sundays",
+    srcs = ["019_counting_sundays.cc"],
+)
