@@ -28,16 +28,16 @@ def test_log_to_file(tempdir: pathlib.Path):
   lines = c.split("\n")
   assert len(lines) == 7
   assert lines[0][0] == "I"
-  assert lines[0].endswith("Hello, info!")
+  assert "Hello, info!" in lines[0]
   assert lines[1][0] == "I"
-  assert lines[1].endswith("Hello, debug!")
+  assert "Hello, debug!" in lines[1]
   assert lines[2][0] == "W"
-  assert lines[2].endswith("Hello, warning!")
+  assert "Hello, warning!" in lines[2]
   assert lines[3][0] == "E"
-  assert lines[3].endswith("Hello, error!")
+  assert "Hello, error!" in lines[3]
   assert lines[4][0] == "I"
-  assert lines[4].endswith("Hello, ...")
-  assert lines[5] == "multiline!"
+  assert "Hello, ..." in lines[4]
+  assert "multiline!" in lines[5]
 
 
 if __name__ == "__main__":

@@ -91,8 +91,8 @@ def test_EncodeFiles(preprocessed_db, encoded_db):
       ]
     )
     pps.flush()
-    with encoded_db.Session(commit=True) as es:
-      assert encode_java_corpus.EncodeFiles(pps, es, 10) == 2
+
+  assert encode_java_corpus.EncodeFiles(preprocessed_db, encoded_db, 10) == 2
 
   with encoded_db.Session() as s:
     vocab = encode_java_corpus.GetVocabFromMetaTable(s)

@@ -6,9 +6,9 @@ from labm8.py import test
 FLAGS = test.FLAGS
 
 
-def test_PreprocessContentFiles():
+def test_PreprocessContentfiles():
   """Test preprocessing a basic input."""
-  pp_cfs = preprocess_java_corpus.PreprocessContentFiles(
+  pp_cfs = preprocess_java_corpus.PreprocessContentfiles(
     [
       contentfiles.ContentFile(
         text="""
@@ -36,9 +36,9 @@ private static int fn_A(int a){
   assert pp_cfs[0].preprocessing_succeeded
 
 
-def test_PreprocessContentFiles_method_depends_on_java_util():
+def test_PreprocessContentfiles_method_depends_on_java_util():
   """Test that a method which uses java.util.ArrayList works."""
-  pp_cfs = preprocess_java_corpus.PreprocessContentFiles(
+  pp_cfs = preprocess_java_corpus.PreprocessContentfiles(
     [
       contentfiles.ContentFile(
         text="""

@@ -28,7 +28,7 @@ FLAGS = app.FLAGS
 pytest_plugins = ["deeplearning.clgen.tests.fixtures"]
 
 # The Model.hash for an instance of abc_model_config.
-ABC_MODEL_HASH = "bf95e335177883a9204a560617990caf3fd1efc6"
+ABC_MODEL_HASH = "c1b6ccf7f4136aaafdf9ac61392ddd9061315a83"
 
 
 def test_Model_config_type_error():
