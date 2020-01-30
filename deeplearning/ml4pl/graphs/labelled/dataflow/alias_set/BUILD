@@ -22,6 +22,8 @@ py_library(
     visibility = ["//deeplearning/ml4pl/graphs:__subpackages__"],
     deps = [
         "//compilers/llvm:opt_util",
+        "//deeplearning/ml4pl/graphs:programl_pb_py",
+        "//deeplearning/ml4pl/graphs/labelled/dataflow:data_flow_graphs",
         "//labm8/py:app",
         "//labm8/py:decorators",
     ],

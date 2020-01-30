@@ -21,6 +21,8 @@ import networkx as nx
 import numpy as np
 
 from compilers.llvm import opt_util
+from deeplearning.ml4pl.graphs import programl_pb2
+from deeplearning.ml4pl.graphs.labelled.dataflow import data_flow_graphs
 from labm8.py import app
 from labm8.py import decorators
 
@@ -33,6 +35,43 @@ app.DEFINE_integer(
   "The minimum number of pointers in an alias set to be used as a labelled "
   "example.",
 )
+
+# The node_x arrays for alias sets:
+NOT_ALIAS_SET = [1, 0]
+ALIAS_SET = [0, 1]
+
+
+class AliasSetAnnotator(data_flow_graphs.NetworkXDataFlowGraphAnnotator):
+  """Annotate graphs with alias sets, as produced by LLVM."""
+
+  def Annotate(self, g: nx.MultiDiGraph, root_node: int) -> None:
+    """Annotate alias sets."""
+    # TODO(github.com/ChrisCummins/ProGraML/issues/4): Complete the
+    # implementation below and remove legacy AnnotateAliasSet() function.
+
+    # Set all of the nodes as not the root identifier and not part of the alias
+    # set. X labels are a list which concatenates the original graph 'x'
+    # embedding indices with a [0,1] value for false/true, respectively.
+    for _, data in g.nodes(data=True):
+      data["x"].append(data_flow_graphs.ROOT_NODE_NO)
+      data["y"] = NOT_ALIAS_SET
+    g.nodes[root_node]["x"][-1] = data_flow_graphs.ROOT_NODE_YES
+
+    # Mark the nodes in the alias set.
+    for pointer in identifiers_in_set:
+      if pointer not in g.nodes:
+        identifier_nodes = [
+          node for node, type_ in g.nodes(data="type") if type_ == "identifier"
+        ]
+        raise ValueError(
+          f"Pointer `{pointer}` not in function with identifiers "
+          f"{identifier_nodes}"
+        )
+      g.nodes[pointer]["y"] = ALIAS_SET
+
+    g.graph["data_flow_root_node"] = root_node
+    g.graph["data_flow_steps"] = 0
+    g.graph["data_flow_positive_node_count"] = len(identifiers_in_set)
 
 
 @decorators.timeout(seconds=120)
