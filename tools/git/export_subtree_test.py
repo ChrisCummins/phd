@@ -123,7 +123,7 @@ def test_MaybeExportCommitSubset_interesting_file_subset(
     "Hello, world!\n".encode("utf-8"),
   )
   license_ = fs.Write(
-    pathlib.Path(src.working_tree_dir) / "LICENSE.md",
+    pathlib.Path(src.working_tree_dir) / "LICENSE",
     "Hello, license!\n".encode("utf-8"),
   )
   src.index.add([str(readme), str(license_)])
@@ -140,7 +140,7 @@ def test_MaybeExportCommitSubset_interesting_file_subset(
 
   # Test that the right files are in dst working tree.
   assert (pathlib.Path(dst.working_tree_dir) / "README.txt").is_file()
-  assert not (pathlib.Path(dst.working_tree_dir) / "LICENSE.md").is_file()
+  assert not (pathlib.Path(dst.working_tree_dir) / "LICENSE").is_file()
 
 
 def test_MaybeExportCommitSubset_uninteresting_file_renamed(
@@ -199,8 +199,7 @@ def test_MaybeExportCommitSubset_commit_conflict(
     "Goodbye, world!\n".encode("utf-8"),
   )
   license_ = fs.Write(
-    pathlib.Path(src.working_tree_dir) / "LICENSE.md",
-    "Hello?\n".encode("utf-8"),
+    pathlib.Path(src.working_tree_dir) / "LICENSE", "Hello?\n".encode("utf-8"),
   )
   src.index.add([str(readme), str(license_)])
   src_commit = src.index.commit("Second commit, add LICENSE and change README")
@@ -210,13 +209,13 @@ def test_MaybeExportCommitSubset_commit_conflict(
   dst.remote("origin").fetch()
 
   dst_commit = export_subtree.MaybeExportCommitSubset(
-    src_commit, dst, {"LICENSE.md"}
+    src_commit, dst, {"LICENSE"}
   )
   assert dst_commit
 
   # Test that the right files are in dst working tree.
   assert not (pathlib.Path(dst.working_tree_dir) / "README.txt").is_file()
-  assert (pathlib.Path(dst.working_tree_dir) / "LICENSE.md").is_file()
+  assert (pathlib.Path(dst.working_tree_dir) / "LICENSE").is_file()
 
 
 def test_ExportSubtree_integration_test_readme(
