@@ -203,3 +203,37 @@ cc_test(
         "//labm8/cpp:test",
     ],
 )
+
+cc_test(
+    name = "034_shared_ptr",
+    srcs = ["034_shared_ptr.cc"],
+    deps = [
+        "//labm8/cpp:logging",
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "035_estimate_derivative",
+    srcs = ["035_estimate_derivative.cc"],
+    deps = [
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "036_hamming_distance",
+    srcs = ["036_hamming_distance.cc"],
+    deps = [
+        "//labm8/cpp:logging",
+    ],
+)
+
+cc_test(
+    name = "037_gradient_descent",
+    srcs = ["037_gradient_descent.cc"],
+    deps = [
+        "//labm8/cpp:logging",
+        "//labm8/cpp:test",
+    ],
+)
