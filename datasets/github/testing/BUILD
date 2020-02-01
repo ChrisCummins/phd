@@ -21,7 +21,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//datasets/github:api",
-        "//labm8/py:fs",
     ],
 )
 
