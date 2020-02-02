@@ -91,7 +91,7 @@ def BatchedMethodExtractor(
   input_message = scrape_repos_pb2.ListOfStrings(string=texts)
   output_message = scrape_repos_pb2.ListOfListOfStrings()
   pbutil.RunProcessMessageToProto(
-    [JAVA_METHODS_BATCHED_EXTRACTOR],
+    [str(JAVA_METHODS_BATCHED_EXTRACTOR)],
     input_message,
     output_message,
     timeout_seconds=3600,
