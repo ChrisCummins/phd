@@ -1080,6 +1080,70 @@ class Database(sqlutil.Database):
   ) -> Iterable[Tuple[str, pd.DataFrame]]:
     """Compute tables of aggregate model performance.
 
+    This method produces an iterator over named data frames which distill
+    the import log attributes.
+
+    Four named tables are returned:
+
+      (1) parameters: This table contains a list of all run parameters. For n
+        runs with p parameters each, this table contains n * p rows with the
+        following columns:
+
+          timestamp: The timestamp of the start of the run.
+          run_id: The run ID.
+          name: The name of the parameter.
+          value: A string representation of the parameter value.
+          type: A string representation of the parameter type. One of:
+            {flag, input_graphs_info, build_info}.
+
+      (2) epochs: This aggregates model batches across all three types for a
+        given epoch number: {train,val,test}. The following columns are present:
+
+          tag: The value of the --tag flag for this run.
+          run_id: The run ID.
+          timestamp: The timestamp of the start of the epoch. When aggregating
+            across multiple batches and multiple epoch types, this is the
+            timestamp of the earliest batch.
+          val_split: The list of validation splits.
+          test_split: The list of validation splits.
+        [Any values in <extra_flags> appear here]
+          {train,val,test}_batch_count: The number of batches in the given epoch
+            type.
+          {train,val,test}_graph_count: The number of graphs in the given epoch
+            type.
+          {train,val,test}_iteration_count: The weighted average iteration count
+            across batches.
+          {train,val,test}_model_converged: The weighted average convergence
+            ratio across batches.
+          {train,val,test}_learning_rate: The weighted average model learning
+            rate.
+          {train,val,test}_loss: The weighted average batch loss.
+          {train,val,test}_accuracy: The weighted average batch accuracy.
+          {train,val,test}_precision: The weighted average batch precision.
+          {train,val,test}_recall: The weighted average batch recall.
+          {train,val,test}_f1: The weighted average batch F1.
+          {train,val,test}_runtime: The cumulative batch runtime.
+          {train,val,test}_throughput: The average graph throughput.
+
+      (3) runs: This table selects a single epoch from a given run, attempting
+        to guess which is the most import epoch to present. It does so using the
+        following heuristic:
+
+          * If multiple epochs contain both validation and test results, the
+            epoch with the greatest validation accuracy is selected.
+          * Else, if one or more epochs contain test results but no validation
+            results, the epoch with the largest epoch number is selected.
+          * Else, if one or more epochs contain validation results but no test
+            results, the epoch with the greatest validation accuracy is
+            selected.
+          * Else, if there are no epochs with either validation or test results,
+            the epoch with the largest epoch number is selected.
+
+      (4) tags: This table aggregates the runs table, presenting arithmetic mean
+        across all columns. The sole purpose of this table is for grouping
+        cross-validation results where there are multiple run IDs grouped by the
+        same tag.
+
     Args:
       run_id: An optional list of run IDs to generate the tables for. If not
         provided, all runs are used.
@@ -1196,6 +1260,11 @@ class Database(sqlutil.Database):
           f"{epoch_type.name.lower()}_{column}" for column in epoch_type_columns
         ]
 
+      # The tag column, if present, always comes first.
+      if "tag" in columns:
+        del columns[columns.index("tag")]
+        columns = ["tag"] + columns
+
       # Put it into a dataframe.
       per_epoch_df = pd.DataFrame(rows, columns=columns)
       if len(per_epoch_df):
@@ -1207,27 +1276,53 @@ class Database(sqlutil.Database):
 
       #########################################################################
       # Per-run stats.
-      # This table contains a single row for each run where there is a best
-      # validation accuracy.
+      # This table contains a single row for each run.
       #########################################################################
 
       rows = []
       epoch_counts: List[int] = []
       for run_id in set(per_epoch_df.run_id.values):
-
         run_df = per_epoch_df[per_epoch_df["run_id"] == run_id]
-        # Select the subset of epochs with best validation and test accuracy,
-        # which we use to determine the best model performance (selected on
-        # val_accuracy).
+
+        # Select the epoch using the following heuristic:
+        #
+        #  * If multiple epochs contain both validation and test results, the
+        #    epoch with the greatest validation accuracy is selected.
+        #  * Else, if one or more epochs contain test results but no validation
+        #    results, the epoch with the largest epoch number is selected.
+        #  * Else, if one or more epochs contain validation results but no test
+        #    results, the epoch with the greatest validation accuracy is
+        #    selected.
+        #  * Else, if there are no epochs with either validation or test
+        #    results, the epoch with the largest epoch number is selected.
+        run_row = None
         runs_with_val_and_test = run_df[
           (run_df["val_accuracy"].notnull())
           & (run_df["test_accuracy"].notnull())
         ]
         if len(runs_with_val_and_test):
-          epoch_counts.append(len(run_df))
-          # Select the best epoch by validation accuracy.
           best_epoch = runs_with_val_and_test["val_accuracy"].idxmax()
-          rows.append(runs_with_val_and_test.loc[best_epoch])
+          run_row = runs_with_val_and_test.loc[best_epoch]
+
+        if run_row is None:
+          runs_with_test = run_df[run_df["test_accuracy"].notnull()]
+          if len(runs_with_test):
+            last_epoch = runs_with_test["epoch_num"].idxmax()
+            run_row = runs_with_test.loc[last_epoch]
+
+        if run_row is None:
+          runs_with_val = run_df[run_df["val_accuracy"].notnull()]
+          if len(runs_with_val):
+            best_epoch = runs_with_val["val_accuracy"].idxmax()
+            run_row = runs_with_val.loc[best_epoch]
+
+        if run_row is None:
+          last_epoch = run_df["epoch_num"].idxmax()
+          run_row = run_df.loc[last_epoch]
+
+        assert run_row is not None
+        epoch_counts.append(len(run_df))
+        rows.append(run_row)
 
       per_run_df = pd.DataFrame(rows, columns=per_epoch_df.columns.values)
       # Add the per-run epoch counts and set the best_epoch values.
@@ -1240,6 +1335,12 @@ class Database(sqlutil.Database):
       columns = per_run_df.columns.tolist()
       i = columns.index("best_epoch")
       columns = columns[:i] + [columns[-1]] + columns[i:-1]
+
+      # The tag column, if present, always comes first.
+      if "tag" in columns:
+        del columns[columns.index("tag")]
+        columns = ["tag"] + columns
+
       per_run_df = per_run_df[columns]
 
       yield "runs", per_run_df
