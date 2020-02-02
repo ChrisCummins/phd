@@ -116,7 +116,8 @@ def test_BazelClient_Run_stderr(workspace: pathlib.Path, tempdir: pathlib.Path):
 
   process.join()
   # Stderr starts with bazel build log.
-  assert process.stderr.endswith("Hello, stderr!\n")
+  print(process.stderr)
+  assert "Hello, stderr!\n" in process.stderr
 
 
 def test_BazelClient_Run_workdir_files(
