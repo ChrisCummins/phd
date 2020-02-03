@@ -10,7 +10,7 @@
 [core]
     pager = diff-so-fancy | less --tabs=4 -RFX
     quotepath = false
-    editor = /home/cec/.oh-my-zsh/plugins/emacs/emacsclient.sh -nw
+    editor = ~/.oh-my-zsh/plugins/emacs/emacsclient.sh -nw
 [alias]
     ci = commit
 [merge]
