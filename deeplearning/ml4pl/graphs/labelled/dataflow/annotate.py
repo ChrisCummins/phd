@@ -178,7 +178,7 @@ def _AnnotateInSubprocess(
   if binary_graph:
     stdin = graph
   else:
-    stdin = programl.ToBytes(graph, fmt=programl.InputOutputFormat.PB)
+    stdin = programl.ToBytes(graph, fmt=programl.StdoutGraphFormat.PB)
 
   # Run this analysis script.
   stdout, stderr = process.communicate(stdin)
@@ -200,7 +200,7 @@ def _AnnotateInSubprocess(
   # Construct the protocol buffer from stdout.
   output = programl.FromBytes(
     stdout,
-    programl.InputOutputFormat.PB,
+    programl.StdinGraphFormat.PB,
     proto=programl_pb2.ProgramGraphs(),
     empty_okay=True,
   )

@@ -15,6 +15,7 @@
 # limitations under the License.
 """Unit tests for //deeplearning/ml4pl/graphs:programl."""
 import random
+from typing import Tuple
 
 from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
@@ -58,12 +59,6 @@ def graph_y_dimensionality(request) -> int:
 @test.Fixture(scope="session", params=(None, 10, 100))
 def node_count(request) -> int:
   """A test fixture which enumerates node_counts."""
-  return request.param
-
-
-@test.Fixture(scope="session", params=list(programl.InputOutputFormat))
-def fmt(request) -> programl.InputOutputFormat:
-  """A test fixture which enumerates protocol buffer formats."""
   return request.param
 
 
@@ -133,14 +128,6 @@ def test_fuzz_GraphBuilder():
     builder.AddEdge(random.choice(nodes), random.choice(nodes))
   assert builder.g
   assert builder.proto
-
-
-@decorators.loop_for(seconds=3)
-def test_fuzz_proto_bytes_equivalence(fmt: programl.InputOutputFormat):
-  """Test that conversion to and from bytes does not change the proto."""
-  input = random_programl_generator.CreateRandomProto()
-  output = programl.FromBytes(programl.ToBytes(input, fmt), fmt)
-  assert input == output
 
 
 @decorators.loop_for(seconds=3)

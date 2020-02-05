@@ -60,12 +60,6 @@ def node_count(request) -> int:
   return request.param
 
 
-@test.Fixture(scope="session", params=list(programl.InputOutputFormat))
-def fmt(request) -> programl.InputOutputFormat:
-  """A test fixture which enumerates protocol buffer formats."""
-  return request.param
-
-
 ###############################################################################
 # Benchmarks.
 ###############################################################################
