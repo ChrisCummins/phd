@@ -23,9 +23,8 @@ PYBIND11_MODULE(mnist_data_loader, m) {
 
   py::class_<MnistDataLoader>(m, "MnistDataLoader")
       .def(py::init<>())
-      .def("Load", [](MnistDataLoader &d) {
-        return labm8::StatusOrToException(d.Load());
-      });
+      .def("Load",
+           [](MnistDataLoader &d) { return d.Load().ValueOrException(); });
 }
 
 }  // namespace mnist
