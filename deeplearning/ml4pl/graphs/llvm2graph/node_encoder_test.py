@@ -108,6 +108,12 @@ def test_EncodeNodes_llvm_program_graph(llvm_program_graph_nx: nx.MultiDiGraph):
   )
   assert num_statements >= 1
 
+  # Check for the presence of expected node attributes.
+  for _, data in g.nodes(data=True):
+    assert len(data["x"]) == 1
+    assert len(data["y"]) == 0
+    assert "preprocessed_text" in data
+
 
 if __name__ == "__main__":
   test.Main()

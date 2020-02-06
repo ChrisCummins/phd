@@ -43,20 +43,20 @@ def one_proto() -> programl_pb2.ProgramGraph:
   return next(random_programl_generator.EnumerateTestSet())
 
 
-@test.Fixture(scope="session", params=list(programl.InputOutputFormat))
-def stdin_fmt(request) -> programl.InputOutputFormat:
+@test.Fixture(scope="session", params=list(programl.StdinGraphFormat))
+def stdin_fmt(request) -> programl.StdinGraphFormat:
   """A test fixture which enumerates stdin formats."""
   return request.param
 
 
-@test.Fixture(scope="session", params=list(programl.InputOutputFormat))
-def stdout_fmt(request) -> programl.InputOutputFormat:
+@test.Fixture(scope="session", params=list(programl.StdoutGraphFormat))
+def stdout_fmt(request) -> programl.StdoutGraphFormat:
   """A test fixture which enumerates stdout formats."""
   return request.param
 
 
 @test.Fixture(scope="session", params=list(annotate.AVAILABLE_ANALYSES))
-def analysis(request) -> programl.InputOutputFormat:
+def analysis(request) -> str:
   """A test fixture which yields all analysis names."""
   return request.param
 

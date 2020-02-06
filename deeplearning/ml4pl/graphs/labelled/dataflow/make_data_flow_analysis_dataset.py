@@ -233,7 +233,7 @@ def ProcessWorker(packed_args) -> AnnotationResult:
         annotated_graphs = annotate.Annotate(
           analysis,
           programl.FromBytes(
-            program_graph.serialized_proto, programl.InputOutputFormat.PB
+            program_graph.serialized_proto, programl.StdinGraphFormat.PB
           ),
           n=FLAGS.n,
           timeout=FLAGS.annotator_timeout,
