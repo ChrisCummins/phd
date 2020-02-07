@@ -226,12 +226,104 @@ cc_test(
     srcs = ["036_hamming_distance.cc"],
     deps = [
         "//labm8/cpp:logging",
+        "//labm8/cpp:test",
     ],
 )
 
 cc_test(
     name = "037_gradient_descent",
     srcs = ["037_gradient_descent.cc"],
+    deps = [
+        "//labm8/cpp:logging",
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "038_n_choose_k",
+    srcs = ["038_n_choose_k.cc"],
+    deps = [
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "039_huffman_coding",
+    srcs = ["039_huffman_coding.cc"],
+    deps = [
+        "//labm8/cpp:logging",
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "040_closest_binary_tree_value",
+    srcs = ["040_closest_binary_tree_value.cc"],
+    deps = [
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "041_random_set",
+    srcs = ["041_random_set.cc"],
+    deps = [
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "042_merge_intervals",
+    srcs = ["042_merge_intervals.cc"],
+    deps = [
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "043_enumerate_parenthesis",
+    srcs = ["043_enumerate_parenthesis.cc"],
+    deps = [
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "044_shortest_distance_from_all_buildings",
+    srcs = ["044_shortest_distance_from_all_buildings.cc"],
+    deps = [
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "045_find_duplicate_num",
+    srcs = ["045_find_duplicate_num.cc"],
+    deps = [
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "046_kth_highest_value",
+    srcs = ["046_kth_highest_value.cc"],
+    deps = [
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "047_malloc",
+    srcs = ["047_malloc.cc"],
+    deps = [
+        "//labm8/cpp:logging",
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "048_bipartite_graph",
+    srcs = ["048_bipartite_graph.cc"],
     deps = [
         "//labm8/cpp:logging",
         "//labm8/cpp:test",

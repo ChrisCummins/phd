@@ -103,6 +103,15 @@ py_test(
 )
 
 cc_test(
+    name = "025",
+    srcs = ["025.cc"],
+    deps = [
+        "//labm8/cpp:string",
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
     name = "064",
     srcs = ["064.cc"],
     deps = [
@@ -196,6 +205,35 @@ cc_test(
     name = "379",
     srcs = ["379.cc"],
     deps = [
+        "//labm8/cpp:string",
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "396",
+    srcs = ["396.cc"],
+    deps = [
+        "//labm8/cpp:logging",
+        "//labm8/cpp:string",
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "398",
+    srcs = ["398.cc"],
+    deps = [
+        "//labm8/cpp:logging",
+        "//labm8/cpp:test",
+    ],
+)
+
+cc_test(
+    name = "450",
+    srcs = ["450.cc"],
+    deps = [
+        "//labm8/cpp:logging",
         "//labm8/cpp:string",
         "//labm8/cpp:test",
     ],
