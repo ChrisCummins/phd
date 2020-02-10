@@ -30,6 +30,10 @@ message ProgramGraph {
   repeated Node node = 1;
   repeated Edge edge = 2;
   repeated Function function = 3;
+  // A list of strings used in this graph. Strings are stored in this string
+  // table, and indices into this table are used to provide the textual
+  // representation of node names, function names, etc.
+  repeated string string = 4;
   // Optional vectors of graph-level features and labels.
   repeated int64 x = 5 [packed = true];
   repeated int64 y = 6 [packed = true];
@@ -46,8 +50,8 @@ message ProgramGraph {
 }
 
 message Function {
-  // The name of the function.
-  required string name = 1;
+  // The name of the function, as an index into the ProgramGraph.string table.
+  required int32 name = 1;
 }
 
 message Node {
@@ -58,11 +62,13 @@ message Node {
     IMMEDIATE = 2;
   }
   required Type type = 1;
-  // The text of a node. This is the raw representation of a node, such as the
-  // contents of a statement, or the name of an identifier.
-  required string text = 2;
-  // The pre-processed text of a node. This is the
-  optional string preprocessed_text = 3;
+  // The text of a node, as an index into the ProgramGraph.string table. This is
+  // the raw representation of a node, such as the contents of a statement, or
+  // the name of an identifier.
+  optional int32 text = 2;
+  // The pre-processed text of a node, as an index into the ProgramGraph.string
+  // table.
+  optional int32 preprocessed_text = 3;
   // An index into the ProgramGraph.function list indicating the source function
   // for this node. Omitting this fields means the node does not belong to a
   // function, such as the case for global identifiers.
@@ -80,7 +86,7 @@ message Edge {
     CALL = 2;
   }
   required Flow flow = 1;
-  // The source and destination nodes of the edge, as andicies into a
+  // The source and destination nodes of the edge, as indicies into a
   // ProgramGraph.node list.
   required int32 source_node = 2;
   required int32 destination_node = 3;

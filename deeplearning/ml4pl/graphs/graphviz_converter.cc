@@ -48,6 +48,7 @@ NodeLabel NodeLabelFromString(const string& value) {
 
   LOG(FATAL) << "Unknown value for node label: `" << value << "`. Supported "
              << "values: none,text,preprocessed_text,x,y";
+  return NodeLabel::kNone;
 }
 
 }  // anonymous namespace
@@ -78,6 +79,13 @@ using GraphvizGraph = boost::adjacency_list<
                             boost::property<boost::graph_edge_attribute_t,
                                             AttributeMap>>>>>;
 
+const string& GetString(const ProgramGraph& graph, int index) {
+  CHECK(index >= 0 && index <= graph.string_size())
+      << "String " << index << " is out of range for string table with "
+      << graph.string_size() << " elements";
+  return graph.string(index);
+}
+
 void SerializeGraphVizToString(const ProgramGraph& graph, std::ostream* ostream,
                                const string& nodeLabels) {
   NodeLabel nodeLabelFormat = NodeLabelFromString(nodeLabels);
@@ -106,7 +114,7 @@ void SerializeGraphVizToString(const ProgramGraph& graph, std::ostream* ostream,
     functionGraphs.push_back(main.create_subgraph());
 
     // Set the name of the function.
-    string functionName = function.name();
+    string functionName = GetString(graph, function.name());
     labm8::TruncateWithEllipsis(functionName, kMaximumLabelLen);
     boost::get_property(functionGraphs[functionGraphs.size() - 1].get(),
                         boost::graph_graph_attribute)["label"] = functionName;
@@ -141,11 +149,10 @@ void SerializeGraphVizToString(const ProgramGraph& graph, std::ostream* ostream,
       case kNone:
         break;
       case kText:
-        text = node.text();
+        text = GetString(graph, node.text());
         break;
       case kPreprocessedText:
-        LOG(INFO) << "TEXT " << node.text() << " " << node.DebugString();
-        text = node.preprocessed_text();
+        text = GetString(graph, node.preprocessed_text());
         break;
       case kX:
         textStream << std::setprecision(3);

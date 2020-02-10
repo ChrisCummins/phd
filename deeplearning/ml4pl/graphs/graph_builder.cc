@@ -28,21 +28,21 @@ namespace ml4pl {
 GraphBuilder::GraphBuilder() : finalized_(false) {
   // Create the graph root node.
   auto node = AddNode(Node::STATEMENT);
-  node.second->set_text("; root");
+  node.second->set_text(AddString("; root"));
 }
 
 std::pair<int, Function*> GraphBuilder::AddFunction(const string& name) {
   CHECK(name.size()) << "Empty function name is invalid";
   int functionNumber = graph_.function_size();
   Function* function = graph_.add_function();
-  function->set_name(name);
+  function->set_name(AddString(name));
   return std::make_pair(functionNumber, function);
 }
 
 std::pair<int, Node*> GraphBuilder::AddStatement(const string& text,
                                                  int function) {
   auto node = AddNode(Node::STATEMENT);
-  node.second->set_text(text);
+  node.second->set_text(AddString(text));
   node.second->set_function(function);
   return node;
 }
@@ -50,14 +50,14 @@ std::pair<int, Node*> GraphBuilder::AddStatement(const string& text,
 std::pair<int, Node*> GraphBuilder::AddIdentifier(const string& text,
                                                   int function) {
   auto node = AddNode(Node::IDENTIFIER);
-  node.second->set_text(text);
+  node.second->set_text(AddString(text));
   node.second->set_function(function);
   return node;
 }
 
 std::pair<int, Node*> GraphBuilder::AddImmediate(const string& text) {
   auto node = AddNode(Node::IMMEDIATE);
-  node.second->set_text(text);
+  node.second->set_text(AddString(text));
   return node;
 }
 
@@ -216,6 +216,26 @@ std::pair<int, Node*> GraphBuilder::AddNode(const Node::Type& type) {
   call_adjacencies_.push_back({});
 
   return std::make_pair(nodeNumber, node);
+}
+
+int GraphBuilder::AddString(const string& s) {
+  auto it = strings_.find(s);
+  if (it == strings_.end()) {
+    int index = graph_.string_size();
+    strings_.insert({s, index});
+    graph_.add_string(s);
+    return index;
+  }
+
+  return it->second;
+}
+
+const string& GraphBuilder::GetString(int index) const {
+  CHECK(index >= 0 && index <= graph_.string_size())
+      << "Requested string " << index
+      << " is out of range for string table with " << graph_.string_size()
+      << " elements.";
+  return graph_.string(index);
 }
 
 }  // namespace ml4pl

@@ -76,10 +76,22 @@ class GraphBuilder {
       const std::vector<std::vector<std::pair<size_t, int>>>& adjacencies,
       const Edge::Flow& flow, std::vector<bool>* visitedNodes);
 
+  // Insert the string into the strings table, or return its value if already
+  // present.
+  int AddString(const string& s);
+
+  // Return the string from the strings table at the given index. This CHECK
+  // fails if the requested index is out of bound.
+  const string& GetString(int index) const;
+
   // Adjacency lists.
   std::vector<std::vector<size_t>> control_adjacencies_;
   std::vector<std::vector<std::pair<size_t, int>>> data_reverse_adjacencies_;
   std::vector<std::vector<size_t>> call_adjacencies_;
+
+  // A map from unique strings to their position in the flattened string list.
+  // E.g. {"a": 0, "b": 1} flattens to the strings list ["a", "b"].
+  absl::flat_hash_map<string, int> strings_;
 
   bool finalized_;
 };
