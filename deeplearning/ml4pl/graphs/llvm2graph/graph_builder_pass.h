@@ -40,10 +40,10 @@ class GraphBuilderPass : public llvm::ModulePass {
 
   bool runOnModule(llvm::Module& module) override;
 
-  labm8::StatusOr<ProgramGraph> GetGraph() const { return graph_; }
+  labm8::StatusOr<ProgramGraphProto> GetGraph() const { return graph_; }
 
  private:
-  labm8::StatusOr<ProgramGraph> graph_;
+  labm8::StatusOr<ProgramGraphProto> graph_;
   LlvmGraphBuilder graphBuilder_;
 };
 

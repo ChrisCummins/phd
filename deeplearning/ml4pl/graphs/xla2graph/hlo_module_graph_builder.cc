@@ -24,7 +24,7 @@
 
 namespace ml4pl {
 
-labm8::StatusOr<ProgramGraph> HloModuleGraphBuilder::Build(
+labm8::StatusOr<ProgramGraphProto> HloModuleGraphBuilder::Build(
     const xla::HloProto& proto) {
   RETURN_IF_ERROR(VisitModule(proto.hlo_module()));
   return GetGraph();

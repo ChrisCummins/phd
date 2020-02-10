@@ -67,22 +67,22 @@ def node_count(request) -> int:
 ###############################################################################
 
 
-def test_graphviz_converter(llvm_program_graph: programl_pb2.ProgramGraph):
-  """Black-box test ProgramGraphToGraphviz()."""
-  assert programl.ProgramGraphToGraphviz(llvm_program_graph)
+def test_graphviz_converter(llvm_program_graph: programl_pb2.ProgramGraphProto):
+  """Black-box test ProgramGraphProtoToGraphviz()."""
+  assert programl.ProgramGraphProtoToGraphviz(llvm_program_graph)
 
 
 def test_proto_networkx_equivalence(
-  llvm_program_graph: programl_pb2.ProgramGraph,
+  llvm_program_graph: programl_pb2.ProgramGraphProto,
 ):
   """Test proto -> networkx -> proto equivalence."""
   # proto -> networkx
-  g = programl.ProgramGraphToNetworkX(llvm_program_graph)
+  g = programl.ProgramGraphProtoToNetworkX(llvm_program_graph)
   assert g.number_of_nodes() == len(llvm_program_graph.node)
   assert g.number_of_edges() == len(llvm_program_graph.edge)
 
   # networkx -> proto
-  proto_out = programl.NetworkXToProgramGraph(g)
+  proto_out = programl.NetworkXToProgramGraphProto(g)
   assert set(fn.name for fn in proto_out.function) == set(
     fn.name for fn in llvm_program_graph.function
   )
@@ -91,18 +91,18 @@ def test_proto_networkx_equivalence(
 
 
 def test_proto_networkx_equivalence_with_preallocated_proto(
-  llvm_program_graph: programl_pb2.ProgramGraph,
+  llvm_program_graph: programl_pb2.ProgramGraphProto,
 ):
   """Test proto -> networkx -> proto equivalent using pre-allocated protos."""
   # proto -> networkx
-  g = programl.ProgramGraphToNetworkX(llvm_program_graph)
+  g = programl.ProgramGraphProtoToNetworkX(llvm_program_graph)
   assert g.number_of_nodes() == len(llvm_program_graph.node)
   assert g.number_of_edges() == len(llvm_program_graph.edge)
 
   # networkx -> proto
   # Allocate the proto ahead of time:
-  proto_out = programl_pb2.ProgramGraph()
-  programl.NetworkXToProgramGraph(g, proto=proto_out)
+  proto_out = programl_pb2.ProgramGraphProto()
+  programl.NetworkXToProgramGraphProto(g, proto=proto_out)
   assert set(fn.name for fn in proto_out.function) == set(
     fn.name for fn in llvm_program_graph.function
   )
@@ -148,7 +148,7 @@ def test_fuzz_proto_networkx_equivalence(
   )
 
   # proto -> networkx
-  g = programl.ProgramGraphToNetworkX(proto_in)
+  g = programl.ProgramGraphProtoToNetworkX(proto_in)
   assert g.number_of_nodes() == len(proto_in.node)
   assert g.number_of_edges() == len(proto_in.edge)
 
@@ -164,7 +164,7 @@ def test_fuzz_proto_networkx_equivalence(
   assert sorted(functions_in_proto) == sorted(functions_in_graph)
 
   # networkx -> proto
-  proto_out = programl.NetworkXToProgramGraph(g)
+  proto_out = programl.NetworkXToProgramGraphProto(g)
   assert proto_out.function == proto_in.function
   assert proto_out.node == proto_in.node
   # Randomly generated graphs don't have a stable edge order.

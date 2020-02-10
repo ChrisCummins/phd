@@ -29,7 +29,7 @@ import "deeplearning/ml4pl/graphs/programl.proto";
 
 // An graph that has been serialized and encoded to a concatenated sequence of
 // encoded node representations.
-message ProgramGraphSeq {
+message ProgramGraphSeqProto {
   // The concatenated sequences of encoded node representations.
   repeated int32 encoded = 1;
   repeated int32 encoded_node_length = 2;
@@ -41,6 +41,6 @@ message ProgramGraphSeq {
 // and the encoded results.
 message GraphEncoderJob {
   map<string, int32> vocabulary = 1;
-  repeated ProgramGraph graph = 2;
-  repeated ProgramGraphSeq seq = 3;
+  repeated ProgramGraphProto graph = 2;
+  repeated ProgramGraphSeqProto seq = 3;
 }

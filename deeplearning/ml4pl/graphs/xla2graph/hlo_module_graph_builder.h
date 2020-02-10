@@ -34,7 +34,7 @@ class HloModuleGraphBuilder : GraphBuilder {
  public:
   // Main entry point. Accepts a module as input and returns a graph as output,
   // or an error status if graph construction fails.
-  labm8::StatusOr<ProgramGraph> Build(const xla::HloProto& proto);
+  labm8::StatusOr<ProgramGraphProto> Build(const xla::HloProto& proto);
 
  protected:
   labm8::Status VisitModule(const xla::HloModuleProto& module);

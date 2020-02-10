@@ -6,12 +6,13 @@
 namespace ml4pl {
 
 // Construct a program graph from the given module.
-labm8::StatusOr<ProgramGraph> BuildGraph(llvm::Module& module);
+labm8::StatusOr<ProgramGraphProto> BuildGraph(llvm::Module& module);
 
 // Construct a program graph from a buffer for a module.
-labm8::StatusOr<ProgramGraph> BuildGraph(const llvm::MemoryBuffer& irBuffer);
+labm8::StatusOr<ProgramGraphProto> BuildGraph(
+    const llvm::MemoryBuffer& irBuffer);
 
 // Construct a program graph from a string of IR.
-labm8::StatusOr<ProgramGraph> BuildGraph(const string& irString);
+labm8::StatusOr<ProgramGraphProto> BuildGraph(const string& irString);
 
 }  // namespace ml4pl

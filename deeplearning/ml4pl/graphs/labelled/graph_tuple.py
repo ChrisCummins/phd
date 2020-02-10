@@ -36,7 +36,7 @@ FLAGS = app.FLAGS
 class GraphTuple(NamedTuple):
   """The graph tuple: a compact representation of one or more graphs.
 
-  The transformation of ProgramGraph protocol buffer to GraphTuples is lossy
+  The transformation of ProgramGraphProto protocol buffer to GraphTuples is lossy
   (omitting attributes such as node types and texts).
 
   See <github.com/ChrisCummins/ProGraML/issues/22>.
@@ -261,7 +261,7 @@ class GraphTuple(NamedTuple):
 
     Args:
       g: The graph to convert to a graph. See
-        deeplearning.ml4pl.graphs.programl.ProgramGraphToNetworkX() for a
+        deeplearning.ml4pl.graphs.programl.ProgramGraphProtoToNetworkX() for a
         description of the networkx format.
 
     Returns:
@@ -336,11 +336,13 @@ class GraphTuple(NamedTuple):
     )
 
   @classmethod
-  def CreateFromProgramGraph(cls, program_graph: programl_pb2.ProgramGraph):
+  def CreateFromProgramGraphProto(
+    cls, program_graph: programl_pb2.ProgramGraphProto
+  ):
     # TODO(github.com/ChrisCummins/ProGraML/issues/31): Perform the conversion
     # directly.
     return cls.CreateFromNetworkX(
-      programl.ProgramGraphToNetworkX(program_graph)
+      programl.ProgramGraphProtoToNetworkX(program_graph)
     )
 
   @classmethod

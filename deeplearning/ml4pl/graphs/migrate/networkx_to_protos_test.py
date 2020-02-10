@@ -109,7 +109,7 @@ def test_NetworkXGraphToProgramGraphProto_returns_proto(
   proto = networkx_to_protos.NetworkXGraphToProgramGraphProto(
     valid_simple_graph
   )
-  assert isinstance(proto, programl_pb2.ProgramGraph)
+  assert isinstance(proto, programl_pb2.ProgramGraphProto)
 
 
 def ReadPickledNetworkxGraphs() -> Iterable[Tuple[str, nx.MultiDiGraph]]:
@@ -133,7 +133,7 @@ def test_NetworkXGraphToProgramGraphProto_random_100(
   name, g = pickled_networkx_graph
   proto = networkx_to_protos.NetworkXGraphToProgramGraphProto(g)
 
-  assert isinstance(proto, programl_pb2.ProgramGraph)
+  assert isinstance(proto, programl_pb2.ProgramGraphProto)
   # The graph should have the same number of nodes and edges.
   assert len(proto.node) == g.number_of_nodes()
   assert len(proto.edge) == g.number_of_edges()
@@ -147,7 +147,7 @@ def test_fuzz_NetworkXGraphToProgramGraphProto():
   g = random_cdfg_generator.FastCreateRandom()
   proto = networkx_to_protos.NetworkXGraphToProgramGraphProto(g)
 
-  assert isinstance(proto, programl_pb2.ProgramGraph)
+  assert isinstance(proto, programl_pb2.ProgramGraphProto)
   # The graph should have the same number of nodes and edges.
   assert len(proto.node) == g.number_of_nodes()
   assert len(proto.edge) == g.number_of_edges()

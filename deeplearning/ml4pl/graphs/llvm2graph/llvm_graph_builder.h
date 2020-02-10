@@ -77,7 +77,7 @@ class LlvmGraphBuilder : GraphBuilder {
  public:
   // Main entry point. Accepts a module as input and returns a graph as output,
   // or an error status if graph construction fails.
-  labm8::StatusOr<ProgramGraph> Build(const llvm::Module& module);
+  labm8::StatusOr<ProgramGraphProto> Build(const llvm::Module& module);
 
  protected:
   labm8::StatusOr<FunctionEntryExits> VisitFunction(

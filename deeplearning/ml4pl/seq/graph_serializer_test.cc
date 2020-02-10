@@ -25,14 +25,14 @@ namespace ml4pl {
 namespace {
 
 TEST(SerializeStatements, EmptyGraph) {
-  ProgramGraph graph;
+  ProgramGraphProto graph;
 
   auto serialized = SerializeStatements(graph);
   ASSERT_EQ(0, serialized.size());
 }
 
 TEST(SerializeStatements, RootNodeOnly) {
-  ProgramGraph graph;
+  ProgramGraphProto graph;
   Node* root = graph.add_node();
   root->set_type(Node::STATEMENT);
 
@@ -41,7 +41,7 @@ TEST(SerializeStatements, RootNodeOnly) {
 }
 
 TEST(SerializeStatements, SingleFunction) {
-  ProgramGraph graph;
+  ProgramGraphProto graph;
   Node* root = graph.add_node();
   root->set_type(Node::STATEMENT);
   Node* a = graph.add_node();
@@ -58,7 +58,7 @@ TEST(SerializeStatements, SingleFunction) {
 }
 
 TEST(SerializeStatements, SingleFunctionWithLoop) {
-  ProgramGraph graph;
+  ProgramGraphProto graph;
   Node* root = graph.add_node();
   root->set_type(Node::STATEMENT);
   Node* a = graph.add_node();

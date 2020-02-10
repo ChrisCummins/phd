@@ -45,7 +45,7 @@ class DataFlowGraphs(object):
     raise NotImplementedError("abstract class")
 
   @property
-  def protos(self) -> List[programl_pb2.ProgramGraph]:
+  def protos(self) -> List[programl_pb2.ProgramGraphProto]:
     """Access the data flow graphs as protos."""
     raise NotImplementedError("abstract class")
 
@@ -62,9 +62,9 @@ class NetworkxDataFlowGraphs(DataFlowGraphs):
     return self._graphs
 
   @property
-  def protos(self) -> List[programl_pb2.ProgramGraph]:
+  def protos(self) -> List[programl_pb2.ProgramGraphProto]:
     """Convert the networkx graphs to program graph protos."""
-    return [programl.NetworkXToProgramGraph(g) for g in self.graphs]
+    return [programl.NetworkXToProgramGraphProto(g) for g in self.graphs]
 
 
 ###############################################################################
@@ -97,7 +97,7 @@ class AnalysisTimeout(AnalysisFailed):
 class DataFlowGraphAnnotator(object):
   """Abstract base class for implement data flow analysis graph annotators."""
 
-  def __init__(self, unlabelled_graph: programl_pb2.ProgramGraph):
+  def __init__(self, unlabelled_graph: programl_pb2.ProgramGraphProto):
     """Constructor.
 
     unlabelled_graph: The unlabelled program graph used to produce annotated
@@ -131,7 +131,7 @@ class NetworkXDataFlowGraphAnnotator(DataFlowGraphAnnotator):
 
   def __init__(self, *args, **kwargs):
     super(NetworkXDataFlowGraphAnnotator, self).__init__(*args, **kwargs)
-    self.g = programl.ProgramGraphToNetworkX(self.unlabelled_graph)
+    self.g = programl.ProgramGraphProtoToNetworkX(self.unlabelled_graph)
 
     self.root_nodes = [
       node

@@ -35,8 +35,8 @@ LLVM2GRAPH = bazelutil.DataPath(
 def BuildProgramGraphProto(
   module: str,
   timeout: int = 120,
-  graph: Optional[programl_pb2.ProgramGraph] = None,
-) -> programl_pb2.ProgramGraph:
+  graph: Optional[programl_pb2.ProgramGraphProto] = None,
+) -> programl_pb2.ProgramGraphProto:
   """Construct a program graph for the given LLVM IR.
 
   Args:
@@ -47,7 +47,7 @@ def BuildProgramGraphProto(
       a new graph message is constructed.
 
   Returns:
-    A ProgramGraph message instance.
+    A ProgramGraphProto message instance.
 
   Raises:
     TimeoutError: If graph construction fails to complete within timeout
@@ -64,7 +64,7 @@ def BuildProgramGraphProto(
   # from stdout. This has a higher overhead (requiring an extra proto serialize
   # and deserialize per call).
 
-  graph = graph or programl_pb2.ProgramGraph()
+  graph = graph or programl_pb2.ProgramGraphProto()
 
   # Build and execute a llvm2graph command.
   cmd = [
@@ -104,7 +104,7 @@ def BuildProgramGraphProto(
 def BuildProgramGraphNetworkX(
   module: str,
   timeout: int = 120,
-  graph: Optional[programl_pb2.ProgramGraph] = None,
+  graph: Optional[programl_pb2.ProgramGraphProto] = None,
 ) -> nx.MultiDiGraph:
   """Construct a NetworkX program graph for the given LLVM IR.
 
@@ -128,6 +128,6 @@ def BuildProgramGraphNetworkX(
   # //deeplearning/ml4pl/graphs/llvm2graph which would produce output in the
   # format expected by networkx. See:
   # https://networkx.github.io/documentation/networkx-1.10/reference/generated/networkx.convert.to_dict_of_dicts.html#networkx.convert.to_dict_of_dicts
-  return programl.ProgramGraphToNetworkX(
+  return programl.ProgramGraphProtoToNetworkX(
     BuildProgramGraphProto(module=module, timeout=timeout, graph=graph)
   )

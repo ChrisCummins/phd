@@ -24,7 +24,7 @@
 namespace py = pybind11;
 
 PYBIND11_MODULE(xla2graph_pybind, m) {
-  m.doc() = "pybind11 example plugin";
+  m.doc() = "Convert XLA HLO graphs to ProGraML graphs";
 
   m.def("BuildProgramGraphProto",
         [&](const string& serializedProto) {
@@ -40,5 +40,5 @@ PYBIND11_MODULE(xla2graph_pybind, m) {
           graph.SerializeToOstream(&out);
           return py::bytes(out.str());
         },
-        "Build a serialized ProgramGraph from a serialized HloProto.");
+        "Build a serialized ProgramGraphProto from a serialized HloProto.");
 }

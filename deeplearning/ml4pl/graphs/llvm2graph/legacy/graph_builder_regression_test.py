@@ -38,7 +38,7 @@ def builder() -> graph_builder.ProGraMLGraphBuilder:
 def test_53(builder: graph_builder.ProGraMLGraphBuilder):
   """github.com/ChrisCummins/ProGraML/issues/53"""
   proto = builder.Build(fs.Read(REGRESSION_TESTS / "53.ll"))
-  programl.NetworkXToProgramGraph(proto)
+  programl.NetworkXToProgramGraphProto(proto)
 
 
 def test_105975(builder: graph_builder.ProGraMLGraphBuilder):

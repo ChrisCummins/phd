@@ -282,9 +282,9 @@ class GraphTuple(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     )
 
   @classmethod
-  def CreateFromProgramGraph(
+  def CreateFromProgramGraphProto(
     cls,
-    program_graph: programl_pb2.ProgramGraph,
+    program_graph: programl_pb2.ProgramGraphProto,
     ir_id: int,
     split: Optional[int] = None,
   ) -> "GraphTuple":
@@ -302,7 +302,7 @@ class GraphTuple(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     Returns:
       A GraphTuple instance.
     """
-    graph_tuple = graph_tuple_lib.GraphTuple.CreateFromProgramGraph(
+    graph_tuple = graph_tuple_lib.GraphTuple.CreateFromProgramGraphProto(
       program_graph
     )
     mapped = cls.CreateFromGraphTuple(graph_tuple, ir_id, split)

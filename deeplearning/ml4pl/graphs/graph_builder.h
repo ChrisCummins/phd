@@ -52,7 +52,7 @@ class GraphBuilder {
   void AddDataEdge(int sourceNode, int destinationNode, int position);
 
   // Access the graph.
-  const ProgramGraph& GetGraph();
+  const ProgramGraphProto& GetGraph();
 
  protected:
   std::pair<int, Node*> AddNode(const Node::Type& type);
@@ -67,7 +67,7 @@ class GraphBuilder {
                     const FunctionEntryExits& calledFunction);
 
  private:
-  ProgramGraph graph_;
+  ProgramGraphProto graph_;
 
   void AddEdges(const std::vector<std::vector<size_t>>& adjacencies,
                 const Edge::Flow& flow, std::vector<bool>* visitedNodes);

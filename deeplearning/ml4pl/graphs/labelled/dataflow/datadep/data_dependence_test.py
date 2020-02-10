@@ -32,7 +32,7 @@ FLAGS = test.FLAGS
 @test.Fixture(
   scope="session", params=list(random_programl_generator.EnumerateTestSet()),
 )
-def real_proto(request) -> programl_pb2.ProgramGraph:
+def real_proto(request) -> programl_pb2.ProgramGraphProto:
   """A test fixture which yields one of 100 "real" graphs."""
   return request.param
 
@@ -83,7 +83,7 @@ def test_Annotate():
   assert g.nodes[E]["y"] == data_dependence.NOT_DEPENDENCY
 
 
-def test_MakeAnnotated_real_protos(real_proto: programl_pb2.ProgramGraph,):
+def test_MakeAnnotated_real_protos(real_proto: programl_pb2.ProgramGraphProto,):
   """Opaque black-box test of annotator."""
   annotator = data_dependence.DataDependencyAnnotator(real_proto)
   annotated = annotator.MakeAnnotated(10)

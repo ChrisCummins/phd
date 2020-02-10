@@ -29,8 +29,8 @@ FLAGS = app.FLAGS
 
 def BuildProgramGraphProto(
   hlo_proto: hlo_pb2.HloProto,
-  graph: Optional[programl_pb2.ProgramGraph] = None,
-) -> programl_pb2.ProgramGraph:
+  graph: Optional[programl_pb2.ProgramGraphProto] = None,
+) -> programl_pb2.ProgramGraphProto:
   """Construct a program graph for the given LLVM IR.
 
   Args:
@@ -39,7 +39,7 @@ def BuildProgramGraphProto(
       a new graph message is constructed.
 
   Returns:
-    A ProgramGraph message instance.
+    A ProgramGraphProto message instance.
 
   Raises:
     ValueError: If graph construction fails.
@@ -47,7 +47,7 @@ def BuildProgramGraphProto(
   # This requires a round trip serialized to / from strings, since I can't
   # figure out a way to get pybind11 to auto-generate bindings for protocol
   # buffers.
-  graph = graph or programl_pb2.ProgramGraph()
+  graph = graph or programl_pb2.ProgramGraphProto()
   serialized_graph = xla2graph_pybind.BuildProgramGraphProto(
     hlo_proto.SerializeToString()
   )
@@ -57,7 +57,7 @@ def BuildProgramGraphProto(
 
 def BuildProgramGraphNetworkX(
   hlo_proto: hlo_pb2.HloProto,
-  graph: Optional[programl_pb2.ProgramGraph] = None,
+  graph: Optional[programl_pb2.ProgramGraphProto] = None,
 ) -> nx.MultiDiGraph:
   """Construct a NetworkX program graph for the given LLVM IR.
 
@@ -77,6 +77,6 @@ def BuildProgramGraphNetworkX(
   # //deeplearning/ml4pl/graphs/xla2graph which would produce output in the
   # format expected by networkx. See:
   # https://networkx.github.io/documentation/networkx-1.10/reference/generated/networkx.convert.to_dict_of_dicts.html#networkx.convert.to_dict_of_dicts
-  return programl.ProgramGraphToNetworkX(
+  return programl.ProgramGraphProtoToNetworkX(
     BuildProgramGraphProto(hlo_proto=hlo_proto, graph=graph)
   )

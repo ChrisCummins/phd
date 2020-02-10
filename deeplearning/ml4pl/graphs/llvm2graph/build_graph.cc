@@ -11,7 +11,7 @@
 
 namespace ml4pl {
 
-labm8::StatusOr<ProgramGraph> BuildGraph(llvm::Module& module) {
+labm8::StatusOr<ProgramGraphProto> BuildGraph(llvm::Module& module) {
   // Construct an empty pass manager.
   llvm::legacy::PassManager passManager;
   llvm::PassManagerBuilder passManagerBuilder;
@@ -29,7 +29,8 @@ labm8::StatusOr<ProgramGraph> BuildGraph(llvm::Module& module) {
   return graph_builder_pass->GetGraph();
 }
 
-labm8::StatusOr<ProgramGraph> BuildGraph(const llvm::MemoryBuffer& irBuffer) {
+labm8::StatusOr<ProgramGraphProto> BuildGraph(
+    const llvm::MemoryBuffer& irBuffer) {
   // Parse the IR module.
   llvm::SMDiagnostic error;
   llvm::LLVMContext ctx;
@@ -43,7 +44,7 @@ labm8::StatusOr<ProgramGraph> BuildGraph(const llvm::MemoryBuffer& irBuffer) {
   return BuildGraph(*module);
 }
 
-labm8::StatusOr<ProgramGraph> BuildGraph(const string& irString) {
+labm8::StatusOr<ProgramGraphProto> BuildGraph(const string& irString) {
   const auto irBuffer = llvm::MemoryBuffer::getMemBuffer(irString);
   return BuildGraph(*irBuffer);
 }

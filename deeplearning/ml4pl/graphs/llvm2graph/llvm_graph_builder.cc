@@ -309,7 +309,7 @@ labm8::StatusOr<FunctionEntryExits> LlvmGraphBuilder::VisitFunction(
   return functionEntryExits;
 }
 
-labm8::StatusOr<ProgramGraph> LlvmGraphBuilder::Build(
+labm8::StatusOr<ProgramGraphProto> LlvmGraphBuilder::Build(
     const llvm::Module& module) {
   // A map from functions to their entry and exit nodes.
   absl::flat_hash_map<const llvm::Function*, FunctionEntryExits> functions;

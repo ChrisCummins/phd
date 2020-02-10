@@ -79,14 +79,15 @@ using GraphvizGraph = boost::adjacency_list<
                             boost::property<boost::graph_edge_attribute_t,
                                             AttributeMap>>>>>;
 
-const string& GetString(const ProgramGraph& graph, int index) {
+const string& GetString(const ProgramGraphProto& graph, int index) {
   CHECK(index >= 0 && index <= graph.string_size())
       << "String " << index << " is out of range for string table with "
       << graph.string_size() << " elements";
   return graph.string(index);
 }
 
-void SerializeGraphVizToString(const ProgramGraph& graph, std::ostream* ostream,
+void SerializeGraphVizToString(const ProgramGraphProto& graph,
+                               std::ostream* ostream,
                                const string& nodeLabels) {
   NodeLabel nodeLabelFormat = NodeLabelFromString(nodeLabels);
 

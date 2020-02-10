@@ -24,7 +24,7 @@ namespace ml4pl {
 namespace {
 
 TEST(GraphVizConverter, EmptyGraph) {
-  ProgramGraph graph;
+  ProgramGraphProto graph;
   std::stringstream output;
   SerializeGraphVizToString(graph, &output);
   ASSERT_EQ(output.str(), "digraph main {\nsubgraph external {\n}\n}\n");

@@ -36,7 +36,7 @@ FLAGS = test.FLAGS
 
 @test.Parametrize("stdout_fmt", ("pb", "pbtxt", "nx"))
 def test_pb_conversion(
-  llvm_program_graph: programl_pb2.ProgramGraph, stdout_fmt: str
+  llvm_program_graph: programl_pb2.ProgramGraphProto, stdout_fmt: str
 ):
   """Test format conversion from text protocol buffer."""
   assert subprocess.check_output(
@@ -47,7 +47,7 @@ def test_pb_conversion(
 
 @test.Parametrize("stdout_fmt", ("pb", "pbtxt", "nx"))
 def test_pbtxt_conversion(
-  llvm_program_graph: programl_pb2.ProgramGraph, stdout_fmt: str
+  llvm_program_graph: programl_pb2.ProgramGraphProto, stdout_fmt: str
 ):
   """Test format conversion from text protocol buffer."""
   assert subprocess.check_output(

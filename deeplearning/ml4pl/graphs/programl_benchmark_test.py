@@ -72,7 +72,7 @@ def benchmark_proto(
   graph_x_dimensionality: int,
   graph_y_dimensionality: int,
   node_count: int,
-) -> List[programl_pb2.ProgramGraph]:
+) -> List[programl_pb2.ProgramGraphProto]:
   """A fixture which returns 10 protos for benchmarking."""
   return [
     random_programl_generator.CreateRandomProto(
@@ -88,10 +88,10 @@ def benchmark_proto(
 
 @test.Fixture(scope="session")
 def benchmark_networkx(
-  benchmark_proto: List[programl_pb2.ProgramGraph],
+  benchmark_proto: List[programl_pb2.ProgramGraphProto],
 ) -> List[nx.MultiDiGraph]:
   """A fixture which returns 10 graphs for benchmarking."""
-  return [programl.ProgramGraphToNetworkX(p) for p in benchmark_proto]
+  return [programl.ProgramGraphProtoToNetworkX(p) for p in benchmark_proto]
 
 
 def Benchmark(fn, inputs):
@@ -101,24 +101,24 @@ def Benchmark(fn, inputs):
 
 
 def test_benchmark_proto_to_networkx(
-  benchmark, benchmark_proto: List[programl_pb2.ProgramGraph]
+  benchmark, benchmark_proto: List[programl_pb2.ProgramGraphProto]
 ):
   """Benchmark proto -> networkx."""
-  benchmark(Benchmark, programl.ProgramGraphToNetworkX, benchmark_proto)
+  benchmark(Benchmark, programl.ProgramGraphProtoToNetworkX, benchmark_proto)
 
 
 def test_benchmark_proto_to_graphviz(
-  benchmark, benchmark_proto: List[programl_pb2.ProgramGraph]
+  benchmark, benchmark_proto: List[programl_pb2.ProgramGraphProto]
 ):
   """Benchmark proto -> graphviz."""
-  benchmark(Benchmark, programl.ProgramGraphToGraphviz, benchmark_proto)
+  benchmark(Benchmark, programl.ProgramGraphProtoToGraphviz, benchmark_proto)
 
 
 def test_benchmark_networkx_to_proto(
   benchmark, benchmark_networkx: List[nx.MultiDiGraph]
 ):
   """Benchmark networkx -> proto."""
-  benchmark(Benchmark, programl.NetworkXToProgramGraph, benchmark_networkx)
+  benchmark(Benchmark, programl.NetworkXToProgramGraphProto, benchmark_networkx)
 
 
 if __name__ == "__main__":

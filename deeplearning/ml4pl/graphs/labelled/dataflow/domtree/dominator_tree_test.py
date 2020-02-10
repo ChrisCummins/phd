@@ -31,19 +31,19 @@ FLAGS = test.FLAGS
 @test.Fixture(
   scope="session", params=list(random_programl_generator.EnumerateTestSet()),
 )
-def real_proto(request) -> programl_pb2.ProgramGraph:
+def real_proto(request) -> programl_pb2.ProgramGraphProto:
   """A test fixture which yields one of 100 "real" graphs."""
   return request.param
 
 
 @test.Fixture(scope="session")
-def one_real_graph() -> programl_pb2.ProgramGraph:
+def one_real_graph() -> programl_pb2.ProgramGraphProto:
   """A test fixture which yields one of 100 "real" graphs."""
   return next(random_networkx_generator.EnumerateTestSet())
 
 
 @test.Fixture(scope="function")
-def g1() -> programl_pb2.ProgramGraph:
+def g1() -> programl_pb2.ProgramGraphProto:
   """A four statement graph with one data element."""
   #            +---+
   #   +--------+ a +--------+       +---+
@@ -72,7 +72,7 @@ def g1() -> programl_pb2.ProgramGraph:
 
 
 @test.Fixture(scope="function")
-def g2() -> programl_pb2.ProgramGraph:
+def g2() -> programl_pb2.ProgramGraphProto:
   """A five statement graph with one data element.
 
   This is the same as g1, but the extra statement "e" means that 'a' no longer
@@ -112,7 +112,7 @@ def g2() -> programl_pb2.ProgramGraph:
 ###############################################################################
 
 
-def test_Annotate_g1(g1: programl_pb2.ProgramGraph):
+def test_Annotate_g1(g1: programl_pb2.ProgramGraphProto):
   """Test dominator tree for a small """
   annotator = dominator_tree.DominatorTreeAnnotator(g1)
   g = annotator.g
@@ -136,7 +136,7 @@ def test_Annotate_g1(g1: programl_pb2.ProgramGraph):
   assert g.nodes[4]["y"] == dominator_tree.NOT_DOMINATED
 
 
-def test_Annotate_g2(g2: programl_pb2.ProgramGraph):
+def test_Annotate_g2(g2: programl_pb2.ProgramGraphProto):
   """Test dominator tree for a small """
   annotator = dominator_tree.DominatorTreeAnnotator(g2)
   g = annotator.g
@@ -173,7 +173,7 @@ def test_root_node_is_not_in_a_function():
   assert g.graph["data_flow_steps"] == 0
 
 
-def test_MakeAnnotated_real_protos(real_proto: programl_pb2.ProgramGraph,):
+def test_MakeAnnotated_real_protos(real_proto: programl_pb2.ProgramGraphProto,):
   """Opaque black-box test of reachability annotator."""
   annotator = dominator_tree.DominatorTreeAnnotator(real_proto)
   annotated = annotator.MakeAnnotated(10)

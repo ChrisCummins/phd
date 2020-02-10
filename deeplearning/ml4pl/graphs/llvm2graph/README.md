@@ -3,7 +3,7 @@
 This package constructs program graphs from LLVM intermediate representations.
 The [`llvm::LlvmGraphBuilder`](deeplearning/ml4pl/graphs/llvm2graph/llvm_graph_builder.h)
 class implements a graph constructor which accepts an `llvm::Module` as input
-and generates a ProgramGraph protocol buffer. The
+and generates a ProgramGraphProto protocol buffer. The
 [`llvm2graph`](deeplearning/ml4pl/graphs/llvm2graph/llvm2graph.cc) binary
 wraps the graph constructor in a pass pipeline and runs it on a module.
 

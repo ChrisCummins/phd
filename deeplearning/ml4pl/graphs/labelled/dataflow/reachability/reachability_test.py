@@ -34,7 +34,7 @@ FLAGS = test.FLAGS
 
 
 @test.Fixture(scope="function")
-def graph() -> programl_pb2.ProgramGraph:
+def graph() -> programl_pb2.ProgramGraphProto:
   """A program graph with linear control flow."""
   builder = programl.GraphBuilder()
   a = builder.AddNode(x=[0])
@@ -50,7 +50,7 @@ def graph() -> programl_pb2.ProgramGraph:
 @test.Fixture(
   scope="session", params=list(random_programl_generator.EnumerateTestSet()),
 )
-def real_graph(request) -> programl_pb2.ProgramGraph:
+def real_graph(request) -> programl_pb2.ProgramGraphProto:
   """A test fixture which yields one of 100 "real" graphs."""
   return request.param
 
@@ -60,31 +60,31 @@ def real_graph(request) -> programl_pb2.ProgramGraph:
 ###############################################################################
 
 
-def test_Annotate_reachable_node_count_D(graph: programl_pb2.ProgramGraph):
+def test_Annotate_reachable_node_count_D(graph: programl_pb2.ProgramGraphProto):
   annotator = reachability.ReachabilityAnnotator(graph)
   annotator.Annotate(annotator.g, 3)
   assert annotator.g.graph["data_flow_positive_node_count"] == 1
 
 
-def test_Annotate_reachable_node_count_A(graph: programl_pb2.ProgramGraph):
+def test_Annotate_reachable_node_count_A(graph: programl_pb2.ProgramGraphProto):
   annotator = reachability.ReachabilityAnnotator(graph)
   annotator.Annotate(annotator.g, 0)
   assert annotator.g.graph["data_flow_positive_node_count"] == 4
 
 
-def test_Annotate_data_flow_steps_D(graph: programl_pb2.ProgramGraph):
+def test_Annotate_data_flow_steps_D(graph: programl_pb2.ProgramGraphProto):
   annotator = reachability.ReachabilityAnnotator(graph)
   annotator.Annotate(annotator.g, 3)
   assert annotator.g.graph["data_flow_steps"] == 1
 
 
-def test_Annotate_data_flow_steps_A(graph: programl_pb2.ProgramGraph):
+def test_Annotate_data_flow_steps_A(graph: programl_pb2.ProgramGraphProto):
   annotator = reachability.ReachabilityAnnotator(graph)
   annotator.Annotate(annotator.g, 0)
   assert annotator.g.graph["data_flow_steps"] == 4
 
 
-def test_Annotate_node_x(graph: programl_pb2.ProgramGraph):
+def test_Annotate_node_x(graph: programl_pb2.ProgramGraphProto):
   annotator = reachability.ReachabilityAnnotator(graph)
   annotator.Annotate(annotator.g, 0)
   assert annotator.g.nodes[0]["x"] == [0, 1]
@@ -93,7 +93,7 @@ def test_Annotate_node_x(graph: programl_pb2.ProgramGraph):
   assert annotator.g.nodes[3]["x"] == [0, 0]
 
 
-def test_Annotate_node_y(graph: programl_pb2.ProgramGraph):
+def test_Annotate_node_y(graph: programl_pb2.ProgramGraphProto):
   annotator = reachability.ReachabilityAnnotator(graph)
   annotator.Annotate(annotator.g, 1)
   assert annotator.g.nodes[0]["y"] == [1, 0]
@@ -102,7 +102,7 @@ def test_Annotate_node_y(graph: programl_pb2.ProgramGraph):
   assert annotator.g.nodes[3]["y"] == [0, 1]
 
 
-def test_MakeAnnotated_real_graphs(real_graph: programl_pb2.ProgramGraph,):
+def test_MakeAnnotated_real_graphs(real_graph: programl_pb2.ProgramGraphProto,):
   """Opaque black-box test of reachability annotator."""
   annotator = reachability.ReachabilityAnnotator(real_graph)
   annotated = annotator.MakeAnnotated(n=10)

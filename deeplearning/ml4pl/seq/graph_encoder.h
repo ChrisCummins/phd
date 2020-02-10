@@ -28,7 +28,7 @@ class GraphEncoder {
   GraphEncoder(const CachedStringEncoder& string_encoder)
       : string_encoder_(string_encoder) {}
 
-  ProgramGraphSeq Encode(const ProgramGraph& graph);
+  ProgramGraphSeqProto Encode(const ProgramGraphProto& graph);
 
  private:
   const CachedStringEncoder string_encoder_;

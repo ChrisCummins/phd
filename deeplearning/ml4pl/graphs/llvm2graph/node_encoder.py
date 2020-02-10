@@ -120,10 +120,10 @@ class GraphNodeEncoder(object):
 def Main():
   """Main entry point."""
   proto = programl.ReadStdin()
-  g = programl.ProgramGraphToNetworkX(proto)
+  g = programl.ProgramGraphProtoToNetworkX(proto)
   encoder = GraphNodeEncoder()
   encoder.EncodeNodes(g)
-  programl.WriteStdout(programl.NetworkXToProgramGraph(g))
+  programl.WriteStdout(programl.NetworkXToProgramGraphProto(g))
 
 
 if __name__ == "__main__":

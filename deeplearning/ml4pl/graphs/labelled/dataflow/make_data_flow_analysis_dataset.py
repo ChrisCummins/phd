@@ -116,7 +116,7 @@ app.DEFINE_float(
 FLAGS = app.FLAGS
 
 
-class ProgramGraphProto(NamedTuple):
+class ProgramGraph(NamedTuple):
   """A serialized program graph protocol buffer."""
 
   ir_id: int
@@ -129,7 +129,7 @@ def BatchedProtoReader(
   batch_size_in_bytes: int,
   order_by: str,
   ctx: progress.ProgressBarContext,
-) -> Iterable[List[ProgramGraphProto]]:
+) -> Iterable[List[ProgramGraph]]:
   """Read from the given list of IDs in batches."""
   ids_and_sizes_to_do = sorted(ids_and_sizes_to_do, key=lambda x: x[0])
   i = 0
@@ -172,7 +172,7 @@ def BatchedProtoReader(
 
         graphs = graphs.all()
       yield [
-        ProgramGraphProto(
+        ProgramGraph(
           ir_id=graph.ir_id, serialized_proto=graph.data.serialized_proto
         )
         for graph in graphs
@@ -203,7 +203,7 @@ def ProcessWorker(packed_args) -> AnnotationResult:
   worker_id: str = f"{packed_args[0]:06d}"
   max_mem_size: int = packed_args[1]
   analysis: str = packed_args[2]
-  program_graphs: List[ProgramGraphProto] = packed_args[3]
+  program_graphs: List[ProgramGraph] = packed_args[3]
   ctx: progress.ProgressBarContext = packed_args[4]
 
   # Set the hard limit on the memory size. Exceeding this limit will raise

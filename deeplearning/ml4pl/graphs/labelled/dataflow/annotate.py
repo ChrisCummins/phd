@@ -15,10 +15,10 @@
 # limitations under the License.
 """Generate labelled program graphs using data flow analysis.
 
-This program reads a ProgramGraph protocol buffer from stdin, creates labelled
-graphs by running a specified analysis, then prints the results as a
-ProgramGraphs protocol buffer to stdout. Use --stdin_fmt and --stdout_fmt to
-support binary or text formats.
+This program reads a ProgramGraphProto protocol buffer from stdin, creates
+labelled graphs by running a specified analysis, then prints the results as a
+ProgramGraphsProto protocol buffer to stdout. Use --stdin_fmt and --stdout_fmt
+to support binary or text formats.
 
 List the available analyses using:
 
@@ -122,11 +122,11 @@ E_INVALID_STDOUT = 13
 
 def _AnnotateInSubprocess(
   analysis: str,
-  graph: Union[programl_pb2.ProgramGraph, bytes],
+  graph: Union[programl_pb2.ProgramGraphProto, bytes],
   n: int = 0,
   timeout: int = 120,
   binary_graph: bool = False,
-) -> programl_pb2.ProgramGraphs:
+) -> programl_pb2.ProgramGraphsProto:
   """Run this script in a subprocess.
 
   This is the most robust method for enforcing the timeout, but has a huge
@@ -138,14 +138,14 @@ def _AnnotateInSubprocess(
 
   Args:
     analysis: The name of the analysis to run.
-    graph: The unlabelled ProgramGraph protocol buffer to to annotate, either
-      as a proto instance or as binary-encoded byte array.
+    graph: The unlabelled ProgramGraphProto protocol buffer to to annotate,
+      either as a proto instance or as binary-encoded byte array.
     n: The maximum number of labelled graphs to produce.
     timeout: The maximum number of seconds to run the analysis for.
     binary_graph: If true, treat the graph argument as a binary byte array.
 
   Returns:
-    A ProgramGraphs protocol buffer.
+    A ProgramGraphsProto protocol buffer.
 
   Raises:
     IOError: If serializing the input or output protos fails.
@@ -201,7 +201,7 @@ def _AnnotateInSubprocess(
   output = programl.FromBytes(
     stdout,
     programl.StdinGraphFormat.PB,
-    proto=programl_pb2.ProgramGraphs(),
+    proto=programl_pb2.ProgramGraphsProto(),
     empty_okay=True,
   )
 
@@ -210,7 +210,7 @@ def _AnnotateInSubprocess(
 
 def Annotate(
   analysis: str,
-  graph: Union[programl_pb2.ProgramGraph, bytes],
+  graph: Union[programl_pb2.ProgramGraphProto, bytes],
   n: int = 0,
   timeout: int = 120,
 ) -> data_flow_graphs.DataFlowGraphs:
@@ -218,14 +218,14 @@ def Annotate(
 
   Args:
     analysis: The name of the analysis to run.
-    graph: The unlabelled ProgramGraph protocol buffer to to annotate, either
-      as a proto instance or as binary-encoded byte array.
+    graph: The unlabelled ProgramGraphProto protocol buffer to to annotate,
+      either as a proto instance or as binary-encoded byte array.
     n: The maximum number of labelled graphs to produce.
     timeout: The maximum number of seconds to run the analysis for.
     binary_graph: If true, treat the graph argument as a binary byte array.
 
   Returns:
-    A ProgramGraphs protocol buffer.
+    A ProgramGraphsProto protocol buffer.
 
   Raises:
     ValueError: If an invalid analysis is requested.
@@ -274,7 +274,7 @@ def Main():
 
   annotator = ANALYSES[FLAGS.analysis](input_graph)
 
-  annotated_graphs: List[programl_pb2.ProgramGraph] = []
+  annotated_graphs: List[programl_pb2.ProgramGraphProto] = []
   try:
     for annotated_graph in annotator.MakeAnnotated(n):
       annotated_graphs.append(annotated_graph)
@@ -283,7 +283,9 @@ def Main():
     sys.exit(E_ANALYSIS_FAILED)
 
   try:
-    programl.WriteStdout(programl_pb2.ProgramGraphs(graph=annotated_graphs))
+    programl.WriteStdout(
+      programl_pb2.ProgramGraphsProto(graph=annotated_graphs)
+    )
   except Exception as e:
     print(f"Error writing stdout: {e}", file=sys.stderr)
     sys.exit(E_INVALID_STDOUT)

@@ -177,7 +177,7 @@ void GraphBuilder::AddReverseEdges(
   }
 }
 
-const ProgramGraph& GraphBuilder::GetGraph() {
+const ProgramGraphProto& GraphBuilder::GetGraph() {
   if (finalized_) {
     return graph_;
   }

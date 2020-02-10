@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""A database of unlabelled ProGraML ProgramGraph protocol buffers."""
+"""A database of unlabelled ProGraML ProgramGraphProto protocol buffers."""
 import datetime
 import pickle
 from typing import Any
@@ -146,17 +146,17 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   @property
   def proto(
-    self, proto: programl_pb2.ProgramGraph = None
-  ) -> programl_pb2.ProgramGraph:
+    self, proto: programl_pb2.ProgramGraphProto = None
+  ) -> programl_pb2.ProgramGraphProto:
     """Deserialize and load the protocol buffer."""
-    proto = proto or programl_pb2.ProgramGraph()
+    proto = proto or programl_pb2.ProgramGraphProto()
     proto.ParseFromString(self.data.serialized_proto)
     return proto
 
   @classmethod
   def Create(
     cls,
-    proto: programl_pb2.ProgramGraph,
+    proto: programl_pb2.ProgramGraphProto,
     ir_id: int,
     split: Optional[int] = None,
   ) -> "ProgramGraph":
@@ -247,7 +247,7 @@ class ProgramGraphData(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   # you can group by this sha1 column and prune the duplicates.
   sha1: str = sql.Column(sql.String(40), nullable=False, index=True)
 
-  # A binary-serialized ProgramGraph protocol buffer.
+  # A binary-serialized ProgramGraphProto protocol buffer.
   serialized_proto: bytes = sql.Column(
     sqlutil.ColumnTypes.LargeBinary(), nullable=False
   )
@@ -269,7 +269,7 @@ def database_statistic(func):
 
 
 class Database(sqlutil.Database):
-  """A database of ProgramGraph protocol buffers."""
+  """A database of ProgramGraphProto protocol buffers."""
 
   def __init__(
     self,

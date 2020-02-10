@@ -23,7 +23,7 @@ namespace ml4pl {
 
 static const int ROOT_NODE = 0;
 
-std::vector<int> SerializeStatements(const ProgramGraph& graph) {
+std::vector<int> SerializeStatements(const ProgramGraphProto& graph) {
   std::vector<int> serialized;
 
   // An array of function entries to visit, where each function entry is a node

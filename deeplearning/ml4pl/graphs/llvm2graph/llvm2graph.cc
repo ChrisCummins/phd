@@ -53,7 +53,7 @@ static const char* usage =
     "\n"
     "  $ clang foo.c -emit-llvm -o - | llvm2graph -\n"
     "\n"
-    "The output format is the textual representation of a ProgramGraph \n"
+    "The output format is the textual representation of a ProgramGraphProto \n"
     "protocol buffer. A binary protocol buffer can be printed using:\n"
     "\n"
     "  $ llvm2graph /path/to/llvm.ir --stdout_fmt=pb > /tmp/llvm.pb\n"

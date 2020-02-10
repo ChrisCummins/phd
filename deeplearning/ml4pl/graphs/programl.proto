@@ -26,7 +26,7 @@ option java_outer_classname = "ProgramlProto";
 option java_package = "com.ml4pl";
 
 // A program graph.
-message ProgramGraph {
+message ProgramGraphProto {
   repeated Node node = 1;
   repeated Edge edge = 2;
   repeated Function function = 3;
@@ -50,7 +50,7 @@ message ProgramGraph {
 }
 
 message Function {
-  // The name of the function, as an index into the ProgramGraph.string table.
+  // The name of the function, as an index into the ProgramGraphProto.string table.
   required int32 name = 1;
 }
 
@@ -62,14 +62,14 @@ message Node {
     IMMEDIATE = 2;
   }
   required Type type = 1;
-  // The text of a node, as an index into the ProgramGraph.string table. This is
+  // The text of a node, as an index into the ProgramGraphProto.string table. This is
   // the raw representation of a node, such as the contents of a statement, or
   // the name of an identifier.
   optional int32 text = 2;
-  // The pre-processed text of a node, as an index into the ProgramGraph.string
+  // The pre-processed text of a node, as an index into the ProgramGraphProto.string
   // table.
   optional int32 preprocessed_text = 3;
-  // An index into the ProgramGraph.function list indicating the source function
+  // An index into the ProgramGraphProto.function list indicating the source function
   // for this node. Omitting this fields means the node does not belong to a
   // function, such as the case for global identifiers.
   optional int32 function = 4;
@@ -87,7 +87,7 @@ message Edge {
   }
   required Flow flow = 1;
   // The source and destination nodes of the edge, as indicies into a
-  // ProgramGraph.node list.
+  // ProgramGraphProto.node list.
   required int32 source_node = 2;
   required int32 destination_node = 3;
   // The position of an edge.
@@ -95,6 +95,32 @@ message Edge {
 }
 
 // A collection of program graphs.
-message ProgramGraphs {
-  repeated ProgramGraph graph = 1;
+message ProgramGraphsProto {
+  repeated ProgramGraphProto graph = 1;
+}
+
+message ProgramGraphFeaturesProto {
+  // A vector graph-level features.
+  repeated int64 graph_x = 1;
+  // A vector graph-level labels.
+  repeated int64 graph_y = 2;
+  // A vector of node-level feature vectors, concatenated.
+  repeated int64 node_x = 3;
+  repeated int64 node_y = 4;
+}
+
+message ProgramGraphLabelsProto {
+  // A vector graph-level features.
+  repeated int64 graph_x = 1;
+  // A vector graph-level labels.
+  repeated int64 graph_y = 2;
+  // A vector of node-level feature vectors, concatenated.
+  repeated int64 node_x = 3;
+  repeated int64 node_y = 4;
+}
+
+message AnnotatedProgramGraphProto {
+  optional ProgramGraphProto graph = 1;
+  optional ProgramGraphFeaturesProto features = 2;
+  optional ProgramGraphLabelsProto labels = 3;
 }

@@ -23,7 +23,7 @@ pytest_plugins = ["deeplearning.ml4pl.testing.fixtures.llvm_ir"]
 
 
 @test.Fixture(scope="session")
-def llvm_program_graph(llvm_ir: str) -> programl_pb2.ProgramGraph:
+def llvm_program_graph(llvm_ir: str) -> programl_pb2.ProgramGraphProto:
   """A test fixture which yields a program graph constructed from LLVM IR."""
   return llvm2graph.BuildProgramGraphProto(llvm_ir)
 

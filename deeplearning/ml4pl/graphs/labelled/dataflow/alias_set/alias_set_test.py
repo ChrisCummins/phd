@@ -51,7 +51,7 @@ def CSourceToInputPair(source: str) -> InputPair:
   it is because graph construction or clang is broken.
   """
   bytecode = CSourceToBytecode(source)
-  graph = llvm2graph.BuildProgramGraphNetworkX(bytecode)
+  graph = llvm2graph.BuildProgramGraphProtoNetworkX(bytecode)
   return InputPair(graph=graph, bytecode=bytecode)
 
 

@@ -26,7 +26,7 @@ namespace ml4pl {
 namespace {
 
 TEST(GraphEncoder, EmptyGraph) {
-  ProgramGraph graph;
+  ProgramGraphProto graph;
 
   absl::flat_hash_map<string, int> vocabulary;
   vocabulary.insert({"a", 0});

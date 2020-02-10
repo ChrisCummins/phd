@@ -71,7 +71,7 @@ def CreateRandomProto(
   graph_y_dimensionality: int = 0,
   with_data_flow: bool = False,
   node_count: int = None,
-) -> programl_pb2.ProgramGraph:
+) -> programl_pb2.ProgramGraphProto:
   """Generate a random program graph.
 
   This generates a random graph which has sensible values for fields, but does
@@ -90,7 +90,7 @@ def CreateRandomProto(
   if node_count < 2:
     raise ValueError("node_count < 2")
 
-  proto = programl_pb2.ProgramGraph()
+  proto = programl_pb2.ProgramGraphProto()
 
   def _RandomDst(src: int) -> int:
     """Select a random destination node for the given source."""
@@ -145,7 +145,7 @@ def CreateRandomProto(
   # Create the functions.
   for i in range(0, function_count):
     function = proto.function.add()
-    # In NetworkXToProgramGraph(), functions are sorted lexicographically by
+    # In NetworkXToProgramGraphProto(), functions are sorted lexicographically by
     # their name. To preserve equivalence between proto <-> nx function names,
     # we create zero-padded function names, e.g. function 10 -> fn_000010.
     # This will not work if the number of digits required to name the functions
@@ -199,7 +199,7 @@ def CreateRandomProto(
 
 def EnumerateTestSet(
   n: Optional[int] = None,
-) -> Iterable[programl_pb2.ProgramGraph]:
+) -> Iterable[programl_pb2.ProgramGraphProto]:
   """Enumerate a test set of "real" program graphs."""
   with NETWORKX_GRAPHS_ARCHIVE as pickled_dir:
     for i, path in enumerate(pickled_dir.iterdir()):

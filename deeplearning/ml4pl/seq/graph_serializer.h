@@ -25,7 +25,7 @@ namespace ml4pl {
 
 // Serialize the statements in a graph, returning a list of node indices,
 // ordered by a depth first traversal of the statements in each.
-std::vector<int> SerializeStatements(const ProgramGraph& graph);
+std::vector<int> SerializeStatements(const ProgramGraphProto& graph);
 
 // Serialize the statements in a function using a depth first traversal of the
 // forward control edges starting at the given root node.
@@ -36,6 +36,6 @@ std::vector<int> SerializeStatements(
 // Serialize the statements in a graph, returning a list of node indices,
 // ordered by a depth first traversal of each functions.
 std::vector<std::vector<int>> SerializeStatementsByIdentifier(
-    const ProgramGraph& graph);
+    const ProgramGraphProto& graph);
 
 }  // namespace ml4pl

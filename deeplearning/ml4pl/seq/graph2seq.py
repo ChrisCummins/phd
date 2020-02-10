@@ -78,7 +78,7 @@ class EncoderBase(object):
     self,
     graphs: List[graph_tuple_database.GraphTuple],
     ctx: progress.ProgressContext = progress.NullContext,
-  ) -> List[Union[np.array, graph2seq_pb2.ProgramGraphSeq]]:
+  ) -> List[Union[np.array, graph2seq_pb2.ProgramGraphSeqProto]]:
     """Translate a list of graphs to encoded sequences."""
     unique_ids = {graph.ir_id for graph in graphs}
     id_to_encoded = {
@@ -117,7 +117,7 @@ class EncoderBase(object):
 
   def EncodeIds(
     self, ir_ids: List[int], ctx: progress.ProgressContext
-  ) -> List[Union[np.array, graph2seq_pb2.ProgramGraphSeq]]:
+  ) -> List[Union[np.array, graph2seq_pb2.ProgramGraphSeqProto]]:
     """Encode a list of graph IDs and return the sequences in the same order."""
     raise NotImplementedError("abstract class")
 
@@ -208,7 +208,7 @@ class StatementEncoder(EncoderBase):
 
   def EncodeIds(
     self, ir_ids: List[int], ctx: progress.ProgressContext
-  ) -> List[graph2seq_pb2.ProgramGraphSeq]:
+  ) -> List[graph2seq_pb2.ProgramGraphSeqProto]:
     """Serialize a graph into an encoded sequence.
 
     This method is used to provide a serialized sequence of encoded tokens
@@ -301,9 +301,9 @@ class StatementEncoder(EncoderBase):
 
   def EncodeGraphs(
     self,
-    graphs: List[programl_pb2.ProgramGraph],
+    graphs: List[programl_pb2.ProgramGraphProto],
     ctx: progress.ProgressContext = progress.NullContext,
-  ) -> List[graph2seq_pb2.ProgramGraphSeq]:
+  ) -> List[graph2seq_pb2.ProgramGraphSeqProto]:
     """Encode a list of graphs and return them in order.
 
     Args:

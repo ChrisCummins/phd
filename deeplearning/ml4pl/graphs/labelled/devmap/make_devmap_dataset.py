@@ -128,7 +128,7 @@ def AnnotateGraphMetas(
           raise ValueError(
             f"Expected one proto for relpath {relpath} with ID {ir_id}"
           )
-        proto: programl_pb2.ProgramGraph = proto_row.proto
+        proto: programl_pb2.ProgramGraphProto = proto_row.proto
 
         # Add the null "selector vector" value.
         for node in proto.node:
@@ -144,7 +144,7 @@ def AnnotateGraphMetas(
         # proto -> graph_tuple conversion.
         graph_tuple = graph_tuple_database.GraphTuple.CreateFromGraphTuple(
           graph_tuple=graph_tuples.GraphTuple.CreateFromNetworkX(
-            programl.ProgramGraphToNetworkX(proto)
+            programl.ProgramGraphProtoToNetworkX(proto)
           ),
           ir_id=ir_id,
         )

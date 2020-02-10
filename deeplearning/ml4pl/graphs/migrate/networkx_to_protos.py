@@ -28,10 +28,10 @@ FLAGS = app.FLAGS
 
 def NetworkXGraphToProgramGraphProto(
   g: nx.MultiDiGraph,
-) -> programl_pb2.ProgramGraph:
+) -> programl_pb2.ProgramGraphProto:
   """Convert a networkx graph constructed using the old control-and-data-flow
   graph builder to a ProGraML graph proto."""
-  proto = programl_pb2.ProgramGraph()
+  proto = programl_pb2.ProgramGraphProto()
 
   # Create the map from function IDs to function names.
   function_names = list(

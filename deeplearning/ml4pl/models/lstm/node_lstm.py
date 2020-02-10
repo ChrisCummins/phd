@@ -275,7 +275,7 @@ class NodeLstm(lstm_base.LstmBase):
       return batches.Data(graph_ids=[], data=None)
 
     node_offset = 0
-    # Convert ProgramGraphSeq protos to arrays of numeric values.
+    # Convert ProgramGraphSeqProto protos to arrays of numeric values.
     for graph, seq in zip(graphs, encoded_graphs):
       # Skip empty graphs.
       if not seq.encoded:

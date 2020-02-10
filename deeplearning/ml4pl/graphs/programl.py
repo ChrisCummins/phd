@@ -31,6 +31,7 @@ Example usage:
 import enum
 import pickle
 import sys
+from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -110,9 +111,9 @@ class GraphBuilder(object):
     self.functions: List[str] = []
 
   @property
-  def proto(self) -> programl_pb2.ProgramGraph:
+  def proto(self) -> programl_pb2.ProgramGraphProto:
     """Access the program graph as a protocol buffer."""
-    return NetworkXToProgramGraph(self.g)
+    return NetworkXToProgramGraphProto(self.g)
 
   def AddFunction(self, name: Optional[str] = None) -> str:
     """Create a new function and return its name.
@@ -179,8 +180,8 @@ class GraphBuilder(object):
     )
 
 
-def ProgramGraphToNetworkX(proto: programl_pb2) -> nx.MultiDiGraph:
-  """Convert a ProgramGraph proto to a networkx graph.
+def ProgramGraphProtoToNetworkX(proto: programl_pb2) -> nx.MultiDiGraph:
+  """Convert a ProgramGraphProto to a networkx graph.
 
   The networkx representation of a program graph uses node and edge-level
   attributes to encode the information of protobufs.
@@ -188,11 +189,11 @@ def ProgramGraphToNetworkX(proto: programl_pb2) -> nx.MultiDiGraph:
   The mapping from protocol buffer fields to networkx graph attributes is:
 
   Graph:
-      * x (List[int]): ProgramGraph.x
-      * y (List[int]): ProgramGraph.y
-      * data_flow_root_node: ProgramGraph.data_flow_root_node
-      * data_flow_steps: ProgramGraph.data_flow_steps
-      * data_flow_positive_node_count: ProgramGraph.data_flow_positive_node_count
+      * x (List[int]): ProgramGraphProto.x
+      * y (List[int]): ProgramGraphProto.y
+      * data_flow_root_node: ProgramGraphProto.data_flow_root_node
+      * data_flow_steps: ProgramGraphProto.data_flow_steps
+      * data_flow_positive_node_count: ProgramGraphProto.data_flow_positive_node_count
 
   Nodes:
       * type (Node.Type enum): Node.type
@@ -225,10 +226,14 @@ def ProgramGraphToNetworkX(proto: programl_pb2) -> nx.MultiDiGraph:
     g.add_node(
       i,
       type=node.type,
-      text=node.text,
-      preprocessed_text=node.preprocessed_text,
+      text=proto.string[node.text],
+      preprocessed_text=(
+        proto.string[node.preprocessed_text]
+        if node.HasField("preprocessed_text")
+        else None
+      ),
       function=(
-        proto.function[node.function].name
+        proto.string[proto.function[node.function].name]
         if node.HasField("function")
         else None
       ),
@@ -248,14 +253,14 @@ def ProgramGraphToNetworkX(proto: programl_pb2) -> nx.MultiDiGraph:
   return g
 
 
-def NetworkXToProgramGraph(
+def NetworkXToProgramGraphProto(
   g: nx.MultiDiGraph,
-  proto: Optional[programl_pb2.ProgramGraph] = None,
+  proto: Optional[programl_pb2.ProgramGraphProto] = None,
   **proto_fields,
-) -> programl_pb2.ProgramGraph:
+) -> programl_pb2.ProgramGraphProto:
   """Perform the inverse transformation from networkx graph -> protobuf.
 
-  See ProgramGraphToNetworkX() for details.
+  See ProgramGraphProtoToNetworkX() for details.
 
   Arguments:
     g: A networkx graph.
@@ -265,9 +270,17 @@ def NetworkXToProgramGraph(
       Has no effect if proto argument is set.
 
   Returns:
-    A ProgramGraph proto instance.
+    A ProgramGraphProto instance.
   """
-  proto = proto or programl_pb2.ProgramGraph(**proto_fields)
+  proto = proto or programl_pb2.ProgramGraphProto(**proto_fields)
+
+  strings: Dict[str, int] = {}
+
+  def GetOrAddString(string: str):
+    if string not in strings:
+      strings[string] = len(proto.string)
+      proto.string.append(string)
+    return strings[string]
 
   # Create a map from function name to function ID.
   function_names = list(
@@ -278,7 +291,7 @@ def NetworkXToProgramGraph(
   # Create the function protos.
   for function_name in function_names:
     function_proto = proto.function.add()
-    function_proto.name = function_name
+    function_proto.name = GetOrAddString(function_name)
 
   # Set the graph-level features and labels.
   proto.x[:] = np.array(g.graph["x"], dtype=np.int64).tolist()
@@ -296,8 +309,9 @@ def NetworkXToProgramGraph(
   for node, data in g.nodes(data=True):
     node_proto = proto.node.add()
     node_proto.type = data["type"]
-    node_proto.text = data["text"]
-    node_proto.preprocessed_text = data["preprocessed_text"]
+    node_proto.text = GetOrAddString(data["text"])
+    if data["preprocessed_text"] is not None:
+      node_proto.preprocessed_text = GetOrAddString(data["preprocessed_text"])
     if data["function"] is not None:
       node_proto.function = function_to_idx_map[data["function"]]
     node_proto.x[:] = np.array(data["x"], dtype=np.int64).tolist()
@@ -314,7 +328,7 @@ def NetworkXToProgramGraph(
   return proto
 
 
-def ProgramGraphToGraphviz(
+def ProgramGraphProtoToGraphviz(
   proto: programl_pb2, node_labels: Optional[str] = None
 ) -> str:
   """Convert a program graph protocol buffer to a graphviz dot string.
@@ -329,15 +343,17 @@ def ProgramGraphToGraphviz(
   """
   proto_str = proto.SerializeToString()
   node_labels = node_labels or FLAGS.node_labels
-  return graphviz_converter_py.ProgramGraphToGraphviz(proto_str, node_labels)
+  return graphviz_converter_py.ProgramGraphProtoToGraphviz(
+    proto_str, node_labels
+  )
 
 
 def FromBytes(
   data: bytes,
   fmt: StdinGraphFormat,
-  proto: Optional[programl_pb2.ProgramGraph] = None,
+  proto: Optional[programl_pb2.ProgramGraphProto] = None,
   empty_okay: bool = False,
-) -> programl_pb2.ProgramGraph:
+) -> programl_pb2.ProgramGraphProto:
   """Decode a byte array to a program graph proto.
 
   Args:
@@ -349,13 +365,13 @@ def FromBytes(
   Returns:
     A program graph protocol buffer.
   """
-  proto = proto or programl_pb2.ProgramGraph()
+  proto = proto or programl_pb2.ProgramGraphProto()
   if fmt == StdinGraphFormat.PB:
     proto.ParseFromString(data)
   elif fmt == StdinGraphFormat.PBTXT:
     pbutil.FromString(data.decode("utf-8"), proto)
   elif fmt == StdinGraphFormat.NX:
-    NetworkXToProgramGraph(pickle.loads(data), proto=proto)
+    NetworkXToProgramGraphProto(pickle.loads(data), proto=proto)
   else:
     raise ValueError(f"Unknown program graph format: {fmt}")
 
@@ -369,7 +385,7 @@ def FromBytes(
 
 
 def ToBytes(
-  program_graph: programl_pb2.ProgramGraph, fmt: StdoutGraphFormat
+  program_graph: programl_pb2.ProgramGraphProto, fmt: StdoutGraphFormat
 ) -> bytes:
   """Convert a program graph to a byte array.
 
@@ -385,14 +401,14 @@ def ToBytes(
   elif fmt == StdoutGraphFormat.PBTXT:
     return str(program_graph).encode("utf-8")
   elif fmt == StdoutGraphFormat.NX:
-    return pickle.dumps(ProgramGraphToNetworkX(program_graph))
+    return pickle.dumps(ProgramGraphProtoToNetworkX(program_graph))
   elif fmt == StdoutGraphFormat.DOT:
-    return ProgramGraphToGraphviz(program_graph).encode("utf-8")
+    return ProgramGraphProtoToGraphviz(program_graph).encode("utf-8")
   else:
     raise ValueError(f"Unknown program graph format: {fmt}")
 
 
-def ReadStdin() -> programl_pb2.ProgramGraph:
+def ReadStdin() -> programl_pb2.ProgramGraphProto:
   """Read a program graph from stdin using --stdin_fmt."""
   return FromBytes(sys.stdin.buffer.read(), FLAGS.stdin_fmt())
 

@@ -24,10 +24,10 @@
 #include <pybind11/pybind11.h>
 
 // Convert the given serialized program graph proto to a graphviz string.
-string ProgramGraphToGraphviz(const string& serializedProto,
-                              const string& nodeLabels) {
+string ProgramGraphProtoToGraphviz(const string& serializedProto,
+                                   const string& nodeLabels) {
   // Parse the input protocol buffer.
-  ml4pl::ProgramGraph graph;
+  ml4pl::ProgramGraphProto graph;
   graph.ParseFromString(serializedProto);
 
   // Serialize to graphviz.
@@ -37,8 +37,9 @@ string ProgramGraphToGraphviz(const string& serializedProto,
 }
 
 PYBIND11_MODULE(graphviz_converter_py, m) {
-  m.doc() = "Convert ProgramGraph protocol buffers to graphviz dot strings.";
+  m.doc() =
+      "Convert ProgramGraphProto protocol buffers to graphviz dot strings.";
 
-  m.def("ProgramGraphToGraphviz", &ProgramGraphToGraphviz,
+  m.def("ProgramGraphProtoToGraphviz", &ProgramGraphProtoToGraphviz,
         "Convert the given serialized program graph proto to graphviz.");
 }

@@ -32,7 +32,7 @@ class PassThruAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
   def MakeAnnotated(
     self, n: Optional[int] = None
   ) -> data_flow_graphs.NetworkxDataFlowGraphs:
-    g = programl.ProgramGraphToNetworkX(self.unlabelled_graph)
+    g = programl.ProgramGraphProtoToNetworkX(self.unlabelled_graph)
     return data_flow_graphs.NetworkxDataFlowGraphs([g for _ in range(n or 1)])
 
 
@@ -45,7 +45,7 @@ class FlakyAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
     if random.random() < 0.2:
       raise OSError("something went wrong!")
 
-    g = programl.ProgramGraphToNetworkX(self.unlabelled_graph)
+    g = programl.ProgramGraphProtoToNetworkX(self.unlabelled_graph)
     return data_flow_graphs.NetworkxDataFlowGraphs([g for _ in range(n or 1)])
 
 

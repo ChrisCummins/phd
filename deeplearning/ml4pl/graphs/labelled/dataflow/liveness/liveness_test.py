@@ -31,7 +31,7 @@ FLAGS = test.FLAGS
 @test.Fixture(
   scope="session", params=list(random_programl_generator.EnumerateTestSet()),
 )
-def real_graph(request) -> programl_pb2.ProgramGraph:
+def real_graph(request) -> programl_pb2.ProgramGraphProto:
   """A test fixture which yields one of 100 "real" graphs."""
   return request.param
 
@@ -42,7 +42,7 @@ def real_graph(request) -> programl_pb2.ProgramGraph:
 
 
 @test.Fixture(scope="function")
-def wiki() -> programl_pb2.ProgramGraph:
+def wiki() -> programl_pb2.ProgramGraphProto:
   """A test fixture which yields a program graph."""
   # Example graph taken from Wikipedia:
   # <https://en.wikipedia.org/wiki/Live_variable_analysis>
@@ -107,7 +107,7 @@ def wiki() -> programl_pb2.ProgramGraph:
   return builder.proto
 
 
-def test_AnnotateLiveness_wiki_b1(wiki: programl_pb2.ProgramGraph):
+def test_AnnotateLiveness_wiki_b1(wiki: programl_pb2.ProgramGraphProto):
   """Test liveness annotations from block b1."""
   annotator = liveness.LivenessAnnotator(wiki)
   g = annotator.g
@@ -139,7 +139,7 @@ def test_AnnotateLiveness_wiki_b1(wiki: programl_pb2.ProgramGraph):
   assert g.nodes[3]["y"] == liveness.LIVE_OUT
 
 
-def test_AnnotateLiveness_wiki_b2(wiki: programl_pb2.ProgramGraph):
+def test_AnnotateLiveness_wiki_b2(wiki: programl_pb2.ProgramGraphProto):
   """Test liveness annotations from block b2."""
   annotator = liveness.LivenessAnnotator(wiki)
   g = annotator.g
@@ -171,7 +171,7 @@ def test_AnnotateLiveness_wiki_b2(wiki: programl_pb2.ProgramGraph):
   assert g.nodes[3]["y"] == liveness.LIVE_OUT
 
 
-def test_AnnotateLiveness_wiki_b3a(wiki: programl_pb2.ProgramGraph):
+def test_AnnotateLiveness_wiki_b3a(wiki: programl_pb2.ProgramGraphProto):
   """Test liveness annotations from block b3a."""
   annotator = liveness.LivenessAnnotator(wiki)
   g = annotator.g
@@ -203,7 +203,7 @@ def test_AnnotateLiveness_wiki_b3a(wiki: programl_pb2.ProgramGraph):
   assert g.nodes[3]["y"] == liveness.LIVE_OUT
 
 
-def test_AnnotateLiveness_wiki_b3b(wiki: programl_pb2.ProgramGraph):
+def test_AnnotateLiveness_wiki_b3b(wiki: programl_pb2.ProgramGraphProto):
   """Test liveness annotations from block b3b."""
   annotator = liveness.LivenessAnnotator(wiki)
   g = annotator.g
@@ -241,7 +241,7 @@ def test_AnnotateLiveness_wiki_b3b(wiki: programl_pb2.ProgramGraph):
 
 
 @test.Fixture(scope="function")
-def graph() -> programl_pb2.ProgramGraph:
+def graph() -> programl_pb2.ProgramGraphProto:
   """A test fixture which yields a program graph."""
   builder = programl.GraphBuilder()
   a = builder.AddNode(type=programl_pb2.Node.STATEMENT, x=[-1])
@@ -265,7 +265,7 @@ def graph() -> programl_pb2.ProgramGraph:
   return builder.proto
 
 
-def test_AnnotateDominatorTree_graph_A(graph: programl_pb2.ProgramGraph):
+def test_AnnotateDominatorTree_graph_A(graph: programl_pb2.ProgramGraphProto):
   annotator = liveness.LivenessAnnotator(graph)
   g = annotator.g
 
@@ -292,7 +292,7 @@ def test_AnnotateDominatorTree_graph_A(graph: programl_pb2.ProgramGraph):
   assert g.nodes[5]["y"] == liveness.LIVE_OUT
 
 
-def test_AnnotateDominatorTree_graph_B(graph: programl_pb2.ProgramGraph):
+def test_AnnotateDominatorTree_graph_B(graph: programl_pb2.ProgramGraphProto):
   annotator = liveness.LivenessAnnotator(graph)
   g = annotator.g
 
@@ -319,7 +319,7 @@ def test_AnnotateDominatorTree_graph_B(graph: programl_pb2.ProgramGraph):
   assert g.nodes[5]["y"] == liveness.LIVE_OUT
 
 
-def test_AnnotateDominatorTree_graph_C(graph: programl_pb2.ProgramGraph):
+def test_AnnotateDominatorTree_graph_C(graph: programl_pb2.ProgramGraphProto):
   annotator = liveness.LivenessAnnotator(graph)
   g = annotator.g
 
@@ -346,7 +346,7 @@ def test_AnnotateDominatorTree_graph_C(graph: programl_pb2.ProgramGraph):
   assert g.nodes[5]["y"] == liveness.LIVE_OUT
 
 
-def test_AnnotateDominatorTree_graph_D(graph: programl_pb2.ProgramGraph):
+def test_AnnotateDominatorTree_graph_D(graph: programl_pb2.ProgramGraphProto):
   annotator = liveness.LivenessAnnotator(graph)
   g = annotator.g
 
@@ -379,7 +379,7 @@ def test_AnnotateDominatorTree_graph_D(graph: programl_pb2.ProgramGraph):
 
 
 @test.Fixture(scope="function")
-def while_loop() -> programl_pb2.ProgramGraph:
+def while_loop() -> programl_pb2.ProgramGraphProto:
   """Test fixture which returns a simple "while loop" graph."""
   #          (v1)
   #            |
@@ -431,7 +431,7 @@ def while_loop() -> programl_pb2.ProgramGraph:
 
 
 def test_AnnotateDominatorTree_while_loop_A(
-  while_loop: programl_pb2.ProgramGraph,
+  while_loop: programl_pb2.ProgramGraphProto,
 ):
   annotator = liveness.LivenessAnnotator(while_loop)
   g = annotator.g
@@ -462,7 +462,7 @@ def test_AnnotateDominatorTree_while_loop_A(
 
 
 def test_AnnotateDominatorTree_while_loop_Ba(
-  while_loop: programl_pb2.ProgramGraph,
+  while_loop: programl_pb2.ProgramGraphProto,
 ):
   annotator = liveness.LivenessAnnotator(while_loop)
   g = annotator.g
@@ -493,7 +493,7 @@ def test_AnnotateDominatorTree_while_loop_Ba(
 
 
 def test_AnnotateDominatorTree_while_loop_Bb(
-  while_loop: programl_pb2.ProgramGraph,
+  while_loop: programl_pb2.ProgramGraphProto,
 ):
   annotator = liveness.LivenessAnnotator(while_loop)
   g = annotator.g
@@ -524,7 +524,7 @@ def test_AnnotateDominatorTree_while_loop_Bb(
 
 
 def test_AnnotateDominatorTree_while_loop_C(
-  while_loop: programl_pb2.ProgramGraph,
+  while_loop: programl_pb2.ProgramGraphProto,
 ):
   annotator = liveness.LivenessAnnotator(while_loop)
   g = annotator.g
@@ -560,7 +560,7 @@ def test_AnnotateDominatorTree_while_loop_C(
 
 
 def test_AnnotateLiveness_exit_block_is_removed(
-  wiki: programl_pb2.ProgramGraph,
+  wiki: programl_pb2.ProgramGraphProto,
 ):
   n = len(wiki.node)
   annotator = liveness.LivenessAnnotator(wiki)
@@ -568,7 +568,7 @@ def test_AnnotateLiveness_exit_block_is_removed(
   assert n == annotator.g.number_of_nodes()
 
 
-def test_MakeAnnotated_real_graphs(real_graph: programl_pb2.ProgramGraph,):
+def test_MakeAnnotated_real_graphs(real_graph: programl_pb2.ProgramGraphProto,):
   """Opaque black-box test of annotator."""
   annotator = liveness.LivenessAnnotator(real_graph)
   annotated = annotator.MakeAnnotated(10)

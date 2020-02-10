@@ -72,4 +72,4 @@ def EnumerateTestSet(
 ) -> Iterable[graph_tuple.GraphTuple]:
   """Enumerate a test set of "real" graph tuples."""
   for graph in random_programl_generator.EnumerateTestSet(n=n):
-    yield graph_tuple.GraphTuple.CreateFromProgramGraph(graph)
+    yield graph_tuple.GraphTuple.CreateFromProgramGraphProto(graph)

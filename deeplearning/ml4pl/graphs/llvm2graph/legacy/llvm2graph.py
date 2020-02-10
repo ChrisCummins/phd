@@ -57,7 +57,7 @@ def Main():
   bytecode = sys.stdin.read()
   builder = graph_builder.ProGraMLGraphBuilder()
   g = builder.Build(bytecode, FLAGS.opt)
-  print(programl.NetworkXToProgramGraph(g))
+  print(programl.NetworkXToProgramGraphProto(g))
 
 
 if __name__ == "__main__":

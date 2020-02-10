@@ -32,13 +32,13 @@ FLAGS = test.FLAGS
 @test.Fixture(
   scope="session", params=list(random_programl_generator.EnumerateTestSet()),
 )
-def real_proto(request) -> programl_pb2.ProgramGraph:
+def real_proto(request) -> programl_pb2.ProgramGraphProto:
   """A test fixture which enumerates one of 100 "real" protos."""
   return request.param
 
 
 @test.Fixture(scope="session")
-def one_proto() -> programl_pb2.ProgramGraph:
+def one_proto() -> programl_pb2.ProgramGraphProto:
   """A test fixture which enumerates a single real proto."""
   return next(random_programl_generator.EnumerateTestSet())
 
@@ -72,20 +72,22 @@ def n(request) -> int:
 ###############################################################################
 
 
-def test_invalid_analysis(one_proto: programl_pb2.ProgramGraph, n: int):
+def test_invalid_analysis(one_proto: programl_pb2.ProgramGraphProto, n: int):
   """Test that error is raised if the input is invalid."""
   with test.Raises(ValueError) as e_ctx:
     annotate.Annotate("invalid_analysis", one_proto, n)
   assert str(e_ctx.value).startswith("Unknown analysis: invalid_analysis. ")
 
 
-def test_timeout(one_proto: programl_pb2.ProgramGraph):
+def test_timeout(one_proto: programl_pb2.ProgramGraphProto):
   """Test that error is raised if the analysis times out."""
   with test.Raises(data_flow_graphs.AnalysisTimeout):
     annotate.Annotate("test_timeout", one_proto, timeout=1)
 
 
-def test_annotate(analysis: str, real_proto: programl_pb2.ProgramGraph, n: int):
+def test_annotate(
+  analysis: str, real_proto: programl_pb2.ProgramGraphProto, n: int
+):
   """Test all annotators over all real protos."""
   try:
     # Use a lower timeout for testing.
