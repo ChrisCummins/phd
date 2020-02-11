@@ -37,7 +37,7 @@ void ProgressStringEncoderJobInplace(StringEncoderJob* job) {
     EncodedString* message = job->add_seq();
     std::vector<int> encoded = encoder.EncodeAndCache(string);
     message->mutable_encoded()->Reserve(encoded.size());
-    for (int i = 0; i < encoded.size(); ++i) {
+    for (size_t i = 0; i < encoded.size(); ++i) {
       message->mutable_encoded()->Add(encoded[i]);
     }
   }

@@ -42,8 +42,8 @@ std::vector<int> CachedStringEncoder::Encode(const std::string& input) const {
   // we emit an "unknown vocabulary element" token and proceed.
   std::vector<int> encoded;
 
-  int pos = 0;
-  int len = 1;
+  size_t pos = 0;
+  size_t len = 1;
   while (pos + len <= input.size()) {
     auto candidate_token = input.substr(pos, len);
     if (HasPrefix(candidate_token) && pos + len < input.size()) {
