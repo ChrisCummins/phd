@@ -861,3 +861,13 @@ load("@org_tensorflow//tensorflow:workspace.bzl", "tf_repositories")
 tf_repositories()
 
 ################################################################################
+
+# A modern C++ formatting library. https://fmt.dev
+
+http_archive(
+    name = "fmt",
+    build_file = "//:third_party/fmt.BUILD",
+    sha256 = "1cafc80701b746085dddf41bd9193e6d35089e1c6ec1940e037fcb9c98f62365",
+    strip_prefix = "fmt-6.1.2",
+    urls = ["https://github.com/fmtlib/fmt/archive/6.1.2.tar.gz"],
+)
