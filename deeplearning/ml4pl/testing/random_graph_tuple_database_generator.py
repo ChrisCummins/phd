@@ -30,8 +30,10 @@ from typing import NamedTuple
 import numpy as np
 
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
+from deeplearning.ml4pl.graphs.llvm2graph import llvm2graph
 from deeplearning.ml4pl.testing import generator_flags
 from deeplearning.ml4pl.testing import random_graph_tuple_generator
+from deeplearning.ml4pl.testing.fixtures import llvm_ir
 from labm8.py import app
 
 
@@ -139,7 +141,10 @@ def PopulateWithTestSet(
   rows = []
   graph_tuples = itertools.islice(
     itertools.cycle(
-      random_graph_tuple_generator.EnumerateTestSet(n=graph_count)
+      [
+        llvm2graph.BuildProgramGraphProto(ir)
+        for _, ir in llvm_ir.EnumerateLlvmIrs()
+      ]
     ),
     graph_count,
   )

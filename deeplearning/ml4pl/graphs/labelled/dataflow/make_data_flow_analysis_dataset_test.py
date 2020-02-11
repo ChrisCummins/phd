@@ -80,7 +80,7 @@ def proto_db_10(request,) -> unlabelled_graph_database.Database.SessionType:
         [
           unlabelled_graph_database.ProgramGraph.Create(proto, ir_id=i + 1)
           for i, proto in enumerate(
-            list(random_programl_generator.EnumerateTestSet())[:10]
+            [random_programl_generator.CreateRandomProto() for _ in range(10)]
           )
         ]
       )

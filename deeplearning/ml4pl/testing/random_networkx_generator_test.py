@@ -54,12 +54,6 @@ def test_CreateRandomGraph(
   assert len(g.graph["y"]) == graph_y_dimensionality
 
 
-def test_EnumerateTestSet():
-  """Test the "real" protos."""
-  protos = list(random_networkx_generator.EnumerateTestSet())
-  assert len(protos) == 100
-
-
 def test_benchmark_CreateRandomGraph(benchmark):
   """Benchmark graph generation."""
   benchmark(random_networkx_generator.CreateRandomGraph)

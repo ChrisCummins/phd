@@ -25,6 +25,8 @@ from deeplearning.ml4pl.testing import random_programl_generator
 from labm8.py import decorators
 from labm8.py import test
 
+pytest_plugins = ["deeplearning.ml4pl.testing.fixtures.llvm_program_graph"]
+
 
 FLAGS = test.FLAGS
 
@@ -45,14 +47,6 @@ def graph() -> programl_pb2.ProgramGraphProto:
   builder.AddEdge(b, c)
   builder.AddEdge(c, d)
   return builder.proto
-
-
-@test.Fixture(
-  scope="session", params=list(random_programl_generator.EnumerateTestSet()),
-)
-def real_graph(request) -> programl_pb2.ProgramGraphProto:
-  """A test fixture which yields one of 100 "real" graphs."""
-  return request.param
 
 
 ###############################################################################
@@ -102,9 +96,11 @@ def test_Annotate_node_y(graph: programl_pb2.ProgramGraphProto):
   assert annotator.g.nodes[3]["y"] == [0, 1]
 
 
-def test_MakeAnnotated_real_graphs(real_graph: programl_pb2.ProgramGraphProto,):
+def test_MakeAnnotated_llvm_program_graphs(
+  llvm_program_graph: programl_pb2.ProgramGraphProto,
+):
   """Opaque black-box test of reachability annotator."""
-  annotator = reachability.ReachabilityAnnotator(real_graph)
+  annotator = reachability.ReachabilityAnnotator(llvm_program_graph)
   annotated = annotator.MakeAnnotated(n=10)
   assert len(annotated.graphs) <= 10
 

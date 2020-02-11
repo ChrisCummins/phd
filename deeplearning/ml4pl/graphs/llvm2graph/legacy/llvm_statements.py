@@ -130,7 +130,7 @@ def GetCalledFunctionName(statement) -> typing.Optional[str]:
   return m_glob[0][1:]  # strip the leading '@' character
 
 
-def FindCallSites(graph, source_function, destination_function):
+def FindCallSites(graph, source_function: str, destination_function: str):
   """Find the statements in function that call another function."""
   call_sites = []
   for node, data in nx_utils.StatementNodeIterator(graph):

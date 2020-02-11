@@ -45,7 +45,9 @@ py_test(
         ":data_flow_graphs",
         "//deeplearning/ml4pl/graphs:programl",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
-        "//deeplearning/ml4pl/testing:random_programl_generator",
+        "//deeplearning/ml4pl/graphs/llvm2graph:llvm2graph_py",
+        "//deeplearning/ml4pl/testing/fixtures:llvm_program_graph",
+        "//deeplearning/ml4pl/testing/fixtures:random_program_graph",
         "//labm8/py:test",
     ],
 )
@@ -86,8 +88,8 @@ py_test(
     srcs = ["data_flow_graphs_test.py"],
     deps = [
         ":data_flow_graphs",
-        "//deeplearning/ml4pl/graphs:programl",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
+        "//deeplearning/ml4pl/graphs/py:graph_builder",
         "//labm8/py:test",
         "//third_party/py/networkx",
     ],

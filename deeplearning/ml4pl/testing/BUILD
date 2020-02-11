@@ -58,6 +58,8 @@ py_binary(
         ":generator_flags",
         ":random_graph_tuple_generator",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
+        "//deeplearning/ml4pl/graphs/llvm2graph:llvm2graph_py",
+        "//deeplearning/ml4pl/testing/fixtures:llvm_ir",
         "//labm8/py:app",
     ],
 )
@@ -137,15 +139,14 @@ py_binary(
     testonly = 1,
     srcs = ["random_programl_generator.py"],
     data = [
-        "//deeplearning/ml4pl/testing/data:100_unlabelled_networkx_graphs",
+        "//deeplearning/ml4pl/graphs/py:random_graph_builder.so",
     ],
     visibility = ["//deeplearning/ml4pl:__subpackages__"],
     deps = [
-        "//deeplearning/ml4pl/graphs:programl",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//deeplearning/ml4pl/graphs/migrate:networkx_to_protos",
         "//labm8/py:app",
-        "//labm8/py:bazelutil",
+        "//third_party/py/numpy",
     ],
 )
 
@@ -167,7 +168,9 @@ py_binary(
     deps = [
         ":generator_flags",
         ":random_programl_generator",
+        "//deeplearning/ml4pl/graphs/llvm2graph:llvm2graph_py",
         "//deeplearning/ml4pl/graphs/unlabelled:unlabelled_graph_database",
+        "//deeplearning/ml4pl/testing/fixtures:llvm_ir",
         "//labm8/py:app",
     ],
 )

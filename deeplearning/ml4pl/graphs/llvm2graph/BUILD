@@ -155,8 +155,8 @@ py_test(
     srcs = ["node_encoder_test.py"],
     deps = [
         ":node_encoder",
-        "//deeplearning/ml4pl/graphs:programl",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
+        "//deeplearning/ml4pl/graphs/py:graph_builder",
         "//deeplearning/ml4pl/testing/fixtures:llvm_program_graph",
         "//labm8/py:test",
         "//third_party/py/networkx",

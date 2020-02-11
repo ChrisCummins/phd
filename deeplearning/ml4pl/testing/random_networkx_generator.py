@@ -55,9 +55,3 @@ def CreateRandomGraph(
     node_count=node_count,
   )
   return programl.ProgramGraphProtoToNetworkX(proto)
-
-
-def EnumerateTestSet(n: Optional[int] = None) -> Iterable[nx.MultiDiGraph]:
-  """Enumerate a test set of "real" graphs."""
-  for proto in random_programl_generator.EnumerateTestSet(n=n):
-    yield programl.ProgramGraphProtoToNetworkX(proto)

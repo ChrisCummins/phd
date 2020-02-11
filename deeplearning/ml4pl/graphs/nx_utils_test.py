@@ -15,8 +15,8 @@
 # limitations under the License.
 """Unit tests for //deeplearning/ml4pl/graphs:nx_utils."""
 from deeplearning.ml4pl.graphs import nx_utils
-from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
+from deeplearning.ml4pl.graphs.py import graph_builder
 from labm8.py import test
 
 FLAGS = test.FLAGS
@@ -24,20 +24,19 @@ FLAGS = test.FLAGS
 
 @test.Fixture(scope="function")
 def graph():
-  builder = programl.GraphBuilder()
-  fn1 = builder.AddFunction()
-  root = builder.AddNode()
-  A = builder.AddNode(function=fn1)
-  B = builder.AddNode(function=fn1)
-  C = builder.AddNode(function=fn1)
-  D = builder.AddNode(function=fn1)
-  v1 = builder.AddNode(type=programl_pb2.Node.IDENTIFIER, function=fn1)
-  builder.AddEdge(A, B, flow=programl_pb2.Edge.CONTROL)
-  builder.AddEdge(B, C, flow=programl_pb2.Edge.CONTROL)
-  builder.AddEdge(C, D, flow=programl_pb2.Edge.CONTROL)
-  builder.AddEdge(root, A, flow=programl_pb2.Edge.CALL)
-  builder.AddEdge(A, v1, flow=programl_pb2.Edge.DATA)
-  builder.AddEdge(v1, D, flow=programl_pb2.Edge.DATA)
+  builder = graph_builder.GraphBuilder()
+  fn = builder.AddFunction("x")
+  A = builder.AddStatement("x", fn)
+  B = builder.AddStatement("x", fn)
+  C = builder.AddStatement("x", fn)
+  D = builder.AddStatement("x", fn)
+  v1 = builder.AddIdentifier("x", fn)
+  builder.AddControlEdge(A, B)
+  builder.AddControlEdge(B, C)
+  builder.AddControlEdge(C, D)
+  builder.AddCallEdge(0, A)
+  builder.AddDataEdge(A, v1)
+  builder.AddDataEdge(v1, D)
   return builder.g
 
 
@@ -82,12 +81,14 @@ def test_StatementIsSuccessor(graph):
 
 def test_StatementIsSuccessor_linear_control_path():
   # A -> B -> C
-  builder = programl.GraphBuilder()
-  a = builder.AddNode()
-  b = builder.AddNode()
-  c = builder.AddNode()
-  builder.AddEdge(a, b)
-  builder.AddEdge(b, c)
+  builder = graph_builder.GraphBuilder()
+  fn = builder.AddFunction("x")
+  a = builder.AddStatement("a", fn)
+  b = builder.AddStatement("a", fn)
+  c = builder.AddStatement("a", fn)
+  builder.AddControlEdge(0, a)
+  builder.AddControlEdge(a, b)
+  builder.AddControlEdge(b, c)
   g = builder.g
   assert nx_utils.StatementIsSuccessor(g, a, a)
   assert nx_utils.StatementIsSuccessor(g, a, b)
@@ -103,15 +104,17 @@ def test_StatementIsSuccessor_linear_control_path():
 def test_StatementIsSuccessor_branched_control_path():
   # A -> B -> D
   # A -> C -> D
-  builder = programl.GraphBuilder()
-  a = builder.AddNode()
-  b = builder.AddNode()
-  c = builder.AddNode()
-  d = builder.AddNode()
-  builder.AddEdge(a, b)
-  builder.AddEdge(a, c)
-  builder.AddEdge(b, d)
-  builder.AddEdge(c, d)
+  builder = graph_builder.GraphBuilder()
+  fn = builder.AddFunction("x")
+  a = builder.AddStatement("A", fn)
+  b = builder.AddStatement("B", fn)
+  c = builder.AddStatement("C", fn)
+  d = builder.AddStatement("D", fn)
+  builder.AddControlEdge(0, a)
+  builder.AddControlEdge(a, b)
+  builder.AddControlEdge(a, c)
+  builder.AddControlEdge(b, d)
+  builder.AddControlEdge(c, d)
   g = builder.g
   assert nx_utils.StatementIsSuccessor(g, a, b)
   assert nx_utils.StatementIsSuccessor(g, a, c)
@@ -123,8 +126,10 @@ def test_StatementIsSuccessor_branched_control_path():
 
 def test_GetStatementsForNode_node():
   """Test the nodes returned when root is a statementt."""
-  builder = programl.GraphBuilder()
-  foo = builder.AddNode()
+  builder = graph_builder.GraphBuilder()
+  fn = builder.AddFunction("x")
+  foo = builder.AddStatement("x", fn)
+  builder.AddControlEdge(0, foo)
 
   nodes = list(nx_utils.GetStatementsForNode(builder.g, foo))
   assert nodes == [foo]
@@ -132,12 +137,14 @@ def test_GetStatementsForNode_node():
 
 def test_GetStatementsForNode_identifier():
   """Test the nodes returned when root is an identifier."""
-  builder = programl.GraphBuilder()
-  foo = builder.AddNode()
-  bar = builder.AddNode()
-  v1 = builder.AddNode(type=programl_pb2.Node.IDENTIFIER)
-  builder.AddEdge(foo, v1, flow=programl_pb2.Edge.DATA)
-  builder.AddEdge(v1, bar, flow=programl_pb2.Edge.DATA)
+  builder = graph_builder.GraphBuilder()
+  fn = builder.AddFunction("x")
+  foo = builder.AddStatement("x", fn)
+  bar = builder.AddStatement("x", fn)
+  v1 = builder.AddIdentifier("v1", fn)
+  builder.AddControlEdge(0, foo)
+  builder.AddDataEdge(foo, v1, 0)
+  builder.AddDataEdge(v1, bar, 0)
 
   nodes = list(nx_utils.GetStatementsForNode(builder.g, v1))
   assert nodes == [foo, bar]

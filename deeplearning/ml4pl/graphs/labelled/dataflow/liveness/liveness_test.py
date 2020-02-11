@@ -20,20 +20,9 @@ from deeplearning.ml4pl.graphs.labelled.dataflow.liveness import liveness
 from deeplearning.ml4pl.testing import random_programl_generator
 from labm8.py import test
 
+pytest_plugins = ["deeplearning.ml4pl.testing.fixtures.llvm_program_graph"]
+
 FLAGS = test.FLAGS
-
-
-###############################################################################
-# Fixtures.
-###############################################################################
-
-
-@test.Fixture(
-  scope="session", params=list(random_programl_generator.EnumerateTestSet()),
-)
-def real_graph(request) -> programl_pb2.ProgramGraphProto:
-  """A test fixture which yields one of 100 "real" graphs."""
-  return request.param
 
 
 ###############################################################################
@@ -568,9 +557,11 @@ def test_AnnotateLiveness_exit_block_is_removed(
   assert n == annotator.g.number_of_nodes()
 
 
-def test_MakeAnnotated_real_graphs(real_graph: programl_pb2.ProgramGraphProto,):
+def test_MakeAnnotated_llvm_program_graphs(
+  llvm_program_graph: programl_pb2.ProgramGraphProto,
+):
   """Opaque black-box test of annotator."""
-  annotator = liveness.LivenessAnnotator(real_graph)
+  annotator = liveness.LivenessAnnotator(llvm_program_graph)
   annotated = annotator.MakeAnnotated(10)
   assert len(annotated.graphs) <= 10
   # Assume all graphs produce annotations.

@@ -33,7 +33,7 @@ TEST_PROTO = bazelutil.DataPath(
 def test_empty_proto():
   """Build from an empty proto."""
   proto = hlo_pb2.HloProto()
-  with test.Raises(RuntimeError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     xla2graph.BuildProgramGraphProto(proto)
 
   assert "Failed to locate entry computation" in str(e_ctx.value)

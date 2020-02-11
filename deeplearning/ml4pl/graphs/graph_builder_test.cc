@@ -15,32 +15,44 @@
 // limitations under the License.
 #include "deeplearning/ml4pl/graphs/graph_builder.h"
 
+#include "labm8/cpp/logging.h"
 #include "labm8/cpp/test.h"
 
 namespace ml4pl {
 namespace {
 
+const string& GetString(const ProgramGraphProto& graph, int index) {
+  CHECK(index >= 0 && index <= graph.string_size())
+      << "String " << index << " is out of range for string table with "
+      << graph.string_size() << " elements";
+  return graph.string(index);
+}
+
 TEST(GraphBuilder, AddFunction) {
   GraphBuilder builder;
-  auto foo = builder.AddFunction("foo");
-  ASSERT_EQ(foo.first, 0);
-  ASSERT_EQ(foo.second->name(), "foo");
+  int foo = builder.AddFunction("foo").ValueOrDie();
+  int bar = builder.AddFunction("bar").ValueOrDie();
 
-  auto bar = builder.AddFunction("bar");
-  ASSERT_EQ(bar.first, 1);
-  ASSERT_EQ(bar.second->name(), "bar");
+  ASSERT_EQ(foo, 0);
+  ASSERT_EQ(bar, 1);
+
+  ProgramGraphProto graph = builder.GetGraph().ValueOrDie();
+  ASSERT_EQ(GetString(graph, graph.function(foo).name()), "foo");
+  ASSERT_EQ(GetString(graph, graph.function(bar).name()), "bar");
 }
 
 TEST(GraphBuilder, AddFunctionWithEmptyName) {
   GraphBuilder builder;
-  ASSERT_DEATH(builder.AddFunction(""), "Empty function name is invalid");
+  StatusOr<int> fn = builder.AddFunction("");
+  ASSERT_FALSE(fn.ok());
+  ASSERT_EQ(fn.status().error_message(), "Empty function name is invalid");
 }
 
 TEST(GraphBuilder, UnconnectedNode) {
   GraphBuilder builder;
-  auto fn = builder.AddFunction("x");
-  builder.AddStatement("x", fn.first);
-  ASSERT_DEATH(builder.GetGraph(), "Graph contains node with no connections");
+  auto fn = builder.AddFunction("x").ValueOrDie();
+  builder.AddStatement("x", fn);
+  ASSERT_FALSE(builder.GetGraph().ok());
 }
 
 }  // namespace

@@ -30,9 +30,13 @@ cc_library(
     deps = [
         ":programl_pb_cc",
         "//labm8/cpp:logging",
+        "//labm8/cpp:status",
+        "//labm8/cpp:status_macros",
+        "//labm8/cpp:statusor",
         "//labm8/cpp:string",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
+        "@fmt",
     ],
 )
 
@@ -41,6 +45,7 @@ cc_test(
     srcs = ["graph_builder_test.cc"],
     deps = [
         ":graph_builder",
+        "//labm8/cpp:logging",
         "//labm8/cpp:test",
     ],
 )
@@ -97,6 +102,7 @@ py_test(
         ":nx_utils",
         ":programl",
         ":programl_pb_py",
+        "//deeplearning/ml4pl/graphs/py:graph_builder",
         "//labm8/py:test",
     ],
 )
@@ -183,5 +189,32 @@ py_test(
         "//labm8/py:bazelutil",
         "//labm8/py:test",
         "//third_party/py/networkx",
+    ],
+)
+
+cc_library(
+    name = "random_graph_builder",
+    testonly = 1,
+    srcs = ["random_graph_builder.cc"],
+    hdrs = ["random_graph_builder.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":graph_builder",
+        ":programl_pb_cc",
+        "//labm8/cpp:status",
+        "//labm8/cpp:status_macros",
+        "//labm8/cpp:statusor",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "@fmt",
+    ],
+)
+
+cc_test(
+    name = "random_graph_builder_benchmark",
+    srcs = ["random_graph_builder_benchmark.cc"],
+    deps = [
+        ":random_graph_builder",
+        "//labm8/cpp:test",
     ],
 )

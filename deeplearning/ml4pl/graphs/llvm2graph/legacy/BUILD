@@ -107,7 +107,7 @@ py_test(
     srcs = ["llvm_statements_test.py"],
     deps = [
         ":llvm_statements",
-        "//deeplearning/ml4pl/graphs:programl",
+        "//deeplearning/ml4pl/graphs/py:graph_builder",
         "//labm8/py:test",
     ],
 )

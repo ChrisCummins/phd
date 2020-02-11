@@ -16,13 +16,21 @@
 #include "deeplearning/ml4pl/seq/graph_encoder.h"
 
 #include "deeplearning/ml4pl/seq/graph_serializer.h"
+#include "labm8/cpp/logging.h"
 
 #include <vector>
 
 namespace ml4pl {
 
-ProgramGraphSeq GraphEncoder::Encode(const ProgramGraph& graph) {
-  ProgramGraphSeq message;
+const string& GetString(const ProgramGraphProto& graph, int index) {
+  CHECK(index >= 0 && index <= graph.string_size())
+      << "String " << index << " is out of range for string table with "
+      << graph.string_size() << " elements";
+  return graph.string(index);
+}
+
+ProgramGraphSeqProto GraphEncoder::Encode(const ProgramGraphProto& graph) {
+  ProgramGraphSeqProto message;
 
   auto encoded = message.mutable_encoded();
   auto encoded_node_lengths = message.mutable_encoded_node_length();
@@ -31,7 +39,7 @@ ProgramGraphSeq GraphEncoder::Encode(const ProgramGraph& graph) {
   for (const auto& node : SerializeStatements(graph)) {
     // Encode the text of the node.
     std::vector<int> encoded_node =
-        string_encoder_.Encode(graph.node(node).text());
+        string_encoder_.Encode(GetString(graph, graph.node(node).text()));
     // Append the encoded node and segment IDs.
     for (const auto& x : encoded_node) {
       encoded->Add(x);

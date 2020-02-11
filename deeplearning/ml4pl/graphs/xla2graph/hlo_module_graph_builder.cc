@@ -46,23 +46,25 @@ labm8::Status HloModuleGraphBuilder::VisitModule(
     return labm8::Status(labm8::error::Code::INVALID_ARGUMENT,
                          "Failed to locate entry computation");
   }
-  AddCallEdges(0, entryComputation->second);
+  RETURN_IF_ERROR(AddCallEdges(0, entryComputation->second));
 
   return labm8::Status::OK;
 }
 
 labm8::StatusOr<FunctionEntryExits> HloModuleGraphBuilder::VisitComputation(
     const xla::HloComputationProto& computation) {
-  size_t fn = AddFunction(computation.name()).first;
+  int fn;
+  ASSIGN_OR_RETURN(fn, AddFunction(computation.name()));
 
   // Create an entry statement which acts as a common control predecessor of
   // the computation inputs. Since a HLO module is a dataflow graph, there may
   // be multiple inputs.
-  size_t entryInstruction = AddStatement("; computation entry", fn).first;
+  int entryInstruction;
+  ASSIGN_OR_RETURN(entryInstruction, AddStatement("; computation entry", fn));
 
   // Visit the instructions in-order. Instructions are ordered such that
   // producers appear before consumers.
-  size_t lastInstruction = entryInstruction;
+  int lastInstruction = entryInstruction;
   for (int i = 0; i < computation.instructions_size(); ++i) {
     ASSIGN_OR_RETURN(
         lastInstruction,
@@ -74,28 +76,32 @@ labm8::StatusOr<FunctionEntryExits> HloModuleGraphBuilder::VisitComputation(
   return FunctionEntryExits{entryInstruction, {lastInstruction}};
 }
 
-labm8::StatusOr<size_t> HloModuleGraphBuilder::VisitInstruction(
-    const xla::HloInstructionProto& instruction, size_t functionNumber,
-    size_t entryInstruction) {
+labm8::StatusOr<int> HloModuleGraphBuilder::VisitInstruction(
+    const xla::HloInstructionProto& instruction, int functionNumber,
+    int entryInstruction) {
   // Generate the instruction node.
-  size_t instructionNodeId =
-      AddStatement(HloInstructionToText(instruction), functionNumber).first;
+  int instructionNodeId;
+  ASSIGN_OR_RETURN(
+      instructionNodeId,
+      AddStatement(HloInstructionToText(instruction), functionNumber));
   instructions_.insert({instruction.id(), instructionNodeId});
 
   // Generate the identifier node for the data produced by the instruction.
-  size_t dataId =
-      AddIdentifier(ShapeProtoToString(instruction.shape()), functionNumber)
-          .first;
+  int dataId;
+  ASSIGN_OR_RETURN(
+      dataId,
+      AddIdentifier(ShapeProtoToString(instruction.shape()), functionNumber));
   producers_.insert({instruction.id(), dataId});
   AddDataEdge(instructionNodeId, dataId, 0);
 
   if (instruction.opcode() == "parameter") {
     // Add the implicit control edge from computation entry point to parameters.
-    AddControlEdge(entryInstruction, instructionNodeId);
+    RETURN_IF_ERROR(AddControlEdge(entryInstruction, instructionNodeId));
   } else if (instruction.opcode() == "constant") {
     // Generate the immediate value nodes for constants.
-    size_t literal =
-        AddImmediate(LiteralProtoToText(instruction.literal())).first;
+    int literal;
+    ASSIGN_OR_RETURN(literal,
+                     AddImmediate(LiteralProtoToText(instruction.literal())));
     AddDataEdge(literal, instructionNodeId, instruction.operand_ids_size());
   }
 
@@ -115,7 +121,7 @@ labm8::StatusOr<size_t> HloModuleGraphBuilder::VisitInstruction(
       return labm8::Status(labm8::error::Code::INVALID_ARGUMENT,
                            "Failed to find operand instruction");
     }
-    AddControlEdge(pred->second, instructionNodeId);
+    RETURN_IF_ERROR(AddControlEdge(pred->second, instructionNodeId));
   }
 
   // Add explicit control dependencies.
@@ -125,7 +131,7 @@ labm8::StatusOr<size_t> HloModuleGraphBuilder::VisitInstruction(
       return labm8::Status(labm8::error::Code::INVALID_ARGUMENT,
                            "Failed to find control predecessor");
     }
-    AddControlEdge(pred->second, instructionNodeId);
+    RETURN_IF_ERROR(AddControlEdge(pred->second, instructionNodeId));
   }
 
   // Add call edges from instructions to computations.

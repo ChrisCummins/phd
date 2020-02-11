@@ -24,19 +24,13 @@ and prints it to stdout. Example usage:
           --graph_x_dimensionality=2
           --graph_y_dimensionality=0
 """
-import pickle
 import random
-from typing import Iterable
-from typing import Optional
-from typing import Set
-from typing import Tuple
 
 import numpy as np
 
 from deeplearning.ml4pl.graphs import programl_pb2
-from deeplearning.ml4pl.graphs.migrate import networkx_to_protos
+from deeplearning.ml4pl.graphs.py import random_graph_builder
 from labm8.py import app
-from labm8.py import bazelutil
 
 
 FLAGS = app.FLAGS
@@ -56,11 +50,8 @@ app.DEFINE_integer(
 app.DEFINE_boolean(
   "with_data_flow", False, "Whether to generate data flow columns."
 )
-
-# A test set of unlabelled program graphs using the legacy networkx schema.
-# These must be migrated to the new program graph representation before use.
-NETWORKX_GRAPHS_ARCHIVE = bazelutil.DataArchive(
-  "phd/deeplearning/ml4pl/testing/data/100_unlabelled_networkx_graphs.tar.bz2"
+app.DEFINE_integer(
+  "node_count", None, "The number of nodes in the randomly generated graph."
 )
 
 
@@ -70,7 +61,7 @@ def CreateRandomProto(
   graph_x_dimensionality: int = 0,
   graph_y_dimensionality: int = 0,
   with_data_flow: bool = False,
-  node_count: int = None,
+  node_count: int = 0,
 ) -> programl_pb2.ProgramGraphProto:
   """Generate a random program graph.
 
@@ -85,103 +76,18 @@ def CreateRandomProto(
     5. Edges have positions.
     6. The graph is strongly connected.
   """
-  node_count = node_count or random.randint(5, 50)
-
-  if node_count < 2:
-    raise ValueError("node_count < 2")
-
+  builder = random_graph_builder.RandomGraphBuilder()
   proto = programl_pb2.ProgramGraphProto()
+  proto.ParseFromString(builder.GetSerializedGraphProto(node_count))
 
-  def _RandomDst(src: int) -> int:
-    """Select a random destination node for the given source."""
-    n = random.randint(0, node_count - 1)
-    if n == src:
-      return _RandomDst(src)
-    else:
-      return n
-
-  function_count = 0
-
-  # Create the nodes.
-  for i in range(node_count):
-    node = proto.node.add()
-    if i:
-      node.type = np.random.choice(
-        [
-          programl_pb2.Node.STATEMENT,
-          programl_pb2.Node.IDENTIFIER,
-          programl_pb2.Node.IMMEDIATE,
-        ],
-        p=[0.45, 0.3, 0.25],
-      )
-      if node.type == programl_pb2.Node.STATEMENT:
-        node.text = "statement"
-        node.preprocessed_text = "!UNK"
-        # Assign the node to a function, or create a new function.
-        if function_count and random.random() < 0.85:
-          node.function = random.randint(0, function_count - 1)
-        else:
-          function_count += 1
-          node.function = function_count - 1
-      elif node.type == programl_pb2.Node.IDENTIFIER:
-        node.text = "%0"
-        node.preprocessed_text = "!IDENTIFIER"
-      else:
-        node.text = "0"
-        node.preprocessed_text = "!IDENTIFIER"
-    else:
-      # The first node is always the root.
-      node.type = programl_pb2.Node.STATEMENT
-      node.text = "root"
-      node.preprocessed_text = "!UNK"
-
+  for node in proto.node:
+    node.preprocessed_text = 0
     # Add the node features and labels.
     # Limit node feature values in range [0,1] to play nicely with models with
     # hardcoded "binary selector" embeddings.
     node.x[:] = np.random.randint(low=0, high=2, size=node_x_dimensionality)
     if node_y_dimensionality:
       node.y[:] = np.random.randint(low=0, high=100, size=node_y_dimensionality)
-
-  # Create the functions.
-  for i in range(0, function_count):
-    function = proto.function.add()
-    # In NetworkXToProgramGraphProto(), functions are sorted lexicographically by
-    # their name. To preserve equivalence between proto <-> nx function names,
-    # we create zero-padded function names, e.g. function 10 -> fn_000010.
-    # This will not work if the number of digits required to name the functions
-    # overflows the padding size! I.e. if there are more than 999999 function
-    # names in a randomly generated proto.
-    function.name = f"fn_{i + 1:06d}"
-
-  # Keep track of the edges that we have created to avoid generating parallel
-  # edges of the same flow.
-  edges: Set[Tuple[int, int, programl_pb2.Edge.Flow]] = set()
-
-  # Create the edges.
-  for src, node in enumerate(proto.node):
-    outgoing_edge_count = random.randint(1, 3)
-    for _ in range(outgoing_edge_count):
-      dst = _RandomDst(src)
-
-      # Determine the flow based on the source node type.
-      if src:
-        if node.type == programl_pb2.Node.STATEMENT:
-          flow = np.random.choice(
-            [programl_pb2.Edge.CONTROL, programl_pb2.Edge.CALL], p=[0.9, 0.1]
-          )
-        else:
-          flow = programl_pb2.Edge.DATA
-      else:
-        flow = programl_pb2.Edge.CALL
-
-      if (src, dst, flow) not in edges:
-        edges.add((src, dst, flow))
-
-        edge = proto.edge.add()
-        edge.flow = flow
-        edge.source_node = src
-        edge.destination_node = dst
-        edge.position = random.randint(0, 4)
 
   if graph_x_dimensionality:
     proto.x[:] = np.random.randint(low=0, high=100, size=graph_x_dimensionality)
@@ -197,19 +103,6 @@ def CreateRandomProto(
   return proto
 
 
-def EnumerateTestSet(
-  n: Optional[int] = None,
-) -> Iterable[programl_pb2.ProgramGraphProto]:
-  """Enumerate a test set of "real" program graphs."""
-  with NETWORKX_GRAPHS_ARCHIVE as pickled_dir:
-    for i, path in enumerate(pickled_dir.iterdir()):
-      if n and i >= n:
-        break
-      with open(path, "rb") as f:
-        old_nx_graph = pickle.load(f)
-        yield networkx_to_protos.NetworkXGraphToProgramGraphProto(old_nx_graph)
-
-
 def Main():
   """Main entry point"""
   print(
@@ -218,6 +111,7 @@ def Main():
       node_y_dimensionality=FLAGS.node_y_dimensionality,
       graph_x_dimensionality=FLAGS.graph_x_dimensionality,
       graph_y_dimensionality=FLAGS.graph_y_dimensionality,
+      node_count=FLAGS.node_count,
     )
   )
 

@@ -21,28 +21,12 @@ from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled.dataflow.subexpressions import (
   subexpressions,
 )
-from deeplearning.ml4pl.testing import random_networkx_generator
-from deeplearning.ml4pl.testing import random_programl_generator
 from labm8.py import test
+
+pytest_plugins = ["deeplearning.ml4pl.testing.fixtures.llvm_program_graph"]
 
 
 FLAGS = test.FLAGS
-
-
-@test.Fixture(
-  scope="session", params=list(random_programl_generator.EnumerateTestSet()),
-)
-def real_proto(request) -> programl_pb2.ProgramGraphProto:
-  """A test fixture which yields one of 100 "real" graphs."""
-  return request.param
-
-
-@test.Fixture(
-  scope="session", params=list(random_networkx_generator.EnumerateTestSet()),
-)
-def real_graph(request) -> nx.MultiDiGraph:
-  """A test fixture which yields one of 100 "real" graphs."""
-  return request.param
 
 
 @test.Fixture(scope="function")
@@ -312,18 +296,20 @@ def test_GetExpressionSets_commutative_graph_labels(
     assert a.nodes[node]["y"] == b.nodes[node]["y"]
 
 
-def test_GetExpressionSets_statement_count(real_graph: nx.MultiDiGraph):
+def test_GetExpressionSets_statement_count(
+  llvm_program_graph_nx: nx.MultiDiGraph,
+):
   """Check that every statement node appears in the expression sets."""
-  expression_sets = subexpressions.GetExpressionSets(real_graph)
+  expression_sets = subexpressions.GetExpressionSets(llvm_program_graph_nx)
   # Count the number of statements with at least one operand.
   statements_with_operands_count = len(
     [
       n
-      for n, type_ in real_graph.nodes(data="type")
+      for n, type_ in llvm_program_graph_nx.nodes(data="type")
       if type_ == programl_pb2.Node.STATEMENT
       and any(
         _
-        for _, _, flow in real_graph.in_edges(n, data="flow")
+        for _, _, flow in llvm_program_graph_nx.in_edges(n, data="flow")
         if flow == programl_pb2.Edge.DATA
       )
     ]
@@ -333,10 +319,10 @@ def test_GetExpressionSets_statement_count(real_graph: nx.MultiDiGraph):
 
 
 def test_GetExpressionSets_does_not_include_duplicates(
-  real_graph: nx.MultiDiGraph,
+  llvm_program_graph_nx: nx.MultiDiGraph,
 ):
   """Check that every node appears in only one expression set."""
-  expression_sets = subexpressions.GetExpressionSets(real_graph)
+  expression_sets = subexpressions.GetExpressionSets(llvm_program_graph_nx)
   flattened_expression_sets = set().union(*expression_sets)
   assert len(flattened_expression_sets) == sum(len(s) for s in expression_sets)
 
@@ -352,9 +338,11 @@ def test_MakeSubexpressionsGraphs_wiki_without_subexpressions(
   assert len(graphs) == 0
 
 
-def test_MakeAnnotated_real_protos(real_proto: programl_pb2.ProgramGraphProto,):
+def test_MakeAnnotated_llvm_program_graphs(
+  llvm_program_graph: programl_pb2.ProgramGraphProto,
+):
   """Opaque black-box test of reachability annotator."""
-  annotator = subexpressions.CommonSubexpressionAnnotator(real_proto)
+  annotator = subexpressions.CommonSubexpressionAnnotator(llvm_program_graph)
   annotated = annotator.MakeAnnotated(10)
   assert len(annotated.graphs) <= 10
 

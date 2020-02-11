@@ -18,113 +18,145 @@
 
 #include "deeplearning/ml4pl/graphs/graph_builder.h"
 
+#include <sstream>
 #include <utility>
+#include "fmt/format.h"
 
 #include "absl/container/flat_hash_set.h"
 #include "labm8/cpp/logging.h"
+#include "labm8/cpp/status_macros.h"
+
+namespace error = labm8::error;
 
 namespace ml4pl {
 
 GraphBuilder::GraphBuilder() : finalized_(false) {
   // Create the graph root node.
-  auto node = AddNode(Node::STATEMENT);
+  auto node = AddNode(Node::STATEMENT).ValueOrDie();
   node.second->set_text(AddString("; root"));
 }
 
-std::pair<int, Function*> GraphBuilder::AddFunction(const string& name) {
-  CHECK(name.size()) << "Empty function name is invalid";
+StatusOr<int> GraphBuilder::AddFunction(const string& name) {
+  if (!name.size()) {
+    return Status(error::Code::INVALID_ARGUMENT,
+                  "Empty function name is invalid");
+  }
   int functionNumber = graph_.function_size();
   Function* function = graph_.add_function();
   function->set_name(AddString(name));
-  return std::make_pair(functionNumber, function);
+  return functionNumber;
 }
 
-std::pair<int, Node*> GraphBuilder::AddStatement(const string& text,
-                                                 int function) {
-  auto node = AddNode(Node::STATEMENT);
+StatusOr<int> GraphBuilder::AddStatement(const string& text, int function) {
+  std::pair<int, Node*> node;
+  ASSIGN_OR_RETURN(node, AddNode(Node::STATEMENT, function));
   node.second->set_text(AddString(text));
-  node.second->set_function(function);
-  return node;
+  return node.first;
 }
 
-std::pair<int, Node*> GraphBuilder::AddIdentifier(const string& text,
-                                                  int function) {
-  auto node = AddNode(Node::IDENTIFIER);
+StatusOr<int> GraphBuilder::AddIdentifier(const string& text, int function) {
+  std::pair<int, Node*> node;
+  ASSIGN_OR_RETURN(node, AddNode(Node::IDENTIFIER));
   node.second->set_text(AddString(text));
-  node.second->set_function(function);
-  return node;
+  return node.first;
 }
 
-std::pair<int, Node*> GraphBuilder::AddImmediate(const string& text) {
-  auto node = AddNode(Node::IMMEDIATE);
+StatusOr<int> GraphBuilder::AddImmediate(const string& text) {
+  std::pair<int, Node*> node;
+  ASSIGN_OR_RETURN(node, AddNode(Node::IMMEDIATE));
   node.second->set_text(AddString(text));
-  return node;
+  return node.first;
 }
 
-void GraphBuilder::AddControlEdge(int sourceNode, int destinationNode) {
-  CHECK(sourceNode < graph_.node_size())
-      << "Source node " << sourceNode << " out of range for graph with "
-      << graph_.node_size() << " nodes";
-  CHECK(destinationNode < graph_.node_size())
-      << "Destination node " << destinationNode
-      << " out of range for graph with " << graph_.node_size() << " nodes";
+Status GraphBuilder::AddControlEdge(int sourceNode, int destinationNode) {
+  RETURN_IF_ERROR(ValidateEdge(sourceNode, destinationNode));
 
-  CHECK(graph_.node(sourceNode).type() == Node::STATEMENT &&
-        graph_.node(destinationNode).type() == Node::STATEMENT)
-      << "Control edge must connect statements";
-  CHECK(graph_.node(sourceNode).function() ==
-        graph_.node(destinationNode).function())
-      << "Control edge must connect statements in the same function";
+  if (graph_.node(sourceNode).type() != Node::STATEMENT ||
+      graph_.node(destinationNode).type() != Node::STATEMENT) {
+    return Status(error::Code::INVALID_ARGUMENT,
+                  "Control edge must connect statement nodes");
+  }
+
+  int sourceFunction = graph_.node(sourceNode).function();
+  int destinationFunction = graph_.node(destinationNode).function();
+
+  if (sourceFunction != destinationFunction) {
+    return Status(error::Code::INVALID_ARGUMENT,
+                  "Control edge must connect statements in the same function. "
+                  "Received source node {} is in function {} and destination "
+                  "node {} is in function {}",
+                  sourceNode, sourceFunction, destinationNode,
+                  destinationFunction);
+  }
 
   control_adjacencies_[sourceNode].push_back(destinationNode);
+
+  return Status::OK;
 }
 
-void GraphBuilder::AddCallEdge(int sourceNode, int destinationNode) {
-  CHECK(sourceNode < graph_.node_size())
-      << "Source node " << sourceNode << " out of range for graph with "
-      << graph_.node_size() << " nodes";
-  CHECK(destinationNode < graph_.node_size())
-      << "Destination node " << destinationNode
-      << " out of range for graph with " << graph_.node_size() << " nodes";
+Status GraphBuilder::AddCallEdge(int sourceNode, int destinationNode) {
+  RETURN_IF_ERROR(ValidateEdge(sourceNode, destinationNode));
 
-  CHECK(graph_.node(sourceNode).type() == Node::STATEMENT &&
-        graph_.node(destinationNode).type() == Node::STATEMENT)
-      << "Call edge must connect statements";
+  Node::Type sourceType = graph_.node(sourceNode).type();
+  Node::Type destinationType = graph_.node(destinationNode).type();
+
+  if (sourceType != Node::STATEMENT || destinationType != Node::STATEMENT) {
+    return Status(error::Code::INVALID_ARGUMENT,
+                  "Call edge must connect statements. Received source node {} "
+                  "has type {} and destination node {} has type {}",
+                  sourceNode, Node::Type_Name(sourceType), destinationNode,
+                  Node::Type_Name(destinationType));
+  }
+
+  if (graph_.node(sourceNode).has_function() &&
+      graph_.node(destinationNode).has_function() &&
+      graph_.node(sourceNode).function() ==
+          graph_.node(destinationNode).function()) {
+    return Status(
+        error::Code::INVALID_ARGUMENT,
+        "Call edge must connect statements in different functions. "
+        "Attempting to connect statements {} and {} both in function {}.",
+        sourceNode, destinationNode, graph_.node(sourceNode).function());
+  }
 
   call_adjacencies_[sourceNode].push_back(destinationNode);
+
+  return Status::OK;
 }
 
-void GraphBuilder::AddDataEdge(int sourceNode, int destinationNode,
-                               int position) {
-  CHECK(sourceNode < graph_.node_size())
-      << "Source node " << sourceNode << " out of range for graph with "
-      << graph_.node_size() << " nodes";
-  CHECK(destinationNode < graph_.node_size())
-      << "Destination node " << destinationNode
-      << " out of range for graph with " << graph_.node_size() << " nodes";
+Status GraphBuilder::AddDataEdge(int sourceNode, int destinationNode,
+                                 int position) {
+  RETURN_IF_ERROR(ValidateEdge(sourceNode, destinationNode));
 
-  bool sourceIsData = (graph_.node(sourceNode).type() == Node::IDENTIFIER ||
-                       graph_.node(sourceNode).type() == Node::IMMEDIATE);
-  bool destinationIsData =
-      (graph_.node(destinationNode).type() == Node::IDENTIFIER ||
-       graph_.node(destinationNode).type() == Node::IMMEDIATE);
+  Node::Type sourceType = graph_.node(sourceNode).type();
+  Node::Type destinationType = graph_.node(destinationNode).type();
 
-  CHECK(
-      (sourceIsData &&
-       graph_.node(destinationNode).type() == Node::STATEMENT) ||
-      (graph_.node(sourceNode).type() == Node::STATEMENT && destinationIsData))
-      << "Data edge must connect either a statement with data "
-      << "OR data with a statement";
+  bool sourceIsData =
+      (sourceType == Node::IDENTIFIER || sourceType == Node::IMMEDIATE);
+  bool destinationIsData = (destinationType == Node::IDENTIFIER ||
+                            destinationType == Node::IMMEDIATE);
+
+  if (!((sourceIsData && destinationType == Node::STATEMENT) ||
+        (sourceType == Node::STATEMENT && destinationIsData))) {
+    return Status(error::Code::INVALID_ARGUMENT,
+                  "Data edge must connect either a statement with data "
+                  "OR data with a statement. Received source node {} and "
+                  "destination node {}",
+                  Node::Type_Name(sourceType),
+                  Node::Type_Name(destinationType));
+  }
 
   data_reverse_adjacencies_[destinationNode].push_back({sourceNode, position});
+  return Status::OK;
 }
 
-void GraphBuilder::AddCallEdges(const size_t callingNode,
-                                const FunctionEntryExits& calledFunction) {
-  AddCallEdge(callingNode, calledFunction.first);
+Status GraphBuilder::AddCallEdges(const size_t callingNode,
+                                  const FunctionEntryExits& calledFunction) {
+  RETURN_IF_ERROR(AddCallEdge(callingNode, calledFunction.first));
   for (auto exitNode : calledFunction.second) {
-    AddCallEdge(exitNode, callingNode);
+    RETURN_IF_ERROR(AddCallEdge(exitNode, callingNode));
   }
+  return Status::OK;
 }
 
 void GraphBuilder::AddEdges(const std::vector<std::vector<size_t>>& adjacencies,
@@ -147,7 +179,7 @@ void GraphBuilder::AddEdges(const std::vector<std::vector<size_t>>& adjacencies,
   }
 }
 
-void GraphBuilder::AddReverseEdges(
+Status GraphBuilder::AddReverseEdges(
     const std::vector<std::vector<std::pair<size_t, int>>>& adjacencies,
     const Edge::Flow& flow, std::vector<bool>* visitedNodes) {
   for (size_t destinationNode = 0; destinationNode < adjacencies.size();
@@ -161,7 +193,10 @@ void GraphBuilder::AddReverseEdges(
 
       // Ensure that the position is unique.
       auto it = positionsSet.find(position);
-      CHECK(it == positionsSet.end()) << "Duplicate position " << position;
+      if (it != positionsSet.end()) {
+        return Status(error::Code::INVALID_ARGUMENT, "Duplicate position {}",
+                      position);
+      };
       positionsSet.insert(position);
 
       Edge* edge = graph_.add_edge();
@@ -175,40 +210,46 @@ void GraphBuilder::AddReverseEdges(
       (*visitedNodes)[destinationNode] = true;
     }
   }
+
+  return Status::OK;
 }
 
-const ProgramGraphProto& GraphBuilder::GetGraph() {
+StatusOr<ProgramGraphProto> GraphBuilder::GetGraph() {
   if (finalized_) {
     return graph_;
   }
   std::vector<bool> visitedNodes(graph_.node_size(), false);
 
   AddEdges(control_adjacencies_, Edge::CONTROL, &visitedNodes);
-  AddReverseEdges(data_reverse_adjacencies_, Edge::DATA, &visitedNodes);
+  RETURN_IF_ERROR(
+      AddReverseEdges(data_reverse_adjacencies_, Edge::DATA, &visitedNodes));
   AddEdges(call_adjacencies_, Edge::CALL, &visitedNodes);
 
   // Check that all nodes except the root are connected. The root is allowed to
   // have no connections in the case where it is an empty graph.
   for (size_t i = 1; i < visitedNodes.size(); ++i) {
-    CHECK(visitedNodes[i]) << "Graph contains node with no connections: "
-                           << graph_.node(i).DebugString();
+    if (!visitedNodes[i]) {
+      return Status(error::Code::INVALID_ARGUMENT,
+                    "Graph contains node with no connections: {}",
+                    graph_.node(i).DebugString());
+    }
   }
 
   finalized_ = true;
   return graph_;
 }
 
-std::pair<int, Node*> GraphBuilder::AddNode(const Node::Type& type) {
-  size_t nodeNumber = NextNodeNumber();
+StatusOr<std::pair<int, Node*>> GraphBuilder::AddNode(const Node::Type& type) {
+  int nodeNumber = NextNodeNumber();
   Node* node = graph_.add_node();
   node->set_type(type);
 
   // Create empty adjacency lists for the new node.
-  DCHECK(control_adjacencies_.size() == nodeNumber)
+  DCHECK(control_adjacencies_.size() == static_cast<size_t>(nodeNumber))
       << control_adjacencies_.size() << " != " << nodeNumber;
-  DCHECK(data_reverse_adjacencies_.size() == nodeNumber)
+  DCHECK(data_reverse_adjacencies_.size() == static_cast<size_t>(nodeNumber))
       << data_reverse_adjacencies_.size() << " != " << nodeNumber;
-  DCHECK(call_adjacencies_.size() == nodeNumber)
+  DCHECK(call_adjacencies_.size() == static_cast<size_t>(nodeNumber))
       << call_adjacencies_.size() << " != " << nodeNumber;
 
   control_adjacencies_.push_back({});
@@ -216,6 +257,37 @@ std::pair<int, Node*> GraphBuilder::AddNode(const Node::Type& type) {
   call_adjacencies_.push_back({});
 
   return std::make_pair(nodeNumber, node);
+}
+
+StatusOr<std::pair<int, Node*>> GraphBuilder::AddNode(const Node::Type& type,
+                                                      int function) {
+  if (function < 0 || function >= graph_.function_size()) {
+    return Status(error::Code::INVALID_ARGUMENT,
+                  "Function {} is out of bounds for graph with {} functions",
+                  function, graph_.function_size());
+  }
+
+  std::pair<int, Node*> node;
+  ASSIGN_OR_RETURN(node, AddNode(type));
+  node.second->set_function(function);
+  return node;
+}
+
+Status GraphBuilder::ValidateEdge(int sourceNode, int destinationNode) const {
+  if (sourceNode < 0 || sourceNode >= graph_.node_size()) {
+    return Status(error::Code::INVALID_ARGUMENT,
+                  "Edge source node {} out of range for graph with {} nodes",
+                  sourceNode, graph_.node_size());
+  }
+
+  if (destinationNode < 0 || destinationNode >= graph_.node_size()) {
+    return Status(
+        error::Code::INVALID_ARGUMENT,
+        "Edge destination node {} out of range for graph with {} nodes",
+        destinationNode, graph_.node_size());
+  }
+
+  return Status::OK;
 }
 
 int GraphBuilder::AddString(const string& s) {
@@ -228,14 +300,6 @@ int GraphBuilder::AddString(const string& s) {
   }
 
   return it->second;
-}
-
-const string& GraphBuilder::GetString(int index) const {
-  CHECK(index >= 0 && index <= graph_.string_size())
-      << "Requested string " << index
-      << " is out of range for string table with " << graph_.string_size()
-      << " elements.";
-  return graph_.string(index);
 }
 
 }  // namespace ml4pl

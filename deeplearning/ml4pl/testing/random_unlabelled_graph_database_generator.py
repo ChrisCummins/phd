@@ -28,9 +28,11 @@ from typing import List
 from typing import NamedTuple
 from typing import Optional
 
+from deeplearning.ml4pl.graphs.llvm2graph import llvm2graph
 from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
 from deeplearning.ml4pl.testing import generator_flags
 from deeplearning.ml4pl.testing import random_programl_generator
+from deeplearning.ml4pl.testing.fixtures import llvm_ir
 from labm8.py import app
 
 
@@ -121,7 +123,12 @@ def PopulateDatabaseWithTestSet(
 ):
   """Populate a database with "real" programs."""
   inputs = itertools.islice(
-    itertools.cycle(random_programl_generator.EnumerateTestSet(n=graph_count)),
+    itertools.cycle(
+      [
+        llvm2graph.BuildProgramGraphProto(ir)
+        for _, ir in llvm_ir.EnumerateLlvmIrs()
+      ]
+    ),
     graph_count,
   )
 

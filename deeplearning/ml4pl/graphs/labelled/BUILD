@@ -108,6 +108,7 @@ py_test(
         "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//deeplearning/ml4pl/testing:random_graph_tuple_generator",
         "//deeplearning/ml4pl/testing:random_networkx_generator",
+        "//deeplearning/ml4pl/testing/fixtures:llvm_program_graph",
         "//labm8/py:app",
         "//labm8/py:decorators",
         "//labm8/py:fs",

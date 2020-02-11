@@ -83,9 +83,7 @@ def test_proto_networkx_equivalence(
 
   # networkx -> proto
   proto_out = programl.NetworkXToProgramGraphProto(g)
-  assert set(fn.name for fn in proto_out.function) == set(
-    fn.name for fn in llvm_program_graph.function
-  )
+  assert set(proto_out.string) == set(llvm_program_graph.string)
   assert len(llvm_program_graph.node) == len(proto_out.node)
   assert len(llvm_program_graph.edge) == len(proto_out.edge)
 
@@ -103,9 +101,7 @@ def test_proto_networkx_equivalence_with_preallocated_proto(
   # Allocate the proto ahead of time:
   proto_out = programl_pb2.ProgramGraphProto()
   programl.NetworkXToProgramGraphProto(g, proto=proto_out)
-  assert set(fn.name for fn in proto_out.function) == set(
-    fn.name for fn in llvm_program_graph.function
-  )
+  assert set(proto_out.string) == set(llvm_program_graph.string)
   assert len(llvm_program_graph.node) == len(proto_out.node)
   assert len(llvm_program_graph.edge) == len(proto_out.edge)
 
@@ -113,21 +109,6 @@ def test_proto_networkx_equivalence_with_preallocated_proto(
 ###############################################################################
 # Fuzzers.
 ###############################################################################
-
-
-@decorators.loop_for(seconds=10)
-def test_fuzz_GraphBuilder():
-  """Test that graph construction doesn't set on fire."""
-  builder = programl.GraphBuilder()
-  random_node_count = random.randint(3, 100)
-  random_edge_count = random.randint(3, 100)
-  nodes = []
-  for _ in range(random_node_count):
-    nodes.append(builder.AddNode())
-  for _ in range(random_edge_count):
-    builder.AddEdge(random.choice(nodes), random.choice(nodes))
-  assert builder.g
-  assert builder.proto
 
 
 @decorators.loop_for(seconds=3)
@@ -160,12 +141,16 @@ def test_fuzz_proto_networkx_equivalence(
       if function is not None
     ]
   )
-  functions_in_proto = [function.name for function in proto_in.function]
+  functions_in_proto = [
+    proto_in.string[function.name] for function in proto_in.function
+  ]
   assert sorted(functions_in_proto) == sorted(functions_in_graph)
 
   # networkx -> proto
   proto_out = programl.NetworkXToProgramGraphProto(g)
-  assert proto_out.function == proto_in.function
+  assert set(proto_out.string[fn.name] for fn in proto_out.function) == set(
+    proto_in.string[fn.name] for fn in proto_in.function
+  )
   assert proto_out.node == proto_in.node
   # Randomly generated graphs don't have a stable edge order.
   assert len(proto_out.edge) == len(proto_in.edge)

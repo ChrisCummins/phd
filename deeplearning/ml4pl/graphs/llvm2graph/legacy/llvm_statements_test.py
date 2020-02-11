@@ -14,22 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for //deeplearning/ml4pl/graphs/llvm2graph/legacy:llvm_statements."""
-from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs.llvm2graph.legacy import llvm_statements
+from deeplearning.ml4pl.graphs.py import graph_builder
 from labm8.py import test
 
 FLAGS = test.FLAGS
 
 
 def test_FindCallSites_multiple_call_sites():
-  builder = programl.GraphBuilder()
-  fn1 = builder.AddFunction()
-  call = builder.AddNode(function=fn1, text="%2 = call i32 @B()")
-  foo = builder.AddNode(function=fn1)
-  call2 = builder.AddNode(function=fn1, text="%call = call i32 @B()")
+  builder = graph_builder.GraphBuilder()
+  A = builder.AddFunction("A")
+  call = builder.AddStatement("%2 = call i32 @B()", function=A)
+  foo = builder.AddStatement("x", function=A)
+  call2 = builder.AddStatement("%call = call i32 @B()", function=A)
+
+  builder.AddControlEdge(0, call)
+  builder.AddControlEdge(call, foo)
+  builder.AddControlEdge(foo, call2)
+
   g = builder.g
 
-  call_sites = llvm_statements.FindCallSites(g, fn1, "B")
+  call_sites = llvm_statements.FindCallSites(g, "A", "B")
   assert len(call_sites) == 2
   assert set(call_sites) == {call, call2}
 

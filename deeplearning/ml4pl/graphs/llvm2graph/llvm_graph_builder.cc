@@ -46,11 +46,14 @@ string PrintToString(const T& value) {
   return str;
 }
 
-string GetInstructionLhs(const llvm::Instruction& instruction) {
+StatusOr<string> GetInstructionLhs(const llvm::Instruction& instruction) {
   const string instructionString = PrintToString(instruction);
   const size_t snipAt = instructionString.find(" = ");
-  CHECK(snipAt != string::npos)
-      << "' = ' assignment not found in instruction: " << instructionString;
+  if (snipAt == string::npos) {
+    return Status(error::Code::INVALID_ARGUMENT,
+                  "' = ' assignment not found in instruction: {}",
+                  instructionString);
+  }
 
   const string identifier = instructionString.substr(0, snipAt);
   const string type = PrintToString(*instruction.getType());
@@ -60,7 +63,7 @@ string GetInstructionLhs(const llvm::Instruction& instruction) {
   return instructionName.str();
 }
 
-string GetInstructionRhs(const llvm::Instruction& instruction) {
+StatusOr<string> GetInstructionRhs(const llvm::Instruction& instruction) {
   const string instructionString = PrintToString(instruction);
   const size_t snipAt = instructionString.find(" = ");
   if (snipAt == string::npos) {
@@ -70,7 +73,7 @@ string GetInstructionRhs(const llvm::Instruction& instruction) {
   return instructionString.substr(snipAt + 3);
 }
 
-labm8::StatusOr<BasicBlockEntryExit> LlvmGraphBuilder::VisitBasicBlock(
+StatusOr<BasicBlockEntryExit> LlvmGraphBuilder::VisitBasicBlock(
     const llvm::BasicBlock& block, const int& functionNumber,
     InstructionNumberMap* instructions, ArgumentConsumerMap* argumentConsumers,
     std::vector<DataEdge>* dataEdgesToAdd) {
@@ -90,16 +93,17 @@ labm8::StatusOr<BasicBlockEntryExit> LlvmGraphBuilder::VisitBasicBlock(
 #endif
 
     // Create the graph node for the instruction.
-    auto statement = AddStatement(text, functionNumber);
+    int statement;
+    ASSIGN_OR_RETURN(statement, AddStatement(text, functionNumber));
     previousNodeNumber = currentNodeNumber;
-    currentNodeNumber = statement.first;
+    currentNodeNumber = statement;
 
     instructions->insert({&instruction, currentNodeNumber});
 
     // A basic block consists of a linear sequence of instructions, so we can
     // insert the control edge between instructions as we go.
     if (previousNodeNumber != -1) {
-      AddControlEdge(previousNodeNumber, currentNodeNumber);
+      RETURN_IF_ERROR(AddControlEdge(previousNodeNumber, currentNodeNumber));
     }
 
     // If the instruction is a call, record the call site, which we will use
@@ -160,13 +164,15 @@ labm8::StatusOr<BasicBlockEntryExit> LlvmGraphBuilder::VisitBasicBlock(
         // To this we create the intermediate data flow node '%2' immediately,
         // but defer adding the edge from the producer instruction, since we may
         // not have visited it yet.
-        auto identifier = AddIdentifier(identifierText, functionNumber);
+        int identifier;
+        ASSIGN_OR_RETURN(identifier,
+                         AddIdentifier(identifierText, functionNumber));
 
         // Connect the data -> consumer.
-        AddDataEdge(identifier.first, currentNodeNumber, position);
+        RETURN_IF_ERROR(AddDataEdge(identifier, currentNodeNumber, position));
 
         // Defer creation of the edge from producer -> data.
-        dataEdgesToAdd->push_back({operand, identifier.first});
+        dataEdgesToAdd->push_back({operand, identifier});
       } else if (const auto* operand = llvm::dyn_cast<llvm::Argument>(value)) {
         // Record the usage of the argument.
         (*argumentConsumers)[operand].push_back({currentNodeNumber, position});
@@ -190,12 +196,14 @@ labm8::StatusOr<BasicBlockEntryExit> LlvmGraphBuilder::VisitBasicBlock(
     }
   }
 
-  CHECK(currentNodeNumber != -1) << "No instructions in block";
+  if (currentNodeNumber == -1) {
+    return Status(error::Code::INVALID_ARGUMENT, "No instructions in block");
+  }
 
   return std::make_pair(firstNodeNumber, currentNodeNumber);
 }
 
-labm8::StatusOr<FunctionEntryExits> LlvmGraphBuilder::VisitFunction(
+StatusOr<FunctionEntryExits> LlvmGraphBuilder::VisitFunction(
     const llvm::Function& function, const int& functionNumber) {
   // A map from basic blocks to <entry,exit> node numbers.
   absl::flat_hash_map<const llvm::BasicBlock*, BasicBlockEntryExit> blocks;
@@ -213,11 +221,14 @@ labm8::StatusOr<FunctionEntryExits> LlvmGraphBuilder::VisitFunction(
   FunctionEntryExits functionEntryExits;
 
   if (function.isDeclaration()) {
-    auto entry = AddStatement("; undefined function entry", functionNumber);
-    auto exit = AddStatement("; undefined function exit", functionNumber);
-    AddControlEdge(entry.first, exit.first);
-    functionEntryExits.first = entry.first;
-    functionEntryExits.second.push_back(exit.first);
+    int entry, exit;
+    ASSIGN_OR_RETURN(
+        entry, AddStatement("; undefined function entry", functionNumber));
+    ASSIGN_OR_RETURN(exit,
+                     AddStatement("; undefined function exit", functionNumber));
+    RETURN_IF_ERROR(AddControlEdge(entry, exit));
+    functionEntryExits.first = entry;
+    functionEntryExits.second.push_back(exit);
     return functionEntryExits;
   }
 
@@ -230,7 +241,11 @@ labm8::StatusOr<FunctionEntryExits> LlvmGraphBuilder::VisitFunction(
                                      &argumentConsumers, &dataEdgesToAdd));
     blocks.insert({&block, entry_exit});
   }
-  CHECK(blocks.size()) << "Function contains no blocks: " << function.getName();
+  if (!blocks.size()) {
+    return Status(error::Code::INVALID_ARGUMENT,
+                  "Function contains no blocks: {}",
+                  string(function.getName()));
+  }
 
   // Construct the identifier data elements for arguments and connect data
   // edges.
@@ -240,10 +255,11 @@ labm8::StatusOr<FunctionEntryExits> LlvmGraphBuilder::VisitFunction(
 #else
     auto text = "!IDENTIFIER";
 #endif
-    auto argument = AddIdentifier(text, functionNumber);
+    int argument;
+    ASSIGN_OR_RETURN(argument, AddIdentifier(text, functionNumber));
     for (auto argumentConsumer : it.second) {
-      AddDataEdge(argument.first, argumentConsumer.first,
-                  argumentConsumer.second);
+      RETURN_IF_ERROR(AddDataEdge(argument, argumentConsumer.first,
+                                  argumentConsumer.second));
     }
   }
 
@@ -251,18 +267,28 @@ labm8::StatusOr<FunctionEntryExits> LlvmGraphBuilder::VisitFunction(
   // elements that are produced.
   for (auto dataEdgeToAdd : dataEdgesToAdd) {
     auto producer = instructions.find(dataEdgeToAdd.first);
-    CHECK(producer != instructions.end())
-        << "Operand references instruction "
-        << "that has not been visited: " << PrintToString(*dataEdgeToAdd.first);
-    AddDataEdge(producer->second, dataEdgeToAdd.second, /*position=*/0);
+    if (producer == instructions.end()) {
+      return Status(
+          error::Code::INVALID_ARGUMENT,
+          "Operand references instruction that has not been visited: {}",
+          PrintToString(*dataEdgeToAdd.first));
+    }
+    RETURN_IF_ERROR(
+        AddDataEdge(producer->second, dataEdgeToAdd.second, /*position=*/0));
   }
 
   const llvm::BasicBlock* entry = &function.getEntryBlock();
-  CHECK(entry) << "No entry block for function: " << function.getName();
+  if (!entry) {
+    return Status(error::Code::INVALID_ARGUMENT,
+                  "No entry block for function: {}",
+                  string(function.getName()));
+  }
 
   // Construct a the <entry, exits> pair.
   auto entryNode = blocks.find(entry);
-  CHECK(entryNode != blocks.end()) << "No entry block";
+  if (entryNode == blocks.end()) {
+    return Status(error::Code::INVALID_ARGUMENT, "No entry block");
+  }
   functionEntryExits.first = entryNode->second.first;
 
   // Traverse the basic blocks in the function, creating control edges between
@@ -275,7 +301,9 @@ labm8::StatusOr<FunctionEntryExits> LlvmGraphBuilder::VisitFunction(
     q.pop_front();
 
     auto it = blocks.find(current);
-    CHECK(it != blocks.end()) << "Block not found";
+    if (it == blocks.end()) {
+      return Status(error::Code::INVALID_ARGUMENT, "Block not found");
+    }
     int currentExit = it->second.second;
 
     int successorNumber = -1;
@@ -286,10 +314,12 @@ labm8::StatusOr<FunctionEntryExits> LlvmGraphBuilder::VisitFunction(
       ++successorNumber;
 
       auto it = blocks.find(successor);
-      CHECK(it != blocks.end()) << "Block not found";
+      if (it == blocks.end()) {
+        return Status(error::Code::INVALID_ARGUMENT, "Block not found");
+      }
       int successorEntry = it->second.first;
 
-      AddControlEdge(currentExit, successorEntry);
+      RETURN_IF_ERROR(AddControlEdge(currentExit, successorEntry));
 
       if (visited.find(successor) == visited.end()) {
         q.push_back(successor);
@@ -302,24 +332,27 @@ labm8::StatusOr<FunctionEntryExits> LlvmGraphBuilder::VisitFunction(
       functionEntryExits.second.push_back(currentExit);
     }
   }
-  CHECK(visited.size() == function.getBasicBlockList().size())
-      << "Visited " << visited.size() << " blocks in a function with "
-      << function.getBasicBlockList().size() << " blocks";
+  if (visited.size() != function.getBasicBlockList().size()) {
+    return Status(error::Code::INVALID_ARGUMENT,
+                  "Visited {} blocks in a function with blocks", visited.size(),
+                  function.getBasicBlockList().size());
+  }
 
   return functionEntryExits;
 }
 
-labm8::StatusOr<ProgramGraphProto> LlvmGraphBuilder::Build(
+StatusOr<ProgramGraphProto> LlvmGraphBuilder::Build(
     const llvm::Module& module) {
   // A map from functions to their entry and exit nodes.
   absl::flat_hash_map<const llvm::Function*, FunctionEntryExits> functions;
 
   for (const llvm::Function& function : module) {
     // Create the function message.
-    auto fn = AddFunction(function.getName());
+    int fn;
+    ASSIGN_OR_RETURN(fn, AddFunction(function.getName()));
 
     FunctionEntryExits functionEntryExits;
-    ASSIGN_OR_RETURN(functionEntryExits, VisitFunction(function, fn.first));
+    ASSIGN_OR_RETURN(functionEntryExits, VisitFunction(function, fn));
 
     functions.insert({&function, functionEntryExits});
   }
@@ -332,9 +365,11 @@ labm8::StatusOr<ProgramGraphProto> LlvmGraphBuilder::Build(
   // Add call edges to and from call sites.
   for (auto callSite : call_sites_) {
     const auto& calledFunction = functions.find(callSite.second);
-    CHECK(calledFunction != functions.end())
-        << "Could not resolve call to function";
-    AddCallEdges(callSite.first, calledFunction->second);
+    if (calledFunction == functions.end()) {
+      return Status(error::Code::INVALID_ARGUMENT,
+                    "Could not resolve call to function");
+    }
+    RETURN_IF_ERROR(AddCallEdges(callSite.first, calledFunction->second));
   }
 
   // Create the constants.
@@ -346,10 +381,12 @@ labm8::StatusOr<ProgramGraphProto> LlvmGraphBuilder::Build(
 #endif
 
     // Create the node for the constant.
-    auto immmediate = AddImmediate(immediateText);
+    int immediate;
+    ASSIGN_OR_RETURN(immediate, AddImmediate(immediateText));
     // Create data in-flow edges.
     for (auto destination : constant.second) {
-      AddDataEdge(immmediate.first, destination.first, destination.second);
+      RETURN_IF_ERROR(
+          AddDataEdge(immediate, destination.first, destination.second));
     }
   }
 

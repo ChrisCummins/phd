@@ -21,7 +21,12 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "deeplearning/ml4pl/graphs/programl.pb.h"
+#include "labm8/cpp/status.h"
+#include "labm8/cpp/statusor.h"
 #include "labm8/cpp/string.h"
+
+using labm8::Status;
+using labm8::StatusOr;
 
 namespace ml4pl {
 
@@ -35,36 +40,42 @@ class GraphBuilder {
   GraphBuilder();
 
   // Construct a new function and return its number.
-  std::pair<int, Function*> AddFunction(const string& name);
+  StatusOr<int> AddFunction(const string& name);
 
   // Node factories.
-  std::pair<int, Node*> AddStatement(const string& text, int function);
+  StatusOr<int> AddStatement(const string& text, int function);
 
-  std::pair<int, Node*> AddIdentifier(const string& text, int function);
+  StatusOr<int> AddIdentifier(const string& text, int function);
 
-  std::pair<int, Node*> AddImmediate(const string& text);
+  StatusOr<int> AddImmediate(const string& text);
 
   // Edge factories.
-  void AddControlEdge(int sourceNode, int destinationNode);
+  Status AddControlEdge(int sourceNode, int destinationNode);
 
-  void AddCallEdge(int sourceNode, int destinationNode);
+  Status AddCallEdge(int sourceNode, int destinationNode);
 
-  void AddDataEdge(int sourceNode, int destinationNode, int position);
+  Status AddDataEdge(int sourceNode, int destinationNode, int position);
 
   // Access the graph.
-  const ProgramGraphProto& GetGraph();
+  StatusOr<ProgramGraphProto> GetGraph();
 
  protected:
-  std::pair<int, Node*> AddNode(const Node::Type& type);
+  StatusOr<std::pair<int, Node*>> AddNode(const Node::Type& type);
 
-  Edge* AddEdge(const Edge::Flow& flow, int sourceNode, int destinationNode,
-                int position);
+  StatusOr<std::pair<int, Node*>> AddNode(const Node::Type& type, int function);
 
-  size_t NextNodeNumber() const { return graph_.node_size(); }
+  // Check that source and destination nodes are in-range.
+  Status ValidateEdge(int sourceNode, int destinationNode) const;
+
+  int NextNodeNumber() const { return graph_.node_size(); }
 
   // Add outgoing and return call edges from a node to a function.
-  void AddCallEdges(const size_t callingNode,
-                    const FunctionEntryExits& calledFunction);
+  Status AddCallEdges(const size_t callingNode,
+                      const FunctionEntryExits& calledFunction);
+
+  int FunctionCount() const { return graph_.function_size(); }
+
+  const Node& GetNode(int i) const { return graph_.node(i); }
 
  private:
   ProgramGraphProto graph_;
@@ -72,17 +83,13 @@ class GraphBuilder {
   void AddEdges(const std::vector<std::vector<size_t>>& adjacencies,
                 const Edge::Flow& flow, std::vector<bool>* visitedNodes);
 
-  void AddReverseEdges(
+  Status AddReverseEdges(
       const std::vector<std::vector<std::pair<size_t, int>>>& adjacencies,
       const Edge::Flow& flow, std::vector<bool>* visitedNodes);
 
   // Insert the string into the strings table, or return its value if already
   // present.
   int AddString(const string& s);
-
-  // Return the string from the strings table at the given index. This CHECK
-  // fails if the requested index is out of bound.
-  const string& GetString(int index) const;
 
   // Adjacency lists.
   std::vector<std::vector<size_t>> control_adjacencies_;

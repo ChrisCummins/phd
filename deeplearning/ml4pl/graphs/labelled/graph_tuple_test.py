@@ -31,6 +31,8 @@ from labm8.py import fs
 from labm8.py import test
 
 
+pytest_plugins = ["deeplearning.ml4pl.testing.fixtures.llvm_program_graph"]
+
 FLAGS = app.FLAGS
 
 
@@ -296,33 +298,26 @@ def test_ToNetworkx_graph_y_set(graph: nx.MultiDiGraph):
   assert g.graph["y"] == [1, 2]
 
 
-@test.Fixture(
-  scope="function", params=list(random_networkx_generator.EnumerateTestSet()),
-)
-def real_nx_graph(request) -> nx.MultiDiGraph:
-  return request.param
-
-
-def test_on_real_graph(real_nx_graph: nx.MultiDiGraph):
+def test_on_real_graph(llvm_program_graph_nx: nx.MultiDiGraph):
   """Test nx -> graph_tuple -> nx conversion on real graphs."""
   # Create graph tuple from networkx.
-  t = graph_tuple.GraphTuple.CreateFromNetworkX(real_nx_graph)
+  t = graph_tuple.GraphTuple.CreateFromNetworkX(llvm_program_graph_nx)
   try:
-    assert t.node_count == real_nx_graph.number_of_nodes()
-    assert t.edge_count == real_nx_graph.number_of_edges()
+    assert t.node_count == llvm_program_graph_nx.number_of_nodes()
+    assert t.edge_count == llvm_program_graph_nx.number_of_edges()
   except AssertionError:
-    fs.Write("/tmp/graph_in.pickle", pickle.dumps(real_nx_graph))
+    fs.Write("/tmp/graph_in.pickle", pickle.dumps(llvm_program_graph_nx))
     fs.Write("/tmp/graph_tuple_out.pickle", pickle.dumps(t))
     raise
 
   # Convert graph tuple back to networkx.
   g = t.ToNetworkx()
   try:
-    assert g.number_of_nodes() == real_nx_graph.number_of_nodes()
+    assert g.number_of_nodes() == llvm_program_graph_nx.number_of_nodes()
     # TODO(github.com/ChrisCummins/ProGraML/issues/36): Fix me.
-    # assert g.number_of_edges() == real_nx_graph.number_of_edges()
+    # assert g.number_of_edges() == llvm_program_graph_nx.number_of_edges()
   except AssertionError:
-    fs.Write("/tmp/graph_in.pickle", pickle.dumps(real_nx_graph))
+    fs.Write("/tmp/graph_in.pickle", pickle.dumps(llvm_program_graph_nx))
     fs.Write("/tmp/graph_out.pickle", pickle.dumps(g))
     raise
 

@@ -19,9 +19,9 @@ from typing import Optional
 
 import networkx as nx
 
-from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled.dataflow import data_flow_graphs
+from deeplearning.ml4pl.graphs.py import graph_builder
 from labm8.py import test
 
 
@@ -62,55 +62,52 @@ class MockNetworkXDataFlowGraphAnnotator(
 
 def test_IsValidRootNode():
   """Test that root nodes are correctly selected."""
-  builder = programl.GraphBuilder()
-  builder.AddNode(type=programl_pb2.Node.STATEMENT)
-  builder.AddNode(type=programl_pb2.Node.IDENTIFIER)
+  builder = graph_builder.GraphBuilder()
+  fn = builder.AddFunction("x")
+  a = builder.AddIdentifier("x", fn)
+  builder.AddDataEdge(0, a)
   annotator = MockNetworkXDataFlowGraphAnnotator(builder.proto)
   assert annotator.root_nodes == [0]
 
 
-def test_MakeAnnotated_no_root_nodes():
-  """Test that a graph with no root nodes produces no annotations."""
-  builder = programl.GraphBuilder()
-  annotator = MockNetworkXDataFlowGraphAnnotator(builder.proto)
-  annotated = annotator.MakeAnnotated()
-  assert len(annotated.graphs) == 0
-  assert len(annotated.protos) == 0
-
-
 def test_MakeAnnotated_no_node_y():
   """Test annotator with no node labels."""
-  builder = programl.GraphBuilder()
-  builder.AddNode()
+  builder = graph_builder.GraphBuilder()
+  fn = builder.AddFunction("x")
+  builder.AddControlEdge(0, builder.AddStatement("x", fn))
   annotator = MockNetworkXDataFlowGraphAnnotator(builder.proto)
   annotated = annotator.MakeAnnotated()
-  assert len(annotated.graphs) == 1
-  assert len(annotated.protos) == 1
+  assert len(annotated.graphs) == 2
+  assert len(annotated.protos) == 2
   assert annotated.graphs[0].nodes[0]["y"] == []
   assert annotated.protos[0].node[0].y == []
 
 
 def test_MakeAnnotated_node_y():
   """Test annotator with node labels."""
-  builder = programl.GraphBuilder()
-  builder.AddNode()
+  builder = graph_builder.GraphBuilder()
+  fn = builder.AddFunction("x")
+  a = builder.AddStatement("x", fn)
+  builder.AddControlEdge(0, a)
   annotator = MockNetworkXDataFlowGraphAnnotator(builder.proto, node_y=[1, 2])
   annotated = annotator.MakeAnnotated()
-  assert len(annotated.graphs) == 1
-  assert len(annotated.protos) == 1
+  assert len(annotated.graphs) == 2
+  assert len(annotated.protos) == 2
   assert annotated.graphs[0].nodes[0]["y"] == [1, 2]
   assert annotated.protos[0].node[0].y == [1, 2]
 
 
 def test_MakeAnnotated_node_x():
   """Test that node X values get appended."""
-  builder = programl.GraphBuilder()
+  builder = graph_builder.GraphBuilder()
+  fn = builder.AddFunction("x")
   for _ in range(10):
-    builder.AddNode()
+    builder.AddControlEdge(0, builder.AddStatement("x", fn))
   annotator = MockNetworkXDataFlowGraphAnnotator(builder.proto)
   annotated = annotator.MakeAnnotated()
-  assert len(annotated.graphs) == 10
-  assert len(annotated.protos) == 10
+  # 10 statements + root
+  assert len(annotated.graphs) == 11
+  assert len(annotated.protos) == 11
   # Check each graph to ensure that each graph gets a fresh set of node x
   # arrays to append to, else these lists will graph in length.
   for graph, proto in zip(annotated.graphs, annotated.protos):
@@ -125,22 +122,25 @@ def test_MakeAnnotated_node_x():
 
 def test_MakeAnnotated_no_graph_limit():
   """Test annotator with node labels."""
-  builder = programl.GraphBuilder()
-  builder.AddNode()
-  builder.AddNode()
-  builder.AddNode()
+  builder = graph_builder.GraphBuilder()
+  fn = builder.AddFunction("x")
+  builder.AddControlEdge(0, builder.AddStatement("x", fn))
+  builder.AddControlEdge(0, builder.AddStatement("x", fn))
+  builder.AddControlEdge(0, builder.AddStatement("x", fn))
   annotator = MockNetworkXDataFlowGraphAnnotator(builder.proto, node_y=[1, 2])
   annotated = annotator.MakeAnnotated()
-  assert len(annotated.graphs) == 3
-  assert len(annotated.protos) == 3
+  # 3 statements + root
+  assert len(annotated.graphs) == 4
+  assert len(annotated.protos) == 4
 
 
 @test.Parametrize("n", (1, 10, 100))
 def test_MakeAnnotated_graph_limit(n: int):
   """Test annotator with node labels."""
-  builder = programl.GraphBuilder()
+  builder = graph_builder.GraphBuilder()
+  fn = builder.AddFunction("x")
   for _ in range(100):
-    builder.AddNode()
+    builder.AddControlEdge(0, builder.AddStatement("x", fn))
   annotator = MockNetworkXDataFlowGraphAnnotator(builder.proto, node_y=[1, 2])
   annotated = annotator.MakeAnnotated(n)
   assert len(annotated.graphs) == n
@@ -149,17 +149,18 @@ def test_MakeAnnotated_graph_limit(n: int):
 
 def test_MakeAnnotated_graph_subset_of_root_nodes():
   """Test the number of graphs when only a subset of nodes are roots."""
-  builder = programl.GraphBuilder()
+  builder = graph_builder.GraphBuilder()
+  fn = builder.AddFunction("x")
   for i in range(50):
     if i % 2 == 0:
-      builder.AddNode(type=programl_pb2.Node.STATEMENT)
+      builder.AddControlEdge(0, builder.AddStatement("x", fn))
     else:
-      builder.AddNode(type=programl_pb2.Node.IDENTIFIER)
+      builder.AddDataEdge(0, builder.AddIdentifier("x", fn))
   annotator = MockNetworkXDataFlowGraphAnnotator(builder.proto, node_y=[1, 2])
   annotated = annotator.MakeAnnotated()
-  # Only the 25 statement nodes are used as roots.
-  assert len(annotated.graphs) == 25
-  assert len(annotated.protos) == 25
+  # Only the 25 statement nodes (+ root) are used as roots.
+  assert len(annotated.graphs) == 26
+  assert len(annotated.protos) == 26
 
 
 if __name__ == "__main__":

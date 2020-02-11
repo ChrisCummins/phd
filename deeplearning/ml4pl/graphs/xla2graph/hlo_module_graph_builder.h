@@ -42,17 +42,17 @@ class HloModuleGraphBuilder : GraphBuilder {
   labm8::StatusOr<FunctionEntryExits> VisitComputation(
       const xla::HloComputationProto& computation);
 
-  labm8::StatusOr<size_t> VisitInstruction(
-      const xla::HloInstructionProto& instruction, size_t functionNumber,
-      size_t entryInstruction);
+  labm8::StatusOr<int> VisitInstruction(
+      const xla::HloInstructionProto& instruction, int functionNumber,
+      int entryInstruction);
 
  private:
   // A map from computations to their entry and exit nodes.
   absl::flat_hash_map<labm8::int64, FunctionEntryExits> computations_;
   // A map of instruction IDs to their node number.
-  absl::flat_hash_map<labm8::int64, size_t> instructions_;
+  absl::flat_hash_map<labm8::int64, int> instructions_;
   // A map of instruction IDs to the data element produced by the instruction.
-  absl::flat_hash_map<labm8::int64, size_t> producers_;
+  absl::flat_hash_map<labm8::int64, int> producers_;
 };
 
 }  // namespace ml4pl

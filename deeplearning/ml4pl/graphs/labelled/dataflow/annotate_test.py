@@ -18,29 +18,19 @@ from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled.dataflow import annotate
 from deeplearning.ml4pl.graphs.labelled.dataflow import data_flow_graphs
-from deeplearning.ml4pl.testing import random_programl_generator
 from labm8.py import test
 
 FLAGS = test.FLAGS
+
+pytest_plugins = [
+  "deeplearning.ml4pl.testing.fixtures.llvm_program_graph",
+  "deeplearning.ml4pl.testing.fixtures.random_program_graph",
+]
 
 
 ###############################################################################
 # Fixtures.
 ###############################################################################
-
-
-@test.Fixture(
-  scope="session", params=list(random_programl_generator.EnumerateTestSet()),
-)
-def real_proto(request) -> programl_pb2.ProgramGraphProto:
-  """A test fixture which enumerates one of 100 "real" protos."""
-  return request.param
-
-
-@test.Fixture(scope="session")
-def one_proto() -> programl_pb2.ProgramGraphProto:
-  """A test fixture which enumerates a single real proto."""
-  return next(random_programl_generator.EnumerateTestSet())
 
 
 @test.Fixture(scope="session", params=list(programl.StdinGraphFormat))
@@ -72,34 +62,36 @@ def n(request) -> int:
 ###############################################################################
 
 
-def test_invalid_analysis(one_proto: programl_pb2.ProgramGraphProto, n: int):
+def test_invalid_analysis(
+  random_program_graph: programl_pb2.ProgramGraphProto, n: int
+):
   """Test that error is raised if the input is invalid."""
   with test.Raises(ValueError) as e_ctx:
-    annotate.Annotate("invalid_analysis", one_proto, n)
+    annotate.Annotate("invalid_analysis", random_program_graph, n)
   assert str(e_ctx.value).startswith("Unknown analysis: invalid_analysis. ")
 
 
-def test_timeout(one_proto: programl_pb2.ProgramGraphProto):
+def test_timeout(random_program_graph: programl_pb2.ProgramGraphProto):
   """Test that error is raised if the analysis times out."""
   with test.Raises(data_flow_graphs.AnalysisTimeout):
-    annotate.Annotate("test_timeout", one_proto, timeout=1)
+    annotate.Annotate("test_timeout", random_program_graph, timeout=1)
 
 
 def test_annotate(
-  analysis: str, real_proto: programl_pb2.ProgramGraphProto, n: int
+  analysis: str, llvm_program_graph: programl_pb2.ProgramGraphProto, n: int
 ):
   """Test all annotators over all real protos."""
   try:
     # Use a lower timeout for testing.
-    annotated = annotate.Annotate(analysis, real_proto, n, timeout=30)
+    annotated = annotate.Annotate(analysis, llvm_program_graph, n, timeout=30)
 
     # Check that up to 'n' annotated graphs were generated.
     assert 0 <= len(annotated.protos) <= n
 
     # Check that output graphs have the same shape as the input graphs.
     for graph in annotated.protos:
-      assert len(graph.node) == len(real_proto.node)
-      assert len(graph.edge) == len(real_proto.edge)
+      assert len(graph.node) == len(llvm_program_graph.node)
+      assert len(graph.edge) == len(llvm_program_graph.edge)
   except data_flow_graphs.AnalysisTimeout:
     # A timeout error is acceptable.
     pass

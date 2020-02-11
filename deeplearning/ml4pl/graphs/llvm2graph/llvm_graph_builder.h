@@ -31,6 +31,10 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Module.h"
 
+using labm8::Status;
+using labm8::StatusOr;
+namespace error = labm8::error;
+
 namespace ml4pl {
 
 // An <entry, exit> pair which records the node numbers of a basic block's entry
@@ -69,21 +73,21 @@ using ArgumentConsumerMap =
 // concatenating it with the type.
 //
 // See: https://lists.llvm.org/pipermail/llvm-dev/2010-April/030726.html
-string GetInstructionLhs(const llvm::Instruction& instruction);
-string GetInstructionRhs(const llvm::Instruction& instruction);
+StatusOr<string> GetInstructionLhs(const llvm::Instruction& instruction);
+StatusOr<string> GetInstructionRhs(const llvm::Instruction& instruction);
 
-// A module pass for constructing graphs.
+// A class for constructing program graphs from LLVM IR.
 class LlvmGraphBuilder : GraphBuilder {
  public:
   // Main entry point. Accepts a module as input and returns a graph as output,
   // or an error status if graph construction fails.
-  labm8::StatusOr<ProgramGraphProto> Build(const llvm::Module& module);
+  StatusOr<ProgramGraphProto> Build(const llvm::Module& module);
 
  protected:
-  labm8::StatusOr<FunctionEntryExits> VisitFunction(
-      const llvm::Function& function, const int& functionNumber);
+  StatusOr<FunctionEntryExits> VisitFunction(const llvm::Function& function,
+                                             const int& functionNumber);
 
-  labm8::StatusOr<BasicBlockEntryExit> VisitBasicBlock(
+  StatusOr<BasicBlockEntryExit> VisitBasicBlock(
       const llvm::BasicBlock& block, const int& functionNumber,
       InstructionNumberMap* instructions,
       ArgumentConsumerMap* argumentConsumers,

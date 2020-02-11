@@ -41,3 +41,14 @@ py_library(
         "//third_party/py/networkx",
     ],
 )
+
+py_library(
+    name = "random_program_graph",
+    testonly = 1,
+    srcs = ["random_program_graph.py"],
+    deps = [
+        "//deeplearning/ml4pl/graphs:programl_pb_py",
+        "//deeplearning/ml4pl/testing:random_programl_generator",
+        "//labm8/py:test",
+    ],
+)

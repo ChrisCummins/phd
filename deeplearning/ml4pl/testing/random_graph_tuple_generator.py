@@ -65,11 +65,3 @@ def CreateRandomGraphTuple(
     return graph_tuple.GraphTuple.FromGraphTuples(graph_tuples)
   else:
     return graph_tuples[0]
-
-
-def EnumerateTestSet(
-  n: Optional[int] = None,
-) -> Iterable[graph_tuple.GraphTuple]:
-  """Enumerate a test set of "real" graph tuples."""
-  for graph in random_programl_generator.EnumerateTestSet(n=n):
-    yield graph_tuple.GraphTuple.CreateFromProgramGraphProto(graph)

@@ -17,29 +17,17 @@
 from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled.dataflow.domtree import dominator_tree
-from deeplearning.ml4pl.testing import random_networkx_generator
-from deeplearning.ml4pl.testing import random_programl_generator
 from labm8.py import test
+
+pytest_plugins = [
+  "deeplearning.ml4pl.testing.fixtures.llvm_program_graph",
+]
 
 FLAGS = test.FLAGS
 
 ###############################################################################
 # Fixtures.
 ###############################################################################
-
-
-@test.Fixture(
-  scope="session", params=list(random_programl_generator.EnumerateTestSet()),
-)
-def real_proto(request) -> programl_pb2.ProgramGraphProto:
-  """A test fixture which yields one of 100 "real" graphs."""
-  return request.param
-
-
-@test.Fixture(scope="session")
-def one_real_graph() -> programl_pb2.ProgramGraphProto:
-  """A test fixture which yields one of 100 "real" graphs."""
-  return next(random_networkx_generator.EnumerateTestSet())
 
 
 @test.Fixture(scope="function")
@@ -173,9 +161,11 @@ def test_root_node_is_not_in_a_function():
   assert g.graph["data_flow_steps"] == 0
 
 
-def test_MakeAnnotated_real_protos(real_proto: programl_pb2.ProgramGraphProto,):
+def test_MakeAnnotated_llvm_program_graph(
+  llvm_program_graph: programl_pb2.ProgramGraphProto,
+):
   """Opaque black-box test of reachability annotator."""
-  annotator = dominator_tree.DominatorTreeAnnotator(real_proto)
+  annotator = dominator_tree.DominatorTreeAnnotator(llvm_program_graph)
   annotated = annotator.MakeAnnotated(10)
   assert len(annotated.graphs) <= 10
 

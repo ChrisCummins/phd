@@ -14,47 +14,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //deeplearning/ml4pl/graphs/labelled/dataflow/datadep:data_dependence."""
-from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled.dataflow import data_flow_graphs
 from deeplearning.ml4pl.graphs.labelled.dataflow.datadep import data_dependence
-from deeplearning.ml4pl.testing import random_programl_generator
+from deeplearning.ml4pl.graphs.py import graph_builder
 from labm8.py import test
+
+pytest_plugins = ["deeplearning.ml4pl.testing.fixtures.llvm_program_graph"]
 
 FLAGS = test.FLAGS
 
 
-###############################################################################
-# Fixtures.
-###############################################################################
-
-
-@test.Fixture(
-  scope="session", params=list(random_programl_generator.EnumerateTestSet()),
-)
-def real_proto(request) -> programl_pb2.ProgramGraphProto:
-  """A test fixture which yields one of 100 "real" graphs."""
-  return request.param
-
-
-###############################################################################
-# Tests.
-###############################################################################
-
-
 def test_Annotate():
-  builder = programl.GraphBuilder()
-  A = builder.AddNode(x=[-1])
-  B = builder.AddNode(x=[-1])
-  C = builder.AddNode(x=[-1])
-  D = builder.AddNode(x=[-1])
-  E = builder.AddNode(x=[-1])
+  builder = graph_builder.GraphBuilder()
+  A = builder.AddStatement("A")
+  B = builder.AddStatement("B")
+  C = builder.AddStatement("C")
+  D = builder.AddStatement("D")
+  E = builder.AddStatement("E")
 
-  builder.AddEdge(A, B)
-  builder.AddEdge(A, C)
-  builder.AddEdge(B, D)
-  builder.AddEdge(C, D)
-  builder.AddEdge(A, E)
+  builder.AddControlEdge(0, A)
+  builder.AddControlEdge(A, B)
+  builder.AddControlEdge(A, C)
+  builder.AddControlEdge(B, D)
+  builder.AddControlEdge(C, D)
+  builder.AddControlEdge(A, E)
 
   builder.AddEdge(A, B, flow=programl_pb2.Edge.DATA)
   builder.AddEdge(A, C, flow=programl_pb2.Edge.DATA)
@@ -83,9 +67,11 @@ def test_Annotate():
   assert g.nodes[E]["y"] == data_dependence.NOT_DEPENDENCY
 
 
-def test_MakeAnnotated_real_protos(real_proto: programl_pb2.ProgramGraphProto,):
+def test_MakeAnnotated_real_protos(
+  llvm_program_graph: programl_pb2.ProgramGraphProto,
+):
   """Opaque black-box test of annotator."""
-  annotator = data_dependence.DataDependencyAnnotator(real_proto)
+  annotator = data_dependence.DataDependencyAnnotator(llvm_program_graph)
   annotated = annotator.MakeAnnotated(10)
   assert len(annotated.graphs) <= 10
 

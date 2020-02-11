@@ -16,9 +16,9 @@
 """Unit tests for //deeplearning/ml4pl/graphs/llvm2graph:node_encoder."""
 import networkx as nx
 
-from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.llvm2graph import node_encoder
+from deeplearning.ml4pl.graphs.py import graph_builder
 from labm8.py import test
 
 
@@ -37,9 +37,12 @@ def test_EncodeNodes_equivalent_preprocessed_text(
   encoder: node_encoder.GraphNodeEncoder,
 ):
   """Test equivalence of nodes that pre-process to the same text."""
-  builder = programl.GraphBuilder()
-  a = builder.AddNode(text="%7 = add nsw i32 %5, -1")
-  b = builder.AddNode(text="%9 = add nsw i32 %5, -2")
+  builder = graph_builder.GraphBuilder()
+  fn = builder.AddFunction("x")
+  a = builder.AddStatement("%7 = add nsw i32 %5, -1", fn)
+  b = builder.AddStatement("%9 = add nsw i32 %5, -2", fn)
+  builder.AddControlEdge(0, a)
+  builder.AddControlEdge(a, b)
   g = builder.g
 
   encoder.EncodeNodes(g)
@@ -50,8 +53,10 @@ def test_EncodeNodes_equivalent_preprocessed_text(
 
 def test_EncodeNodes_identifier(encoder: node_encoder.GraphNodeEncoder):
   """Test the encoding of identifier nodes."""
-  builder = programl.GraphBuilder()
-  a = builder.AddNode(text="abcd", type=programl_pb2.Node.IDENTIFIER)
+  builder = graph_builder.GraphBuilder()
+  fn = builder.AddFunction("x")
+  a = builder.AddIdentifier("abcd", fn)
+  builder.AddDataEdge(0, a)
   g = builder.g
 
   encoder.EncodeNodes(g)
@@ -61,8 +66,9 @@ def test_EncodeNodes_identifier(encoder: node_encoder.GraphNodeEncoder):
 
 def test_EncodeNodes_immediate(encoder: node_encoder.GraphNodeEncoder):
   """Test the encoding of immediate nodes."""
-  builder = programl.GraphBuilder()
-  a = builder.AddNode(text="abcd", type=programl_pb2.Node.IMMEDIATE)
+  builder = graph_builder.GraphBuilder()
+  a = builder.AddImmediate("abcd")
+  builder.AddDataEdge(a, 0)
   g = builder.g
 
   encoder.EncodeNodes(g)
@@ -72,8 +78,10 @@ def test_EncodeNodes_immediate(encoder: node_encoder.GraphNodeEncoder):
 
 def test_EncodeNodes_encoded_values(encoder: node_encoder.GraphNodeEncoder):
   """Test that "x" attribute of a node matches dictionary value."""
-  builder = programl.GraphBuilder()
-  a = builder.AddNode(text="br label %4")
+  builder = graph_builder.GraphBuilder()
+  fn = builder.AddFunction("x")
+  a = builder.AddStatement("br label %4", fn)
+  builder.AddControlEdge(0, a)
   g = builder.g
 
   encoder.EncodeNodes(g)
@@ -85,9 +93,12 @@ def test_EncodeNodes_encoded_values_differ_between_statements(
   encoder: node_encoder.GraphNodeEncoder,
 ):
   """Test that "x" attribute of nodes differ between different texts."""
-  builder = programl.GraphBuilder()
-  a = builder.AddNode(text="%7 = add nsw i32 %5, -1")
-  b = builder.AddNode(text="br label %4")
+  builder = graph_builder.GraphBuilder()
+  fn = builder.AddFunction("x")
+  a = builder.AddStatement("%7 = add nsw i32 %5, -1", fn)
+  b = builder.AddStatement("br label %4", fn)
+  builder.AddControlEdge(0, a)
+  builder.AddControlEdge(a, b)
   g = builder.g
 
   encoder.EncodeNodes(g)

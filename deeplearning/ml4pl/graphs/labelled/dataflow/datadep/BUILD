@@ -33,10 +33,10 @@ py_test(
     srcs = ["data_dependence_test.py"],
     deps = [
         ":data_dependence",
-        "//deeplearning/ml4pl/graphs:programl",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//deeplearning/ml4pl/graphs/labelled/dataflow:data_flow_graphs",
-        "//deeplearning/ml4pl/testing:random_programl_generator",
+        "//deeplearning/ml4pl/graphs/py:graph_builder",
+        "//deeplearning/ml4pl/testing/fixtures:llvm_program_graph",
         "//labm8/py:test",
     ],
 )

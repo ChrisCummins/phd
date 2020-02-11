@@ -16,7 +16,8 @@
 """Benchmarks for comparing annotator performance."""
 from deeplearning.ml4pl.graphs.labelled.dataflow import annotate
 from deeplearning.ml4pl.graphs.labelled.dataflow import data_flow_graphs
-from deeplearning.ml4pl.testing import random_programl_generator
+from deeplearning.ml4pl.graphs.llvm2graph import llvm2graph
+from deeplearning.ml4pl.testing.fixtures import llvm_ir
 from labm8.py import prof
 from labm8.py import test
 
@@ -24,8 +25,10 @@ FLAGS = test.FLAGS
 
 MODULE_UNDER_TEST = None
 
-# Real programs to test over.
-PROTOS = list(random_programl_generator.EnumerateTestSet(n=20))
+PROTOS = [
+  llvm2graph.BuildProgramGraphProto(proto)
+  for proto in llvm_ir.EnumerateLlvmIrs()[:20]
+]
 
 # The annotators to test.
 ANNOTATORS = {
