@@ -106,9 +106,10 @@ def PopulateDatabaseWithRandomProgramGraphs(
   # Generate a full list of rows by randomly selecting from the graph pool.
   rows = [copy.deepcopy(random.choice(graph_pool)) for _ in range(proto_count)]
 
-  # Assign unique keys.
-  for i, row in enumerate(rows):
-    row.ir_id = i + 1
+  # Assign unique keys and checksums.
+  for i, row in enumerate(rows, start=1):
+    row.ir_id = i
+    row.data.sha1 = str(i) * 40
 
   with db.Session(commit=True) as session:
     session.add_all([copy.deepcopy(t) for t in rows])

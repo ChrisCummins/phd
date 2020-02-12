@@ -91,3 +91,34 @@ py_test(
         "//third_party/py/sqlalchemy",
     ],
 )
+
+py_library(
+    name = "unlabelled_graph_database_exporter",
+    srcs = ["unlabelled_graph_database_exporter.py"],
+    visibility = ["//deeplearning/ml4pl:__subpackages__"],
+    deps = [
+        ":unlabelled_graph_database",
+        "//deeplearning/ml4pl/graphs:programl",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:labtypes",
+        "//labm8/py:ppar",
+        "//labm8/py:progress",
+        "//third_party/py/sqlalchemy",
+    ],
+)
+
+py_test(
+    name = "unlabelled_graph_database_exporter_test",
+    srcs = ["unlabelled_graph_database_exporter_test.py"],
+    deps = [
+        ":unlabelled_graph_database",
+        ":unlabelled_graph_database_exporter",
+        "//deeplearning/ml4pl/graphs:programl",
+        "//deeplearning/ml4pl/testing:random_unlabelled_graph_database_generator",
+        "//deeplearning/ml4pl/testing:testing_databases",
+        "//labm8/py:app",
+        "//labm8/py:progress",
+        "//labm8/py:test",
+    ],
+)
