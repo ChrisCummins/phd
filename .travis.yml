@@ -8,7 +8,24 @@ install:
   - chmod -R 777 $TRAVIS_BUILD_DIR
 
 script:
-  - docker run -v$TRAVIS_BUILD_DIR:/phd chriscummins/phd_build:latest -c "./tools/flaky_bazel.sh run --config=travis //tools:whoami"
+  - >
+    docker run \
+        -u root \
+        -v$TRAVIS_BUILD_DIR:/phd \
+        -v/var/run/docker.sock:/var/run/docker.sock \
+        -v$HOME/.cache/bazel/_bazel_docker:/home/docker/.cache/bazel/_bazel_docker \
+        chriscummins/phd_build:latest \
+        -c "./tools/flaky_bazel.sh run --config=travis //tools:whoami"
+  - >
+    docker run \
+        -u root \
+        -v$TRAVIS_BUILD_DIR:/phd \
+        -v/var/run/docker.sock:/var/run/docker.sock \
+        -v$HOME/.cache/bazel/_bazel_docker:/home/docker/.cache/bazel/_bazel_docker \
+        --env COMMIT_RANGE=$TRAVIS_COMMIT_RANGE \
+        --env TEST_ARGS=--config=travis \
+        chriscummins/phd_build:latest \
+        -c "./third_party/bazel/ci.sh"
 
 notifications:
   email:

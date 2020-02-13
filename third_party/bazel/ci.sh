@@ -71,5 +71,5 @@ tests=$(bazel query \
 # Run the tests if there were results
 if [[ ! -z $tests ]]; then
   echo "Running tests"
-  bazel test $tests
+  bazel test $TEST_ARGS $tests
 fi
