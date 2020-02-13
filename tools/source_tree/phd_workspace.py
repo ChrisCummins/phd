@@ -25,7 +25,9 @@ _ALWAYS_EXPORTED_FILES = [
   "configure",  # Needed to generate config proto.
   "BUILD",  # Top-level BUILD file is always needed.
   "WORKSPACE",  # Implicit dependency of everything.
-  "README.md",
+  "README.md",  # Core documentation.
+  "INSTALL.md",  # Core documentation.
+  "CONTRIBUTING.md",  # Core documentation.
   "requirements.txt",  # Needed by WORKSPACE.
   "tools/Brewfile.travis",  # Needed by Travis CI.
   "tools/bazel",  # Optional, but useful.
