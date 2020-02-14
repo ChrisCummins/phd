@@ -22,6 +22,9 @@ A monolithic repository for (almost) everything I have done while at the Univers
 
 ##  Publications
 
+1. Chris Cummins, "**Deep Learning for Copmilers**". PhD thesis.
+   [[source code]](/docs/thesis).
+   Build command: `$ bazel build //docs/thesis`.
 1. Chris Cummins, Pavlos Petoumenos, Alastair Murray, Hugh Leather.
    "**Compiler Fuzzing through Deep Learning**".
    ISSTA '18.
@@ -181,50 +184,6 @@ A monolithic repository for (almost) everything I have done while at the Univers
    Build command: `$ bazel build //docs/2015_09_progression_review`.
 
 
-<h2>
-   Building the code
-</h2>
+## Building the code
 
-I use [Bazel](https://bazel.build) as my build system of choice, with a
-preliminary [configure](/configure) script to setup the build. I'm gradually
-working towards a completely hermetic build, but for now there remains a couple
-of dependencies on the host C++ toolchain and Python runtime.
-
-This project can only be built on a modern version of Ubuntu Linux or macOS.
-This is a requirement I inherit from my dependencies, which eschew Windows and
-other Linux distros. Fortunately, you can use a
-[Docker](https://www.docker.com/community-edition) image and follow the Ubuntu
-instructions:
-
-```sh
-$ docker run -it ubuntu:18.04 /bin/bash
-```
-
-If you have success building this project on other platforms, I'd love to hear
-about it and accept patches.
-
-#### Ubuntu/MacOS instructions
-
-Run `python3 ./tools/boostrap.py` to generate a `bootstrap.sh` script which will
-install the required dependent packages. Since installing these packages will
-affect the global state of your system, and may requires root access, inspect
-this script carefully. Once you're happy to proceed, run it using:
-
-```sh
-$ bash ./bootstrap.sh
-```
-
-Finally, we must set up the shell environment for running bazel. The file `.env`
-is created by the configure process and must be sourced for every shell we want
-to use bazel with:
-
-```sh
-$ source $PWD/.env
-```
-
-Now build or test whatever bazel targets you'd like. Use `bazel query //...` to
-list the available targets. E.g. to run the entire test suite, run:
-
-```bash
-$ bazel test //...
-```
+See [INSTALL.md](/INSTALL.md) and [CONTRIBUTING.md](/CONTRIBUTING.md).

@@ -28,7 +28,10 @@ programs it learns from.
 
 ## Getting Started
 
-Build CLgen using:
+First check out [INSTALL.md](/INSTALL.md) for instructions on getting the build
+environment set up .
+
+Then build CLgen using:
 
 ```sh
 $ bazel build -c opt //deeplearning/clgen
