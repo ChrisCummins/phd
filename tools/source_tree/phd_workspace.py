@@ -3,7 +3,6 @@ import datetime
 import glob
 import os
 import pathlib
-import re
 import shutil
 import subprocess
 import typing
@@ -123,76 +122,6 @@ class PhdWorkspace(bazelutil.Workspace):
 
     return list(sorted(filtered_files))
 
-  def GetPythonRequirementsForTarget(
-    self, targets: typing.List[str]
-  ) -> typing.List[str]:
-    """Get the subset of requirements.txt which is needed for a target."""
-    # The set of bazel dependencies for all targets.
-    dependencies = set()
-    for target in targets:
-      bazel = self.BazelQuery([f"deps({target})"], stdout=subprocess.PIPE)
-      grep = subprocess.Popen(
-        ["grep", "^@pypi__"],
-        stdout=subprocess.PIPE,
-        stdin=bazel.stdout,
-        universal_newlines=True,
-      )
-      stdout, _ = grep.communicate()
-      if bazel.returncode:
-        raise OSError("bazel query failed")
-      output = stdout.rstrip()
-      if output:
-        dependencies = dependencies.union(set(output.split("\n")))
-
-    with open(self.workspace_root / "requirements.txt") as f:
-      all_requirements = set(f.readlines())
-
-    needed = []
-    all_dependencies = set()
-    # This is a pretty hacky approach that tries to match the package component
-    # of the generated @pypi__<package>_<vesion> package to the name as it
-    # appears in requirements.txt.
-    for dependency in dependencies:
-      if not dependency.startswith("@pypi__"):
-        continue
-      dependency = dependency[len("@pypi__") :].lower().split("//:")[0]
-      all_dependencies.add(dependency)
-
-    def _GetMatchingRequirements(dependency: str, all_requirements):
-      requirements = []
-      for requirement in all_requirements:
-        requirement_to_match = requirement.replace("-", "_").lower().rstrip()
-        requirement_to_match = requirement_to_match.split("==")[0]
-        requirement_to_match = re.sub(r"#.*", "", requirement_to_match)
-        if not requirement_to_match:
-          continue
-        if dependency.startswith(requirement_to_match):
-          requirements.append(requirement.rstrip())
-      return requirements
-
-    for dependency in all_dependencies:
-      requirements = _GetMatchingRequirements(dependency, all_requirements)
-      if not requirements:
-        continue
-      needed += requirements
-      # Total hack workaround for the fact that
-      # //third_party/py/scipy:BUILD pulls in multiple packages.
-      for requirement in requirements:
-        if requirement.startswith("scipy"):
-          needed += _GetMatchingRequirements("scikit", all_requirements)
-
-    return list(sorted(set(needed)))
-
-  def CreatePythonRequirementsFileForTargets(
-    self, workspace: bazelutil.Workspace, targets: typing.List[str]
-  ) -> None:
-    # Export the subset of python requirements that are needed.
-    print("requirements.txt")
-    requirements = self.GetPythonRequirementsForTarget(targets)
-    requirements_path = workspace.workspace_root / "requirements.txt"
-    with open(requirements_path, "w") as f:
-      print("\n".join(requirements), file=f)
-
   def CopyFilesToDestination(
     self, workspace: bazelutil.Workspace, files: typing.List[str]
   ) -> None:
@@ -269,7 +198,6 @@ class PhdWorkspace(bazelutil.Workspace):
     exported_workspace = bazelutil.Workspace(
       pathlib.Path(repo.working_tree_dir)
     )
-    self.CreatePythonRequirementsFileForTargets(exported_workspace, targets)
     self.CopyFilesToDestination(exported_workspace, extra_files)
     self.MoveFilesToDestination(exported_workspace, file_move_mapping)
 
