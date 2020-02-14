@@ -33,7 +33,7 @@ FLAGS = app.FLAGS
 
 app.DEFINE_integer(
   "zero_r_batch_size",
-  1000000,
+  100000,
   "The number of graphs to process in a single batch.",
 )
 
