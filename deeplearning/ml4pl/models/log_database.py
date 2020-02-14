@@ -606,7 +606,9 @@ class Database(sqlutil.Database):
         raise ValueError(f"Run not found: {run_id}")
 
       pdutil.RewriteColumn(df, "type", lambda x: ParameterType(x).name.lower())
-      pdutil.RewriteColumn(df, "value", lambda x: pickle.loads(x))
+      pdutil.RewriteColumn(
+        df, "value", lambda x: pickle.loads(x), rewrite_error="[decode error]"
+      )
       return df
 
   def GetBestResults(
@@ -1185,7 +1187,9 @@ class Database(sqlutil.Database):
 
       df = pdutil.QueryToDataFrame(session, query)
       pdutil.RewriteColumn(df, "type", lambda x: ParameterType(x).name.lower())
-      pdutil.RewriteColumn(df, "value", lambda x: pickle.loads(x))
+      pdutil.RewriteColumn(
+        df, "value", lambda x: pickle.loads(x), rewrite_error="[decode error]"
+      )
       yield "parameters", df
 
       #########################################################################
