@@ -49,6 +49,13 @@ app.DEFINE_boolean(
   "{train,val,test} epoch boundaries. This is disabled by default as the "
   "performance and memory overhead may be large for big datasets.",
 )
+app.DEFINE_integer(
+  "max_data_flow_steps",
+  0,
+  "If set to a positive value, limit the size of dataflow-annotated graphs "
+  "used to only those with data_flow_steps <= --max_data_flow_steps. "
+  "This has no effect for graph databases with no dataflow annotations.",
+)
 
 
 class ClassifierBase(object):
@@ -336,6 +343,15 @@ class ClassifierBase(object):
       A buffered graph reader instance.
     """
     del epoch_type
+
+    filters = filters or []
+
+    # Optionally limit graphs to data_flow_steps <= --max_data_flow_steps.
+    if FLAGS.max_data_flow_steps and self.graph_db.has_data_flow:
+      filters.append(
+        lambda: graph_tuple_database.GraphTuple.data_flow_steps
+        <= FLAGS.max_data_flow_steps
+      )
 
     return graph_database_reader.BufferedGraphReader.CreateFromFlags(
       graph_db=graph_db,
