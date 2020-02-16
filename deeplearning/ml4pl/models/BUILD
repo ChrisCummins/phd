@@ -39,6 +39,27 @@ py_library(
     ],
 )
 
+py_binary(
+    name = "batch_details_exporter",
+    srcs = ["batch_details_exporter.py"],
+    visibility = ["//deeplearning/ml4pl/cmd:__subpackages__"],
+    deps = [
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple",
+        "//deeplearning/ml4pl/models:checkpoints",
+        "//deeplearning/ml4pl/models:epoch",
+        "//deeplearning/ml4pl/models:log_analysis",
+        "//deeplearning/ml4pl/models:log_database",
+        "//deeplearning/ml4pl/models:logger",
+        "//labm8/py:fs",
+        "//labm8/py:jsonutil",
+        "//labm8/py:labtypes",
+        "//labm8/py:ppar",
+        "//labm8/py:progress",
+        "//third_party/py/numpy",
+        "//third_party/py/sqlalchemy",
+    ],
+)
+
 py_test(
     name = "batch_test",
     srcs = ["batch_test.py"],
@@ -67,6 +88,7 @@ py_library(
 py_library(
     name = "checkpoints",
     srcs = ["checkpoints.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":epoch",
         "//deeplearning/ml4pl:run_id",
@@ -139,7 +161,7 @@ py_binary(
 py_library(
     name = "epoch",
     srcs = ["epoch.py"],
-    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":batch",
         "//labm8/py:app",
@@ -245,7 +267,7 @@ py_test(
 py_library(
     name = "logger",
     srcs = ["logger.py"],
-    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":batch",
         ":checkpoints",
