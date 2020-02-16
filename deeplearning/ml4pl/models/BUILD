@@ -160,6 +160,7 @@ py_binary(
         "//labm8/py:google_sheets",
         "//labm8/py:pdutil",
         "//third_party/py/pandas",
+        "//third_party/py/torch",
     ],
 )
 

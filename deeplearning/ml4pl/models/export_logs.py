@@ -45,6 +45,7 @@ import pathlib
 from typing import List
 
 import pandas as pd
+import torch
 
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models import schedules
@@ -60,7 +61,7 @@ from labm8.py import prof
 # from this project. List those classes / modules here to make the dependency
 # explicit.
 
-_unused_imports_ = (log_database, schedules, Ir2SeqType, ggnn_config)
+_unused_imports_ = (log_database, schedules, Ir2SeqType, ggnn_config, torch)
 del _unused_imports_
 
 
