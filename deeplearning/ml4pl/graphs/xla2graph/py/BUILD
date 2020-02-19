@@ -20,7 +20,6 @@ load(
     "//third_party/pybind11_bazel:build_defs.bzl",
     "pybind_extension",
 )
-load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
 pybind_extension(
     "xla2graph_pybind",
