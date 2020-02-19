@@ -24,7 +24,7 @@
 namespace py = pybind11;
 
 PYBIND11_MODULE(xla2graph_pybind, m) {
-  m.doc() = "pybind11 example plugin";
+  m.doc() = "Generate program graphs from XLA HLO modules.";
 
   m.def("BuildProgramGraphProto",
         [&](const string& serializedProto) {
