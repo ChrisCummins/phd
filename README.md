@@ -22,7 +22,7 @@ A monolithic repository for (almost) everything I have done while at the Univers
 
 ##  Publications
 
-1. Chris Cummins, "**Deep Learning for Copmilers**". PhD thesis.
+1. Chris Cummins, "**Deep Learning for Compilers**". PhD thesis.
    [[source code]](/docs/thesis).
    Build command: `$ bazel build //docs/thesis`.
 1. Chris Cummins, Pavlos Petoumenos, Alastair Murray, Hugh Leather.
