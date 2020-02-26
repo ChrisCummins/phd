@@ -2,8 +2,6 @@
 import pathlib
 import tempfile
 
-import pytest
-
 from deeplearning.ncc.inst2vec import inst2vec_preprocess
 from labm8.py import app
 from labm8.py import test
@@ -103,6 +101,61 @@ def test_CreateContextualFlowGraphsFromBytecodes_files(data_folder: str):
   ).is_file()
   assert (d / "BLAS-3.8.0/blas_preprocessed/xfg/fast_dcabs1.txt").is_file()
   assert (d / "BLAS-3.8.0/blas_preprocessed/xfg_dual/fast_dcabs1.p").is_file()
+
+
+def test_GetStructTypes_no_structs():
+  """Test an IR with no struct definitions."""
+  ir = """
+define i32 @main(i32, i8**) #0 {
+  %3 = alloca i32, align 4
+  %4 = alloca i32, align 4
+  %5 = alloca i8**, align 8
+  store i32 0, i32* %3, align 4
+  store i32 %0, i32* %4, align 4
+  store i8** %1, i8*** %5, align 8
+  ret i32 0
+}
+"""
+  structs = inst2vec_preprocess.GetStructTypes(ir)
+  assert structs == {}
+
+
+def test_GetStructTypes_one_struct():
+  """Test extraction of a single struct definition."""
+  ir = """
+%struct.foo = type { i32, i8* }
+
+define i32 @A(%struct.foo*) #0 {
+  %2 = alloca %struct.foo*, align 8
+  store %struct.foo* %0, %struct.foo** %2, align 8
+  %3 = load %struct.foo*, %struct.foo** %2, align 8
+  %4 = getelementptr inbounds %struct.foo, %struct.foo* %3, i32 0, i32 0
+  %5 = load i32, i32* %4, align 8
+  ret i32 %5
+}
+"""
+  structs = inst2vec_preprocess.GetStructTypes(ir)
+  assert structs == {"%struct.foo": "{ i32, i8* }"}
+
+
+def test_GetStructTypes_nested_structs():
+  """Test extraction of a nested struct definition."""
+  ir = """
+%struct.bar = type { %struct.foo* }
+%struct.foo = type { i32 }
+
+; Function Attrs: noinline nounwind optnone uwtable
+define void @Foo(%struct.bar*) #0 {
+  %2 = alloca %struct.bar*, align 8
+  store %struct.bar* %0, %struct.bar** %2, align 8
+  ret void
+}
+"""
+  structs = inst2vec_preprocess.GetStructTypes(ir)
+  assert structs == {
+    "%struct.bar": "{ { i32 }* }",
+    "%struct.foo": "{ i32 }",
+  }
 
 
 if __name__ == "__main__":
