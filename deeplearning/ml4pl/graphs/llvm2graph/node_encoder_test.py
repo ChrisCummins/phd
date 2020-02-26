@@ -95,6 +95,97 @@ def test_EncodeNodes_encoded_values_differ_between_statements(
   assert g.nodes[a]["x"][0] != g.nodes[b]["x"][0]
 
 
+def test_EncodeNodes_inlined_struct(encoder: node_encoder.GraphNodeEncoder):
+  """Test that struct definition is inlined in pre-processed text.
+
+  NOTE(github.com/ChrisCummins/ProGraML/issues/57): Regression test.
+  """
+  ir = """
+%struct.foo = type { i32, i8* }
+
+define i32 @A(%struct.foo*) #0 {
+  %2 = alloca %struct.foo*, align 8
+  store %struct.foo* %0, %struct.foo** %2, align 8
+  %3 = load %struct.foo*, %struct.foo** %2, align 8
+  %4 = getelementptr inbounds %struct.foo, %struct.foo* %3, i32 0, i32 0
+  %5 = load i32, i32* %4, align 8
+  ret i32 %5
+}
+"""
+  builder = programl.GraphBuilder()
+  a = builder.AddNode(text="%2 = alloca %struct.foo*, align 8")
+  g = builder.g
+
+  encoder.EncodeNodes(g, ir=ir)
+
+  assert (
+    g.nodes[a]["preprocessed_text"] == "<%ID> = alloca { i32, i8* }*, align 8"
+  )
+
+
+def test_EncodeNodes_inlined_nested_struct(
+  encoder: node_encoder.GraphNodeEncoder,
+):
+  """Test that nested struct definitions are inlined in pre-processed text.
+
+  NOTE(github.com/ChrisCummins/ProGraML/issues/57): Regression test.
+  """
+  ir = """
+%struct.bar = type { %struct.foo* }
+%struct.foo = type { i32 }
+
+; Function Attrs: noinline nounwind optnone uwtable
+define i32 @Foo(%struct.bar*) #0 {
+  %2 = alloca %struct.bar*, align 8
+  store %struct.bar* %0, %struct.bar** %2, align 8
+  %3 = load %struct.bar*, %struct.bar** %2, align 8
+  %4 = getelementptr inbounds %struct.bar, %struct.bar* %3, i32 0, i32 0
+  %5 = load %struct.foo*, %struct.foo** %4, align 8
+  %6 = getelementptr inbounds %struct.foo, %struct.foo* %5, i32 0, i32 0
+  %7 = load i32, i32* %6, align 4
+  ret i32 %7
+}
+"""
+  builder = programl.GraphBuilder()
+  a = builder.AddNode(text="%2 = alloca %struct.bar*, align 8")
+  b = builder.AddNode(text="store %struct.bar* %0, %struct.bar** %2, align 8")
+  c = builder.AddNode(text="%3 = load %struct.bar*, %struct.bar** %2, align 8")
+  d = builder.AddNode(
+    text="%4 = getelementptr inbounds %struct.bar, %struct.bar* %3, i32 0, i32 0"
+  )
+  e = builder.AddNode(text="%5 = load %struct.foo*, %struct.foo** %4, align 8")
+  f = builder.AddNode(
+    text="%6 = getelementptr inbounds %struct.foo, %struct.foo* %5, i32 0, i32 0"
+  )
+  g = builder.g
+
+  encoder.EncodeNodes(g, ir=ir)
+
+  assert (
+    g.nodes[a]["preprocessed_text"] == "<%ID> = alloca { { i32 }* }*, align 8"
+  )
+  assert (
+    g.nodes[b]["preprocessed_text"]
+    == "store { { i32 }* }* <%ID>, { { i32 }* }** <%ID>, align 8"
+  )
+  assert (
+    g.nodes[c]["preprocessed_text"]
+    == "<%ID> = load { { i32 }* }*, { { i32 }* }** <%ID>, align 8"
+  )
+  assert (
+    g.nodes[d]["preprocessed_text"]
+    == "<%ID> = getelementptr inbounds { { i32 }* }, { { i32 }* }* <%ID>, i32 <INT>, i32 <INT>"
+  )
+  assert (
+    g.nodes[e]["preprocessed_text"]
+    == "<%ID> = load { i32 }*, { i32 }** <%ID>, align 8"
+  )
+  assert (
+    g.nodes[f]["preprocessed_text"]
+    == "<%ID> = getelementptr inbounds { i32 }, { i32 }* <%ID>, i32 <INT>, i32 <INT>"
+  )
+
+
 def test_EncodeNodes_llvm_program_graph(llvm_program_graph_nx: nx.MultiDiGraph):
   """Black-box test encoding LLVM program graphs."""
   encoder = node_encoder.GraphNodeEncoder()
