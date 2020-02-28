@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Test graph builder on IRs that were found to exposure bugs."""
+from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs.llvm2graph import llvm2graph
 from labm8.py import bazelutil
 from labm8.py import fs
@@ -56,6 +57,32 @@ def test_560():
 def test_400531():
   """Graph has no exit blocks."""
   llvm2graph.BuildProgramGraphNetworkX(fs.Read(REGRESSION_TESTS / "400531.ll"))
+
+
+def test_profiled_ep_A():
+  """Graph with profiling information."""
+  proto_in = llvm2graph.BuildProgramGraphProto(
+    fs.Read(REGRESSION_TESTS / "profiled_ep.A.ll")
+  )
+  # Check that profiling data has been lifted.
+  assert any(f.HasField("llvm_entry_count") for f in proto_in.function)
+  assert any(n.HasField("llvm_profile_true_weight") for n in proto_in.node)
+  assert any(n.HasField("llvm_profile_false_weight") for n in proto_in.node)
+  assert any(n.HasField("llvm_profile_total_weight") for n in proto_in.node)
+
+  # Check that profiling data is preserved after conversion to networkx.
+  g = programl.ProgramGraphToNetworkX(proto_in)
+  assert g.graph["llvm_function_entry_count"]
+  assert any("llvm_profile_true_weight" in d for _, d in g.nodes(data=True))
+  assert any("llvm_profile_false_weight" in d for _, d in g.nodes(data=True))
+  assert any("llvm_profile_total_weight" in d for _, d in g.nodes(data=True))
+
+  # Check that profiling data is preserved after conversion back to proto.
+  proto_out = programl.NetworkXToProgramGraph(g)
+  assert any(f.HasField("llvm_entry_count") for f in proto_out.function)
+  assert any(n.HasField("llvm_profile_true_weight") for n in proto_out.node)
+  assert any(n.HasField("llvm_profile_false_weight") for n in proto_out.node)
+  assert any(n.HasField("llvm_profile_total_weight") for n in proto_out.node)
 
 
 if __name__ == "__main__":
