@@ -110,6 +110,32 @@ def test_proto_networkx_equivalence_with_preallocated_proto(
   assert len(llvm_program_graph.edge) == len(proto_out.edge)
 
 
+@test.Parametrize("fmt", list(programl.StdoutGraphFormat))
+def test_StdoutGraphFormatToFileExtension_smoke_test(
+  fmt: programl.StdoutGraphFormat,
+):
+  assert programl.StdoutGraphFormatToFileExtension(fmt)
+
+
+def test_StdoutGraphFormatToFileExtension():
+  assert (
+    programl.StdoutGraphFormatToFileExtension(programl.StdoutGraphFormat.PB)
+    == ".pb"
+  )
+  assert (
+    programl.StdoutGraphFormatToFileExtension(programl.StdoutGraphFormat.PBTXT)
+    == ".pbtxt"
+  )
+  assert (
+    programl.StdoutGraphFormatToFileExtension(programl.StdoutGraphFormat.NX)
+    == ".nx.pickle"
+  )
+  assert (
+    programl.StdoutGraphFormatToFileExtension(programl.StdoutGraphFormat.DOT)
+    == ".dot"
+  )
+
+
 ###############################################################################
 # Fuzzers.
 ###############################################################################
