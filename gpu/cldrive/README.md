@@ -13,12 +13,33 @@
   <img src="https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg?style=flat">
 </a>
 
+[cldrive](https://github.com/ChrisCummins/cldrive) is a tool for running
+arbitrary OpenCL kernels to record their runtimes and outputs. It reads OpenCL
+kernels from an input file, and for each, generates random inputs
+(parameterized by a given size), runs the kernel and records its execution time
+and outputs. It was developed as part of my work on
+[Deep Learning benchmark synthesis](https://github.com/ChrisCummins/clgen), and
+has been used in the following publications:
 
-## Prerequisites
+1. Cummins, C., Petoumenos, P., Zang, W., & Leather, H. (2017). Synthesizing
+   Benchmarks for Predictive Modeling. CGO. IEEE.
+1. Cummins, C., Petoumenos, P., Wang, Z., & Leather, H. (2017). End-to-end
+   Deep Learning of Optimization Heuristics. PACT. IEEE.
+1. Ben-Nun, T., Jakobovits, A. S., & Hoefler, T. (2018). Neural Code
+   Comprehension: A Learnable Representation of Code Semantics. NeurIPS.
+1. Cummins, C., Petoumenos, P., Murray, A., & Leather, H. (2018). Compiler
+   Fuzzing through Deep Learning. ISSTA.
+1. Goens, A., Brauckmann, A., Ertel, S., Cummins, C., Leather, H., &
+   Castrillon, J. (2019). A Case Study on Machine Learning for Synthesizing
+   Benchmarks. MAPL.
+1. Cummins, C. (2020). Deep Learning for Compilers. University of Edinburgh.
 
-Install [Bazel](https://docs.bazel.build/versions/master/install.html).
+## Build
 
-Build using:
+See [INSTALL.md](/INSTALL.md) for instructions on setting up the build
+environment.
+
+Then build cldrive using:
 
 ```sh
 $ bazel build -c opt //gpu/cldrive
