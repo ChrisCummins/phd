@@ -1,5 +1,9 @@
 # cldrive - Run arbitrary OpenCL kernels
 
+<!-- Travis CI -->
+<a href="https://travis-ci.org/ChrisCummins/cldrive">
+  <img src="https://img.shields.io/travis/ChrisCummins/cldrive/master.svg">
+</a>
 <!-- Better code -->
 <a href="https://bettercodehub.com/results/ChrisCummins/cldrive">
   <img src="https://bettercodehub.com/edge/badge/ChrisCummins/cldrive?branch=master">
