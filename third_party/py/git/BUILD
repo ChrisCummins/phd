@@ -15,7 +15,6 @@ py_library(
     srcs = ["//third_party/py:empty.py"],
     deps = [
         requirement("GitPython"),
-        requirement("gitdb2"),
-        requirement("smmap2"),
+        "//third_party/py/gitdb",
     ],
 )
