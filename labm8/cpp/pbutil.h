@@ -3,10 +3,34 @@
 
 #include "labm8/cpp/logging.h"
 
+#include "google/protobuf/io/zero_copy_stream_impl.h"
+#include "google/protobuf/text_format.h"
+
+#include <fstream>
 #include <functional>
 #include <iostream>
 
+namespace labm8 {
 namespace pbutil {
+
+// Write a protocol message to file in text format.
+template <typename Message>
+void TextFormatProtoToFile(const string &path, const Message &proto) {
+  std::ofstream out(path);
+  out << proto.DebugString();
+}
+
+// Read a text format protocol message from stdin. If parsing fails, terminate.
+template <typename Message>
+Message ReadTextFormatProtoFromStdinOrDie() {
+  google::protobuf::io::IstreamInputStream istream(&std::cin);
+  Message message;
+  if (!google::protobuf::TextFormat::Parse(&istream, &message)) {
+    std::cerr << "fatal: failed to parse stdin";
+    exit(3);
+  }
+  return message;
+}
 
 // Run a process_function callback that accepts a proto message and mutates
 // it in place. The proto message is decoded from the given istream, and
@@ -51,21 +75,22 @@ void ProcessMessage(
 }
 
 }  // namespace pbutil
+}  // namespace labm8
 
 // A convenience macro to run an in-place process_function as the main()
 // function of a program.
-#define PBUTIL_INPLACE_PROCESS_MAIN(process_function, message_type) \
-  int main() {                                                      \
-    pbutil::ProcessMessageInPlace<message_type>(process_function);  \
-    return 0;                                                       \
+#define PBUTIL_INPLACE_PROCESS_MAIN(process_function, message_type)       \
+  int main() {                                                            \
+    labm8::pbutil::ProcessMessageInPlace<message_type>(process_function); \
+    return 0;                                                             \
   }
 
 // A convenience macro to run an process_function as the main() function of a
 // program.
-#define PBUTIL_PROCESS_MAIN(process_function, input_message_type,    \
-                            output_message_type)                     \
-  int main() {                                                       \
-    pbutil::ProcessMessage<input_message_type, output_message_type>( \
-        process_function);                                           \
-    return 0;                                                        \
+#define PBUTIL_PROCESS_MAIN(process_function, input_message_type,           \
+                            output_message_type)                            \
+  int main() {                                                              \
+    labm8::pbutil::ProcessMessage<input_message_type, output_message_type>( \
+        process_function);                                                  \
+    return 0;                                                               \
   }

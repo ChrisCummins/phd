@@ -5,10 +5,7 @@
 
 #include <sstream>
 
-void AddXandYInPlaceCallback(AddXandY *message) {
-  message->set_result(message->x() + message->y());
-}
-
+namespace labm8 {
 namespace pbutil {
 
 TEST(ProcessMessageInPlace, SetAField) {
@@ -109,5 +106,6 @@ void BM_ProcessMessage(benchmark::State &state) {
 BENCHMARK(BM_ProcessMessage);
 
 }  // namespace pbutil
+}  // namespace labm8
 
 TEST_MAIN();
