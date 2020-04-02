@@ -18,6 +18,7 @@ py_library(
     name = "access_token",
     testonly = 1,
     srcs = ["access_token.py"],
+    visibility = ["//visibility:public"],
     deps = [
         "//datasets/github:api",
         "//labm8/py:fs",
