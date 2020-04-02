@@ -17,6 +17,18 @@
 # limitations under the License.
 
 py_binary(
+    name = "dump_detailed_batch_logs",
+    srcs = ["dump_detailed_batch_logs.py"],
+    deps = [
+        "//deeplearning/ml4pl/models:batch_details_exporter",
+        "//deeplearning/ml4pl/models:checkpoints",
+        "//deeplearning/ml4pl/models:epoch",
+        "//labm8/py:app",
+        "//labm8/py:progress",
+    ],
+)
+
+py_binary(
     name = "dump_unlabelled_graph_db",
     srcs = ["dump_unlabelled_graph_db.py"],
     deps = [
