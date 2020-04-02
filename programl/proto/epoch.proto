@@ -1,0 +1,55 @@
+// Protocol message to describe model epochs.
+//
+// Copyright 2019-2020 the ProGraML authors.
+//
+// Contact Chris Cummins <chrisc.101@gmail.com>.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package programl;
+
+option go_package = "programlpb";
+option java_multiple_files = true;
+option java_outer_classname = "EpochProto";
+option java_package = "com.programl";
+
+enum EpochType {
+  TRAIN = 0;
+  VAL = 1;
+  TEST = 2;
+}
+
+message EpochResults {
+  int64 graph_count = 1;
+  int64 batch_count = 2;
+  int64 target_count = 3;
+  float mean_iteration_count = 4;
+  float mean_model_converged = 5;
+  float mean_learning_rate = 6;
+  float mean_loss = 7;
+  float mean_accuracy = 8;
+  float mean_precision = 9;
+  float mean_recall = 10;
+  float mean_f1 = 11;
+  float walltime_seconds = 12;
+}
+
+message Epoch {
+  int32 epoch_num = 1;
+  float walltime_seconds = 5;
+  EpochResults train_results = 2;
+  EpochResults val_results = 3;
+  EpochResults test_results = 4;
+}

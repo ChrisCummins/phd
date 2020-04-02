@@ -1,0 +1,11 @@
+# Configuration for Better Code analysis.
+# See https://bettercodehub.com/docs/configuration-manual
+exclude:
+  - /compilers/.*
+  - /datasets/.*
+  - /deeplearning/.*
+  - /labm8/.*
+  - /third_party/.*
+  - /tools/.*
+# Set component depth to match //programl/<component> structure.
+component_depth: 2

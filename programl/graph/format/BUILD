@@ -1,0 +1,58 @@
+# This package contains libraries for converting program graph formats.
+#
+# Copyright 2019-2020 the ProGraML authors.
+#
+# Contact Chris Cummins <chrisc.101@gmail.com>.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+cc_library(
+    name = "graphviz_converter",
+    srcs = ["graphviz_converter.cc"],
+    hdrs = ["graphviz_converter.h"],
+    visibility = ["//programl:__subpackages__"],
+    deps = [
+        "//labm8/cpp:status",
+        "//labm8/cpp:string",
+        "//programl/proto:program_graph_cc",
+        "@boost//:graph",
+        "@com_google_absl//absl/container:flat_hash_map",
+    ],
+)
+
+cc_library(
+    name = "node_link_graph",
+    srcs = ["node_link_graph.cc"],
+    hdrs = ["node_link_graph.h"],
+    visibility = ["//programl:__subpackages__"],
+    deps = [
+        "//labm8/cpp:logging",
+        "//labm8/cpp:status",
+        "//labm8/cpp:status_macros",
+        "//programl/proto:program_graph_cc",
+        "@nlohmann_json//:json",
+    ],
+)
+
+cc_test(
+    name = "node_link_graph_test",
+    srcs = ["node_link_graph_test.cc"],
+    deps = [
+        ":node_link_graph",
+        "//labm8/cpp:status",
+        "//labm8/cpp:string",
+        "//labm8/cpp:test",
+        "//programl/proto:program_graph_cc",
+        "@nlohmann_json//:json",
+    ],
+)
