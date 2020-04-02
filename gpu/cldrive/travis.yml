@@ -1,1 +1,32 @@
-# TODO
+# Run //gpu/cldrive/... test suite using phd_build docker image.
+language: generic
+
+services:
+  - docker
+
+install:
+  - docker pull chriscummins/phd_build:latest
+  - chmod -R 777 $TRAVIS_BUILD_DIR
+
+script:
+  - >
+    docker run \
+        -u root \
+        -v$TRAVIS_BUILD_DIR:/phd \
+        -v/var/run/docker.sock:/var/run/docker.sock \
+        -v$HOME/.cache/bazel/_bazel_docker:/home/docker/.cache/bazel/_bazel_docker \
+        chriscummins/phd_build:latest \
+        -c "./tools/flaky_bazel.sh run --config=travis //tools:whoami"
+  - >
+    docker run \
+        -u root \
+        -v$TRAVIS_BUILD_DIR:/phd \
+        -v/var/run/docker.sock:/var/run/docker.sock \
+        -v$HOME/.cache/bazel/_bazel_docker:/home/docker/.cache/bazel/_bazel_docker \
+        chriscummins/phd_build:latest \
+        -c "./tools/flaky_bazel.sh test //gpu/cldrive/..."
+
+notifications:
+  email:
+    on_success: never
+    on_failure: change

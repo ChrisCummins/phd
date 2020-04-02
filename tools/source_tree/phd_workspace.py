@@ -21,20 +21,22 @@ FLAGS = app.FLAGS
 # patterns are expanded.
 _ALWAYS_EXPORTED_FILES = [
   ".bazelrc",  # Not strictly required, but provides consistency.
-  "configure",  # Needed to generate config proto.
   "BUILD",  # Top-level BUILD file is always needed.
-  "WORKSPACE",  # Implicit dependency of everything.
-  "README.md",  # Core documentation.
-  "INSTALL.md",  # Core documentation.
+  "configure",  # Needed to generate config proto.
   "CONTRIBUTING.md",  # Core documentation.
+  "INSTALL.md",  # Core documentation.
+  "README.md",  # Core documentation.
   "requirements.txt",  # Needed by WORKSPACE.
-  "tools/Brewfile.travis",  # Needed by Travis CI.
-  "tools/bazel",  # Optional, but useful.
-  "tools/bzl/*",  # Implicit dependency of WORKSPACE file.
-  "third_party/bazel/*",  # Needed by WORKSPACE.
   "third_party/*.BUILD",  # Implicit dependencies of WORKSPACE file.
+  "third_party/bazel/*",  # Needed by WORKSPACE.
+  "third_party/py/*.bzl",  # Implicit dependencies of WORKSPACE file.
+  "third_party/py/*.tpl",  # Implicit dependencies of WORKSPACE file.
+  "tools/bazel",  # Optional, but useful.
+  "tools/Brewfile.travis",  # Needed by Travis CI.
+  "tools/bzl/*",  # Implicit dependency of WORKSPACE file.
   "tools/flaky_bazel.sh",  # Needed by Travis CI.
   "tools/workspace_status.sh",  # Needed by .bazelrc
+  "WORKSPACE",  # Implicit dependency of everything.
 ]
 
 # A list of relative paths to files which are excluded from export. Glob
