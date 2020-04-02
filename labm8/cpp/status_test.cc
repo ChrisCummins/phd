@@ -134,6 +134,13 @@ TEST(Status, EqualsDifferentMessage) {
   ASSERT_NE(a, b);
 }
 
+TEST(Status, FormatString) {
+  const labm8::Status a =
+      labm8::Status(labm8::error::INVALID_ARGUMENT, "a = {}", 5);
+  ASSERT_EQ(a.error_message(), "a = 5");
+  ASSERT_EQ(a.error_code(), labm8::error::INVALID_ARGUMENT);
+}
+
 }  // namespace
 }  // namespace labm8
 
