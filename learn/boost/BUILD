@@ -5,9 +5,9 @@ cc_binary(
     srcs = ["fs.cc"],
     linkopts = [
         "-lpthread",
-        "-lcrypto",
     ],
     deps = [
+        "//third_party/openssl",
         "@boost//:filesystem",
         "@boost//:format",
     ],

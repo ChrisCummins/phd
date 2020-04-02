@@ -12,7 +12,7 @@
   },
   "description": "My PhD.",
   "devDependencies": {
-    "husky": "^0.14.3"
+    "@bazel/ibazel": "^0.12.3"
   },
   "homepage": "https://github.com/ChrisCummins/phd",
   "license": "UNLICENSED",
@@ -20,11 +20,5 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/ChrisCummins/phd.git"
-  },
-  "scripts": {
-    "postcommit": "./tools/git/post-commit.sh",
-    "postrebase": "./tools/git/post-rebase.sh",
-    "precommit": "./tools/git/pre-commit.sh",
-    "prepush": "./tools/git/pre-push.sh"
   }
 }

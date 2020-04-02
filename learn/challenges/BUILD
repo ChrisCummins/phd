@@ -174,7 +174,15 @@ cc_test(
     name = "031_matrix_diagonal",
     srcs = ["031_matrix_diagonal.cc"],
     copts = ["-fopenmp"],
-    linkopts = ["-fopenmp"],
+    # macOS: Requires libomp Homebrew package.
+    linkopts = [
+        "-fopenmp",
+    ] + select({
+        "//:darwin": [
+            "-L/usr/local/Cellar/libomp/10.0.0/lib",
+        ],
+        "//conditions:default": [],
+    }),
     deps = [
         "//labm8/cpp:test",
     ],

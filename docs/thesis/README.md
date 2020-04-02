@@ -6,4 +6,10 @@ Compile the PDF using:
 $ bazel build //docs/thesis
 ```
 
-Requires `bazel`, `pdflatex`, `biber` and `Pygments`.
+Requires `bazel`, `pdflatex`, `biber` and `Pygments`. On macOS:
+
+```sh
+$ brew install bazel
+$ brew cask install mactex
+$ python -m pip install -U Pygments
+```

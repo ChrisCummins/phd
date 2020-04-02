@@ -10,7 +10,7 @@ cc_library(
     hdrs = ["d181211_matrix_multiplication.h"],
     deps = [
         "//labm8/cpp:logging",
-        "@boost//:numeric",
+        "@boost//:numeric_ublas",
         "@boost//:serialization",
         "@boost//:thread",
     ],
@@ -32,7 +32,6 @@ cc_library(
     deps = [
         "//labm8/cpp:logging",
         "@boost//:graph",
-        "@boost//:numeric",
         "@com_google_absl//absl/container:flat_hash_map",
     ],
 )
