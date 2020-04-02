@@ -10,8 +10,8 @@
 set -eu
 export max_attempts=5
 export returncode=1
-for _ in $(seq $max_attempts); do bazel $@ && {
+for i in $(seq $max_attempts); do bazel $@ && {
   returncode=0
   break
-} || echo "> returncode: $?"; done
+} || echo "> flaky bazel attempt $i of $max_attempts, returncode: $?"; done
 exit $returncode
