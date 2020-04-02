@@ -32,27 +32,3 @@ samyang_8mm_set_exif() {
 }
 
 ###############################################################################
-
-# Sync photos.
-
-if [[ -d /Volumes/Catalogs/ ]]; then
-  export ryan_gosling_catalog_dir="catalogs_volume"
-else
-  export ryan_gosling_catalog_dir="catalogs_orange"
-fi
-
-ryan_gosling_give_me_photos() {
-  (
-    ~/.local/bin/machines \
-       --machine=$HOME/.local/var/machines/ryangosling.pbtxt \
-       --pull photos,"$ryan_gosling_catalog_dir",orange --delete --nodry_run $@
-  )
-}
-
-ryan_gosling_have_my_photos() {
-  (
-    ~/.local/bin/machines \
-       --machine=$HOME/.local/var/machines/ryangosling.pbtxt \
-       --push photos,"$ryan_gosling_catalog_dir",orange --delete --nodry_run $@
-  )
-}

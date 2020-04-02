@@ -1,0 +1,155 @@
+# File: //system/machines/proto/machine_spec.proto
+# Proto: MachineSpec
+name: "ryangosling"
+host {
+  host: "192.168.2.95"
+  port: 65335
+}
+host {
+  host: "ryangosling"
+  port: 65335
+}
+host: {
+  host: "prp2013.ddns.net"
+  port: 65335
+}
+mirrored_directory {
+  name: "photos"
+  local_path: "/Users/cec/Pictures/photos"
+  remote_path: "/home/cec/img/photos/photos"
+  timestamp_relpath: ".sync_timestamp.txt"
+  rsync_exclude: "._.DS_Store"
+  rsync_exclude: ".com.apple.timemachine.supported"
+  rsync_exclude: ".DS_Store"
+  rsync_exclude: ".sync.ffs_db"
+  rsync_exclude: "/.DocumentRevisions-V100"
+  rsync_exclude: "/.fseventsd"
+  rsync_exclude: "/.Spotlight-V100"
+  rsync_exclude: "/.TemporaryItems"
+  rsync_exclude: "/.Trashes"
+  rsync_exclude: "/.VolumeIcon.icns"
+  rsync_exclude: "/.VolumeIcon.ico"
+  rsync_exclude: "/autorun.inf"
+}
+mirrored_directory {
+  name: "catalogs"
+  local_path: "/Users/cec/Pictures/catalogs"
+  remote_path: "/home/cec/img/photos/catalogs"
+  timestamp_relpath: ".sync_timestamp.txt"
+  rsync_exclude: "._.DS_Store"
+  rsync_exclude: ".com.apple.timemachine.supported"
+  rsync_exclude: ".DS_Store"
+  rsync_exclude: ".sync.ffs_db"
+  rsync_exclude: "/.DocumentRevisions-V100"
+  rsync_exclude: "/.fseventsd"
+  rsync_exclude: "/.Spotlight-V100"
+  rsync_exclude: "/.TemporaryItems"
+  rsync_exclude: "/.Trashes"
+  rsync_exclude: "/.VolumeIcon.icns"
+  rsync_exclude: "/.VolumeIcon.ico"
+  rsync_exclude: "/autorun.inf"
+}
+# The photolib workspace. Note this excludes the photos
+# and catalogs which is pushed separately.
+mirrored_directory {
+  name: "pictures"
+  local_path: "/Users/cec/Pictures"
+  remote_path: "/home/cec/img/photos"
+  timestamp_relpath: ".sync_timestamp.txt"
+  rsync_exclude: "*.lrcat-journal"
+  rsync_exclude: "*.lrcat.lock"
+  rsync_exclude: "._.DS_Store"
+  rsync_exclude: ".com.apple.timemachine.supported"
+  rsync_exclude: ".DS_Store"
+  rsync_exclude: ".sync.ffs_db"
+  rsync_exclude: "/.DocumentRevisions-V100"
+  rsync_exclude: "/.fseventsd"
+  rsync_exclude: "/.Spotlight-V100"
+  rsync_exclude: "/.TemporaryItems"
+  rsync_exclude: "/.Trashes"
+  rsync_exclude: "/.VolumeIcon.icns"
+  rsync_exclude: "/.VolumeIcon.ico"
+  rsync_exclude: "/autorun.inf"
+  rsync_exclude: "/catalogs"  # Handled by `catalogs`
+  rsync_exclude: "/photos"  # Handled by `photos`
+  rsync_exclude: "/Photos Library.photoslibrary"
+}
+mirrored_directory {
+  name: "music"
+  local_path: "/Users/cec/Music/Music Library"
+  remote_path: "/home/cec/audio/third_party"
+  rsync_exclude: "._.DS_Store"
+  rsync_exclude: ".DS_Store"
+  rsync_exclude: ".iTunes Preferences.plist"
+  rsync_exclude: "Automatically Add to iTunes.localized"
+  rsync_exclude: "Downloads"
+  rsync_exclude: "Mobile Applications"
+}
+mirrored_directory {
+  name: "movies"
+  local_path: "/Users/cec/Movies/Movies"
+  remote_path: "/home/cec/video/third_party/movies"
+  rsync_exclude: "._.DS_Store"
+  rsync_exclude: ".DS_Store"
+  rsync_exclude: ".localized"
+}
+mirrored_directory {
+  name: "tv"
+  local_path: "/Users/cec/Movies/TV Shows"
+  remote_path: "/home/cec/video/third_party/tv"
+  rsync_exclude: "._.DS_Store"
+  rsync_exclude: ".DS_Store"
+  rsync_exclude: ".localized"
+}
+# Backup macOS.
+#
+# This is not a full backup, excluding those files which are covered by the preceding rules.
+mirrored_directory {
+  name: "bodie"
+  local_path: "/"
+  push_only: true
+  remote_path: "/home/cec/docs/Chris/backups/bodie"
+  rsync_exclude: "._.DS_Store"
+  rsync_exclude: ".DocumentRevisions-V100"
+  rsync_exclude: ".DS_Store"
+  rsync_exclude: ".fseventsd"
+  rsync_exclude: ".Spotlight-V100"
+  rsync_exclude: ".VolumeIcons.icns"
+  rsync_exclude: "/.file"
+  rsync_exclude: "/.PKInstallSandboxManager-SystemSoftware"
+  rsync_exclude: "/Applications"
+  rsync_exclude: "/dev"
+  rsync_exclude: "/Library/Application Support/Apple/AssetCache/Data"
+  rsync_exclude: "/Library/Application Support/Apple/ParentalControls/Users"
+  rsync_exclude: "/Library/Application Support/ApplePushService"
+  rsync_exclude: "/Library/Caches"
+  rsync_exclude: "/Library/NordVPN"
+  rsync_exclude: "/Library/OSAnalytics/Preferences/Library"
+  rsync_exclude: "/Library/Server"
+  rsync_exclude: "/Library/SystemMigration/History"
+  rsync_exclude: "/private/etc/cups/certs"
+  rsync_exclude: "/private/tmp"
+  rsync_exclude: "/private/var"
+  rsync_exclude: "/System"
+  rsync_exclude: "/System/Library/Caches"
+  rsync_exclude: "/System/Library/DirectoryServices"
+  rsync_exclude: "/System/Library/User Template"
+  rsync_exclude: "/tmp"
+  rsync_exclude: "/Users/cec/.cache"
+  rsync_exclude: "/Users/cec/.local/share/Trash"
+  rsync_exclude: "/Users/cec/.npm/_cacache"
+  rsync_exclude: "/Users/cec/.Trash"
+  rsync_exclude: "/Users/cec/Library/Application Support/Google/Chrome"
+  rsync_exclude: "/Users/cec/Library/Application Support/Steam/appcache"
+  rsync_exclude: "/Users/cec/Library/Caches"
+  rsync_exclude: "/Users/cec/Library/Safari"
+  rsync_exclude: "/Users/cec/Library/Suggestions"
+  rsync_exclude: "/Users/cec/Library/VoiceTrigger/SAT"
+  rsync_exclude: "/Users/cec/Music"  # Handled by `music`
+  rsync_exclude: "/Users/cec/Pictures"  # Handled by `pictures`
+  rsync_exclude: "/Users/cec/tmp"
+  rsync_exclude: "/Users/Guest"
+  rsync_exclude: "/usr/local/texlive"
+  rsync_exclude: "/usr/sbin"
+  rsync_exclude: "/Volumes"
+}

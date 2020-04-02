@@ -1,5 +1,17 @@
 #!/usr/bin/env zsh
 
+ryan_gosling_have_my_photos() {
+  (~/.local/bin/machines \
+     --machine=$HOME/.local/var/machines/ryangosling.pbtxt \
+     --push photos,catalogs,pictures --nodelete --nodry_run $@)
+}
+
+ryan_gosling_give_me_photos() {
+  (~/.local/bin/machines \
+     --machine=$HOME/.local/var/machines/ryangosling.pbtxt \
+     --pull photos,catalogs,pictures --nodelete --nodry_run $@)
+}
+
 ryan_gosling_have_my_music() {
   (~/.local/bin/machines \
      --machine=$HOME/.local/var/machines/ryangosling.pbtxt \
@@ -15,5 +27,5 @@ ryan_gosling_have_my_movies() {
 ryan_gosling_have_my_files() {
   (~/.local/bin/machines \
      --machine=$HOME/.local/var/machines/ryangosling.pbtxt \
-     --push $(hostname) --delete --nodry_run $@)
+     --push bodie --delete --nodry_run $@)
 }
