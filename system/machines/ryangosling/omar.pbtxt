@@ -1,0 +1,31 @@
+# File: //system/machines/proto/machine_spec.proto
+# Proto: MachineSpec
+name: "ryangosling"
+host {
+  host: "192.168.2.95"
+  port: 65335
+}
+host {
+  host: "ryangosling"
+  port: 65335
+}
+host: {
+  host: "prp2013.ddns.net"
+  port: 65335
+}
+# Backup Linux system.
+mirrored_directory {
+  name: "omar_linux"
+  local_path: "/"
+  push_only: true
+  remote_path: "/home/cec/docs/Chris/backups/omar/linux"
+  rsync_exclude: "/boot"
+  rsync_exclude: "/mnt"
+  rsync_exclude: "/proc"
+  rsync_exclude: "/dev"
+  rsync_exclude: "/sys"
+  rsync_exclude: "/var/run"
+  rsync_exclude: "/var/lock"
+  rsync_exclude: "/tmp"
+  rsync_exclude: "/home/*/.cache/bazel"
+}

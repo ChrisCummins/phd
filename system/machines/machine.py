@@ -37,8 +37,15 @@ def RespondsToPing(host: str) -> typing.Optional[str]:
   Returns:
     The host if it responds to ping, else None.
   """
+  ping = pathlib.Path("/sbin/ping")
+  if not ping.is_file():
+    ping = "ping"
   try:
-    subprocess.check_output(["ping", "-c1", "-W1", host])
+    subprocess.check_call(
+      [str(ping), "-c1", "-W1", host],
+      stdout=subprocess.DEVNULL,
+      stderr=subprocess.DEVNULL,
+    )
     return host
   except subprocess.CalledProcessError:
     return None

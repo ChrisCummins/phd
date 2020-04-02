@@ -1,21 +1,19 @@
 # Scripts and data for machine ryangosling.
 
 filegroup(
-    name = "ryangosling_proto",
-    srcs = ["ryangosling.pbtxt"],
-)
-
-filegroup(
-    name = "ryangosling_zsh",
-    srcs = ["ryangosling.zsh"],
+    name = "bodie_configs",
+    srcs = [
+        "bodie.pbtxt",
+        "bodie.zsh",
+    ],
 )
 
 # This test checks for availability of ryangosling shares. This is incompatible
-# with bazel sandboxing and can only be using bazel run, not test.
+# with bazel sandboxing and can only use bazel run, not test.
 py_test(
     name = "ryangosling_test",
     srcs = ["ryangosling_test.py"],
-    data = [":ryangosling_proto"],
+    data = [":install"],
     tags = [
         "local",
         "manual",
@@ -23,7 +21,6 @@ py_test(
     deps = [
         "//labm8/py:app",
         "//labm8/py:bazelutil",
-        "//labm8/py:test",
         "//system/machines:machine",
         "//system/machines:mirrored_directory",
     ],
@@ -33,7 +30,7 @@ sh_binary(
     name = "install",
     srcs = ["install.sh"],
     data = [
-        ":ryangosling_proto",
+        ":bodie_configs",
         "//system/machines:machine.par",
     ],
 )
