@@ -87,7 +87,6 @@ genrule(
         "lst/parser-failures.tex",
         "lst/post-norm.tex",
         "lst/pre-norm.tex",
-        "opencl_lexer.py",
         "preamble.tex",
         "tab/cgo17-benchmarks.tex",
         "tab/cgo17-platforms.tex",
@@ -111,10 +110,10 @@ genrule(
     outs = ["thesis.pdf"],
     cmd = (
         "cd docs/thesis && " +
-        "pdflatex --shell-escape thesis.tex && " +
+        "pdflatex --shell-escape thesis && " +
         "biber thesis && " +
-        "pdflatex --shell-escape thesis.tex && " +
-        "pdflatex --shell-escape thesis.tex && " +
+        "pdflatex --shell-escape thesis && " +
+        "pdflatex --shell-escape thesis && " +
         "cp -v thesis.pdf ../../$@"
     ),
 )

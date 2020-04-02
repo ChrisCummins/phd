@@ -1,28 +1,8 @@
 # -*- coding: utf-8 -*-
 """Pygments lexer for OpenCL."""
-import re
-
-import pygments.unistring as uni
-from pygments.lexer import bygroups
-from pygments.lexer import combined
-from pygments.lexer import default
-from pygments.lexer import include
-from pygments.lexer import RegexLexer
-from pygments.lexer import this
-from pygments.lexer import using
-from pygments.lexer import words
 from pygments.lexers.c_cpp import CLexer
-from pygments.token import Comment
 from pygments.token import Keyword
 from pygments.token import Name
-from pygments.token import Number
-from pygments.token import Operator
-from pygments.token import Other
-from pygments.token import Punctuation
-from pygments.token import String
-from pygments.token import Text
-from pygments.util import get_bool_opt
-from pygments.util import iteritems
 
 __all__ = ["OpenCLLexer"]
 
