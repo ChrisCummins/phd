@@ -6,6 +6,7 @@
 #include <functional>
 #include <iostream>
 
+namespace labm8 {
 namespace pbutil {
 
 // Run a process_function callback that accepts a proto message and mutates
@@ -51,21 +52,22 @@ void ProcessMessage(
 }
 
 }  // namespace pbutil
+}  // namespace labm8
 
 // A convenience macro to run an in-place process_function as the main()
 // function of a program.
-#define PBUTIL_INPLACE_PROCESS_MAIN(process_function, message_type) \
-  int main() {                                                      \
-    pbutil::ProcessMessageInPlace<message_type>(process_function);  \
-    return 0;                                                       \
+#define PBUTIL_INPLACE_PROCESS_MAIN(process_function, message_type)       \
+  int main() {                                                            \
+    labm8::pbutil::ProcessMessageInPlace<message_type>(process_function); \
+    return 0;                                                             \
   }
 
 // A convenience macro to run an process_function as the main() function of a
 // program.
-#define PBUTIL_PROCESS_MAIN(process_function, input_message_type,    \
-                            output_message_type)                     \
-  int main() {                                                       \
-    pbutil::ProcessMessage<input_message_type, output_message_type>( \
-        process_function);                                           \
-    return 0;                                                        \
+#define PBUTIL_PROCESS_MAIN(process_function, input_message_type,           \
+                            output_message_type)                            \
+  int main() {                                                              \
+    labm8::pbutil::ProcessMessage<input_message_type, output_message_type>( \
+        process_function);                                                  \
+    return 0;                                                               \
   }
