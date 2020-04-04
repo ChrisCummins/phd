@@ -35,7 +35,7 @@ And is available at:
 
   https://sites.google.com/site/treebasedcnn/
 
-This script creates the 52,000 source files, LLVM-IR files, and program graphs,
+This program creates the 52,000 source files, LLVM-IR files, and program graphs,
 divided intro training, validation, and test data.)";
 
 DEFINE_string(url,
