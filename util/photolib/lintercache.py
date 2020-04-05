@@ -151,6 +151,7 @@ class LinterCache(sqlutil.Database):
     )
 
     self.session.add(directory)
+    self.session.flush()
 
     # Create entries for the errors.
     errors_ = [
@@ -198,10 +199,10 @@ class LinterCache(sqlutil.Database):
       app.Log(2, "Removing stale directory cache: `%s`", relpath)
 
       # Delete all existing cache entries.
-      self.session.delete(directory)
       self.session.query(CachedError).filter(
         CachedError.dir == ret.relpath_md5
       ).delete()
+      self.session.delete(directory)
 
     return ret
 
