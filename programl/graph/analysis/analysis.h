@@ -25,6 +25,8 @@ namespace programl {
 namespace graph {
 namespace analysis {
 
+// Interface to run named analyses on a program graph, producing a list of
+// program graph features.
 Status RunAnalysis(const string& analysisName, const ProgramGraph& graph,
                    ProgramGraphFeaturesList* featuresList);
 

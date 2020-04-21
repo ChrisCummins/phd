@@ -42,6 +42,23 @@ cc_library(
 )
 
 cc_library(
+    name = "loop_connectedness",
+    srcs = ["loop_connectedness.cc"],
+    hdrs = ["loop_connectedness.h"],
+    deps = [
+        ":data_flow_pass",
+        "//labm8/cpp:status",
+        "//labm8/cpp:status_macros",
+        "//labm8/cpp:statusor",
+        "//programl/graph:features",
+        "//programl/proto:program_graph_cc",
+        "//programl/proto:program_graph_features_cc",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
+    ],
+)
+
+cc_library(
     name = "reachability",
     srcs = ["reachability.cc"],
     hdrs = ["reachability.h"],

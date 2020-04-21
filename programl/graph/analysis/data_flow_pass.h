@@ -32,41 +32,46 @@ namespace analysis {
 // A data flow analysis pass.
 class DataFlowPass {
  public:
-  explicit DataFlowPass(const ProgramGraph& graph) : DataFlowPass(graph, 10) {}
-
-  DataFlowPass(const ProgramGraph& graph, int maxInstancesPerGraph)
-      : graph_(graph),
-        maxInstancesPerGraph_(maxInstancesPerGraph),
-        seed_(std::chrono::system_clock::now().time_since_epoch().count()){}
+  explicit DataFlowPass(const ProgramGraph& graph)
+      : graph_(graph){}
 
             [[nodiscard]] virtual Status
         Run(ProgramGraphFeaturesList * featuresList) = 0;
-
-  int max_instances_per_graph() const { return maxInstancesPerGraph_; }
 
   const ProgramGraph& graph() const { return graph_; }
 
   const vector<vector<int>>& control_adjacencies();
 
-  unsigned seed() const { return seed_; }
-  void seed(unsigned seed) { seed_ = seed; }
-
  private:
   const ProgramGraph& graph_;
-  const int maxInstancesPerGraph_;
-  unsigned seed_;
   vector<vector<int>> controlAdjacencies_;
 };
 
 class InstructionRootDataFlowAnalysis : public DataFlowPass {
  public:
-  using DataFlowPass::DataFlowPass;
+  InstructionRootDataFlowAnalysis(const ProgramGraph& graph)
+      : InstructionRootDataFlowAnalysis(graph, 10) {}
 
-  [[nodiscard]] virtual Status Run(
-      ProgramGraphFeaturesList* featuresList) override;
+  InstructionRootDataFlowAnalysis(const ProgramGraph& graph,
+                                  int maxInstancesPerGraph)
+      : DataFlowPass(graph),
+        maxInstancesPerGraph_(maxInstancesPerGraph),
+        seed_(std::chrono::system_clock::now().time_since_epoch().count()){}
+
+            [[nodiscard]] virtual Status
+        Run(ProgramGraphFeaturesList * featuresList) override;
+
+  int max_instances_per_graph() const { return maxInstancesPerGraph_; }
+
+  unsigned seed() const { return seed_; }
+  void seed(unsigned seed) { seed_ = seed; }
 
  protected:
   virtual Status RunOne(int rootNode, ProgramGraphFeatures* features) = 0;
+
+ private:
+  const int maxInstancesPerGraph_;
+  unsigned seed_;
 };
 
 }  // namespace analysis
