@@ -17,6 +17,7 @@ py_test(
         ":graph_util",
         "//labm8/py:app",
         "//labm8/py:test",
+        "//third_party/py/numpy",
     ],
 )
 
