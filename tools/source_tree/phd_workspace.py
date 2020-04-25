@@ -35,6 +35,7 @@ _ALWAYS_EXPORTED_FILES = [
   "tools/Brewfile.travis",  # Needed by Travis CI.
   "tools/bzl/*",  # Implicit dependency of WORKSPACE file.
   "tools/flaky_bazel.sh",  # Needed by Travis CI.
+  "tools/whoami.sh",  # Debugging utility.
   "tools/workspace_status.sh",  # Needed by .bazelrc
   "WORKSPACE",  # Implicit dependency of everything.
 ]
