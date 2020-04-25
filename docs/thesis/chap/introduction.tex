@@ -53,7 +53,7 @@ To address this issue, there must be a sizeable increase in the availability of 
 
 Machine learning algorithms learn to correlate a set of explanatory variables, known as \emph{features}, with a target value. Learning the correlation between features and target value requires that features must be chosen so as to be discriminative for the target value. Features that are not discriminative will prevent a machine learning system from being able to achieve the desired task.
 
-Choosing a set of features to characterise a program so as to be discriminative for machine learning  depends on the desired task to be learned, the type of model, and the environment from which training data was collected, e.g. the hardware and machine configuration. Many problems in compilers do not map directly to numeric attributes, so systems for extracting numeric representations from non-numeric inputs must be developed. For example, one might extract instruction counts from the input source code. Knowing which attributes to extract to represent a program is a hard problem, there is no one-size-fits-all approach that works for all cases. Further, features may only be rendered suitable for learning by transforming the initial values such as through scaling or normalising. As a result, feature design is often an incremental process of trial and experimentation, and there are few clear signals when this iterative process is ``done''.
+Choosing a set of features to characterise a program so as to be discriminative for machine learning  depends on the desired task to be learned, the type of model, and the environment from which training data was collected, e.g. the hardware and machine configuration. Many problems in compilers do not map directly to numeric attributes, so systems for extracting numeric representations from non-numeric inputs must be developed. For example, one might extract instruction counts from the input source code. Knowing which attributes to extract to represent a program is a hard problem; there is no one-size-fits-all approach that works for all cases. Further, features may only be rendered suitable for learning by transforming the initial values, such as through scaling or normalising. As a result, feature design is often an incremental process of trial and experimentation, and there are few clear signals when this iterative process is ``done''.
 
 
 \subsection{Adoption of Machine Learning Practices}
@@ -73,11 +73,36 @@ This thesis presents machine learning-based techniques to simplify and accelerat
 
 \begin{itemize}
   \item The first application of deep learning over source codes to synthesise compilable, executable benchmarks. The proposed approach automatically enhances the predictive power of a state-of-the-art predictive model, improving the performance of heterogeneous workloads by $1.27\times$. Further, the additional benchmarks expose limitations in the feature design of the model which, after correcting, further increases performance by $4.30\times$. This addresses the scarcity of data challenge (Section~\ref{subsec:challenge-scarcity}) by enabling the generation of an unbounded quantity of training data for use in machine learning models.
-  \item A novel, automatic, and fast approach for the generation of expressive random programs for compiler fuzzing. The proposed system \emph{infers} programming language syntax, structure, and semantics from real-world examples, not through an expert-defined grammar. The system needs two orders of magnitude less code than the state-of-the-art. In modelling real handwritten code, the test cases are more interpretable than other approaches; the average test case size is two orders of magnitude smaller than the state-of-the-art. An extensive testing campaign reveals 67 new bugs in commercial and open source OpenCL compilers, exposing many bugs which prior work cannot by covering more components of the compiler. This addresses the machine learning adoption challenge (Section~\ref{subsec:challenge-adoption}) by demonstrating a far simpler method for developing compiler fuzzers, and proposing fast heuristic techniques that enable probabilistic machine learning systems in a domain which previously required formal approaches.
-	\item A methodology for building compiler heuristics without the need for program feature engineering. In an evaluation of the technique it is found to outperform existing prior  state-of-the-art predictive models by 14\% and 12\% in two challenging GPGPU compiler optimisation domains. The proposed approach enables the first application of \emph{transfer learning} to compiler optimisations, improving heuristics by reusing training information across different optimisation problems, even if they are unrelated. This addresses the model and feature design challenge (Section~\ref{subsec:challenge-features}) by circumventing the need for numeric representations of code, and enables a single model design to be applied to multiple problems.
+  \item A novel, automatic, and fast approach for the generation of expressive random programs for compiler fuzzing. The proposed system \emph{infers} programming language syntax, structure, and semantics from real-world examples, not through an expert-defined grammar. The system needs two orders of magnitude less code than the state-of-the-art. In modelling real handwritten code, the test cases are more interpretable than other approaches; the average test case size is two orders of magnitude smaller than the state-of-the-art. An extensive testing campaign reveals 67 new bugs in commercial and open source OpenCL compilers, exposing many bugs which prior work cannot, by covering more components of the compiler. This addresses the machine learning adoption challenge (Section~\ref{subsec:challenge-adoption}) by demonstrating a far simpler method for developing compiler fuzzers, and proposing fast heuristic techniques that enable probabilistic machine learning systems in a domain which previously required formal approaches.
+  \item A methodology for building compiler heuristics without the need for program feature engineering. In an evaluation of the technique it is found to outperform existing prior  state-of-the-art predictive models by 14\% and 12\% in two challenging GPGPU compiler optimisation domains. The proposed approach enables the first application of \emph{transfer learning} to compiler optimisations, improving heuristics by reusing training information across different optimisation problems, even if they are unrelated. This addresses the model and feature design challenge (Section~\ref{subsec:challenge-features}) by circumventing the need for numeric representations of code, and enables a single model design to be applied to multiple problems.
 \end{itemize}
 
 \newpage
+\section{Publications}
+
+This thesis is in part based on ideas and results which have been described in previous publications. The system for generating benchmarks which provides the basis of Chapter~\ref{chap:clgen} is described in:
+\begin{enumerate}
+  \item \emph{Cummins, C., Petoumenos, P., Zang, W., \& Leather, H. (2017). Synthesizing Benchmarks for Predictive Modeling. In CGO. IEEE.}~\cite{Cummins2017a}.
+\end{enumerate}
+
+\noindent
+Chapter~\ref{chap:deepsmith} describes an approach to compiler testing which was previously published in:
+\begin{enumerate}
+  \setcounter{enumi}{1}
+  \item \emph{Cummins, C., Petoumenos, P., Murray, A., \& Leather, H. (2018). Compiler Fuzzing through Deep Learning. In ISSTA.}~\cite{Cummins2017a}.
+  \item \emph{Cummins, C., Petoumenos, P., Murray, A., \& Leather, H. (2018). DeepSmith: Compiler Fuzzing through Deep Learning. In ACACES.~\cite{Cummins2018a}}
+\end{enumerate}
+
+\noindent
+The \emph{DeepTune} system proposed in Chapter~\ref{chap:deeptune} was first published in:
+\begin{enumerate}
+  \setcounter{enumi}{3}
+  \item \emph{Cummins, C., Petoumenos, P., Wang, Z., \& Leather, H. (2017). End-to-end Deep Learning of Optimization Heuristics. In PACT. IEEE.}~\cite{Cummins2017b}.
+\end{enumerate}
+
+The experimental results in this thesis are reproductions of those in the above publications. What differentiates this work from prior publications is the addition of background material (Chapter~\ref{chap:background}) and a literature review (Chapter~\ref{chap:related-work}) which offers a more comprehensive overview of the relevant fields, and includes references to new works that have been published after the above publications, including works based on those publications.
+
+
 \section{Structure}
 
 This thesis is organised as follows:
@@ -94,7 +119,6 @@ This thesis is organised as follows:
 
 \textbf{Chapter~\ref{chap:conclusions}} summarises the overall findings of the thesis, provides a critical review, and outlines potential avenues for future research.
 
-
 \section{Summary}
 
-The promise of machine learning techniques is reduced compiler development cost and improved performance. Achieving these goal requires overcoming three significant challenges: the data scarcity challenge, the feature design challenge, and the adoption challenge. The next two chapters discuss technical background knowledge and related work. Subsequent chapters describe novel techniques which address the three challenges.
+The promise of machine learning techniques is reduced compiler development cost and improved performance. Achieving these goals requires overcoming three significant challenges: the data scarcity challenge, the feature design challenge, and the adoption challenge. The next two chapters discuss technical background knowledge and related work. Subsequent chapters describe novel techniques which address the three challenges.

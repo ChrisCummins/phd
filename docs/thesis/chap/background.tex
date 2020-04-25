@@ -248,7 +248,7 @@ The data used to train a machine learning model must not be used to evaluate it.
   V(\hat{f}^{-k}) &= \mathcal{L}(\bm{y}_k, \hat{f}^{-k}(\bm{x}_k))
 \end{align}
 
-Employing a second indexing function $u$ to divide the data not set aside for testing into disjoint \emph{training} and \emph{test} sets creates a \emph{validation} set. A validation set can be used to automatically tune model parameters. Given a model $f_p$ parameterised by $p$, the quality of the model evaluating using the parameters $\bar{p}$ that provide the smallest loss on the validation set can be found from a set of parameters $P$ using:
+Employing a second indexing function $u$ to further divide the data $\not\in k$ into disjoint \emph{training} and \emph{test} sets creates a \emph{validation} set. A validation set can be used to automatically tune model parameters. Given a model $f_p$ parameterised by $p$, the quality of the model evaluating using the parameters $\bar{p}$ that provide the smallest loss on the validation set can be found from a set of parameters $P$ using:
 
 \begin{align}
   \bar{p} &= \argmin_p \mathcal{L}(\bm{y}_u, \hat{f}_p^{-(k \cup u)}(\bm{x}_u)), \hspace{.5em} p \forall P\\
