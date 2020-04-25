@@ -7,10 +7,13 @@ import typing
 
 import numpy as np
 from scipy.optimize import minimize
+
+from third_party.py.tensorflow import tf
+
+_ = tf  # Workaround for broken TensorFlow dependency
 from tensorflow.examples.tutorials.mnist import input_data
 
 from labm8.py import app
-from third_party.py.tensorflow import tf
 
 FLAGS = app.FLAGS
 app.DEFINE_integer(
