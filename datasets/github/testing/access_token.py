@@ -15,11 +15,10 @@
 contents, if it exists.
 """
 from datasets.github import api
-from labm8.py import fs
 
 ACCESS_TOKEN_PATH = api.TEST_ACCESS_TOKEN_PATH
 
 if ACCESS_TOKEN_PATH.is_file():
-  ACCESS_TOKEN = fs.Read(ACCESS_TOKEN_PATH)
+  ACCESS_TOKEN = api.ReadGithubAccessTokenPath(ACCESS_TOKEN_PATH)
 else:
   ACCESS_TOKEN = None

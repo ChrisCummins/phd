@@ -6,6 +6,11 @@ licenses(["notice"])  # BSD
 
 configure_make(
     name = "libpqxx",
+    configure_env_vars = {
+        # Workaround for broken libtool on macOS.
+        # See: https://github.com/bazelbuild/rules_foreign_cc/issues/338
+        "AR": "",
+    },
     configure_options = [
         "--disable-documentation",
     ],

@@ -6,6 +6,7 @@ py_library(
         "//labm8/py:app",
         "//labm8/py:labtypes",
         "//third_party/py/networkx",
+        "//third_party/py/numpy",
         "//third_party/py/scipy",
     ],
 )
@@ -17,6 +18,7 @@ py_test(
         ":graph_util",
         "//labm8/py:app",
         "//labm8/py:test",
+        "//third_party/py/numpy",
     ],
 )
 
