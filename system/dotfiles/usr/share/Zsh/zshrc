@@ -432,6 +432,10 @@ s() {
     fi
 }
 
+# Open the arguments in Sublime Text in a new window (default is to
+# re-use an open tab).
+alias sn='subl -n'
+
 
 # Buffer standard input to a file. Useful for redirecting output of a
 # pipe chain to the same input file. Example:
@@ -551,18 +555,24 @@ path_dirs=( \
     ~/.local/opt/go/bin \
     ~/go/bin \
     /Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin \
+    /usr/contrib/bin \
+    /usr/local/bin \
+    /usr/local/cuda/bin \
+    /usr/local/lib/ruby/gems/*/bin \
     /usr/local/opt/coreutils/libexec/gnubin \
+    /usr/local/opt/curl/bin \
     /usr/local/opt/findutils/libexec/gnubin \
     /usr/local/opt/gnu-sed/libexec/gnubin \
-    /usr/local/opt/sqlite/bin \
+    /usr/local/opt/gnu-which/libexec/gnubin \
+    /usr/local/opt/gnu-time/libexec/gnubin \
+    /usr/local/opt/gnu-indent/libexec/gnubin \
     /usr/local/opt/gnu-tar/libexec/gnubin \
+    /usr/local/opt/llvm/bin \
     /usr/local/opt/mysql@5.7/bin \
     /usr/local/opt/ofexport/bin \
     /usr/local/opt/python/libexec/bin \
+    /usr/local/opt/sqlite/bin \
     /usr/local/opt/unzip/bin \
-    /usr/local/bin \
-    /usr/contrib/bin \
-    /usr/local/cuda/bin \
     /opt/bin \
     /opt/local/bin \
     /opt/local/sbin \

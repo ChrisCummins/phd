@@ -1,4 +1,5 @@
-###############################################################################
+# Shell functions for photography.
+
 # Overwrite the EXIF data of the given file(s) to match that of a
 # Samyang lenses.
 #
@@ -30,5 +31,3 @@ samyang_8mm_set_exif() {
       -FNumber="2.8" \
       $@
 }
-
-###############################################################################
