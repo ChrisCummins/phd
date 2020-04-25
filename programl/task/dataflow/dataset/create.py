@@ -42,7 +42,9 @@ app.DEFINE_string("db", None, "The database to export from.")
 app.DEFINE_string("path", None, "The directory to export to.")
 FLAGS = app.FLAGS
 
-CREATE_LABELS = bazelutil.DataPath("phd/task/dataflow/dataset/create_labels")
+CREATE_LABELS = bazelutil.DataPath(
+  "phd/programl/task/dataflow/dataset/create_labels"
+)
 
 
 def _ProcessRow(encoder, path, row, i) -> None:
@@ -94,7 +96,7 @@ def _ProcessRow(encoder, path, row, i) -> None:
       f"../graphs/{name}.ProgramGraph.pb",
       path / dst / f"{name}.ProgramGraph.pb",
     )
-  except (ValueError, OSError, TimeoutError) as e:
+  except (ValueError, OSError, TimeoutError, AssertionError) as e:
     pass
 
 
@@ -132,7 +134,7 @@ AND source NOT LIKE 'poj-104:%'
     with multiprocessing.Pool() as pool:
       # Run many smaller queries rather than one big query since MySQL
       # connections will die if hanging around for too long.
-      for j in range(0, self.n, 512):
+      for j in range(0, self.ctx.n, 512):
         self.db.query(
           f"""
 SELECT
@@ -148,13 +150,13 @@ OFFSET {j}
 """
         )
 
-        results = self.db.use_result()
-        rows = [(item[0], i) for i, item in enumerate(results.fetchall())]
+        results = self.db.store_result()
+        rows = [(item, i) for i, item in enumerate(results.fetch_row())]
         jobs = [
           (encoder, self.path, chunk) for chunk in labtypes.Chunkify(rows, 128)
         ]
 
-        for c in pool.imap_unordered(ProcessDatabaseRow, rows):
+        for c in pool.imap_unordered(_ProcessRows, jobs):
           self.ctx.i += c
 
       self.ctx.i = self.ctx.n
