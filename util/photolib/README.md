@@ -5,13 +5,14 @@ A set of tools for managing my library of photographs.
 ## Installation
 
 ```
-$ brew install exempi python
+$ brew install exempi python bazel
+$ bazel run -c opt //util/photolib:install
 ```
 
 ## Usage
 
 ```sh
-$ bazel run //util/photolib -- lint --working_dir=$HOME/Pictures/Photo\ Library
+$ photolib lint ~/Pictures
 ```
 
 ## License
