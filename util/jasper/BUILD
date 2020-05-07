@@ -1,15 +1,15 @@
 # Jasper is a small command line utility to run long-running MySQL queries.
 
 load("@subpar//:subpar.bzl", "par_binary")
-load("//tools/bzl:exports.bzl", "exports_repo")
+load("@cec_exports_repo//tools/bzl:exports_repo.bzl", "exports_repo")
 
 exports_repo(
     name = "export",
-    github_repo = "jasper",
-    move_file_mapping = {
+    path_rename = {
         "util/jasper/README.md": "README.md",
         "util/jasper/LICENSE": "LICENSE",
     },
+    remote = "git@github.com:ChrisCummins/jasper.git",
     targets = [
         "//util/jasper/...",
     ],

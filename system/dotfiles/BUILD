@@ -1,13 +1,13 @@
 # My dotfiles and configuration.
 
-load("//tools/bzl:exports.bzl", "exports_repo")
+load("@cec_exports_repo//tools/bzl:exports_repo.bzl", "exports_repo")
 
 exports_repo(
     name = "export",
-    github_repo = "dotfiles",
-    move_file_mapping = {
+    path_rename = {
         "system/dotfiles/README.md": "README.md",
     },
+    remote = "git@github.com:ChrisCummins/dotfiles.git",
     targets = [
         "//system/dotfiles",
     ],

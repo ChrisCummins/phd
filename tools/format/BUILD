@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//tools/bzl:exports.bzl", "exports_repo")
+load("@cec_exports_repo//tools/bzl:exports_repo.bzl", "exports_repo")
 load("@com_github_chriscummins_rules_bats//:bats.bzl", "bats_test")
 
 exports_files([
@@ -26,15 +26,15 @@ exports_files([
 
 exports_repo(
     name = "export",
-    extra_files = [
-        "tools/format/install.sh",
-    ],
-    github_repo = "format",
-    move_file_mapping = {
+    path_rename = {
         "tools/format/README.md": "README.md",
         "tools/format/LICENSE": "LICENSE",
         "tools/format/travis.yml": ".travis.yml",
     },
+    paths = [
+        "tools/format/install.sh",
+    ],
+    remote = "git@github.com:ChrisCummins/format.git",
     targets = ["//tools/format/..."],
 )
 

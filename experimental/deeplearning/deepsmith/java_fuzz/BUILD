@@ -1,22 +1,5 @@
 load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
-load("//tools/bzl:exports.bzl", "exports_repo")
-
-exports_repo(
-    name = "export",
-    extra_files = [
-        ".gitignore",
-    ],
-    github_repo = "ibm_deepsmith_shared_code",
-    move_file_mapping = {
-        "experimental/deeplearning/deepsmith/java_fuzz/shared_code_README.md": "README.md",
-    },
-    targets = [
-        "//deeplearning/clgen/preprocessors:JavaRewriter",
-        "//deeplearning/deepsmith/harnesses:JavaDriver",
-        "//deeplearning/deepsmith/harnesses:JavaDriverTest",
-        "//deeplearning/clgen/preprocessors:java_test",
-    ],
-)
+load("@cec_exports_repo//tools/bzl:exports_repo.bzl", "exports_repo")
 
 py_binary(
     name = "encode_java_corpus",
@@ -151,7 +134,7 @@ py_binary(
 
 exports_repo(
     name = "export_github_fuzz_scraper",
-    github_repo = "github_fuzz_scraper",
+    remote = "git@github.com:ChrisCummins/github_fuzz_scraper.git",
     targets = [
         "//experimental/deeplearning/deepsmith/java_fuzz:scrape_java_files",
     ],

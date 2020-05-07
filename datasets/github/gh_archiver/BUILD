@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-load("//tools/bzl:exports.bzl", "exports_repo")
+load("@cec_exports_repo//tools/bzl:exports_repo.bzl", "exports_repo")
 load("@com_github_chriscummins_rules_bats//:bats.bzl", "bats_test")
 load("@subpar//:subpar.bzl", "par_binary")
 
@@ -32,11 +32,11 @@ exports_files([
 
 exports_repo(
     name = "export",
-    github_repo = "gh-archiver",
-    move_file_mapping = {
+    path_rename = {
         "datasets/github/gh_archiver/README.md": "README.md",
         "datasets/github/gh_archiver/LICENSE": "LICENSE",
     },
+    remote = "git@github.com:ChrisCummins/gh-archiver.git",
     targets = ["//datasets/github/gh_archiver/..."],
 )
 
