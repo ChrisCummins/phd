@@ -21,7 +21,10 @@ class FormatJavaScript(batched_file_formatter.BatchedFileFormatter):
 
   def __init__(self, *args, **kwargs):
     super(FormatJavaScript, self).__init__(*args, **kwargs)
-    self.js_beautify = self._Which("js-beautify")
+    self.js_beautify = self._Which(
+      "js-beautify",
+      install_instructions="Install this by running: npm install -g js-beautify",
+    )
 
     # Unpack the jarfile to the local cache. We do this rather than accessing
     # the data file directly since a par build embeds the data inside the
