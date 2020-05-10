@@ -14,7 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//tools/bzl:exports.bzl", "exports_pip", "exports_repo")
+load("@cec_exports_repo//tools/bzl:exports_repo.bzl", "exports_repo")
+load("//tools/bzl:exports.bzl", "exports_pip")
 
 licenses(["notice"])  # Apache 2.0
 
@@ -26,15 +27,15 @@ exports_files([
 
 exports_repo(
     name = "export",
-    extra_files = [
-        "labm8/labm8.jpg",
-    ],
-    github_repo = "labm8",
-    move_file_mapping = {
+    path_rename = {
         "labm8/README.md": "README.md",
         "labm8/LICENSE": "LICENSE",
         "labm8/travis.yml": ".travis.yml",
     },
+    paths = [
+        "labm8/labm8.jpg",
+    ],
+    remote = "git@github.com:ChrisCummins/labm8.git",
     targets = ["//labm8/..."],
 )
 

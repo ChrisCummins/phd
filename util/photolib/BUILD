@@ -3,7 +3,7 @@
 licenses(["notice"])  # Apache 2.0
 
 load("@subpar//:subpar.bzl", "par_binary")
-load("//tools/bzl:exports.bzl", "exports_repo")
+load("@cec_exports_repo//tools/bzl:exports_repo.bzl", "exports_repo")
 
 exports_files([
     "LICENSE",
@@ -12,12 +12,12 @@ exports_files([
 
 exports_repo(
     name = "export",
-    github_repo = "photolib",
-    move_file_mapping = {
+    path_rename = {
         "util/photolib/README.md": "README.md",
         "util/photolib/LICENSE": "LICENSE",
         "util/photolib/travis.yml": ".travis.yml",
     },
+    remote = "git@github.com:ChrisCummins/photolib.git",
     targets = [
         "//util/photolib/...",
     ],
