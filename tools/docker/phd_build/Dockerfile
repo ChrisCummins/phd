@@ -15,18 +15,19 @@ ENV DEBIAN_FRONTEND noninteractive
 # Install packages.
 RUN apt-get update && apt-get install -y --no-install-recommends \
   # Packages required to build code.
-  unzip \
-  g++ \
-  zlib1g-dev \
-  ocl-icd-opencl-dev \
-  python \
   apt-transport-https \
   ca-certificates gnupg-agent \
+  g++ \
+  m4 \
+  ocl-icd-opencl-dev \
+  patch \
+  python \
+  python-dev \
   software-properties-common \
   texlive-full \
-  patch \
+  unzip \
   zip \
-  m4 \
+  zlib1g-dev \
   # Packages required to build matplotlib.
   pkg-config \
   libfreetype6-dev \
@@ -67,7 +68,7 @@ RUN apt update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install bazel.
-ENV BAZEL_VERSION 2.0.0
+ENV BAZEL_VERSION 3.1.0
 RUN curl -L -o /tmp/bazel.sh https://github.com/bazelbuild/bazel/releases/download/$BAZEL_VERSION/bazel-$BAZEL_VERSION-installer-linux-x86_64.sh && \
     bash /tmp/bazel.sh && rm /tmp/bazel.sh
 
