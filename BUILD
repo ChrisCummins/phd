@@ -5,7 +5,10 @@ load("@bazel_gazelle//:def.bzl", "gazelle")
 load("@build_stack_rules_proto//python:python_grpc_library.bzl", "python_grpc_library")
 
 exports_files([
+    ".travis.yml",
     "README.md",
+    "INSTALL.md",
+    "CONTRIBUTING.md",
     "WORKSPACE",
     "version.txt",
     "deployment.properties",
