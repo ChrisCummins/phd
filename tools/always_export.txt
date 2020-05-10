@@ -1,5 +1,11 @@
 .env
 requirements.txt
+third_party/bazel/.formatignore
+third_party/bazel/BUILD
+third_party/bazel/ci.sh
+third_party/bazel/download_file.py
+third_party/bazel/maven_jar.bzl
+third_party/bazel/util.py
 third_party/bzip2.BUILD
 third_party/CLSmith.BUILD
 third_party/ctpl.BUILD
