@@ -20,13 +20,18 @@ namespace cldrive {
 namespace test {
 
 cl::Kernel CreateClKernel(const string& opencl_kernel) {
-  cl::Program program(opencl_kernel);
-  program.build("-cl-kernel-arg-info");
+  try {
+    cl::Program program(opencl_kernel);
+    program.build("-cl-kernel-arg-info");
 
-  std::vector<cl::Kernel> kernels;
-  program.createKernels(&kernels);
-  CHECK(kernels.size() == 1);
-  return kernels[0];
+    std::vector<cl::Kernel> kernels;
+    program.createKernels(&kernels);
+    CHECK(kernels.size() == 1);
+    return kernels[0];
+  } catch (cl::Error err) {
+    CHECK(false) << "OpenCL exception in test utility code: " << err.what()
+                 << "(" << err.err() << ")";
+  }
 }
 
 DynamicParams MakeParams(size_t global_size, size_t local_size) {
