@@ -35,3 +35,4 @@ tools/bazel_env.sh
 tools/Brewfile.travis
 tools/flaky_bazel.sh
 tools/workspace_status.sh
+version.txt
