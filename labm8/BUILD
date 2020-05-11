@@ -36,6 +36,7 @@ exports_repo(
         "labm8/labm8.jpg",
     ],
     remote = "git@github.com:ChrisCummins/labm8.git",
+    tags = ["manual"],
     targets = ["//labm8/..."],
 )
 

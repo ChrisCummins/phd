@@ -34,6 +34,7 @@ exports_repo(
         "gpu/cldrive/travis.yml": ".travis.yml",
     },
     remote = "git@github.com:ChrisCummins/cldrive.git",
+    tags = ["manual"],
     targets = [
         "//gpu/cldrive/...",
     ],

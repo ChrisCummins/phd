@@ -18,6 +18,7 @@ exports_repo(
         "util/photolib/travis.yml": ".travis.yml",
     },
     remote = "git@github.com:ChrisCummins/photolib.git",
+    tags = ["manual"],
     targets = [
         "//util/photolib/...",
     ],

@@ -135,6 +135,7 @@ py_binary(
 exports_repo(
     name = "export_github_fuzz_scraper",
     remote = "git@github.com:ChrisCummins/github_fuzz_scraper.git",
+    tags = ["manual"],
     targets = [
         "//experimental/deeplearning/deepsmith/java_fuzz:scrape_java_files",
     ],

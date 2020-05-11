@@ -10,6 +10,7 @@ exports_repo(
         "util/jasper/LICENSE": "LICENSE",
     },
     remote = "git@github.com:ChrisCummins/jasper.git",
+    tags = ["manual"],
     targets = [
         "//util/jasper/...",
     ],

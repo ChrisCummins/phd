@@ -38,6 +38,7 @@ exports_repo(
         "deeplearning/clgen/travis.yml": ".travis.yml",
     },
     remote = "git@github.com:ChrisCummins/clgen.git",
+    tags = ["manual"],
     targets = [
         "//deeplearning/clgen/...",
     ],

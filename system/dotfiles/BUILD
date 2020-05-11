@@ -8,6 +8,7 @@ exports_repo(
         "system/dotfiles/README.md": "README.md",
     },
     remote = "git@github.com:ChrisCummins/dotfiles.git",
+    tags = ["manual"],
     targets = [
         "//system/dotfiles",
     ],

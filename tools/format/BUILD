@@ -35,6 +35,7 @@ exports_repo(
         "tools/format/install.sh",
     ],
     remote = "git@github.com:ChrisCummins/format.git",
+    tags = ["manual"],
     targets = ["//tools/format/..."],
 )
 

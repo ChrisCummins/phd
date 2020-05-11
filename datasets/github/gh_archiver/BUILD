@@ -37,6 +37,7 @@ exports_repo(
         "datasets/github/gh_archiver/LICENSE": "LICENSE",
     },
     remote = "git@github.com:ChrisCummins/gh-archiver.git",
+    tags = ["manual"],
     targets = ["//datasets/github/gh_archiver/..."],
 )
 
