@@ -51,38 +51,13 @@ StatusOr<BasicBlockEntryExit> ProgramGraphBuilder::VisitBasicBlock(
 
   // Iterate over the instructions of a basic block in-order.
   for (const ::llvm::Instruction& instruction : block) {
-#ifdef PROGRAML_EXPERIMENTAL_NODE_REPRESENTATION
-    // TODO(github.com/ChrisCummins/ProGraML/issues/55): Don't use the entire
-    // text of an instruction (e.g. "%3 = add %1 %2") for statement nodes.
-    const string text = GetInstructionRhs(instruction);
-#else
-    const string text = PrintToString(instruction);
-#endif
+    const LlvmTextComponents text = textEncoder_.Encode(&instruction);
 
     // Create the graph node for the instruction.
-    auto instructionMessage = AddInstruction(text, functionMessage);
-    instructionMessage->set_block(blockCount_);
-
-    graph::AddScalarFeature(instructionMessage, "llvm_instr_opcode",
-                            instruction.getOpcode());
+    auto instructionMessage = AddLlvmInstruction(&instruction, functionMessage);
 
     // Record the instruction in the function-level instructions map.
     instructions->insert({&instruction, instructionMessage});
-
-    // Add profiling information features, if available.
-    uint64_t profTotalWeight;
-    if (instruction.extractProfTotalWeight(profTotalWeight)) {
-      graph::AddScalarFeature(instructionMessage, "llvm_profile_total_weight",
-                              profTotalWeight);
-    }
-    uint64_t profTrueWeight;
-    uint64_t profFalseWeight;
-    if (instruction.extractProfMetadata(profTrueWeight, profFalseWeight)) {
-      graph::AddScalarFeature(instructionMessage, "llvm_profile_true_weight",
-                              profTotalWeight);
-      graph::AddScalarFeature(instructionMessage, "llvm_profile_false_weight",
-                              profFalseWeight);
-    }
 
     // A basic block consists of a linear sequence of instructions, so we can
     // insert the control edge between instructions as we go.
@@ -129,8 +104,6 @@ StatusOr<BasicBlockEntryExit> ProgramGraphBuilder::VisitBasicBlock(
         if (options_.instructions_only()) {
           continue;
         }
-        const string varText = textEncoder_.GetInstructionLhs(operand);
-
         // We have an instruction operand which itself is another instruction.
         //
         // For example, take the following IR snippet:
@@ -152,8 +125,7 @@ StatusOr<BasicBlockEntryExit> ProgramGraphBuilder::VisitBasicBlock(
         // To this we create the intermediate data flow node '%2' immediately,
         // but defer adding the edge from the producer instruction, since we may
         // not have visited it yet.
-        Node* variable = AddVariable(varText, functionMessage);
-        variable->set_block(blockCount_);
+        Node* variable = AddLlvmVariable(operand, functionMessage);
 
         // Connect the data -> consumer.
         RETURN_IF_ERROR(
@@ -180,8 +152,9 @@ StatusOr<BasicBlockEntryExit> ProgramGraphBuilder::VisitBasicBlock(
                       "Unknown operand {} for instruction:\n\n  "
                       "Instruction:  {}\n",
                       "Operand:      {}\n", "Operand Type: {}\n", position,
-                      PrintToString(instruction), PrintToString(*value),
-                      PrintToString(*value->getType()));
+                      textEncoder_.Encode(&instruction).text,
+                      textEncoder_.Encode(value).text,
+                      textEncoder_.Encode(value->getType()).text);
       }
 
       // Advance to the next operand position.
@@ -219,6 +192,7 @@ StatusOr<FunctionEntryExits> ProgramGraphBuilder::VisitFunction(
 
   if (function.isDeclaration()) {
     Node* node = AddInstruction("; undefined function", functionMessage);
+    graph::AddScalarFeature(node, "embedding_key", "undefined");
     functionEntryExits.first = node;
     functionEntryExits.second.push_back(node);
     return functionEntryExits;
@@ -242,8 +216,7 @@ StatusOr<FunctionEntryExits> ProgramGraphBuilder::VisitFunction(
   // Construct the identifier data elements for arguments and connect data
   // edges.
   for (auto it : argumentConsumers) {
-    const string text = PrintToString(*it.first);
-    Node* argument = AddVariable(text, functionMessage);
+    Node* argument = AddLlvmVariable(it.first, functionMessage);
     for (auto argumentConsumer : it.second) {
       Node* argumentConsumerNode = argumentConsumer.first;
       int32_t position = argumentConsumer.second;
@@ -260,7 +233,7 @@ StatusOr<FunctionEntryExits> ProgramGraphBuilder::VisitFunction(
       return Status(
           labm8::error::Code::FAILED_PRECONDITION,
           "Operand references instruction that has not been visited: {}",
-          PrintToString(*dataEdgeToAdd.first));
+          textEncoder_.Encode(dataEdgeToAdd.first).text);
     }
     RETURN_IF_ERROR(
         AddDataEdge(/*position=*/0, producer->second, dataEdgeToAdd.second)
@@ -345,6 +318,57 @@ Status ProgramGraphBuilder::AddCallSite(const Node* source,
   return Status::OK;
 }
 
+Node* ProgramGraphBuilder::AddLlvmInstruction(
+    const ::llvm::Instruction* instruction, const Function* function) {
+  const LlvmTextComponents text = textEncoder_.Encode(instruction);
+  Node* node = AddInstruction(text.opcode_name, function);
+  node->set_block(blockCount_);
+  graph::AddScalarFeature(node, "full_text", text.text);
+
+  // Add profiling information features, if available.
+  uint64_t profTotalWeight;
+  if (instruction->extractProfTotalWeight(profTotalWeight)) {
+    graph::AddScalarFeature(node, "llvm_profile_total_weight", profTotalWeight);
+  }
+  uint64_t profTrueWeight;
+  uint64_t profFalseWeight;
+  if (instruction->extractProfMetadata(profTrueWeight, profFalseWeight)) {
+    graph::AddScalarFeature(node, "llvm_profile_true_weight", profTrueWeight);
+    graph::AddScalarFeature(node, "llvm_profile_false_weight", profFalseWeight);
+  }
+
+  return node;
+}
+
+Node* ProgramGraphBuilder::AddLlvmVariable(const ::llvm::Instruction* operand,
+                                           const programl::Function* function) {
+  const LlvmTextComponents text = textEncoder_.Encode(operand);
+  Node* node = AddVariable(text.lhs_type, function);
+  node->set_block(blockCount_);
+  graph::AddScalarFeature(node, "full_text", text.lhs);
+
+  return node;
+}
+
+Node* ProgramGraphBuilder::AddLlvmVariable(const ::llvm::Argument* argument,
+                                           const programl::Function* function) {
+  const LlvmTextComponents text = textEncoder_.Encode(argument);
+  Node* node = AddVariable(text.lhs_type, function);
+  node->set_block(blockCount_);
+  graph::AddScalarFeature(node, "full_text", text.lhs);
+
+  return node;
+}
+
+Node* ProgramGraphBuilder::AddLlvmConstant(const ::llvm::Constant* constant) {
+  const LlvmTextComponents text = textEncoder_.Encode(constant);
+  Node* node = AddConstant(text.lhs_type);
+  node->set_block(blockCount_);
+  graph::AddScalarFeature(node, "full_text", text.text);
+
+  return node;
+}
+
 StatusOr<ProgramGraph> ProgramGraphBuilder::Build(
     const ::llvm::Module& module) {
   // A map from functions to their entry and exit nodes.
@@ -394,8 +418,8 @@ StatusOr<ProgramGraph> ProgramGraphBuilder::Build(
 
   // Create the constants.
   for (const auto& constant : constants_) {
-    // Create the node for the constant.
-    Node* constantMessage = AddConstant(PrintToString(*constant.first));
+    Node* constantMessage = AddLlvmConstant(constant.first);
+
     // Create data in-flow edges.
     for (auto destination : constant.second) {
       Node* destinationNode = destination.first;
@@ -403,29 +427,29 @@ StatusOr<ProgramGraph> ProgramGraphBuilder::Build(
       RETURN_IF_ERROR(
           AddDataEdge(position, constantMessage, destinationNode).status());
     }
+  }
 
-    // Add profiling information, if available.
-    ::llvm::Metadata* profileMetadata = module.getModuleFlag("ProfileSummary");
-    if (profileMetadata) {
-      ::llvm::ProfileSummary* profileSummary =
-          ::llvm::ProfileSummary::getFromMD(profileMetadata);
-      if (!profileSummary) {
-        return Status(labm8::error::Code::FAILED_PRECONDITION,
-                      "llvm::Module ProfileSymmary is null");
-      }
-      graph::AddScalarFeature(moduleMessage, "llvm_profile_num_functions",
-                              profileSummary->getNumFunctions());
-      graph::AddScalarFeature(moduleMessage, "llvm_profile_max_function_count",
-                              profileSummary->getMaxFunctionCount());
-      graph::AddScalarFeature(moduleMessage, "llvm_profile_num_counts",
-                              profileSummary->getNumCounts());
-      graph::AddScalarFeature(moduleMessage, "llvm_profile_total_count",
-                              profileSummary->getTotalCount());
-      graph::AddScalarFeature(moduleMessage, "llvm_profile_max_count",
-                              profileSummary->getMaxCount());
-      graph::AddScalarFeature(moduleMessage, "llvm_profile_max_internal_count",
-                              profileSummary->getMaxInternalCount());
+  // Add profiling information, if available.
+  ::llvm::Metadata* profileMetadata = module.getModuleFlag("ProfileSummary");
+  if (profileMetadata) {
+    ::llvm::ProfileSummary* profileSummary =
+        ::llvm::ProfileSummary::getFromMD(profileMetadata);
+    if (!profileSummary) {
+      return Status(labm8::error::Code::FAILED_PRECONDITION,
+                    "llvm::Module ProfileSymmary is null");
     }
+    graph::AddScalarFeature(moduleMessage, "llvm_profile_num_functions",
+                            profileSummary->getNumFunctions());
+    graph::AddScalarFeature(moduleMessage, "llvm_profile_max_function_count",
+                            profileSummary->getMaxFunctionCount());
+    graph::AddScalarFeature(moduleMessage, "llvm_profile_num_counts",
+                            profileSummary->getNumCounts());
+    graph::AddScalarFeature(moduleMessage, "llvm_profile_total_count",
+                            profileSummary->getTotalCount());
+    graph::AddScalarFeature(moduleMessage, "llvm_profile_max_count",
+                            profileSummary->getMaxCount());
+    graph::AddScalarFeature(moduleMessage, "llvm_profile_max_internal_count",
+                            profileSummary->getMaxInternalCount());
   }
 
   return programl::graph::ProgramGraphBuilder::Build();

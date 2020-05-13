@@ -38,6 +38,10 @@ define i32 @A(i32, i32) #0 {
 """
 
 
+def GetStringScalar(proto, name):
+  return proto.features.feature[name].bytes_list.value[0].decode("utf-8")
+
+
 def test_simple_ir():
   """Test equivalence of nodes that pre-process to the same text."""
   options = program_graph_options_pb2.ProgramGraphOptions(opt_level=3)
@@ -51,20 +55,29 @@ def test_simple_ir():
   assert proto.node[0].text == "<root>"
   assert proto.node[0].type == node_pb2.Node.INSTRUCTION
 
-  assert proto.node[1].text == "%3 = add nsw i32 %1, %0"
+  assert proto.node[1].text == "add"
   assert proto.node[1].type == node_pb2.Node.INSTRUCTION
+  assert (
+    GetStringScalar(proto.node[1], "full_text") == "%3 = add nsw i32 %1, %0"
+  )
 
-  assert proto.node[2].text == "ret i32 %3"
+  assert proto.node[2].text == "ret"
   assert proto.node[2].type == node_pb2.Node.INSTRUCTION
+  assert GetStringScalar(proto.node[2], "full_text") == "ret i32 %3"
 
-  assert proto.node[3].text == "i32 %3"
+  assert proto.node[3].text == "i32"
   assert proto.node[3].type == node_pb2.Node.VARIABLE
+  assert GetStringScalar(proto.node[3], "full_text") == "i32 %3"
 
-  assert proto.node[4].text.startswith("i32 %")
+  # Use startswith() to compare names for these last two variables as thier
+  # order may differ.
+  assert proto.node[4].text == "i32"
   assert proto.node[4].type == node_pb2.Node.VARIABLE
+  assert GetStringScalar(proto.node[4], "full_text").startswith("i32 %")
 
-  assert proto.node[5].text.startswith("i32 %")
+  assert proto.node[5].text == "i32"
   assert proto.node[5].type == node_pb2.Node.VARIABLE
+  assert GetStringScalar(proto.node[5], "full_text").startswith("i32 %")
 
 
 def test_opt_level():

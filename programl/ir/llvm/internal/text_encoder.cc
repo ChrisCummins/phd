@@ -15,6 +15,9 @@
 // limitations under the License.
 #include "programl/ir/llvm/internal/text_encoder.h"
 
+#include "llvm/IR/Type.h"
+#include "llvm/Support/raw_ostream.h"
+
 #include <sstream>
 #include <utility>
 
@@ -25,45 +28,115 @@ namespace ir {
 namespace llvm {
 namespace internal {
 
-string TextEncoder::GetInstructionLhs(const ::llvm::Instruction* instruction) {
-  return Encode(instruction).first;
+namespace {
+
+// Produce the textual representation of an LLVM value.
+template <typename T>
+string PrintToString(const T &value) {
+  std::string str;
+  ::llvm::raw_string_ostream rso(str);
+  value.print(rso);
+  // Trim any leading indentation whitespace.
+  labm8::TrimLeft(str);
+  return str;
 }
 
-string TextEncoder::GetInstructionRhs(const ::llvm::Instruction* instruction) {
-  return Encode(instruction).second;
-}
-
-void TextEncoder::Clear() { texts_.clear(); }
-
-pair<string, string> TextEncoder::Encode(
-    const ::llvm::Instruction* instruction) {
-  auto it = texts_.find(instruction);
-  if (it != texts_.end()) {
+template <typename T>
+LlvmTextComponents EncodeAndCache(
+    const T *value, absl::flat_hash_map<const T *, LlvmTextComponents> *cache) {
+  auto it = cache->find(value);
+  if (it != cache->end()) {
     return it->second;
   }
 
-  const string instructionString = PrintToString(*instruction);
-  const size_t snipAt = instructionString.find(" = ");
+  LlvmTextComponents encoded;
+  encoded.text = PrintToString(*value);
+
+  cache->insert({value, encoded});
+  return encoded;
+}
+
+}  // anonymous namespace
+
+LlvmTextComponents TextEncoder::Encode(const ::llvm::Instruction *instruction) {
+  // Return from cache if available.
+  auto it = instruction_cache_.find(instruction);
+  if (it != instruction_cache_.end()) {
+    return it->second;
+  }
+
+  LlvmTextComponents encoded;
+  encoded.text = PrintToString(*instruction);
+  encoded.opcode_name = instruction->getOpcodeName(instruction->getOpcode());
+
+  const size_t snipAt = encoded.text.find(" = ");
 
   // An instruction without a LHS.
   if (snipAt == string::npos) {
-    pair<string, string> encoded = make_pair("", instructionString);
-    texts_.insert({instruction, encoded});
+    instruction_cache_.insert({instruction, encoded});
     return encoded;
   }
 
-  const string identifier = instructionString.substr(0, snipAt);
-  const string type = PrintToString(*instruction->getType());
+  encoded.lhs_type = PrintToString(*instruction->getType());
+  encoded.lhs_identifier = encoded.text.substr(0, snipAt);
 
   std::stringstream instructionName;
-  instructionName << type << ' ' << identifier;
+  instructionName << encoded.lhs_type << ' ' << encoded.lhs_identifier;
+  encoded.lhs = instructionName.str();
 
-  string lhs = instructionName.str();
-  string rhs = instructionString.substr(snipAt + 3);
-  pair<string, string> encoded = make_pair(lhs, rhs);
+  encoded.rhs = encoded.text.substr(snipAt + 3);
 
-  texts_.insert({instruction, encoded});
+  instruction_cache_.insert({instruction, encoded});
   return encoded;
+}
+
+LlvmTextComponents TextEncoder::Encode(const ::llvm::Constant *constant) {
+  // Return from cache if available.
+  auto it = constant_cache_.find(constant);
+  if (it != constant_cache_.end()) {
+    return it->second;
+  }
+
+  LlvmTextComponents encoded;
+  encoded.text = PrintToString(*constant);
+  encoded.lhs = encoded.text;
+  encoded.lhs_type = PrintToString(*constant->getType());
+
+  constant_cache_.insert({constant, encoded});
+  return encoded;
+}
+
+LlvmTextComponents TextEncoder::Encode(const ::llvm::Value *value) {
+  return EncodeAndCache(value, &value_cache_);
+}
+
+LlvmTextComponents TextEncoder::Encode(const ::llvm::Type *type) {
+  return EncodeAndCache(type, &type_cache_);
+}
+
+LlvmTextComponents TextEncoder::Encode(const ::llvm::Argument *argument) {
+  // Return from cache if available.
+  auto it = arg_cache_.find(argument);
+  if (it != arg_cache_.end()) {
+    return it->second;
+  }
+
+  LlvmTextComponents encoded;
+  encoded.text = PrintToString(*argument);
+
+  encoded.lhs = encoded.text;
+  encoded.lhs_type = PrintToString(*argument->getType());
+
+  arg_cache_.insert({argument, encoded});
+  return encoded;
+}
+
+void TextEncoder::Clear() {
+  constant_cache_.clear();
+  instruction_cache_.clear();
+  arg_cache_.clear();
+  value_cache_.clear();
+  type_cache_.clear();
 }
 
 }  // namespace internal

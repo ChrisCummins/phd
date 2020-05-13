@@ -21,9 +21,11 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "labm8/cpp/string.h"
+#include "llvm/IR/Argument.h"
+#include "llvm/IR/Constant.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Type.h"
-#include "llvm/Support/raw_ostream.h"
+#include "llvm/IR/Value.h"
 
 using std::pair;
 
@@ -32,29 +34,27 @@ namespace ir {
 namespace llvm {
 namespace internal {
 
-// Produce the textual representation of an LLVM value.
-// This accepts instances of ::llvm::Instruction or ::llvm::Value.
-template <typename T>
-string PrintToString(const T &value) {
-  std::string str;
-  ::llvm::raw_string_ostream rso(str);
-  value.print(rso);
-  // Trim any leading indentation whitespace.
-  labm8::TrimLeft(str);
-  return str;
-}
+struct LlvmTextComponents {
+  // The entire text of the instruction, e.g. "%5 = add nsw i32 %3, %4"
+  string text;
+  // The left-hand side of the instruction, e.g. "i32* %5". If there is no
+  // left-hand side, this string is empty.
+  string lhs;
+  // The right-hand side of the instruction, e.g. "add nsw i32 %3, %4"
+  string rhs;
+  // The identifier of the left-hand side of the instruction, e.g. "%5". If
+  // there is no left-hand side, this string is empty.
+  string lhs_identifier;
+  // The type of the left-hand side of the instruction, e.g. "i32*". If there is
+  // no left-hand side, this string is empty.
+  string lhs_type;
+  // The type of the right-hand side of the instruction, e.g. "add".
+  string opcode_name;
+};
 
 class TextEncoder {
  public:
-  // Generate the split "left"- and "right"-hand side components of an
-  // instruction.
-  //
-  //     E.g.      "%5 = add nsw i32 %3, %4"
-  //          LHS: "int64* %5"
-  //          RHS: "add nsw i32 %3, %4".
-  //
-  // Calling GetInstructionLhs() on an instruction with no LHS,
-  // e.g. "ret i32 %13", returns an empty string.
+  // Encode the string components describing an LLVM IR object.
   //
   // LLVM doesn't require "names" for instructions since it is in SSA form, so
   // these methods generates one by printing the instruction to a string (to
@@ -62,17 +62,28 @@ class TextEncoder {
   // concatenating it with the type.
   //
   // See: https://lists.llvm.org/pipermail/llvm-dev/2010-April/030726.html
-  string GetInstructionLhs(const ::llvm::Instruction *instruction);
-
-  string GetInstructionRhs(const ::llvm::Instruction *instruction);
+  LlvmTextComponents Encode(const ::llvm::Instruction *instruction);
+  // Fields set: text, lhs, and lhs_type.
+  LlvmTextComponents Encode(const ::llvm::Constant *constant);
+  // Fields set: text, lhs, and lhs_type.
+  LlvmTextComponents Encode(const ::llvm::Argument *argument);
+  LlvmTextComponents Encode(const ::llvm::Value *value);
+  LlvmTextComponents Encode(const ::llvm::Type *type);
 
   // Clear the encoded string cache.
   void Clear();
 
  private:
-  pair<string, string> Encode(const ::llvm::Instruction *instruction);
-
-  absl::flat_hash_map<const ::llvm::Instruction *, pair<string, string>> texts_;
+  // Caches to map LLVM IR objects to their encoded representations. We cache
+  // objects since serializing and string manipulation can be expensive, and may
+  // need to be performed many times for each object, dependning on its usage.
+  absl::flat_hash_map<const ::llvm::Instruction *, LlvmTextComponents>
+      instruction_cache_;
+  absl::flat_hash_map<const ::llvm::Constant *, LlvmTextComponents>
+      constant_cache_;
+  absl::flat_hash_map<const ::llvm::Argument *, LlvmTextComponents> arg_cache_;
+  absl::flat_hash_map<const ::llvm::Value *, LlvmTextComponents> value_cache_;
+  absl::flat_hash_map<const ::llvm::Type *, LlvmTextComponents> type_cache_;
 };
 
 }  // namespace internal

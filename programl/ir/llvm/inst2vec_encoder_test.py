@@ -32,15 +32,44 @@ def encoder() -> inst2vec_encoder.Inst2vecEncoder:
   return inst2vec_encoder.Inst2vecEncoder()
 
 
+class Inst2vecGraphBuilder(program_graph_builder.ProgramGraphBuilder):
+  """A program graph builder for conveniently creating inst2vec test graphs."""
+
+  def __init__(self):
+    super(Inst2vecGraphBuilder, self).__init__()
+    mod = self.AddModule("mod")
+    self.fn = self.AddFunction("fn", mod)
+    # Store the full texts which will be assigned as features during Build().
+    self.full_texts = {}
+
+  def AddInstruction(self, full_text: str):
+    """Add an instruction with the given full text."""
+    node = super(Inst2vecGraphBuilder, self).AddInstruction(full_text, self.fn)
+    self.full_texts[node] = full_text
+    return node
+
+  def AddVariable(self, full_text: str):
+    """Add a variable with the given full text."""
+    node = super(Inst2vecGraphBuilder, self).AddVariable(full_text, self.fn)
+    self.full_texts[node] = full_text
+    return node
+
+  def Build(self):
+    proto = super(Inst2vecGraphBuilder, self).Build()
+    for node, full_text in self.full_texts.items():
+      proto.node[node].features.feature["full_text"].bytes_list.value.append(
+        full_text.encode("utf-8")
+      )
+    return proto
+
+
 def test_Encode_equivalent_preprocessed_text(
   encoder: inst2vec_encoder.Inst2vecEncoder,
 ):
   """Test equivalence of nodes that pre-process to the same text."""
-  builder = program_graph_builder.ProgramGraphBuilder()
-  mod = builder.AddModule("mod")
-  fn = builder.AddFunction("fn", mod)
-  a = builder.AddInstruction("%7 = add nsw i32 %5, -1", fn)
-  b = builder.AddInstruction("%9 = add nsw i32 %5, -2", fn)
+  builder = Inst2vecGraphBuilder()
+  a = builder.AddInstruction("%7 = add nsw i32 %5, -1")
+  b = builder.AddInstruction("%9 = add nsw i32 %5, -2")
   builder.AddControlEdge(builder.root, a, position=0)
   builder.AddControlEdge(a, b, position=0)
 
@@ -56,10 +85,8 @@ def test_Encode_equivalent_preprocessed_text(
 
 def test_Encode_variable(encoder: inst2vec_encoder.Inst2vecEncoder):
   """Test the encoding of variable nodes."""
-  builder = program_graph_builder.ProgramGraphBuilder()
-  mod = builder.AddModule("mod")
-  fn = builder.AddFunction("fn", mod)
-  a = builder.AddVariable("abcd", fn)
+  builder = Inst2vecGraphBuilder()
+  a = builder.AddVariable("abcd")
   builder.AddDataEdge(builder.root, a, position=0)
 
   proto = encoder.Encode(builder.Build())
@@ -71,10 +98,8 @@ def test_Encode_variable(encoder: inst2vec_encoder.Inst2vecEncoder):
 
 def test_Encode_constant(encoder: inst2vec_encoder.Inst2vecEncoder):
   """Test the encoding of constant nodes."""
-  builder = program_graph_builder.ProgramGraphBuilder()
-  mod = builder.AddModule("mod")
-  fn = builder.AddFunction("fn", mod)
-  a = builder.AddInstruction("x", fn)
+  builder = Inst2vecGraphBuilder()
+  a = builder.AddInstruction("x")
   b = builder.AddConstant("abcd")
   builder.AddControlEdge(builder.root, a, position=0)
   builder.AddDataEdge(b, a, position=0)
@@ -88,10 +113,8 @@ def test_Encode_constant(encoder: inst2vec_encoder.Inst2vecEncoder):
 
 def test_Encode_encoded_values(encoder: inst2vec_encoder.Inst2vecEncoder):
   """Test that "x" attribute of a node matches dictionary value."""
-  builder = program_graph_builder.ProgramGraphBuilder()
-  mod = builder.AddModule("mod")
-  fn = builder.AddFunction("fn", mod)
-  a = builder.AddInstruction("br label %4", fn)
+  builder = Inst2vecGraphBuilder()
+  a = builder.AddInstruction("br label %4")
   builder.AddControlEdge(builder.root, a, position=0)
 
   proto = encoder.Encode(builder.Build())
@@ -105,11 +128,9 @@ def test_Encode_encoded_values_differ_between_instructions(
   encoder: inst2vec_encoder.Inst2vecEncoder,
 ):
   """Test that "x" attribute of nodes differ between different texts."""
-  builder = program_graph_builder.ProgramGraphBuilder()
-  mod = builder.AddModule("mod")
-  fn = builder.AddFunction("fn", mod)
-  a = builder.AddInstruction("%7 = add nsw i32 %5, -1", fn)
-  b = builder.AddInstruction("br label %4", fn)
+  builder = Inst2vecGraphBuilder()
+  a = builder.AddInstruction("%7 = add nsw i32 %5, -1")
+  b = builder.AddInstruction("br label %4")
   builder.AddControlEdge(builder.root, a, position=0)
   builder.AddControlEdge(a, b, position=0)
 
@@ -138,10 +159,8 @@ define i32 @A(%struct.foo*) #0 {
   ret i32 %5
 }
 """
-  builder = program_graph_builder.ProgramGraphBuilder()
-  mod = builder.AddModule("mod")
-  fn = builder.AddFunction("fn", mod)
-  a = builder.AddInstruction("%2 = alloca %struct.foo*, align 8", fn)
+  builder = Inst2vecGraphBuilder()
+  a = builder.AddInstruction("%2 = alloca %struct.foo*, align 8")
   builder.AddControlEdge(builder.root, a, position=0)
 
   proto = encoder.Encode(builder.Build(), ir=ir)
@@ -174,24 +193,20 @@ define i32 @Foo(%struct.bar*) #0 {
   ret i32 %7
 }
 """
-  builder = program_graph_builder.ProgramGraphBuilder()
-  mod = builder.AddModule("mod")
-  fn = builder.AddFunction("fn", mod)
-  a = builder.AddInstruction("%2 = alloca %struct.bar*, align 8", fn)
-  b = builder.AddInstruction(
-    "store %struct.bar* %0, %struct.bar** %2, align 8", fn
-  )
+  builder = Inst2vecGraphBuilder()
+  a = builder.AddInstruction("%2 = alloca %struct.bar*, align 8")
+  b = builder.AddInstruction("store %struct.bar* %0, %struct.bar** %2, align 8")
   c = builder.AddInstruction(
-    "%3 = load %struct.bar*, %struct.bar** %2, align 8", fn
+    "%3 = load %struct.bar*, %struct.bar** %2, align 8"
   )
   d = builder.AddInstruction(
-    "%4 = getelementptr inbounds %struct.bar, %struct.bar* %3, i32 0, i32 0", fn
+    "%4 = getelementptr inbounds %struct.bar, %struct.bar* %3, i32 0, i32 0"
   )
   e = builder.AddInstruction(
-    "%5 = load %struct.foo*, %struct.foo** %4, align 8", fn
+    "%5 = load %struct.foo*, %struct.foo** %4, align 8"
   )
   f = builder.AddInstruction(
-    "%6 = getelementptr inbounds %struct.foo, %struct.foo* %5, i32 0, i32 0", fn
+    "%6 = getelementptr inbounds %struct.foo, %struct.foo* %5, i32 0, i32 0"
   )
   builder.AddControlEdge(builder.root, a, position=0)
   builder.AddControlEdge(a, b, position=0)

@@ -35,6 +35,15 @@ AUGMENTED_INST2VEC_EMBEDDINGS = bazelutil.DataPath(
 )
 
 
+def NodeFullText(node: node_pb2.Node) -> str:
+  """Get the full text of a node, or an empty string if not set."""
+  if len(node.features.feature["full_text"].bytes_list.value):
+    return (
+      node.features.feature["full_text"].bytes_list.value[0].decode("utf-8")
+    )
+  return ""
+
+
 class Inst2vecEncoder(object):
   """An encoder for LLVM program graphs using inst2vec."""
 
@@ -67,7 +76,7 @@ class Inst2vecEncoder(object):
     """
     # Gather the instruction texts to pre-process.
     lines = [
-      [node.text]
+      [NodeFullText(node)]
       for node in proto.node
       if node.type == node_pb2.Node.INSTRUCTION
     ]

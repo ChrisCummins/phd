@@ -66,7 +66,7 @@ using ArgumentConsumerMap =
     absl::flat_hash_map<const ::llvm::Argument*, vector<PositionalNode>>;
 
 // A module pass for constructing graphs.
-class ProgramGraphBuilder : programl::graph::ProgramGraphBuilder {
+class ProgramGraphBuilder : public programl::graph::ProgramGraphBuilder {
  public:
   explicit ProgramGraphBuilder(const ProgramGraphOptions& options)
       : programl::graph::ProgramGraphBuilder(),
@@ -89,6 +89,14 @@ class ProgramGraphBuilder : programl::graph::ProgramGraphBuilder {
 
   [[nodiscard]] Status AddCallSite(const Node* source,
                                    const FunctionEntryExits& target);
+
+  Node* AddLlvmInstruction(const ::llvm::Instruction* instruction,
+                           const Function* function);
+  Node* AddLlvmVariable(const ::llvm::Instruction* operand,
+                        const Function* function);
+  Node* AddLlvmVariable(const ::llvm::Argument* argument,
+                        const Function* function);
+  Node* AddLlvmConstant(const ::llvm::Constant* constant);
 
  private:
   const ProgramGraphOptions options_;
