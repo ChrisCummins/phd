@@ -37,6 +37,7 @@ cc_library(
         "//labm8/cpp:status_macros",
         "//labm8/cpp:statusor",
         "//labm8/cpp:string",
+        "//programl/graph:features",
         "//programl/graph:program_graph_builder",
         "//programl/proto:program_graph_cc",
         "//programl/proto:program_graph_options_cc",

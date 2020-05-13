@@ -33,6 +33,12 @@ Feature CreateFeature(const vector<int64_t> &value) {
   return feature;
 }
 
+Feature CreateFeature(const string &value) {
+  Feature feature;
+  feature.mutable_bytes_list()->add_value(value);
+  return feature;
+}
+
 void SetFeature(Features *features, const char *label, const Feature &value) {
   (*features->mutable_feature())[label] = value;
 }

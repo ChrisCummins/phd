@@ -17,18 +17,34 @@
 
 #include "programl/proto/features.pb.h"
 
+#include <string>
 #include <vector>
 
+using std::string;
 using std::vector;
 
 namespace programl {
 namespace graph {
 
+// Create a feature protocol buffer with a scalar int64 value.
 Feature CreateFeature(int64_t value);
 
-Feature CreateFeature(const vector<int64_t> &value);
+// Create a feature protocol buffer with a list of int64 values.
+Feature CreateFeature(const vector<int64_t>& value);
 
-void SetFeature(Features *features, const char *label, const Feature &value);
+// Create a feature protocol buffer with a scalar string value.
+Feature CreateFeature(const string& value);
+
+// Set the feature value to the given message.
+void SetFeature(Features* features, const char* label, const Feature& value);
+
+// Convenience function to add a feature.
+template <typename MessageType, typename FeatureType>
+void AddScalarFeature(MessageType* message, const string& key,
+                      const FeatureType& value) {
+  message->mutable_features()->mutable_feature()->insert(
+      {key, CreateFeature(value)});
+}
 
 }  // namespace graph
 }  // namespace programl

@@ -42,20 +42,6 @@ namespace ir {
 namespace llvm {
 namespace internal {
 
-template <typename T>
-void AddScalarFeature(T* message, const string& key, const int64_t value) {
-  Feature feature;
-  feature.mutable_int64_list()->add_value(value);
-  message->mutable_features()->mutable_feature()->insert({key, feature});
-}
-
-template <typename T>
-void AddScalarFeature(T* message, const string& key, const string& value) {
-  Feature feature;
-  feature.mutable_bytes_list()->add_value(value);
-  message->mutable_features()->mutable_feature()->insert({key, feature});
-}
-
 // An <entry, exits> pair which records the node numbers for a function's entry
 // and exit statement nodes, respectively.
 using FunctionEntryExits = pair<Node*, vector<Node*>>;

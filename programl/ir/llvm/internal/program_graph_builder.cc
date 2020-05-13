@@ -28,6 +28,7 @@
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/ProfileSummary.h"
+#include "programl/graph/features.h"
 #include "programl/ir/llvm/internal/text_encoder.h"
 #include "programl/proto/program_graph.pb.h"
 
@@ -62,8 +63,8 @@ StatusOr<BasicBlockEntryExit> ProgramGraphBuilder::VisitBasicBlock(
     auto instructionMessage = AddInstruction(text, functionMessage);
     instructionMessage->set_block(blockCount_);
 
-    AddScalarFeature(instructionMessage, "llvm_instr_opcode",
-                     instruction.getOpcode());
+    graph::AddScalarFeature(instructionMessage, "llvm_instr_opcode",
+                            instruction.getOpcode());
 
     // Record the instruction in the function-level instructions map.
     instructions->insert({&instruction, instructionMessage});
@@ -71,16 +72,16 @@ StatusOr<BasicBlockEntryExit> ProgramGraphBuilder::VisitBasicBlock(
     // Add profiling information features, if available.
     uint64_t profTotalWeight;
     if (instruction.extractProfTotalWeight(profTotalWeight)) {
-      AddScalarFeature(instructionMessage, "llvm_profile_total_weight",
-                       profTotalWeight);
+      graph::AddScalarFeature(instructionMessage, "llvm_profile_total_weight",
+                              profTotalWeight);
     }
     uint64_t profTrueWeight;
     uint64_t profFalseWeight;
     if (instruction.extractProfMetadata(profTrueWeight, profFalseWeight)) {
-      AddScalarFeature(instructionMessage, "llvm_profile_true_weight",
-                       profTotalWeight);
-      AddScalarFeature(instructionMessage, "llvm_profile_false_weight",
-                       profFalseWeight);
+      graph::AddScalarFeature(instructionMessage, "llvm_profile_true_weight",
+                              profTotalWeight);
+      graph::AddScalarFeature(instructionMessage, "llvm_profile_false_weight",
+                              profFalseWeight);
     }
 
     // A basic block consists of a linear sequence of instructions, so we can
@@ -351,10 +352,10 @@ StatusOr<ProgramGraph> ProgramGraphBuilder::Build(
 
   Module* moduleMessage = AddModule(module.getSourceFileName());
 
-  AddScalarFeature(moduleMessage, "llvm_target_triple",
-                   module.getTargetTriple());
-  AddScalarFeature(moduleMessage, "llvm_data_layout",
-                   module.getDataLayoutStr());
+  graph::AddScalarFeature(moduleMessage, "llvm_target_triple",
+                          module.getTargetTriple());
+  graph::AddScalarFeature(moduleMessage, "llvm_data_layout",
+                          module.getDataLayoutStr());
 
   for (const ::llvm::Function& function : module) {
     // Create the function message.
@@ -412,18 +413,18 @@ StatusOr<ProgramGraph> ProgramGraphBuilder::Build(
         return Status(labm8::error::Code::FAILED_PRECONDITION,
                       "llvm::Module ProfileSymmary is null");
       }
-      AddScalarFeature(moduleMessage, "llvm_profile_num_functions",
-                       profileSummary->getNumFunctions());
-      AddScalarFeature(moduleMessage, "llvm_profile_max_function_count",
-                       profileSummary->getMaxFunctionCount());
-      AddScalarFeature(moduleMessage, "llvm_profile_num_counts",
-                       profileSummary->getNumCounts());
-      AddScalarFeature(moduleMessage, "llvm_profile_total_count",
-                       profileSummary->getTotalCount());
-      AddScalarFeature(moduleMessage, "llvm_profile_max_count",
-                       profileSummary->getMaxCount());
-      AddScalarFeature(moduleMessage, "llvm_profile_max_internal_count",
-                       profileSummary->getMaxInternalCount());
+      graph::AddScalarFeature(moduleMessage, "llvm_profile_num_functions",
+                              profileSummary->getNumFunctions());
+      graph::AddScalarFeature(moduleMessage, "llvm_profile_max_function_count",
+                              profileSummary->getMaxFunctionCount());
+      graph::AddScalarFeature(moduleMessage, "llvm_profile_num_counts",
+                              profileSummary->getNumCounts());
+      graph::AddScalarFeature(moduleMessage, "llvm_profile_total_count",
+                              profileSummary->getTotalCount());
+      graph::AddScalarFeature(moduleMessage, "llvm_profile_max_count",
+                              profileSummary->getMaxCount());
+      graph::AddScalarFeature(moduleMessage, "llvm_profile_max_internal_count",
+                              profileSummary->getMaxInternalCount());
     }
   }
 
