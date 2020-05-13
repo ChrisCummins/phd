@@ -30,7 +30,7 @@ def test_RollingResults_iteration_count(weight: float):
   """Test aggreation of model iteration count and convergence."""
   rolling_results = RollingResults()
 
-  data = BatchData(graph_ids=[1], model_data=None)
+  data = BatchData(graph_count=1, model_data=None)
   results = BatchResults.Create(
     targets=np.array([[0, 1, 2]]),
     predictions=np.array([[0, 1, 2]]),

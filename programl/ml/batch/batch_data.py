@@ -15,23 +15,19 @@
 # limitations under the License.
 """This module defines data structures for mini-batches."""
 from typing import Any
-from typing import List
 from typing import NamedTuple
 
 
 class BatchData(NamedTuple):
   """Container for a mini-batch of data."""
 
-  graph_ids: List[int]
+  # The number of graphs in the batch.
+  graph_count: int
   # The model data for this batch.
   model_data: Any
   # A flag used to mark that this batch is the end of an iterable sequences of
   # batches.
   end_of_batches: bool = False
-
-  @property
-  def graph_count(self) -> int:
-    return len(self.graph_ids)
 
   @classmethod
   def CreateEmptyBatch(cls) -> "BatchData":
