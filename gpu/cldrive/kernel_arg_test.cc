@@ -42,7 +42,14 @@ TEST(OpenClTypeFromString, Unknown) {
 
 class KernelArgTest : public ::testing::Test {
  protected:
-  virtual void SetUp() override { context_ = cl::Context::getDefault(); }
+  virtual void SetUp() override {
+    try {
+      context_ = cl::Context::getDefault();
+    } catch (cl::Error err) {
+      CHECK(false) << "OpenCL exception in KernelArgTest::SetUp: " << err.what()
+                   << "(" << err.err() << ")";
+    }
+  }
   cl::Context context_;
 };
 
