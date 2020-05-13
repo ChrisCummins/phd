@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Base class for implementing classifier models."""
+import pickle
 from typing import Any
 from typing import Iterable
 
@@ -100,7 +101,7 @@ class Model(object):
     self._initialized = True
     self.epoch_num = checkpoint.epoch_num
     self.best_results = checkpoint.best_results
-    self.LoadModelData(checkpoint.model_data)
+    self.LoadModelData(pickle.loads(checkpoint.model_data))
 
   def SaveCheckpoint(self) -> checkpoint_pb2.Checkpoint:
     """Construct a checkpoint from the current model state.
@@ -112,7 +113,7 @@ class Model(object):
       epoch_num=self.epoch_num,
       best_train_results=self.best_train_results,
       best_val_results=self.best_val_results,
-      model_data=self.GetModelData(),
+      model_data=pickle.dumps(self.GetModelData()),
     )
 
   #############################################################################
