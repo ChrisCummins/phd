@@ -55,6 +55,8 @@ class BatchResults(NamedTuple):
   precision: float
   recall: float
   f1: float
+  # The confusion matrix.
+  confusion_matrix: np.array
 
   @property
   def has_learning_rate(self) -> bool:
@@ -165,4 +167,37 @@ class BatchResults(NamedTuple):
         labels=labels,
         average=FLAGS.batch_results_averaging_method,
       ),
+      confusion_matrix=BuildConfusionMatrix(
+        targets=true_y, predictions=pred_y, num_classes=y_dimensionality
+      ),
     )
+
+
+def BuildConfusionMatrix(
+  targets: np.array, predictions: np.array, num_classes: int
+) -> np.array:
+  """Build a confusion matrix.
+
+  Args:
+    targets: A list of target classes, dtype int32.
+    predictions: A list of predicted classes of the same length as targets,
+      dtype float32.
+    num_classes: The number of classes. All values in targets and predictions
+      lists must be in the range 0 <= x <= num_classes.
+
+  Returns:
+    A matrix of shape [num_classes, num_classes] where the rows indicate true
+    target class, the columns indicate predicted target class, and the element
+    values are the number of instances of this type in the batch.
+  """
+  if targets.shape != predictions.shape:
+    raise TypeError(
+      f"Predictions shape {predictions.shape} must match targets "
+      f"shape {targets.shape}"
+    )
+
+  confusion_matrix = np.zeros((num_classes, num_classes), dtype=np.int32)
+  for target, prediction in zip(targets, predictions):
+    confusion_matrix[target][prediction] += 1
+
+  return confusion_matrix

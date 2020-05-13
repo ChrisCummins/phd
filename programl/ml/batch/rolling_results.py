@@ -40,6 +40,7 @@ class RollingResults(object):
     self.weighted_precision_sum = 0
     self.weighted_recall_sum = 0
     self.weighted_f1_sum = 0
+    self.confusion_matrix = None
     self.start_time = time.time()
 
   def Update(
@@ -77,6 +78,10 @@ class RollingResults(object):
     self.weighted_precision_sum += results.precision * weight
     self.weighted_recall_sum += results.recall * weight
     self.weighted_f1_sum += results.f1 * weight
+    if self.confusion_matrix is None:
+      self.confusion_matrix = results.confusion_matrix
+    else:
+      self.confusion_matrix += results.confusion_matrix
 
   @property
   def iteration_count(self) -> float:
@@ -126,4 +131,10 @@ class RollingResults(object):
       mean_recall=self.recall,
       mean_f1=self.f1,
       walltime_seconds=time.time() - self.start_time,
+      confusion_matrix=epoch_pb2.ConfusionMatrix(
+        row=[
+          epoch_pb2.ConfusionMatrixRow(column=row)
+          for row in self.confusion_matrix.tolist()
+        ],
+      ),
     )

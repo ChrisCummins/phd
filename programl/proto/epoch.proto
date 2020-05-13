@@ -45,6 +45,7 @@ message EpochResults {
   float mean_precision = 9;
   float mean_recall = 10;
   float mean_f1 = 11;
+  ConfusionMatrix confusion_matrix = 13;
   float walltime_seconds = 12;
 }
 
@@ -54,4 +55,16 @@ message Epoch {
   EpochResults train_results = 2;
   EpochResults val_results = 3;
   EpochResults test_results = 4;
+}
+
+message EpochList {
+  repeated Epoch epoch = 1;
+}
+
+message ConfusionMatrix {
+  repeated ConfusionMatrixRow column = 1;
+}
+
+message ConfusionMatrixRow {
+  repeated int64 row = 2;
 }
