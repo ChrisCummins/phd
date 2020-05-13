@@ -33,6 +33,8 @@ third_party/tbb_mac.BUILD
 tools/bazel
 tools/bazel_env.sh
 tools/Brewfile.travis
+tools/BUILD
 tools/flaky_bazel.sh
+tools/whoami.sh
 tools/workspace_status.sh
 version.txt
