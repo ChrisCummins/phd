@@ -50,10 +50,10 @@ app.DEFINE_output_path(
 )
 
 DICTIONARY = bazelutil.DataPath(
-  "phd/programl/ir/llvm/inst2vec_augmented_dictionary.pickle"
+  "phd/programl/ir/llvm/internal/inst2vec_augmented_dictionary.pickle"
 )
 AUGMENTED_INST2VEC_EMBEDDINGS = bazelutil.DataPath(
-  "phd/programl/ir/llvm/inst2vec_augmented_embeddings.pickle"
+  "phd/programl/ir/llvm/internal/inst2vec_augmented_embeddings.pickle"
 )
 
 
