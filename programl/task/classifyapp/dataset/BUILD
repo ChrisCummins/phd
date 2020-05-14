@@ -16,24 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-py_binary(
-    name = "create",
-    srcs = ["create.py"],
-    data = [":create_helper"],
-    deps = [
-        "//labm8/py:app",
-        "//labm8/py:bazelutil",
-        "//labm8/py:labtypes",
-        "//labm8/py:pbutil",
-        "//labm8/py:progress",
-        "//programl/ir/llvm:inst2vec_encoder",
-        "//programl/proto:program_graph_py",
-    ],
-)
-
 cc_binary(
-    name = "create_helper",
-    srcs = ["create_helper.cc"],
+    name = "create",
+    srcs = ["create.cc"],
     deps = [
         ":poj104",
         "//labm8/cpp:app",

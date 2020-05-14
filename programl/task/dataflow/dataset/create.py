@@ -30,7 +30,6 @@ from labm8.py import bazelutil
 from labm8.py import labtypes
 from labm8.py import pbutil
 from labm8.py import progress
-from programl.ir.llvm import inst2vec_encoder
 from programl.ir.llvm.py import llvm
 from programl.proto import ir_pb2
 
@@ -47,7 +46,7 @@ CREATE_LABELS = bazelutil.DataPath(
 )
 
 
-def _ProcessRow(encoder, path, row, i) -> None:
+def _ProcessRow(path, row, i) -> None:
   source, src_lang, ir_type, binary_ir = row
 
   # Decode database row.
@@ -81,7 +80,6 @@ def _ProcessRow(encoder, path, row, i) -> None:
   # Convert to ProgramGraph.
   try:
     graph = llvm.BuildProgramGraph(ir.text)
-    encoder.Encode(graph, ir=ir.text)
     pbutil.ToFile(graph, path / f"graphs/{name}.ProgramGraph.pb")
 
     # Put into train/val/test bin.
@@ -101,9 +99,9 @@ def _ProcessRow(encoder, path, row, i) -> None:
 
 
 def _ProcessRows(job) -> int:
-  encoder, path, rows = job
+  path, rows = job
   for (row, i) in rows:
-    _ProcessRow(encoder, path, row, i)
+    _ProcessRow(path, row, i)
   return len(rows)
 
 
@@ -130,7 +128,6 @@ class ExportIrDatabase(progress.Progress):
     super(ExportIrDatabase, self).__init__("ir db", i=0, n=n, unit="irs")
 
   def Run(self):
-    encoder = inst2vec_encoder.Inst2vecEncoder()
     with multiprocessing.Pool() as pool:
       # Run many smaller queries rather than one big query since MySQL
       # connections will die if hanging around for too long.
@@ -152,9 +149,7 @@ OFFSET {j}
 
         results = self.db.store_result()
         rows = [(item, i) for i, item in enumerate(results.fetch_row())]
-        jobs = [
-          (encoder, self.path, chunk) for chunk in labtypes.Chunkify(rows, 128)
-        ]
+        jobs = [(self.path, chunk) for chunk in labtypes.Chunkify(rows, 128)]
 
         for c in pool.imap_unordered(_ProcessRows, jobs):
           self.ctx.i += c
@@ -199,8 +194,6 @@ def Main():
   progress.Run(export)
 
   ExportClassifyAppGraphs(pathlib.Path(FLAGS.classifyapp), path)
-
-  # TODO: inst2vec encodings
 
   app.Log(1, "Creating data flow analysis labels")
   subprocess.check_output([str(CREATE_LABELS), "--path", str(path)])
