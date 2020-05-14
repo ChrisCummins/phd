@@ -101,6 +101,17 @@ cc_binary(
     ],
 )
 
+py_binary(
+    name = "node_text_freq",
+    srcs = ["node_text_freq.py"],
+    deps = [
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
+        "//labm8/py:progress",
+        "//programl/proto:program_graph_py",
+    ],
+)
+
 cc_binary(
     name = "pb2pbtxt",
     srcs = ["pb2pbtxt.cc"],
@@ -111,5 +122,28 @@ cc_binary(
         "//programl/proto:program_graph_features_cc",
         "//programl/proto:src_cc",
         "@com_google_protobuf//:protobuf",
+    ],
+)
+
+py_binary(
+    name = "select_vocab",
+    srcs = ["select_vocab.py"],
+    deps = [
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+    ],
+)
+
+cc_binary(
+    name = "xla2graph",
+    srcs = ["xla2graph.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//labm8/cpp:app",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:statusor",
+        "//labm8/cpp:string",
+        "//programl/ir/xla:hlo_module_graph_builder",
+        "@org_tensorflow//tensorflow/compiler/xla/service:hlo_proto",
     ],
 )

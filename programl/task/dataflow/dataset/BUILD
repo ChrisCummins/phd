@@ -24,7 +24,6 @@ py_binary(
         "//labm8/py:labtypes",
         "//labm8/py:pbutil",
         "//labm8/py:progress",
-        "//programl/ir/llvm:inst2vec_encoder",
         "//programl/ir/llvm/py:llvm",
         "//programl/proto:ir_py",
         "//third_party/py/mysql",
