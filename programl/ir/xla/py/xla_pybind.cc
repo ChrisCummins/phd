@@ -17,19 +17,19 @@
 // limitations under the License.
 #include <pybind11/pybind11.h>
 #include <sstream>
-#include "deeplearning/ml4pl/graphs/xla2graph/hlo_module_graph_builder.h"
 #include "labm8/cpp/statusor.h"
 #include "labm8/cpp/string.h"
+#include "programl/ir/xla/hlo_module_graph_builder.h"
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(xla2graph_pybind, m) {
+PYBIND11_MODULE(xla_pybind, m) {
   m.doc() = "Generate program graphs from XLA HLO modules.";
 
   m.def("BuildProgramGraphProto",
         [&](const string& serializedProto) {
-          ml4pl::HloModuleGraphBuilder builder;
-          xla::HloProto proto;
+          programl::ir::xla::HloModuleGraphBuilder builder;
+          ::xla::HloProto proto;
           if (!proto.ParseFromString(serializedProto)) {
             throw std::runtime_error("Failed to parse input proto");
           }

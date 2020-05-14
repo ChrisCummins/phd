@@ -13,14 +13,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "deeplearning/ml4pl/graphs/xla2graph/hlo_proto_reader.h"
+#include "programl/ir/xla/hlo_proto_reader.h"
 
 #include <fstream>
 #include <sstream>
 #include <streambuf>
 #include "labm8/cpp/status_macros.h"
 
-namespace ml4pl {
+namespace programl {
+namespace ir {
+namespace xla {
 
 labm8::StatusOr<string> ReadFileOrStdin(const string& path, std::istream& ins) {
   string str;
@@ -46,12 +48,12 @@ labm8::StatusOr<string> ReadFileOrStdin(const string& path, std::istream& ins) {
   return str;
 }
 
-labm8::StatusOr<xla::HloProto> GetHloProtoFromFileOrStdin(const string& path,
-                                                          bool wireFormat) {
+labm8::StatusOr<HloProto> GetHloProtoFromFileOrStdin(const string& path,
+                                                     bool wireFormat) {
   string serializedProto;
   ASSIGN_OR_RETURN(serializedProto, ReadFileOrStdin(path));
 
-  xla::HloProto proto;
+  HloProto proto;
   if (wireFormat) {
     if (!proto.ParseFromString(serializedProto)) {
       return labm8::Status(labm8::error::Code::INVALID_ARGUMENT,
@@ -64,4 +66,6 @@ labm8::StatusOr<xla::HloProto> GetHloProtoFromFileOrStdin(const string& path,
   return proto;
 }
 
-}  // namespace ml4pl
+}  // namespace xla
+}  // namespace ir
+}  // namespace programl

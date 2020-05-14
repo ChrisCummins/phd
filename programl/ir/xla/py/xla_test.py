@@ -16,25 +16,23 @@
 """Unit tests for //deeplearning/ml4pl/graphs/xla2graph/py:xla2graph."""
 from tensorflow.compiler.xla.service import hlo_pb2
 
-from deeplearning.ml4pl.graphs.xla2graph.py import xla2graph
 from labm8.py import app
 from labm8.py import bazelutil
 from labm8.py import pbutil
 from labm8.py import test
+from programl.ir.xla.py import xla
 
 
 FLAGS = app.FLAGS
 
-TEST_PROTO = bazelutil.DataPath(
-  "phd/deeplearning/ml4pl/testing/data/hlo/a.hlo.pb"
-)
+TEST_PROTO = bazelutil.DataPath("phd/programl/test/data/a.hlo.pb")
 
 
 def test_empty_proto():
   """Build from an empty proto."""
   proto = hlo_pb2.HloProto()
-  with test.Raises(RuntimeError) as e_ctx:
-    xla2graph.BuildProgramGraphProto(proto)
+  with test.Raises(ValueError) as e_ctx:
+    xla.BuildProgramGraphProto(proto)
 
   assert "Failed to locate entry computation" in str(e_ctx.value)
 
@@ -42,16 +40,9 @@ def test_empty_proto():
 def test_non_empty_proto():
   """Build a graph proto from an example proto."""
   proto = pbutil.FromFile(TEST_PROTO, hlo_pb2.HloProto())
-  graph = xla2graph.BuildProgramGraphProto(proto)
+  graph = xla.BuildProgramGraphProto(proto)
   assert len(graph.node) == 155
   assert len(graph.function) == 5
-
-
-def test_non_empty_proto_to_networkx():
-  """Build a networkx graph from an example proto."""
-  proto = pbutil.FromFile(TEST_PROTO, hlo_pb2.HloProto())
-  graph = xla2graph.BuildProgramGraphNetworkX(proto)
-  assert graph.number_of_nodes() == 155
 
 
 if __name__ == "__main__":

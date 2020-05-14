@@ -21,38 +21,48 @@
 
 #include "absl/container/flat_hash_map.h"
 
-#include "deeplearning/ml4pl/graphs/graph_builder.h"
-#include "deeplearning/ml4pl/graphs/programl.pb.h"
 #include "labm8/cpp/port.h"
 #include "labm8/cpp/statusor.h"
+#include "programl/graph/program_graph_builder.h"
+#include "programl/proto/program_graph.pb.h"
 #include "tensorflow/compiler/xla/service/hlo.pb.h"
 
-namespace ml4pl {
+namespace programl {
+namespace ir {
+namespace xla {
+
+using graph::FunctionEntryExits;
+using ::xla::HloComputationProto;
+using ::xla::HloInstructionProto;
+using ::xla::HloModuleProto;
+using ::xla::HloProto;
 
 // A class for generating program graphs from HloProto messages.
-class HloModuleGraphBuilder : GraphBuilder {
+class HloModuleGraphBuilder : graph::ProgramGraphBuilder {
  public:
   // Main entry point. Accepts a module as input and returns a graph as output,
   // or an error status if graph construction fails.
-  labm8::StatusOr<ProgramGraph> Build(const xla::HloProto& proto);
+  labm8::StatusOr<ProgramGraph> Build(const HloProto& proto);
 
  protected:
-  labm8::Status VisitModule(const xla::HloModuleProto& module);
+  [[nodiscard]] labm8::Status VisitModule(const HloModuleProto& module);
 
-  labm8::StatusOr<FunctionEntryExits> VisitComputation(
-      const xla::HloComputationProto& computation);
+  [[nodiscard]] labm8::StatusOr<FunctionEntryExits> VisitComputation(
+      const HloComputationProto& computation, const Module* module);
 
-  labm8::StatusOr<size_t> VisitInstruction(
-      const xla::HloInstructionProto& instruction, size_t functionNumber,
-      size_t entryInstruction);
+  [[nodiscard]] labm8::StatusOr<Node*> VisitInstruction(
+      const HloInstructionProto& instruction, Function* function,
+      Node* entryInstruction);
 
  private:
   // A map from computations to their entry and exit nodes.
   absl::flat_hash_map<labm8::int64, FunctionEntryExits> computations_;
   // A map of instruction IDs to their node number.
-  absl::flat_hash_map<labm8::int64, size_t> instructions_;
+  absl::flat_hash_map<labm8::int64, Node*> instructions_;
   // A map of instruction IDs to the data element produced by the instruction.
-  absl::flat_hash_map<labm8::int64, size_t> producers_;
+  absl::flat_hash_map<labm8::int64, Node*> producers_;
 };
 
-}  // namespace ml4pl
+}  // namespace xla
+}  // namespace ir
+}  // namespace programl

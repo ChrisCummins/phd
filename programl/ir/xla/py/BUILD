@@ -1,4 +1,4 @@
-# This package contains python bindings for xla2graph.
+# This package contains python bindings for xla.
 #
 # Copyright 2019-2020 the ProGraML authors.
 #
@@ -21,41 +21,40 @@ load(
     "pybind_extension",
 )
 
-pybind_extension(
-    "xla2graph_pybind",
-    srcs = ["xla2graph_pybind.cc"],
-    deps = [
-        "//deeplearning/ml4pl/graphs/xla2graph:hlo_module_graph_builder",
-        "//labm8/cpp:statusor",
-        "//labm8/cpp:string",
-        "@org_tensorflow//tensorflow/compiler/xla/service:hlo_proto",
-    ],
-)
-
 py_library(
-    name = "xla2graph",
-    srcs = ["xla2graph.py"],
-    data = [":xla2graph_pybind.so"],
+    name = "xla",
+    srcs = ["xla.py"],
+    data = [":xla_pybind.so"],
     deps = [
-        "//deeplearning/ml4pl/graphs:programl",
-        "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//labm8/py:app",
+        "//programl/proto:program_graph_py",
         "//third_party/py/networkx",
         "@org_tensorflow//tensorflow/compiler/xla/service:hlo_proto_lib_py",
     ],
 )
 
 py_test(
-    name = "xla2graph_test",
-    srcs = ["xla2graph_test.py"],
-    data = ["//deeplearning/ml4pl/testing/data/hlo:hlo_protos"],
+    name = "xla_test",
+    srcs = ["xla_test.py"],
+    data = ["//programl/test/data:hlo_protos"],
     deps = [
-        ":xla2graph",
+        ":xla",
         "//labm8/py:app",
         "//labm8/py:bazelutil",
         "//labm8/py:pbutil",
         "//labm8/py:test",
         "@org_tensorflow//tensorflow/compiler/xla:xla_data_proto_lib_py",
         "@org_tensorflow//tensorflow/compiler/xla/service:hlo_proto_lib_py",
+    ],
+)
+
+pybind_extension(
+    "xla_pybind",
+    srcs = ["xla_pybind.cc"],
+    deps = [
+        "//labm8/cpp:statusor",
+        "//labm8/cpp:string",
+        "//programl/ir/xla:hlo_module_graph_builder",
+        "@org_tensorflow//tensorflow/compiler/xla/service:hlo_proto",
     ],
 )

@@ -20,16 +20,16 @@ cc_library(
     name = "hlo_module_graph_builder",
     srcs = ["hlo_module_graph_builder.cc"],
     hdrs = ["hlo_module_graph_builder.h"],
-    visibility = ["//deeplearning/ml4pl/graphs/xla2graph:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":xla_stringifier",
-        "//deeplearning/ml4pl/graphs:graph_builder",
-        "//deeplearning/ml4pl/graphs:programl_pb_cc",
         "//labm8/cpp:logging",
         "//labm8/cpp:port",
         "//labm8/cpp:status_macros",
         "//labm8/cpp:statusor",
         "//labm8/cpp:string",
+        "//programl/graph:program_graph_builder",
+        "//programl/proto:program_graph_cc",
         "@com_google_absl//absl/container:flat_hash_map",
         "@org_tensorflow//tensorflow/compiler/xla:xla_data_proto",
         "@org_tensorflow//tensorflow/compiler/xla/service:hlo_proto",
@@ -55,20 +55,6 @@ cc_test(
         ":hlo_proto_reader",
         "//labm8/cpp:test",
         "@boost//:filesystem",
-    ],
-)
-
-cc_binary(
-    name = "xla2graph",
-    srcs = ["xla2graph.cc"],
-    deps = [
-        ":hlo_module_graph_builder",
-        "//deeplearning/ml4pl/graphs:graphviz_converter",
-        "//labm8/cpp:app",
-        "//labm8/cpp:logging",
-        "//labm8/cpp:statusor",
-        "//labm8/cpp:string",
-        "@org_tensorflow//tensorflow/compiler/xla/service:hlo_proto",
     ],
 )
 

@@ -21,12 +21,20 @@
 #include "tensorflow/compiler/xla/service/hlo.pb.h"
 #include "tensorflow/compiler/xla/xla_data.pb.h"
 
-namespace ml4pl {
+namespace programl {
+namespace ir {
+namespace xla {
 
-string ShapeProtoToString(const xla::ShapeProto& shape);
+using ::xla::HloInstructionProto;
+using ::xla::LiteralProto;
+using ::xla::ShapeProto;
 
-string HloInstructionToText(const xla::HloInstructionProto& instruction);
+string ShapeProtoToString(const ShapeProto &shape);
 
-string LiteralProtoToText(const xla::LiteralProto& literal);
+string HloInstructionToText(const HloInstructionProto &instruction);
 
-}  // namespace ml4pl
+string LiteralProtoToText(const LiteralProto &literal);
+
+}  // namespace xla
+}  // namespace ir
+}  // namespace programl

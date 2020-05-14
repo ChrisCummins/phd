@@ -13,15 +13,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "deeplearning/ml4pl/graphs/xla2graph/xla_stringifier.h"
+#include "programl/ir/xla/xla_stringifier.h"
 
 #include <sstream>
 
-namespace ml4pl {
+namespace programl {
+namespace ir {
+namespace xla {
 
-string ShapeProtoToString(const xla::ShapeProto& shape) {
+string ShapeProtoToString(const ShapeProto& shape) {
   std::stringstream str;
-  str << xla::PrimitiveType_Name(shape.element_type());
+  str << PrimitiveType_Name(shape.element_type());
   for (int i = 0; i < shape.dimensions_size(); ++i) {
     str << (i ? 'x' : ' ');
     str << shape.dimensions(i);
@@ -29,7 +31,7 @@ string ShapeProtoToString(const xla::ShapeProto& shape) {
   return str.str();
 }
 
-string HloInstructionToText(const xla::HloInstructionProto& instruction) {
+string HloInstructionToText(const HloInstructionProto& instruction) {
   if (instruction.opcode() == "parameter" ||
       instruction.opcode() == "constant") {
     return instruction.name();
@@ -38,8 +40,10 @@ string HloInstructionToText(const xla::HloInstructionProto& instruction) {
   return instruction.opcode();
 }
 
-string LiteralProtoToText(const xla::LiteralProto& literal) {
+string LiteralProtoToText(const LiteralProto& literal) {
   return ShapeProtoToString(literal.shape());
 }
 
-}  // namespace ml4pl
+}  // namespace xla
+}  // namespace ir
+}  // namespace programl

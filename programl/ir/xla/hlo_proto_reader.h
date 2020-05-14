@@ -17,12 +17,17 @@
 // limitations under the License.
 #pragma once
 
-#include <istream>
 #include "labm8/cpp/statusor.h"
 #include "labm8/cpp/string.h"
 #include "tensorflow/compiler/xla/service/hlo.pb.h"
 
-namespace ml4pl {
+#include <istream>
+
+namespace programl {
+namespace ir {
+namespace xla {
+
+using ::xla::HloProto;
 
 // Read the contents of a file to string.
 labm8::StatusOr<string> ReadFileOrStdin(const string& path,
@@ -33,7 +38,9 @@ labm8::StatusOr<string> ReadFileOrStdin(const string& path,
 // Args:
 //     wireFormat: If true, read wire format proto. Else, read text
 //         format proto.
-labm8::StatusOr<xla::HloProto> GetHloProtoFromFileOrStdin(
-    const string& path, bool wireFormat = true);
+labm8::StatusOr<HloProto> GetHloProtoFromFileOrStdin(const string& path,
+                                                     bool wireFormat = true);
 
-}  // namespace ml4pl
+}  // namespace xla
+}  // namespace ir
+}  // namespace programl

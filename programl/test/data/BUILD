@@ -19,6 +19,13 @@
 package(default_visibility = ["//programl:__subpackages__"])
 
 filegroup(
+    name = "hlo_protos",
+    testonly = 1,
+    srcs = glob(["*.hlo.pb"]),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "llvm_ir_tar",
     testonly = 1,
     srcs = ["llvm_ir.tar.bz2"],
