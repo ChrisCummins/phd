@@ -12,5 +12,5 @@ macos: brew install prototool
 # For linting HTML+CSS+JS files.
 all: npm install -g js-beautify
 # For linting bash scripts.
-linux: wget https://github.com/mvdan/sh/releases/download/v2.6.4/shfmt_v2.6.4_linux_386 -O $HOME/.local/bin/shfmt && chmod +x $HOME/.local/bin/shfmt
-macos: wget https://github.com/mvdan/sh/releases/download/v2.6.4/shfmt_v2.6.4_darwin_386 -O $HOME/.local/bin/shfmt && chmod +x $HOME/.local/bin/shfmt
+linux: mkdir -p $HOME/.local/bin && wget https://github.com/mvdan/sh/releases/download/v2.6.4/shfmt_v2.6.4_linux_386 -O $HOME/.local/bin/shfmt && chmod +x $HOME/.local/bin/shfmt
+macos: mkdir -p $HOME/.local/bin && wget https://github.com/mvdan/sh/releases/download/v2.6.4/shfmt_v2.6.4_darwin_386 -O $HOME/.local/bin/shfmt && chmod +x $HOME/.local/bin/shfmt
