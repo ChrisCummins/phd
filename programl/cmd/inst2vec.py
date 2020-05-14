@@ -13,28 +13,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""A module for encoding node embeddings.
+"""Encode node embeddings using inst2vec.
 
-When executed as a binary, this program reads a single program graph from
-stdin, encodes it, and writes a graph to stdout. Use --stdin_fmt and
---stdout_fmt to convert between different graph types, and --ir to read the
-IR file that the graph was constructed from, required for resolving struct
-definitions.
+This program reads a single program graph from file, encodes it, and writes
+the modified graph to stdout.
 
 Example usage:
 
-  Encode a program graph binary proto and write the result as text format:
+  Encode a program graph proto and write the result to file:
 
-    $ bazel run //deeplearning/ml4pl/graphs/llvm2graph:node_encoder -- \
-        --stdin_fmt=pb \
-        --stdout_fmt=pbtxt \
-        --ir=/tmp/source.ll \
-        < /tmp/proto.pb > /tmp/proto.pbtxt
+    $ inst2vec --ir=/tmp/source.ll < program.pbtxt > inst2vec.pbtxt
 """
 import sys
 
 from labm8.py import app
-from labm8.py import bazelutil
 from labm8.py import fs
 from labm8.py import pbutil
 from programl.ir.llvm import inst2vec_encoder
@@ -47,13 +39,6 @@ app.DEFINE_output_path(
   "The path of the IR file that was used to construct the graph. This is "
   "required to inline struct definitions. This argument may be omitted when "
   "struct definitions do not need to be inlined.",
-)
-
-DICTIONARY = bazelutil.DataPath(
-  "phd/programl/ir/llvm/internal/inst2vec_augmented_dictionary.pickle"
-)
-AUGMENTED_INST2VEC_EMBEDDINGS = bazelutil.DataPath(
-  "phd/programl/ir/llvm/internal/inst2vec_augmented_embeddings.pickle"
 )
 
 

@@ -79,7 +79,6 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//labm8/py:app",
-        "//labm8/py:bazelutil",
         "//labm8/py:fs",
         "//labm8/py:pbutil",
         "//programl/ir/llvm:inst2vec_encoder",
