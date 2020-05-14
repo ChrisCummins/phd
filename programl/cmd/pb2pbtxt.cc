@@ -22,7 +22,14 @@
 
 const char* usage = R"(Usage: pb2pbtxt <Protobuf>
 
-Decode a binary protocol buffer to text format.
+Decode a binary protocol buffer to text format. For example, to
+decode a ProgramGraph protocol buffer, use:
+
+  $ pb2pbtxt ProgramGraph myfile.pb
+
+Or to decode a IrList protocol buffer to a text file:
+
+  $ pb2pbtxt IrList ir.pb > ir.pbtxt
 )";
 
 template <typename ProtocolBuffer>
