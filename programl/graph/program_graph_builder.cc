@@ -37,6 +37,7 @@ Module* ProgramGraphBuilder::AddModule(const string& name) {
 
 Function* ProgramGraphBuilder::AddFunction(const string& name,
                                            const Module* module) {
+  DCHECK(module) << "nullptr argument";
   int32_t index = GetProgramGraph().function_size();
   Function* function = GetMutableProgramGraph()->add_function();
   function->set_name(name);
@@ -49,11 +50,13 @@ Function* ProgramGraphBuilder::AddFunction(const string& name,
 
 Node* ProgramGraphBuilder::AddInstruction(const string& text,
                                           const Function* function) {
+  DCHECK(function) << "nullptr argument";
   return AddNode(Node::INSTRUCTION, text, function);
 }
 
 Node* ProgramGraphBuilder::AddVariable(const string& text,
                                        const Function* function) {
+  DCHECK(function) << "nullptr argument";
   return AddNode(Node::VARIABLE, text, function);
 }
 
@@ -64,6 +67,9 @@ Node* ProgramGraphBuilder::AddConstant(const string& text) {
 StatusOr<Edge*> ProgramGraphBuilder::AddControlEdge(int32_t position,
                                                     const Node* source,
                                                     const Node* target) {
+  DCHECK(source) << "nullptr argument";
+  DCHECK(target) << "nullptr argument";
+
   if (source->type() != Node::INSTRUCTION) {
     return Status(labm8::error::Code::INVALID_ARGUMENT,
                   "Invalid control source type ({}). Expected instruction",
@@ -93,6 +99,9 @@ StatusOr<Edge*> ProgramGraphBuilder::AddControlEdge(int32_t position,
 StatusOr<Edge*> ProgramGraphBuilder::AddDataEdge(int32_t position,
                                                  const Node* source,
                                                  const Node* target) {
+  DCHECK(source) << "nullptr argument";
+  DCHECK(target) << "nullptr argument";
+
   bool sourceIsData =
       (source->type() == Node::VARIABLE || source->type() == Node::CONSTANT);
   bool targetIsData =
@@ -114,6 +123,9 @@ StatusOr<Edge*> ProgramGraphBuilder::AddDataEdge(int32_t position,
 
 StatusOr<Edge*> ProgramGraphBuilder::AddCallEdge(const Node* source,
                                                  const Node* target) {
+  DCHECK(source) << "nullptr argument";
+  DCHECK(target) << "nullptr argument";
+
   if (source->type() != Node::INSTRUCTION) {
     return Status(labm8::error::Code::INVALID_ARGUMENT,
                   "Invalid call source type ({}). Expected instruction",
@@ -182,6 +194,8 @@ Node* ProgramGraphBuilder::AddNode(const Node::Type& type, const string& text) {
 
 Node* ProgramGraphBuilder::AddNode(const Node::Type& type, const string& text,
                                    const Function* function) {
+  DCHECK(function) << "nullptr argument";
+
   Node* node = AddNode(type, text);
   node->set_function(GetIndex(function));
   emptyFunctions_.erase(function);
@@ -190,6 +204,9 @@ Node* ProgramGraphBuilder::AddNode(const Node::Type& type, const string& text,
 
 Edge* ProgramGraphBuilder::AddEdge(const Edge::Flow& flow, int32_t position,
                                    const Node* source, const Node* target) {
+  DCHECK(source) << "nullptr argument";
+  DCHECK(target) << "nullptr argument";
+
   int32_t sourceIndex = GetIndex(source);
   int32_t targetIndex = GetIndex(target);
 
@@ -210,6 +227,8 @@ namespace {
 template <typename T>
 int32_t GetIndexOrDie(const absl::flat_hash_map<T*, int32_t>& map,
                       const T* element) {
+  DCHECK(element) << "nullptr argument";
+
   auto it = map.find(element);
   CHECK(it != map.end());
   return it->second;
@@ -218,14 +237,17 @@ int32_t GetIndexOrDie(const absl::flat_hash_map<T*, int32_t>& map,
 }  // anonymous namespace
 
 int32_t ProgramGraphBuilder::GetIndex(const Module* module) {
+  DCHECK(module) << "nullptr argument";
   return GetIndexOrDie(moduleIndices_, module);
 }
 
 int32_t ProgramGraphBuilder::GetIndex(const Function* function) {
+  DCHECK(function) << "nullptr argument";
   return GetIndexOrDie(functionIndices_, function);
 }
 
 int32_t ProgramGraphBuilder::GetIndex(const Node* node) {
+  DCHECK(node) << "nullptr argument";
   return GetIndexOrDie(nodeIndices_, node);
 }
 
