@@ -132,9 +132,9 @@ class RollingResults(object):
       mean_f1=self.f1,
       walltime_seconds=time.time() - self.start_time,
       confusion_matrix=epoch_pb2.ConfusionMatrix(
-        row=[
-          epoch_pb2.ConfusionMatrixRow(column=row)
-          for row in self.confusion_matrix.tolist()
+        column=[
+          epoch_pb2.ConfusionMatrixRow(row=column)
+          for column in self.confusion_matrix.T.tolist()
         ],
       ),
     )

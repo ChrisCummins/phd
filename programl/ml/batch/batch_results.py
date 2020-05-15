@@ -73,7 +73,7 @@ class BatchResults(NamedTuple):
     E.g. the number of graphs in the batch for graph-level models, the number
     of nodes in the batch for node-level models, etc.
     """
-    return self.targets.shape[1]
+    return self.targets.shape[0]
 
   def __repr__(self) -> str:
     return (

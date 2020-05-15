@@ -16,20 +16,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-py_binary(
+py_library(
+    name = "aux_readout",
+    srcs = ["aux_readout.py"],
+    deps = [
+        "//third_party/py/torch",
+    ],
+)
+
+py_library(
     name = "ggnn",
     srcs = ["ggnn.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":aux_readout",
         ":ggnn_batch",
-        ":ggnn_config",
-        ":ggnn_modules",
+        ":ggnn_model",
+        ":ggnn_proper",
+        ":loss",
+        ":node_embeddings",
+        ":readout",
         "//labm8/py:app",
         "//labm8/py:progress",
-        "//programl/ir/llvm:inst2vec_encoder",
+        "//programl/graph/format/py:graph_tuple",
         "//programl/ml/batch:batch_data",
         "//programl/ml/batch:batch_results",
         "//programl/ml/model",
+        "//programl/proto:epoch_py",
         "//third_party/py/numpy",
         "//third_party/py/torch",
     ],
@@ -46,21 +59,108 @@ py_library(
 )
 
 py_library(
-    name = "ggnn_config",
-    srcs = ["ggnn_config.py"],
-    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
+    name = "ggnn_batch_builder",
+    srcs = ["ggnn_batch_builder.py"],
+    visibility = ["//visibility:public"],
     deps = [
+        ":ggnn_batch",
         "//labm8/py:app",
+        "//programl/graph/format/py:graph_tuple_builder",
+        "//programl/ml/batch:base_graph_loader",
+        "//programl/ml/batch:batch_data",
+        "//third_party/py/numpy",
     ],
 )
 
 py_library(
-    name = "ggnn_modules",
-    srcs = ["ggnn_modules.py"],
+    name = "ggnn_layer",
+    srcs = ["ggnn_layer.py"],
     deps = [
-        ":ggnn_config",
-        "//labm8/py:app",
+        "//third_party/py/torch",
+    ],
+)
+
+py_library(
+    name = "ggnn_model",
+    srcs = ["ggnn_model.py"],
+    deps = [
+        ":aux_readout",
+        ":ggnn_proper",
+        ":loss",
+        ":metrics",
+        ":node_embeddings",
         "//labm8/py:gpu_scheduler",
+        "//third_party/py/torch",
+    ],
+)
+
+py_library(
+    name = "ggnn_proper",
+    srcs = ["ggnn_proper.py"],
+    deps = [
+        ":ggnn_layer",
+        ":messaging_layer",
+        ":readout",
+        "//third_party/py/torch",
+    ],
+)
+
+py_library(
+    name = "linear_net",
+    srcs = ["linear_net.py"],
+    deps = [
+        "//third_party/py/torch",
+    ],
+)
+
+py_library(
+    name = "loss",
+    srcs = ["loss.py"],
+    deps = [
+        "//third_party/py/torch",
+    ],
+)
+
+py_library(
+    name = "messaging_layer",
+    srcs = ["messaging_layer.py"],
+    deps = [
+        ":linear_net",
+        ":position_embeddings",
+        "//third_party/py/torch",
+    ],
+)
+
+py_library(
+    name = "metrics",
+    srcs = ["metrics.py"],
+    deps = [
+        "//third_party/py/torch",
+    ],
+)
+
+py_library(
+    name = "node_embeddings",
+    srcs = ["node_embeddings.py"],
+    deps = [
+        "//third_party/py/numpy",
+        "//third_party/py/torch",
+    ],
+)
+
+py_library(
+    name = "position_embeddings",
+    srcs = ["position_embeddings.py"],
+    deps = [
+        "//third_party/py/torch",
+    ],
+)
+
+py_library(
+    name = "readout",
+    srcs = ["readout.py"],
+    deps = [
+        ":linear_net",
         "//third_party/py/torch",
     ],
 )
