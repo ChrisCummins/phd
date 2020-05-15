@@ -30,14 +30,35 @@ namespace internal {
 
 namespace {
 
-// Produce the textual representation of an LLVM value.
+// Produce the textual representation of an LLVM object.
+// Generic implementation works for values, instructions, etc.
 template <typename T>
 string PrintToString(const T &value) {
-  std::string str;
+  string str;
   ::llvm::raw_string_ostream rso(str);
   value.print(rso);
   // Trim any leading indentation whitespace.
   labm8::TrimLeft(str);
+  return str;
+}
+
+// Specialization for LLVM types which returns "struct" or "struct*" for
+// struct or pointer to struct types, respectively. All other types are
+// serialized as normal.
+template <>
+string PrintToString(const ::llvm::Type &value) {
+  string str;
+  if (value.isPointerTy() && value.getPointerElementType()->isStructTy()) {
+    str = "struct*";
+  } else if (value.isStructTy()) {
+    str = "struct";
+  } else {
+    ::llvm::raw_string_ostream rso(str);
+    value.print(rso);
+    // Trim any leading indentation whitespace.
+    labm8::TrimLeft(str);
+  }
+
   return str;
 }
 
