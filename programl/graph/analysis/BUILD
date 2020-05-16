@@ -22,6 +22,7 @@ cc_library(
     hdrs = ["analysis.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":liveness",
         ":reachability",
         "//labm8/cpp:status",
         "//programl/proto:program_graph_cc",
@@ -38,6 +39,34 @@ cc_library(
         "//labm8/cpp:status_macros",
         "//programl/proto:program_graph_cc",
         "//programl/proto:program_graph_features_cc",
+    ],
+)
+
+cc_library(
+    name = "liveness",
+    srcs = ["liveness.cc"],
+    hdrs = ["liveness.h"],
+    deps = [
+        ":data_flow_pass",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:status",
+        "//programl/graph:features",
+        "//programl/proto:program_graph_cc",
+        "//programl/proto:program_graph_features_cc",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
+    ],
+)
+
+cc_test(
+    name = "liveness_test",
+    srcs = ["liveness_test.cc"],
+    deps = [
+        ":liveness",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:status",
+        "//labm8/cpp:test",
+        "//programl/graph:program_graph_builder",
     ],
 )
 
@@ -65,6 +94,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":data_flow_pass",
+        "//labm8/cpp:logging",
         "//labm8/cpp:status",
         "//programl/graph:features",
         "//programl/proto:program_graph_cc",

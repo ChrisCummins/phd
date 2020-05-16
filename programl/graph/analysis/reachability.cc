@@ -16,6 +16,7 @@
 
 #include "programl/graph/analysis/reachability.h"
 
+#include "labm8/cpp/logging.h"
 #include "labm8/cpp/status.h"
 #include "programl/graph/features.h"
 
@@ -30,6 +31,11 @@ namespace error = labm8::error;
 namespace programl {
 namespace graph {
 namespace analysis {
+
+Status ReachabilityAnalysis::Init() {
+  ComputeAdjacencies({.control = true});
+  return Status::OK;
+}
 
 Status ReachabilityAnalysis::RunOne(int rootNode,
                                     ProgramGraphFeatures* features) {
@@ -58,7 +64,10 @@ Status ReachabilityAnalysis::RunOne(int rootNode,
   std::queue<pair<int, int>> q;
   q.push({rootNode, 0});
 
-  const vector<vector<int>>& adjacencies = control_adjacencies();
+  const vector<vector<int>>& cfg = adjacencies().control;
+  DCHECK(cfg.size() == graph().node_size())
+      << "CFG size: " << cfg.size() << " != "
+      << " graph size: " << graph().node_size();
 
   int activeNodeCount = 0;
   while (!q.empty()) {
@@ -73,7 +82,7 @@ Status ReachabilityAnalysis::RunOne(int rootNode,
             ->mutable_feature_list())["data_flow_value"]
           .mutable_feature(current)) = trueFeature;
 
-    for (int neighbour : adjacencies[current]) {
+    for (int neighbour : cfg[current]) {
       if (!visited[neighbour]) {
         q.push({neighbour, dataFlowStepCount + 1});
       }

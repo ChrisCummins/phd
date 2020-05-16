@@ -13,31 +13,37 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#pragma once
 
-#include "programl/graph/analysis/analysis.h"
+#include "labm8/cpp/status.h"
+#include "programl/graph/analysis/data_flow_pass.h"
+#include "programl/proto/program_graph.pb.h"
+#include "programl/proto/program_graph_features.pb.h"
 
-#include "programl/graph/analysis/liveness.h"
-#include "programl/graph/analysis/reachability.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 
-namespace error = labm8::error;
+using labm8::Status;
 
 namespace programl {
 namespace graph {
 namespace analysis {
 
-Status RunAnalysis(const string& analysisName, const ProgramGraph& graph,
-                   ProgramGraphFeaturesList* featuresList) {
-  if (analysisName == "reachability") {
-    ReachabilityAnalysis analysis(graph);
-    return analysis.Run(featuresList);
-  } else if (analysisName == "liveness") {
-    LivenessAnalysis analysis(graph);
-    return analysis.Run(featuresList);
-  } else {
-    return Status(error::Code::INVALID_ARGUMENT, "Invalid analysis: {}",
-                  analysisName);
-  }
-}
+class LivenessAnalysis : public InstructionRootDataFlowAnalysis {
+ public:
+  using InstructionRootDataFlowAnalysis::InstructionRootDataFlowAnalysis;
+
+  virtual Status RunOne(int rootNode, ProgramGraphFeatures* features) override;
+
+  virtual Status Init() override;
+
+ private:
+  int dataFlowStepCount_;
+
+  // Live-in and live-out maps.
+  absl::flat_hash_map<int, absl::flat_hash_set<int>> liveInSets_;
+  absl::flat_hash_map<int, absl::flat_hash_set<int>> liveOutSets_;
+};
 
 }  // namespace analysis
 }  // namespace graph

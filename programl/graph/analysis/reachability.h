@@ -31,6 +31,8 @@ class ReachabilityAnalysis : public InstructionRootDataFlowAnalysis {
   using InstructionRootDataFlowAnalysis::InstructionRootDataFlowAnalysis;
 
   virtual Status RunOne(int rootNode, ProgramGraphFeatures* features) override;
+
+  virtual Status Init() override;
 };
 
 }  // namespace analysis

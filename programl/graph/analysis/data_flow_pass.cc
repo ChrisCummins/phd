@@ -21,6 +21,7 @@
 #include <queue>
 #include <random>
 
+#include "labm8/cpp/logging.h"
 #include "labm8/cpp/status_macros.h"
 
 namespace error = labm8::error;
@@ -29,33 +30,56 @@ namespace programl {
 namespace graph {
 namespace analysis {
 
-namespace {
-
-// Compute a Control Flow Graph as an adjacency list.
-vector<vector<int>> GetControlAdjacencies(const ProgramGraph& graph) {
-  vector<vector<int>> adjacencies;
-  adjacencies.reserve(graph.node_size());
-  for (int i = 0; i < graph.node_size(); ++i) {
-    adjacencies.emplace_back();
-  }
-
-  for (int i = 0; i < graph.edge_size(); ++i) {
-    const Edge& edge = graph.edge(i);
-    if (edge.flow() == Edge::CONTROL) {
-      adjacencies[edge.source()].push_back(edge.target());
+const AdjacencyLists& DataFlowPass::ComputeAdjacencies(
+    const AdjacencyListOptions& options) {
+  if (options.control) {
+    adjacencies_.control.reserve(graph().node_size());
+    for (int i = 0; i < graph().node_size(); ++i) {
+      adjacencies_.control.emplace_back();
     }
   }
-  return adjacencies;
-}
-
-}  // anonymous namespace
-
-const vector<vector<int>>& DataFlowPass::control_adjacencies() {
-  if (!controlAdjacencies_.size()) {
-    controlAdjacencies_ = GetControlAdjacencies(graph());
+  if (options.reverse_control) {
+    adjacencies_.reverse_control.reserve(graph().node_size());
+    for (int i = 0; i < graph().node_size(); ++i) {
+      adjacencies_.reverse_control.emplace_back();
+    }
   }
-  return controlAdjacencies_;
+  if (options.data) {
+    adjacencies_.data.reserve(graph().node_size());
+    for (int i = 0; i < graph().node_size(); ++i) {
+      adjacencies_.data.emplace_back();
+    }
+  }
+  if (options.reverse_data) {
+    adjacencies_.reverse_data.reserve(graph().node_size());
+    for (int i = 0; i < graph().node_size(); ++i) {
+      adjacencies_.reverse_data.emplace_back();
+    }
+  }
+
+  for (int i = 0; i < graph().edge_size(); ++i) {
+    const Edge& edge = graph().edge(i);
+    if (edge.flow() == Edge::CONTROL) {
+      if (options.control) {
+        adjacencies_.control[edge.source()].push_back(edge.target());
+      }
+      if (options.reverse_control) {
+        adjacencies_.reverse_control[edge.target()].push_back(edge.source());
+      }
+    } else if (edge.flow() == Edge::DATA) {
+      if (options.data) {
+        adjacencies_.data[edge.source()].push_back(edge.target());
+      }
+      if (options.reverse_data) {
+        adjacencies_.reverse_data[edge.target()].push_back(edge.source());
+      }
+    }
+  }
+
+  return adjacencies_;
 }
+
+const AdjacencyLists& DataFlowPass::adjacencies() const { return adjacencies_; }
 
 Status InstructionRootDataFlowAnalysis::Run(
     ProgramGraphFeaturesList* featuresList) {
@@ -72,6 +96,8 @@ Status InstructionRootDataFlowAnalysis::Run(
   std::shuffle(rootNodes.begin(), rootNodes.end(),
                std::default_random_engine(seed()));
 
+  RETURN_IF_ERROR(Init());
+
   int numRoots = std::min(static_cast<int>(ceil(rootNodes.size() / 10.0)),
                           max_instances_per_graph());
   for (int i = 0; i < numRoots; ++i) {
@@ -80,6 +106,11 @@ Status InstructionRootDataFlowAnalysis::Run(
     *featuresList->add_graph() = features;
   }
 
+  return Status::OK;
+}
+
+Status InstructionRootDataFlowAnalysis::Init() {
+  LOG(INFO) << "Base init";
   return Status::OK;
 }
 

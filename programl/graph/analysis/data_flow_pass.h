@@ -29,6 +29,20 @@ namespace programl {
 namespace graph {
 namespace analysis {
 
+struct AdjacencyListOptions {
+  bool control;
+  bool reverse_control;
+  bool data;
+  bool reverse_data;
+};
+
+struct AdjacencyLists {
+  vector<vector<int>> control;
+  vector<vector<int>> reverse_control;
+  vector<vector<int>> data;
+  vector<vector<int>> reverse_data;
+};
+
 // A data flow analysis pass.
 class DataFlowPass {
  public:
@@ -40,11 +54,13 @@ class DataFlowPass {
 
   const ProgramGraph& graph() const { return graph_; }
 
-  const vector<vector<int>>& control_adjacencies();
+ protected:
+  const AdjacencyLists& ComputeAdjacencies(const AdjacencyListOptions& options);
+  const AdjacencyLists& adjacencies() const;
 
  private:
   const ProgramGraph& graph_;
-  vector<vector<int>> controlAdjacencies_;
+  AdjacencyLists adjacencies_;
 };
 
 class InstructionRootDataFlowAnalysis : public DataFlowPass {
@@ -60,6 +76,8 @@ class InstructionRootDataFlowAnalysis : public DataFlowPass {
 
             [[nodiscard]] virtual Status
         Run(ProgramGraphFeaturesList * featuresList) override;
+
+  [[nodiscard]] virtual Status Init();
 
   int max_instances_per_graph() const { return maxInstancesPerGraph_; }
 
