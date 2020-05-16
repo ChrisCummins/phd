@@ -77,10 +77,11 @@ class BatchResults(NamedTuple):
 
   def __repr__(self) -> str:
     return (
-      f"accuracy={self.accuracy:.2%}%, "
-      f"precision={self.precision:.3f}, "
-      f"recall={self.recall:.3f}, "
-      f"f1={self.f1:.3f}"
+      f"loss={self.loss:.6f}, "
+      f"acc={self.accuracy:.3%}%, "
+      f"prec={self.precision:.4f}, "
+      f"rec={self.recall:.4f}, "
+      f"f1={self.f1:.4f}"
     )
 
   def __eq__(self, rhs: "BatchResults"):

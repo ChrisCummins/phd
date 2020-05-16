@@ -20,10 +20,12 @@ classification targets for data flow problems.
 """
 import pathlib
 import socket
+import sys
 import time
+import warnings
 from typing import Dict
 
-import numpy as np
+from sklearn.exceptions import UndefinedMetricWarning
 
 from labm8.py import app
 from labm8.py import humanize
@@ -73,6 +75,11 @@ def Main():
   # Since we are dealing with binary classification we calculate
   # precesion / recall / F1 wrt only the positive class.
   FLAGS.batch_results_averaging_method = "binary"
+
+  # NOTE(github.com/ChrisCummins/ProGraML/issues/13): F1 score computation
+  # warns that it iss undefined when there are missing instances from a class,
+  # which is fine for our usage.
+  warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
 
   # Create the logging directories.
   uid = f"{socket.gethostname()}@{time.strftime('%y:%m:%dT%H:%M:%S')}"
@@ -134,20 +141,15 @@ def Main():
         batch_step += 1
         trained_graphs += batch_data.graph_count
         batch_results = model.RunBatch(epoch_type, batch_data)
-        app.Log(
-          1,
-          "epoch %s %s step %s: %s",
-          epoch_step,
-          epoch_pb2.EpochType.Name(epoch_type).lower(),
-          humanize.Commas(batch_step),
-          batch_results,
-        )
         rolling_results.Update(batch_data, batch_results, weight=None)
-
-        true_y = np.argmax(batch_results.targets, axis=1)
-        pred_y = np.argmax(batch_results.predictions, axis=1)
-        accuracy = np.count_nonzero(true_y == pred_y) / len(true_y)
-        # app.Log(1, "acc %s", accuracy)
+        print(
+          f"\r\033[KEpoch {epoch_step} "
+          f"{epoch_pb2.EpochType.Name(epoch_type).lower()}: "
+          f"{rolling_results}",
+          end="",
+          file=sys.stderr,
+        )
+      print("", file=sys.stderr)
 
       epoch_results.append(rolling_results.ToEpochResults())
 

@@ -138,3 +138,14 @@ class RollingResults(object):
         ],
       ),
     )
+
+  def __repr__(self) -> str:
+    return (
+      f"batch={self.batch_count}, "
+      f"graphs={self.graph_count}, "
+      f"loss={self.loss:.6f}, "
+      f"acc={self.accuracy:.3%}%, "
+      f"prec={self.precision:.4f}, "
+      f"rec={self.recall:.4f}, "
+      f"f1={self.f1:.4f}"
+    )

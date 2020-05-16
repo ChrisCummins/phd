@@ -26,6 +26,7 @@ from typing import Iterable
 from typing import Tuple
 
 from labm8.py import app
+from labm8.py import humanize
 from labm8.py import pbutil
 from programl.ml.batch import base_graph_loader
 from programl.proto import epoch_pb2
@@ -165,9 +166,9 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
     def _Done(self, i: int) -> None:
       app.Log(
         2,
-        "Skipped %d of %d graphs (%.2f%%)",
-        self.skip_count,
-        (i + self.skip_count),
+        "Skipped %s of %s graphs (%.2f%%)",
+        humanize.Commas(self.skip_count),
+        humanize.Commas(i + self.skip_count),
         (self.skip_count / (i + self.skip_count)) * 100,
       )
       self.outq.put(DataflowGraphLoader._EndOfIterator(), block=True)

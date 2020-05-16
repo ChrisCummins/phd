@@ -21,6 +21,7 @@ py_library(
     srcs = ["graph_loader.py"],
     deps = [
         "//labm8/py:app",
+        "//labm8/py:humanize",
         "//labm8/py:pbutil",
         "//programl/ml/batch:base_graph_loader",
         "//programl/proto:program_graph_features_py",
@@ -41,6 +42,5 @@ py_binary(
         "//programl/ml/model/ggnn",
         "//programl/ml/model/ggnn:ggnn_batch_builder",
         "//programl/proto:epoch_py",
-        "//third_party/py/numpy",
     ],
 )
