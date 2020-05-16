@@ -116,6 +116,7 @@ cc_binary(
     srcs = ["pb2pbtxt.cc"],
     visibility = ["//visibility:public"],
     deps = [
+        "//programl/proto:checkpoint_cc",
         "//programl/proto:ir_cc",
         "//programl/proto:program_graph_cc",
         "//programl/proto:program_graph_features_cc",

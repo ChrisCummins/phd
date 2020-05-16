@@ -34,6 +34,12 @@ python_proto_library(
     deps = [":checkpoint"],
 )
 
+cc_proto_library(
+    name = "checkpoint_cc",
+    visibility = ["//visibility:public"],
+    deps = [":checkpoint"],
+)
+
 proto_library(
     name = "edge",
     srcs = ["edge.proto"],

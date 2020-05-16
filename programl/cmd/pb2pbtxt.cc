@@ -15,6 +15,7 @@
 // limitations under the License.
 #include <iostream>
 
+#include "programl/proto/checkpoint.pb.h"
 #include "programl/proto/ir.pb.h"
 #include "programl/proto/program_graph.pb.h"
 #include "programl/proto/program_graph_features.pb.h"
@@ -69,5 +70,7 @@ int main(int argc, char** argv) {
     Decode<programl::IrList>();
   } else if (name == "SourceFile") {
     Decode<programl::SourceFile>();
+  } else if (name == "Checkpoint") {
+    Decode<programl::Checkpoint>();
   }
 }
