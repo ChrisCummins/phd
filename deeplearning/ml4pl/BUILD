@@ -28,6 +28,7 @@ exports_repo(
     },
     targets = [
         "//deeplearning/ml4pl/...",
+        "//programl/...",
     ],
 )
 
