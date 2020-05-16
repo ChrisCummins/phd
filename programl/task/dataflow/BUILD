@@ -16,6 +16,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+py_library(
+    name = "dataflow",
+    srcs = ["dataflow.py"],
+    deps = [
+        ":graph_loader",
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
+        "//labm8/py:ppar",
+        "//programl/ml/batch:async_batch_builder",
+        "//programl/ml/model/ggnn",
+        "//programl/ml/model/ggnn:ggnn_batch_builder",
+        "//programl/proto:checkpoint_py",
+        "//programl/proto:epoch_py",
+    ],
+)
+
 py_binary(
     name = "export_logs",
     srcs = ["export_logs.py"],
@@ -46,13 +62,16 @@ py_binary(
     name = "train_ggnn",
     srcs = ["train_ggnn.py"],
     deps = [
-        ":graph_loader",
+        ":dataflow",
         "//labm8/py:app",
-        "//labm8/py:pbutil",
-        "//labm8/py:ppar",
-        "//programl/ml/batch:async_batch_builder",
-        "//programl/ml/model/ggnn",
-        "//programl/ml/model/ggnn:ggnn_batch_builder",
-        "//programl/proto:epoch_py",
+    ],
+)
+
+py_binary(
+    name = "test_ggnn",
+    srcs = ["test_ggnn.py"],
+    deps = [
+        ":dataflow",
+        "//labm8/py:app",
     ],
 )
