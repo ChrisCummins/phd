@@ -91,13 +91,15 @@ app.DEFINE_boolean(
 )
 # Embeddings options.
 app.DEFINE_string(
-  "node_embeddings_type",
+  "text_embedding_type",
   "random",
   "The type of node embeddings to use. One of "
   "{constant_zero, constant_random, random}.",
 )
 app.DEFINE_integer(
-  "node_embedding_dimensionality", 64, "The dimensionality of node embeddings."
+  "text_embedding_dimensionality",
+  32,
+  "The dimensionality of node text embeddings.",
 )
 app.DEFINE_boolean(
   "use_position_embeddings",
@@ -191,12 +193,12 @@ class Ggnn(Model):
       )
 
     node_embeddings = NodeEmbeddings(
-      node_embeddings_type=FLAGS.node_embeddings_type,
+      node_embeddings_type=FLAGS.text_embedding_type,
       use_selector_embeddings=self.node_selector_dimensionality > 0,
       selector_embedding_value=FLAGS.selector_embedding_value,
       embedding_shape=(
         len(vocabulary) + 1,
-        FLAGS.node_embedding_dimensionality,
+        FLAGS.text_embedding_dimensionality,
       ),
     )
 
