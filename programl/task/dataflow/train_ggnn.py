@@ -44,20 +44,45 @@ app.DEFINE_string(
 )
 app.DEFINE_string("analysis", "reachability", "The analysis type to use.")
 app.DEFINE_integer(
-  "max_training_graphs", 1000000, "The maximum number of graphs to train on."
+  "val_graph_count", 10000, "The number of graphs to use in the validation set."
 )
 app.DEFINE_integer(
-  "train_graphs_per_step", 10000, "The number of graphs to train on per step."
+  "val_seed", 0xCC, "The seed value for randomly sampling validation graphs.",
 )
 app.DEFINE_integer(
-  "val_graphs", 10000, "The number of graphs to use in the validation set."
+  "batch_size",
+  50000,
+  "The number of nodes in a graph. "
+  "On our system, we observed that a batch size of 50,000 nodes requires "
+  "about 5.2GB of GPU VRAM.",
 )
-app.DEFINE_integer("batch_size", 10000, "The number of nodes in a graph.")
 app.DEFINE_boolean(
   "limit_max_data_flow_steps",
   True,
   "If set, limit the size of dataflow-annotated graphs used to only those with "
   "data_flow_steps <= message_passing_step_count",
+)
+app.DEFINE_list(
+  "train_graph_counts",
+  [
+    1000,
+    2000,
+    3000,
+    4000,
+    5000,
+    10000,
+    20000,
+    30000,
+    40000,
+    50000,
+    100000,
+    200000,
+    300000,
+    400000,
+    500000,
+    1000000,
+  ],
+  "The list of cumulative training graph counts to evaluate at.",
 )
 FLAGS = app.FLAGS
 
@@ -74,10 +99,10 @@ def Main():
   path = pathlib.Path(FLAGS.path)
   analysis = FLAGS.analysis
   limit_max_data_flow_steps = FLAGS.limit_max_data_flow_steps
-  train_graphs_per_step = FLAGS.train_graphs_per_step
-  val_graphs = FLAGS.val_graphs
+  val_graph_count = FLAGS.val_graph_count
   batch_size = FLAGS.batch_size
-  max_training_graphs = FLAGS.max_training_graphs
+  train_graph_counts = [int(x) for x in FLAGS.train_graph_counts]
+  val_seed = FLAGS.val_seed
 
   # Since we are dealing with binary classification we calculate
   # precesion / recall / F1 wrt only the positive class.
@@ -98,8 +123,6 @@ def Main():
   (log_dir / "graph_loader").mkdir()
 
   vocabulary = LoadVocabulary(path / "vocabulary.txt")
-
-  trained_graphs = 0
 
   # Create the model, defining the shape of the graphs that it will process.
   #
@@ -127,9 +150,10 @@ def Main():
         path,
         epoch_type=epoch_pb2.VAL,
         analysis=analysis,
-        max_graph_count=val_graphs,
+        max_graph_count=val_graph_count,
         data_flow_step_max=data_flow_step_max,
         logfile=open(log_dir / "graph_loader" / "val.txt", "w"),
+        seed=val_seed,
       ),
       vocabulary=vocabulary,
       max_node_size=batch_size,
@@ -137,21 +161,22 @@ def Main():
   )
   val_batches.start()
 
-  epoch_step = 0
   batch_step = 0
-  while trained_graphs < max_training_graphs:
+  train_graph_count = 0
+  for epoch_step, target_train_graph_count in enumerate(
+    train_graph_counts, start=1
+  ):
     start_time = time.time()
-
-    epoch_step += 1
     epoch_results = []
     for epoch_type in [epoch_pb2.TRAIN, epoch_pb2.VAL]:
       if epoch_type == epoch_pb2.TRAIN:
+        train_graphs_in_step = target_train_graph_count - train_graph_count
         # Read a training "step" worth of graphs.
         data_loader = graph_loader.DataflowGraphLoader(
           path,
           epoch_type,
           analysis,
-          max_graph_count=train_graphs_per_step,
+          max_graph_count=train_graphs_in_step,
           data_flow_step_max=data_flow_step_max,
           logfile=open(
             log_dir / "graph_loader" / f"{epoch_step:03d}.train.txt", "w"
@@ -172,11 +197,12 @@ def Main():
       rolling_results = RollingResults()
       for batch_data in batches:
         batch_step += 1
-        trained_graphs += batch_data.graph_count
+        if epoch_type == epoch_pb2.TRAIN:
+          train_graph_count += batch_data.graph_count
         batch_results = model.RunBatch(epoch_type, batch_data)
         rolling_results.Update(batch_data, batch_results, weight=None)
         print(
-          f"\r\033[KEpoch {epoch_step} "
+          f"\r\033[KEpoch {epoch_step} of {len(train_graph_counts)} "
           f"{epoch_pb2.EpochType.Name(epoch_type).lower()}: "
           f"{rolling_results}",
           end="",

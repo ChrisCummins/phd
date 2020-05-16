@@ -40,6 +40,7 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
     path: pathlib.Path,
     epoch_type: epoch_pb2.EpochType,
     analysis: str,
+    seed: int = None,
     max_graph_count: int = None,
     data_flow_step_max: int = None,
     logfile=None,
@@ -52,6 +53,7 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
       analysis,
       self._inq,
       self._outq,
+      seed=seed,
       max_graph_count=max_graph_count,
       data_flow_step_max=data_flow_step_max,
       logfile=logfile,
@@ -99,6 +101,7 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
       analysis: str,
       inq,
       outq,
+      seed: int = None,
       max_graph_count: int = None,
       data_flow_step_max: int = None,
       logfile=None,
@@ -107,6 +110,7 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
       self.outq = outq
       self.max_graph_count = max_graph_count
       self.data_flow_step_max = data_flow_step_max
+      self.seed = seed
       # The number of skipped graphs.
       self.skip_count = 0
       self.logfile = logfile
@@ -122,6 +126,11 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
 
     def run(self):
       files = list(self.graph_path.iterdir())
+      if self.seed:
+        # If we are setting a reproducible seed, first sort the list of files
+        # since iterdir() order is undefined, then seed the RNG for the shuffle.
+        files = sorted(files)
+        random.seed(self.seed)
       random.shuffle(files)
 
       i = 0
