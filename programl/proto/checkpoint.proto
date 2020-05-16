@@ -25,12 +25,12 @@ option java_multiple_files = true;
 option java_outer_classname = "CheckpointProto";
 option java_package = "com.programl";
 
-import "programl/proto/epoch.proto";
-
 // A model checkpoint.
+//
+// A checkpoint captures a snapshot of a model's state. The model data is stored
+// as an opaque binary blog - it is up to the implementation to serialize and
+// deserialize state from this byte array.
 message Checkpoint {
-  int32 epoch_num = 1;
   bytes model_data = 2;
-  Epoch best_train_results = 3;
-  Epoch best_val_results = 4;
+  reserved 1, 3, 4; // Deprecated tags.
 }

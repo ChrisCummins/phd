@@ -25,7 +25,6 @@ proto_library(
     name = "checkpoint",
     srcs = ["checkpoint.proto"],
     visibility = ["//visibility:public"],
-    deps = [":epoch"],
 )
 
 python_proto_library(

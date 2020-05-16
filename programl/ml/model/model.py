@@ -63,11 +63,6 @@ class Model(object):
     self._initialized = False
     self.test_only = test_only
 
-    # Progress counters that are saved and loaded from checkpoints.
-    self.epoch_num = 0
-    self.best_train_results = epoch_pb2.Epoch()
-    self.best_val_results = epoch_pb2.Epoch()
-
   def Initialize(self) -> None:
     """Initialize an untrained model."""
     if self._initialized:
@@ -99,8 +94,6 @@ class Model(object):
   def RestoreCheckpoint(self, checkpoint: checkpoint_pb2.Checkpoint):
     """Restore a model from a checkpoint."""
     self._initialized = True
-    self.epoch_num = checkpoint.epoch_num
-    self.best_results = checkpoint.best_results
     self.LoadModelData(pickle.loads(checkpoint.model_data))
 
   def SaveCheckpoint(self) -> checkpoint_pb2.Checkpoint:
@@ -110,9 +103,6 @@ class Model(object):
       A checkpoint reference.
     """
     return checkpoint_pb2.Checkpoint(
-      epoch_num=self.epoch_num,
-      best_train_results=self.best_train_results,
-      best_val_results=self.best_val_results,
       model_data=pickle.dumps(self.GetModelData()),
     )
 
