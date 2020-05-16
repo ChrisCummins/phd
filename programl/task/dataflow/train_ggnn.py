@@ -20,7 +20,6 @@ classification targets for data flow problems.
 """
 import pathlib
 import socket
-import sys
 import time
 import warnings
 from typing import Dict
@@ -31,11 +30,10 @@ from labm8.py import app
 from labm8.py import pbutil
 from labm8.py import ppar
 from programl.ml.batch.async_batch_builder import AsyncBatchBuilder
-from programl.ml.batch.rolling_results import RollingResults
 from programl.ml.model.ggnn.ggnn import Ggnn
 from programl.ml.model.ggnn.ggnn_batch_builder import GgnnModelBatchBuilder
 from programl.proto import epoch_pb2
-from programl.task.dataflow import graph_loader
+from programl.task.dataflow.graph_loader import DataflowGraphLoader
 
 app.DEFINE_string(
   "path",
@@ -107,7 +105,6 @@ def Main():
   # Since we are dealing with binary classification we calculate
   # precesion / recall / F1 wrt only the positive class.
   FLAGS.batch_results_averaging_method = "binary"
-
   # NOTE(github.com/ChrisCummins/ProGraML/issues/13): F1 score computation
   # warns that it iss undefined when there are missing instances from a class,
   # which is fine for our usage.
@@ -146,7 +143,7 @@ def Main():
   # Read val batches asynchronously
   val_batches = AsyncBatchBuilder(
     batch_builder=GgnnModelBatchBuilder(
-      graph_loader=graph_loader.DataflowGraphLoader(
+      graph_loader=DataflowGraphLoader(
         path,
         epoch_type=epoch_pb2.VAL,
         analysis=analysis,
@@ -161,70 +158,53 @@ def Main():
   )
   val_batches.start()
 
-  batch_step = 0
   train_graph_count = 0
   for epoch_step, target_train_graph_count in enumerate(
     train_graph_counts, start=1
   ):
     start_time = time.time()
-    epoch_results = []
-    for epoch_type in [epoch_pb2.TRAIN, epoch_pb2.VAL]:
-      if epoch_type == epoch_pb2.TRAIN:
-        train_graphs_in_step = target_train_graph_count - train_graph_count
-        # Read a training "step" worth of graphs.
-        data_loader = graph_loader.DataflowGraphLoader(
-          path,
-          epoch_type,
-          analysis,
-          max_graph_count=train_graphs_in_step,
-          data_flow_step_max=data_flow_step_max,
-          logfile=open(
-            log_dir / "graph_loader" / f"{epoch_step:03d}.train.txt", "w"
-          ),
-        )
-        # Construct batches from those graphs in a background thread.
-        batch_builder = GgnnModelBatchBuilder(
-          data_loader, vocabulary, max_node_size=batch_size
-        )
-        batches = ppar.ThreadedIterator(batch_builder, max_queue_size=5)
-      else:
-        # During validation, wait for the batch builder to finish and then
-        # iterate over those.
-        val_batches.join()
-        batches = val_batches.batches
+    log_prefix = f"Epoch {epoch_step} of {len(train_graph_counts)}"
 
-      # Feed the batches through the model and update stats.
-      rolling_results = RollingResults()
-      for batch_data in batches:
-        batch_step += 1
-        if epoch_type == epoch_pb2.TRAIN:
-          train_graph_count += batch_data.graph_count
-        batch_results = model.RunBatch(epoch_type, batch_data)
-        rolling_results.Update(batch_data, batch_results, weight=None)
-        print(
-          f"\r\033[KEpoch {epoch_step} of {len(train_graph_counts)} "
-          f"{epoch_pb2.EpochType.Name(epoch_type).lower()}: "
-          f"{rolling_results}",
-          end="",
-          file=sys.stderr,
-        )
-      print("", file=sys.stderr)
+    # Read a training "step" worth of graphs.
+    train_graphs_in_step = target_train_graph_count - train_graph_count
+    graph_loader = DataflowGraphLoader(
+      path,
+      epoch_type=epoch_pb2.TRAIN,
+      analysis=analysis,
+      max_graph_count=train_graphs_in_step,
+      data_flow_step_max=data_flow_step_max,
+      logfile=open(
+        log_dir / "graph_loader" / f"{epoch_step:03d}.train.txt", "w"
+      ),
+    )
+    # Construct batches from those graphs in a background thread.
+    batch_builder = GgnnModelBatchBuilder(
+      graph_loader, vocabulary, max_node_size=batch_size
+    )
+    train_batches = ppar.ThreadedIterator(batch_builder, max_queue_size=5)
 
-      epoch_results.append(rolling_results.ToEpochResults())
+    train_results = model.RunBatches(epoch_pb2.TRAIN, train_batches, log_prefix)
 
+    # During validation, wait for the batch builder to finish and then
+    # iterate over those.
+    val_batches.join()
+    val_results = model.RunBatches(
+      epoch_pb2.VAL, val_batches.batches, log_prefix
+    )
+
+    # Write the epoch to file as an epoch list.
+    # cat *.EpochList.pbtxt > epochs.pbtxt
     epoch = epoch_pb2.EpochList(
       epoch=[
         epoch_pb2.Epoch(
           walltime_seconds=time.time() - start_time,
           epoch_num=epoch_step,
-          train_results=epoch_results[0],
-          val_results=epoch_results[1],
+          train_results=train_results,
+          val_results=val_results,
         )
       ]
     )
     print(epoch, end="")
-    # Write the epoch to file as an epoch list.
-    # cat *.EpochList.pbtxt > epochs.pbtxt
     pbutil.ToFile(
       epoch, log_dir / "epochs" / f"{epoch_step:03d}.EpochList.pbtxt"
     )

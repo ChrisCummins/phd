@@ -48,11 +48,9 @@ py_binary(
     deps = [
         ":graph_loader",
         "//labm8/py:app",
-        "//labm8/py:humanize",
         "//labm8/py:pbutil",
         "//labm8/py:ppar",
         "//programl/ml/batch:async_batch_builder",
-        "//programl/ml/batch:rolling_results",
         "//programl/ml/model/ggnn",
         "//programl/ml/model/ggnn:ggnn_batch_builder",
         "//programl/proto:epoch_py",

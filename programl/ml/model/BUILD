@@ -24,6 +24,7 @@ py_library(
         "//labm8/py:progress",
         "//programl/ml/batch:batch_data",
         "//programl/ml/batch:batch_results",
+        "//programl/ml/batch:rolling_results",
         "//programl/proto:checkpoint_py",
         "//programl/proto:epoch_py",
     ],

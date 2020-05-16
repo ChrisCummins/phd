@@ -15,6 +15,7 @@
 # limitations under the License.
 """Base class for implementing classifier models."""
 import pickle
+import sys
 from typing import Any
 from typing import Iterable
 
@@ -22,6 +23,7 @@ from labm8.py.progress import NullContext
 from labm8.py.progress import ProgressContext
 from programl.ml.batch.batch_data import BatchData
 from programl.ml.batch.batch_results import BatchResults
+from programl.ml.batch.rolling_results import RollingResults
 from programl.proto import checkpoint_pb2
 from programl.proto import epoch_pb2
 
@@ -86,10 +88,17 @@ class Model(object):
     self,
     epoch_type: epoch_pb2.EpochType,
     batches: Iterable[BatchData],
-    ctx: ProgressContext = NullContext,
-  ) -> Iterable[BatchResults]:
-    for batch in batches:
-      yield self.RunBatch(epoch_type, batch, ctx)
+    log_prefix: str,
+  ) -> epoch_pb2.EpochResults:
+    rolling_results = RollingResults()
+    for batch_data in batches:
+      batch_results = self.RunBatch(epoch_type, batch_data)
+      rolling_results.Update(batch_data, batch_results, weight=None)
+      print(
+        f"\r\033[K{log_prefix}: {rolling_results}", end="", file=sys.stderr,
+      )
+    print("", file=sys.stderr)
+    return rolling_results.ToEpochResults()
 
   def RestoreCheckpoint(self, checkpoint: checkpoint_pb2.Checkpoint):
     """Restore a model from a checkpoint."""
