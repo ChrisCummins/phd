@@ -95,6 +95,7 @@ def Main():
   log_dir.mkdir(parents=True)
   (log_dir / "epochs").mkdir()
   (log_dir / "checkpoints").mkdir()
+  (log_dir / "graph_loader").mkdir()
 
   vocabulary = LoadVocabulary(path / "vocabulary.txt")
 
@@ -128,6 +129,7 @@ def Main():
         analysis=analysis,
         max_graph_count=val_graphs,
         data_flow_step_max=data_flow_step_max,
+        logfile=open(log_dir / "graph_loader" / "val.txt", "w"),
       ),
       vocabulary=vocabulary,
       max_node_size=batch_size,
@@ -151,6 +153,9 @@ def Main():
           analysis,
           max_graph_count=train_graphs_per_step,
           data_flow_step_max=data_flow_step_max,
+          logfile=open(
+            log_dir / "graph_loader" / f"{epoch_step:03d}.train.txt", "w"
+          ),
         )
         # Construct batches from those graphs in a background thread.
         batch_builder = GgnnModelBatchBuilder(

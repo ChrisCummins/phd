@@ -42,6 +42,7 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
     analysis: str,
     max_graph_count: int = None,
     data_flow_step_max: int = None,
+    logfile=None,
   ):
     self._inq = queue.Queue(maxsize=1)
     self._outq = queue.Queue(maxsize=10)
@@ -53,6 +54,7 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
       self._outq,
       max_graph_count=max_graph_count,
       data_flow_step_max=data_flow_step_max,
+      logfile=logfile,
     )
     self._thread.start()
     self._stopped = False
@@ -99,6 +101,7 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
       outq,
       max_graph_count: int = None,
       data_flow_step_max: int = None,
+      logfile=None,
     ):
       self.inq = inq
       self.outq = outq
@@ -106,6 +109,7 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
       self.data_flow_step_max = data_flow_step_max
       # The number of skipped graphs.
       self.skip_count = 0
+      self.logfile = logfile
       super(DataflowGraphLoader._Reader, self).__init__()
 
       self.graph_path = path / epoch_pb2.EpochType.Name(epoch_type).lower()
@@ -137,7 +141,7 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
           features_list = pbutil.FromFile(
             features_path, program_graph_features_pb2.ProgramGraphFeaturesList()
           )
-          for features in features_list.graph:
+          for j, features in enumerate(features_list.graph):
             step_count = features.features.feature[
               "data_flow_step_count"
             ].int64_list.value[0]
@@ -155,6 +159,8 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
               )
               continue
             i += 1
+            if self.logfile:
+              self.logfile.write(f"{features_path} {j}\n")
             self.outq.put((graph, features), block=True)
             if self.max_graph_count and i >= self.max_graph_count:
               app.Log(2, "Stopping after reading %d graphs", i)
@@ -172,3 +178,4 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
         (self.skip_count / (i + self.skip_count)) * 100,
       )
       self.outq.put(DataflowGraphLoader._EndOfIterator(), block=True)
+      self.logfile.close()
