@@ -115,7 +115,7 @@ def Main():
 
   # Create the logging directories.
   uid = f"{socket.gethostname()}@{time.strftime('%y:%m:%dT%H:%M:%S')}"
-  log_dir = path / "ml" / "logs" / "ggnnn" / uid
+  log_dir = path / "ml" / "logs" / "ggnnn" / analysis / uid
   app.Log(1, "Writing logs to %s", log_dir.absolute())
   log_dir.mkdir(parents=True)
   (log_dir / "epochs").mkdir()
