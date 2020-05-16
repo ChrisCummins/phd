@@ -16,6 +16,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+py_binary(
+    name = "export_logs",
+    srcs = ["export_logs.py"],
+    deps = [
+        "//labm8/py:app",
+        "//labm8/py:google_sheets",
+        "//labm8/py:pbutil",
+        "//labm8/py:pdutil",
+        "//programl/proto:epoch_py",
+        "//third_party/py/pandas",
+    ],
+)
+
 py_library(
     name = "graph_loader",
     srcs = ["graph_loader.py"],
