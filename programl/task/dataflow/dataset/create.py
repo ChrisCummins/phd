@@ -196,7 +196,7 @@ def Main():
   ExportClassifyAppGraphs(pathlib.Path(FLAGS.classifyapp), path)
 
   app.Log(1, "Creating data flow analysis labels")
-  subprocess.check_output([str(CREATE_LABELS), "--path", str(path)])
+  subprocess.check_call([str(CREATE_LABELS), "--path", str(path)])
 
 
 if __name__ == "__main__":
