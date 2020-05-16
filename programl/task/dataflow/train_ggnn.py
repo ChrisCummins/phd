@@ -28,9 +28,9 @@ from typing import Dict
 from sklearn.exceptions import UndefinedMetricWarning
 
 from labm8.py import app
-from labm8.py import humanize
 from labm8.py import pbutil
 from labm8.py import ppar
+from programl.ml.batch.async_batch_builder import AsyncBatchBuilder
 from programl.ml.batch.rolling_results import RollingResults
 from programl.ml.model.ggnn.ggnn import Ggnn
 from programl.ml.model.ggnn.ggnn_batch_builder import GgnnModelBatchBuilder
@@ -47,7 +47,10 @@ app.DEFINE_integer(
   "max_training_graphs", 1000000, "The maximum number of graphs to train on."
 )
 app.DEFINE_integer(
-  "graphs_per_step", 100, "The number of graphs to train on per step."
+  "train_graphs_per_step", 10000, "The number of graphs to train on per step."
+)
+app.DEFINE_integer(
+  "val_graphs", 10000, "The number of graphs to use in the validation set."
 )
 app.DEFINE_integer("batch_size", 10000, "The number of nodes in a graph.")
 app.DEFINE_boolean(
@@ -71,6 +74,10 @@ def Main():
   path = pathlib.Path(FLAGS.path)
   analysis = FLAGS.analysis
   limit_max_data_flow_steps = FLAGS.limit_max_data_flow_steps
+  train_graphs_per_step = FLAGS.train_graphs_per_step
+  val_graphs = FLAGS.val_graphs
+  batch_size = FLAGS.batch_size
+  max_training_graphs = FLAGS.max_training_graphs
 
   # Since we are dealing with binary classification we calculate
   # precesion / recall / F1 wrt only the positive class.
@@ -112,30 +119,51 @@ def Main():
   else:
     data_flow_step_max = None
 
+  # Read val batches asynchronously
+  val_batches = AsyncBatchBuilder(
+    batch_builder=GgnnModelBatchBuilder(
+      graph_loader=graph_loader.DataflowGraphLoader(
+        path,
+        epoch_type=epoch_pb2.VAL,
+        analysis=analysis,
+        max_graph_count=val_graphs,
+        data_flow_step_max=data_flow_step_max,
+      ),
+      vocabulary=vocabulary,
+      max_node_size=batch_size,
+    ),
+  )
+  val_batches.start()
+
   epoch_step = 0
   batch_step = 0
-  while trained_graphs < FLAGS.max_training_graphs:
+  while trained_graphs < max_training_graphs:
     start_time = time.time()
 
     epoch_step += 1
     epoch_results = []
     for epoch_type in [epoch_pb2.TRAIN, epoch_pb2.VAL]:
-      # Read a "step" worth of graphs.
-      data_loader = graph_loader.DataflowGraphLoader(
-        path,
-        epoch_type,
-        analysis,
-        max_graph_count=FLAGS.graphs_per_step,
-        data_flow_step_max=data_flow_step_max,
-      )
-      # Construct batches from those graphs in a background thread.
-      batch_builder = GgnnModelBatchBuilder(
-        data_loader, vocabulary, max_node_size=FLAGS.batch_size
-      )
-      batches = ppar.ThreadedIterator(
-        batch_builder.BuildBatches(), max_queue_size=5
-      )
+      if epoch_type == epoch_pb2.TRAIN:
+        # Read a training "step" worth of graphs.
+        data_loader = graph_loader.DataflowGraphLoader(
+          path,
+          epoch_type,
+          analysis,
+          max_graph_count=train_graphs_per_step,
+          data_flow_step_max=data_flow_step_max,
+        )
+        # Construct batches from those graphs in a background thread.
+        batch_builder = GgnnModelBatchBuilder(
+          data_loader, vocabulary, max_node_size=batch_size
+        )
+        batches = ppar.ThreadedIterator(batch_builder, max_queue_size=5)
+      else:
+        # During validation, wait for the batch builder to finish and then
+        # iterate over those.
+        val_batches.join()
+        batches = val_batches.batches
 
+      # Feed the batches through the model and update stats.
       rolling_results = RollingResults()
       for batch_data in batches:
         batch_step += 1

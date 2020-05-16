@@ -17,6 +17,27 @@
 # limitations under the License.
 
 py_library(
+    name = "async_batch_builder",
+    srcs = ["async_batch_builder.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":base_batch_builder",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+    ],
+)
+
+py_library(
+    name = "base_batch_builder",
+    srcs = ["base_batch_builder.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":base_graph_loader",
+        ":batch_data",
+    ],
+)
+
+py_library(
     name = "base_graph_loader",
     srcs = ["base_graph_loader.py"],
     visibility = ["//visibility:public"],

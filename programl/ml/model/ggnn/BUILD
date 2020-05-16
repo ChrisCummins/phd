@@ -66,6 +66,7 @@ py_library(
         ":ggnn_batch",
         "//labm8/py:app",
         "//programl/graph/format/py:graph_tuple_builder",
+        "//programl/ml/batch:base_batch_builder",
         "//programl/ml/batch:base_graph_loader",
         "//programl/ml/batch:batch_data",
         "//third_party/py/numpy",

@@ -21,12 +21,13 @@ import numpy as np
 
 from labm8.py import app
 from programl.graph.format.py.graph_tuple_builder import GraphTupleBuilder
+from programl.ml.batch.base_batch_builder import BaseBatchBuilder
 from programl.ml.batch.base_graph_loader import BaseGraphLoader
 from programl.ml.batch.batch_data import BatchData
 from programl.ml.model.ggnn.ggnn_batch import GgnnBatchData
 
 
-class GgnnModelBatchBuilder(object):
+class GgnnModelBatchBuilder(BaseBatchBuilder):
   """The GGNN batch builder.
 
   Constructs a graph tuple per-batch.
@@ -39,23 +40,24 @@ class GgnnModelBatchBuilder(object):
     max_node_size: int = 10000,
     max_batch_count: int = None,
   ):
-    self.graph_loader = graph_loader
+    super(GgnnModelBatchBuilder, self).__init__(graph_loader)
     self.vocabulary = vocabulary
-    self.builder = GraphTupleBuilder()
     self.max_node_size = max_node_size
     self.max_batch_count = max_batch_count
 
+    # Mutable state.
+    self.builder = GraphTupleBuilder()
     self.vocab_ids = []
     self.selector_ids = []
     self.node_labels = []
     self.batch_count = 0
 
-  def Reset(self) -> None:
+  def _Reset(self) -> None:
     self.vocab_ids = []
     self.selector_ids = []
     self.node_labels = []
 
-  def Build(self) -> BatchData:
+  def _Build(self) -> BatchData:
     gt = self.builder.Build()
     batch = BatchData(
       graph_count=gt.graph_size,
@@ -66,14 +68,14 @@ class GgnnModelBatchBuilder(object):
         node_labels=np.array(self.node_labels, dtype=np.int32),
       ),
     )
-    self.Reset()
+    self._Reset()
     return batch
 
-  def BuildBatches(self) -> Iterable[BatchData]:
+  def __iter__(self) -> Iterable[BatchData]:
     node_size = 0
     for graph, features in self.graph_loader:
       if node_size + len(graph.node) > self.max_node_size:
-        yield self.Build()
+        yield self._Build()
         self.batch_count += 1
         if self.max_batch_count and self.batch_count >= self.max_batch_count:
           app.Log(2, "Stopping after producing %d batches", self.batch_count)
@@ -99,6 +101,6 @@ class GgnnModelBatchBuilder(object):
 
     if node_size:
       self.batch_count += 1
-      yield self.Build()
+      yield self._Build()
 
-    self.Reset()
+    self._Reset()
