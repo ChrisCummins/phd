@@ -46,7 +46,7 @@ CREATE_LABELS = bazelutil.DataPath(
 )
 
 
-def _ProcessRow(path, row, i) -> None:
+def _ProcessRow(output_directory, row, file_id) -> None:
   source, src_lang, ir_type, binary_ir = row
 
   # Decode database row.
@@ -61,26 +61,41 @@ def _ProcessRow(path, row, i) -> None:
   }[src_lang.decode("utf-8")]
   ir_type = ir_type.decode("utf-8")
 
-  source = {
-    "github.com/av-maramzin/SNU_NPB:NPB3.3-SER-C": "npb-3.3-ser-c",
-    "pact17_opencl_devmap": "opencl",
-  }.get(source, source)
   if source.startswith("sqlite:///"):
     source = "github"
+  else:
+    source = {
+      "github.com/av-maramzin/SNU_NPB:NPB3.3-SER-C": "npb-3.3-ser-c",
+      "pact17_opencl_devmap": "opencl",
+    }.get(source, source)
+
+  # Output file paths.
+  name = f"{source}.{file_id}.{src_lang}"
+  ir_path = output_directory / f"ir/{name}.ll"
+  ir_message_path = output_directory / f"ir/{name}.Ir.pb"
+
+  # Check that the files to be generated do not already exist.
+  # This is a defensive measure against accidentally overwriting files during
+  # an export. A side effect of this is that partial exports are not supported.
+  assert not ir_path.is_file()
+  assert not ir_message_path.is_file()
 
   ir = pickle.loads(codecs.decode(binary_ir, "zlib"))
-  compiler_version = {"LLVM_6_0": 600, "LLVM_3_5": 350,}[ir_type]
 
-  ir = ir_pb2.Ir(
+  # Write the text IR to file.
+  with open(ir_path, "w") as f:
+    f.write(ir)
+
+  compiler_version = {"LLVM_6_0": 600, "LLVM_3_5": 350,}[ir_type]
+  ir_message = ir_pb2.Ir(
     type=ir_pb2.Ir.LLVM, compiler_version=compiler_version, text=ir
   )
-  name = f"{source}.{i}.{src_lang}"
-  pbutil.ToFile(ir, path / f"ir/{name}.Ir.pb")
+  pbutil.ToFile(ir_message, ir_message_path)
 
   # Convert to ProgramGraph.
   try:
-    graph = llvm.BuildProgramGraph(ir.text)
-    pbutil.ToFile(graph, path / f"graphs/{name}.ProgramGraph.pb")
+    graph = llvm.BuildProgramGraph(ir)
+    pbutil.ToFile(graph, output_directory / f"graphs/{name}.ProgramGraph.pb")
 
     # Put into train/val/test bin.
     r = random.random()
@@ -92,16 +107,16 @@ def _ProcessRow(path, row, i) -> None:
       dst = "test"
     os.symlink(
       f"../graphs/{name}.ProgramGraph.pb",
-      path / dst / f"{name}.ProgramGraph.pb",
+      output_directory / dst / f"{name}.ProgramGraph.pb",
     )
   except (ValueError, OSError, TimeoutError, AssertionError) as e:
     pass
 
 
 def _ProcessRows(job) -> int:
-  path, rows = job
+  output_directory, rows = job
   for (row, i) in rows:
-    _ProcessRow(path, row, i)
+    _ProcessRow(output_directory, row, i)
   return len(rows)
 
 
@@ -129,11 +144,15 @@ class ExportIrDatabase(progress.Progress):
 
   def Run(self):
     with multiprocessing.Pool() as pool:
-      # Run many smaller queries rather than one big query since MySQL
+      # A counter used to produce a unique ID number for each exported file.
+      n = 0
+      # Run many smaller queries in rather than one big query since MySQL
       # connections will die if hanging around for too long.
-      for j in range(0, self.ctx.n, 512):
+      batch_size = 512
+      job_size = 32
+      for j in range(0, self.ctx.n, batch_size):
         self.db.query(
-          f"""
+          f"""\
 SELECT
   source,
   source_language,
@@ -142,19 +161,26 @@ SELECT
 FROM intermediate_representation
 WHERE compilation_succeeded=1
 AND source NOT LIKE 'poj-104:%'
-LIMIT 1000
+LIMIT {batch_size}
 OFFSET {j}
 """
         )
 
         results = self.db.store_result()
-        rows = [(item, i) for i, item in enumerate(results.fetch_row())]
-        jobs = [(self.path, chunk) for chunk in labtypes.Chunkify(rows, 128)]
+        rows = [
+          (item, i)
+          for i, item in enumerate(results.fetch_row(maxrows=0), start=n)
+        ]
+        # Update the exported file counter.
+        n += len(rows)
+        jobs = [
+          (self.path, chunk) for chunk in labtypes.Chunkify(rows, job_size)
+        ]
 
-        for c in pool.imap_unordered(_ProcessRows, jobs):
-          self.ctx.i += c
+        for exported_count in pool.imap_unordered(_ProcessRows, jobs):
+          self.ctx.i += exported_count
 
-      self.ctx.i = self.ctx.n
+    self.ctx.i = self.ctx.n
 
 
 def ExportClassifyAppGraphs(classifyapp: pathlib.Path, path: pathlib.Path):
@@ -184,11 +210,11 @@ def Main():
     host=FLAGS.host, user=FLAGS.user, passwd=FLAGS.pwd, db=FLAGS.db
   )
 
-  (path / "ir").mkdir(parents=True, exist_ok=True)
-  (path / "graphs").mkdir(exist_ok=True)
-  (path / "train").mkdir(exist_ok=True)
-  (path / "val").mkdir(exist_ok=True)
-  (path / "test").mkdir(exist_ok=True)
+  (path / "ir").mkdir(parents=True)
+  (path / "graphs").mkdir()
+  (path / "train").mkdir()
+  (path / "val").mkdir()
+  (path / "test").mkdir()
 
   export = ExportIrDatabase(path, db)
   progress.Run(export)
