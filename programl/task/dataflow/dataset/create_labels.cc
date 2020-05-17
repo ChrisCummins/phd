@@ -13,8 +13,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include <sys/stat.h>
 #include <algorithm>
 #include <atomic>
+#include <cstdlib>
+#include <ctime>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -36,6 +39,9 @@ using std::vector;
 
 const char* usage = R"(Create dataflow labels for program graphs.)";
 
+DEFINE_int32(limit, 0,
+             "If --limit > 0, limit the number of input graphs processed to "
+             "this number.");
 DEFINE_string(path, "/tmp/programl/poj104",
               "The directory to write generated files to.");
 
@@ -55,22 +61,42 @@ vector<fs::path> EnumerateProgramGraphFiles(const fs::path& root) {
       files.push_back(it.path());
     }
   }
+
+  // Randomize the order of files to crudely load balancing a
+  // bunch of parallel workers iterating through this list in order
+  // as the there is a high variance in the size / complexity of files.
+  std::srand(unsigned(std::time(0)));
+  std::random_shuffle(files.begin(), files.end());
   return files;
 }
 
 int constexpr StrLen(const char* str) { return *str ? 1 + StrLen(str + 1) : 0; }
+
+// Return true if the given file exists.
+inline bool FileExists(const string& name) {
+  struct stat buffer;
+  return (stat(name.c_str(), &buffer) == 0);
+}
 
 // Instantiate and run an analysis on the given graph, writing resulting
 // features to file.
 template <typename Analysis>
 void RunAnalysis(const ProgramGraph& graph, const string& root,
                  const string& analysisName, const string& nameStem) {
+  const string outPath = absl::StrFormat("%s/%s/%sProgramGraphFeaturesList.pb",
+                                         root, analysisName, nameStem);
+
+  // Do nothing if the file already exists. This is to allow for incremental
+  // runs in which the dataset is only partially exported.
+  if (FileExists(outPath)) {
+    return;
+  }
+
   ProgramGraphFeaturesList labels;
   Analysis analysis(graph);
   CHECK(analysis.Run(&labels).ok());
+  // Only write the files if features were exported.
   if (labels.graph_size()) {
-    const string outPath = absl::StrFormat(
-        "%s/%s/%sProgramGraphFeaturesList.pb", root, analysisName, nameStem);
     std::ofstream out(outPath);
     labels.SerializeToOstream(&out);
   }
@@ -92,8 +118,8 @@ void ProcessProgramGraph(const fs::path& root, const fs::path& path) {
                                                 nameStem);
 }
 
-std::chrono::microseconds Now() {
-  return std::chrono::duration_cast<std::chrono::microseconds>(
+std::chrono::milliseconds Now() {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::system_clock::now().time_since_epoch());
 }
 
@@ -101,29 +127,35 @@ void CreateDataflowLabels(const fs::path& path) {
   // Create a directory for each of the analyses that we will run.
   fs::create_directory(path / "reachability");
   fs::create_directory(path / "domtree");
-  std::chrono::microseconds startTime = Now();
+  std::chrono::milliseconds startTime = Now();
 
   const vector<fs::path> files = EnumerateProgramGraphFiles(path / "graphs");
 
   std::atomic_uint64_t fileCount{0};
-  tbb::parallel_for(
-      tbb::blocked_range<size_t>(0, files.size()),
-      [&](const tbb::blocked_range<size_t>& r) {
-        for (size_t index = r.begin(); index != r.end(); ++index) {
-          ProcessProgramGraph(path, files[index]);
-          ++fileCount;
-          uint64_t f = fileCount;
-          if (f && !(f % 8)) {
-            std::chrono::microseconds now = Now();
-            int usPerGraph = ((now - startTime) / f).count();
-            std::cout << "\r\033[K" << f << " of " << files.size()
-                      << " files processed (" << usPerGraph << " μs / graph, "
-                      << std::setprecision(3)
-                      << (f / static_cast<float>(files.size())) * 100 << "%)"
-                      << std::flush;
-          }
-        }
-      });
+
+  // The size of file path chunks to execute in worker thread inner loops.
+  // A larger chunk size creates more infrequent status updates.
+  const int chunkSize = 16;
+
+  const size_t n = FLAGS_limit
+                       ? std::min(size_t(files.size()), size_t(FLAGS_limit))
+                       : files.size();
+
+#pragma omp parallel for
+  for (size_t j = 0; j < n; j += chunkSize) {
+    for (size_t i = j; i < std::min(n, j + chunkSize); ++i) {
+      ProcessProgramGraph(path, files[i]);
+    }
+    fileCount += chunkSize;
+    uint64_t localFileCount = fileCount;
+    std::chrono::milliseconds now = Now();
+    int msPerGraph = ((now - startTime) / localFileCount).count();
+    std::cout << "\r\033[K" << localFileCount << " of " << n
+              << " files processed (" << msPerGraph << " ms / graph, "
+              << std::setprecision(3)
+              << (localFileCount / static_cast<float>(n)) * 100 << "%)"
+              << std::flush;
+  }
   std::cout << std::endl;
 }
 

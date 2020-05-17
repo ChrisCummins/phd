@@ -54,6 +54,7 @@ cc_binary(
 cc_binary(
     name = "create_labels",
     srcs = ["create_labels.cc"],
+    copts = ["-fopenmp"],
     deps = [
         ":graph_map",
         "//labm8/cpp:app",
@@ -80,6 +81,7 @@ cc_library(
         "//programl/graph/analysis:reachability",
         "//programl/proto:program_graph_cc",
         "//programl/proto:program_graph_features_cc",
+        "//third_party/openmp",
         "//third_party/tbb",
         "@boost//:filesystem",
         "@com_google_absl//absl/strings:str_format",
