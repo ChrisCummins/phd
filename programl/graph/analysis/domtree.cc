@@ -17,6 +17,7 @@
 #include "programl/graph/analysis/domtree.h"
 
 #include "labm8/cpp/status.h"
+#include "labm8/cpp/status_macros.h"
 #include "programl/graph/features.h"
 
 #include <utility>
@@ -34,8 +35,9 @@ Status DomtreeAnalysis::Init() {
   return Status::OK;
 }
 
-std::pair<int, absl::flat_hash_map<int, absl::flat_hash_set<int>>>
-DomtreeAnalysis::ComputeDominators(const int rootNode) {
+Status DomtreeAnalysis::ComputeDominators(
+    const int rootNode, int* dataFlowSteps,
+    absl::flat_hash_map<int, absl::flat_hash_set<int>>* dominators) {
   const int function = graph().node(rootNode).function();
   const auto& rcfg = adjacencies().reverse_control;
 
@@ -55,17 +57,16 @@ DomtreeAnalysis::ComputeDominators(const int rootNode) {
                                              instructionsInFunction.end()};
   initialDominators.erase(rootNode);
 
-  absl::flat_hash_map<int, absl::flat_hash_set<int>> dominators;
   for (const auto& node : instructionsInFunction) {
     if (node == rootNode) {
-      dominators[node].insert(rootNode);
+      (*dominators)[node].insert(rootNode);
     } else {
-      dominators[node] = initialDominators;
+      (*dominators)[node] = initialDominators;
     }
   }
 
   bool changed = true;
-  int dataFlowSteps = 0;
+  *dataFlowSteps = 0;
   while (changed) {
     changed = false;
     for (const auto& node : instructionsInFunction) {
@@ -79,7 +80,7 @@ DomtreeAnalysis::ComputeDominators(const int rootNode) {
       // Intersect the dominators of all predecessors.
       absl::flat_hash_map<int, int> domPred;
       for (const auto& predecessor : predecessors) {
-        for (const auto& d : dominators[predecessor]) {
+        for (const auto& d : (*dominators)[predecessor]) {
           ++domPred[d];
         }
       }
@@ -91,24 +92,32 @@ DomtreeAnalysis::ComputeDominators(const int rootNode) {
         }
       }
 
-      if (newDom != dominators[node]) {
-        ++dataFlowSteps;
-        dominators[node] = newDom;
+      if (newDom != (*dominators)[node]) {
+        *dataFlowSteps = *dataFlowSteps + 1;
+        // Error if failed to converge after a generous number of time steps.
+        // In the future we may want to extend this value or remove the check
+        // entirely.
+        if (*dataFlowSteps > 1000) {
+          return Status(
+              error::FAILED_PRECONDITION,
+              "Failed to terminate domtree computation in 1000 steps");
+        }
+        (*dominators)[node] = newDom;
         changed = true;
       }
     }
   }
 
-  return {dataFlowSteps, dominators};
+  return Status::OK;
 }
 
 Status DomtreeAnalysis::RunOne(int rootNode, ProgramGraphFeatures* features) {
   Feature falseFeature = CreateFeature(0);
   Feature trueFeature = CreateFeature(1);
 
-  const auto result = ComputeDominators(rootNode);
-  const int stepCount = result.first;
-  const auto& dominators = result.second;
+  int stepCount;
+  absl::flat_hash_map<int, absl::flat_hash_set<int>> dominators;
+  RETURN_IF_ERROR(ComputeDominators(rootNode, &stepCount, &dominators));
 
   int activeNodeCount = 0;
   for (int i = 0; i < graph().node_size(); ++i) {

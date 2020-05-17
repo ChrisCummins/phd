@@ -44,8 +44,9 @@ class DomtreeAnalysis : public InstructionRootDataFlowAnalysis {
   virtual Status Init() override;
 
  protected:
-  std::pair<int, absl::flat_hash_map<int, absl::flat_hash_set<int>>>
-  ComputeDominators(const int rootNode);
+  Status ComputeDominators(
+      const int rootNode, int* dataFlowSteps,
+      absl::flat_hash_map<int, absl::flat_hash_set<int>>* dominators);
 };
 
 }  // namespace analysis

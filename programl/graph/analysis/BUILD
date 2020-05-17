@@ -52,6 +52,7 @@ cc_library(
         ":data_flow_pass",
         "//labm8/cpp:logging",
         "//labm8/cpp:status",
+        "//labm8/cpp:status_macros",
         "//programl/graph:features",
         "//programl/proto:program_graph_cc",
         "//programl/proto:program_graph_features_cc",
