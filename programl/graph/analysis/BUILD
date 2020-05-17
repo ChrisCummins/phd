@@ -67,6 +67,7 @@ cc_test(
         "//labm8/cpp:status",
         "//labm8/cpp:test",
         "//programl/graph:program_graph_builder",
+        "//programl/test:analysis_testutil",
     ],
 )
 
@@ -107,8 +108,10 @@ cc_test(
     srcs = ["reachability_test.cc"],
     deps = [
         ":reachability",
+        "//labm8/cpp:logging",
         "//labm8/cpp:status",
         "//labm8/cpp:test",
         "//programl/graph:program_graph_builder",
+        "//programl/test:analysis_testutil",
     ],
 )

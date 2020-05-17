@@ -15,9 +15,11 @@
 // limitations under the License.
 #include "programl/graph/analysis/reachability.h"
 
+#include "labm8/cpp/logging.h"
 #include "labm8/cpp/status.h"
 #include "labm8/cpp/test.h"
 #include "programl/graph/program_graph_builder.h"
+#include "programl/test/analysis_testutil.h"
 
 using labm8::Status;
 
@@ -26,20 +28,113 @@ namespace graph {
 namespace analysis {
 namespace {
 
-TEST(ReachabilityAnalysis, Foo) {
-  ProgramGraphBuilder builder;
-  Module* mod = builder.AddModule("mod");
-  Function* fn = builder.AddFunction("fn", mod);
-  Node* a = builder.AddInstruction("a", fn);
-  Node* b = builder.AddInstruction("b", fn);
-  ASSERT_OK(builder.AddControlEdge(0, builder.GetRootNode(), a));
-  ASSERT_OK(builder.AddControlEdge(0, a, b));
-  ProgramGraph graph = builder.Build().ValueOrDie();
+class ReachabilityAnalysisTest : public labm8::Test {
+ public:
+  ReachabilityAnalysisTest() {
+    ProgramGraphBuilder builder;
+    Module* mod = builder.AddModule("mod");
+    Function* fn = builder.AddFunction("fn", mod);
+    Node* a = builder.AddInstruction("a", fn);
+    Node* b = builder.AddInstruction("b", fn);
+    Node* c = builder.AddInstruction("c", fn);
+    Node* d = builder.AddInstruction("d", fn);
+    CHECK(builder.AddControlEdge(0, builder.GetRootNode(), a).status().ok());
+    CHECK(builder.AddControlEdge(0, a, b).status().ok());
+    CHECK(builder.AddControlEdge(0, b, c).status().ok());
+    CHECK(builder.AddControlEdge(0, c, d).status().ok());
+    graph_ = builder.Build().ValueOrDie();
+  }
 
-  ReachabilityAnalysis analysis(graph);
-  ProgramGraphFeaturesList features;
-  ASSERT_OK(analysis.Run(&features));
-  ASSERT_EQ(features.graph_size(), 1);
+ protected:
+  ProgramGraph graph_;
+};
+
+TEST_F(ReachabilityAnalysisTest, ReachableNodeCountFromRootA) {
+  ReachabilityAnalysis analysis(graph_);
+  analysis.Init();
+  ProgramGraphFeatures f;
+
+  ASSERT_OK(analysis.RunOne(1, &f));
+  EXPECT_ACTIVE_NODE_COUNT(f, 4);
+}
+
+TEST_F(ReachabilityAnalysisTest, ReachableNodeCountFromRootD) {
+  ReachabilityAnalysis analysis(graph_);
+  analysis.Init();
+  ProgramGraphFeatures f;
+
+  ASSERT_OK(analysis.RunOne(4, &f));
+  EXPECT_ACTIVE_NODE_COUNT(f, 1);
+}
+
+TEST_F(ReachabilityAnalysisTest, StepCountFromRootA) {
+  ReachabilityAnalysis analysis(graph_);
+  analysis.Init();
+  ProgramGraphFeatures f;
+
+  ASSERT_OK(analysis.RunOne(1, &f));
+  EXPECT_STEP_COUNT(f, 3);
+}
+
+TEST_F(ReachabilityAnalysisTest, StepCountFromRootD) {
+  ReachabilityAnalysis analysis(graph_);
+  analysis.Init();
+  ProgramGraphFeatures f;
+
+  ASSERT_OK(analysis.RunOne(4, &f));
+  EXPECT_STEP_COUNT(f, 0);
+}
+
+TEST_F(ReachabilityAnalysisTest, NodeLabelsFromRootA) {
+  ReachabilityAnalysis analysis(graph_);
+  analysis.Init();
+  ProgramGraphFeatures f;
+
+  ASSERT_OK(analysis.RunOne(1, &f));
+  EXPECT_NODE_FALSE(f, 0);
+  EXPECT_NODE_TRUE(f, 1);
+  EXPECT_NODE_TRUE(f, 2);
+  EXPECT_NODE_TRUE(f, 3);
+  EXPECT_NODE_TRUE(f, 4);
+}
+
+TEST_F(ReachabilityAnalysisTest, NodeLabelsFromRootD) {
+  ReachabilityAnalysis analysis(graph_);
+  analysis.Init();
+  ProgramGraphFeatures f;
+
+  ASSERT_OK(analysis.RunOne(4, &f));
+  EXPECT_NODE_FALSE(f, 0);
+  EXPECT_NODE_FALSE(f, 1);
+  EXPECT_NODE_FALSE(f, 2);
+  EXPECT_NODE_FALSE(f, 3);
+  EXPECT_NODE_TRUE(f, 4);
+}
+
+TEST_F(ReachabilityAnalysisTest, RootNodeFromRootA) {
+  ReachabilityAnalysis analysis(graph_);
+  analysis.Init();
+  ProgramGraphFeatures f;
+
+  ASSERT_OK(analysis.RunOne(1, &f));
+  EXPECT_NOT_ROOT(f, 0);
+  EXPECT_ROOT(f, 1);
+  EXPECT_NOT_ROOT(f, 2);
+  EXPECT_NOT_ROOT(f, 3);
+  EXPECT_NOT_ROOT(f, 4);
+}
+
+TEST_F(ReachabilityAnalysisTest, RootNodeFromRootD) {
+  ReachabilityAnalysis analysis(graph_);
+  analysis.Init();
+  ProgramGraphFeatures f;
+
+  ASSERT_OK(analysis.RunOne(4, &f));
+  EXPECT_NOT_ROOT(f, 0);
+  EXPECT_NOT_ROOT(f, 1);
+  EXPECT_NOT_ROOT(f, 2);
+  EXPECT_NOT_ROOT(f, 3);
+  EXPECT_ROOT(f, 4);
 }
 
 }  // anonymous namespace
