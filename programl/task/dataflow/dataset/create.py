@@ -68,8 +68,10 @@ def _ProcessRow(output_directory, row, file_id) -> None:
     source = "github"
   else:
     source = {
-      "github.com/av-maramzin/SNU_NPB:NPB3.3-SER-C": "npb-3.3-ser-c",
+      "github.com/av-maramzin/SNU_NPB:NPB3.3-SER-C": "npb-3_3-ser-c",
       "pact17_opencl_devmap": "opencl",
+      "linux-4.19": "linux-4_19",
+      "opencv-3.4.0": "opencv-3_4_0",
     }.get(source, source)
 
   # Output file paths.
@@ -192,24 +194,24 @@ OFFSET {j}
 def ExportClassifyAppGraphs(classifyapp: pathlib.Path, path: pathlib.Path):
   app.Log(1, "Copying POJ-104 IR")
   for ir in (classifyapp / "ir").iterdir():
-    shutil.copy(ir, path / f"ir/poj104.{path.name}")
+    shutil.copy(ir, path / f"ir/poj104_{path.name}")
   app.Log(1, "Copying POJ-104 graphs")
   for graph in (classifyapp / "graphs").iterdir():
-    shutil.copy(graph, path / f"graphs/poj104.{graph.name}")
+    shutil.copy(graph, path / f"graphs/poj104_{graph.name}")
   app.Log(1, "Copying POJ-104 train")
   for graph in (classifyapp / "train").iterdir():
     os.symlink(
-      f"../graphs/poj104.{graph.name}", path / f"train/poj104.{graph.name}"
+      f"../graphs/poj104_{graph.name}", path / f"train/poj104_{graph.name}"
     )
   app.Log(1, "Copying POJ-104 val")
   for graph in (classifyapp / "val").iterdir():
     os.symlink(
-      f"../graphs/poj104.{graph.name}", path / f"val/poj104.{graph.name}"
+      f"../graphs/poj104_{graph.name}", path / f"val/poj104_{graph.name}"
     )
   app.Log(1, "Copying POJ-104 test")
   for graph in (classifyapp / "test").iterdir():
     os.symlink(
-      f"../graphs/poj104.{graph.name}", path / f"test/poj104.{graph.name}"
+      f"../graphs/poj104_{graph.name}", path / f"test/poj104_{graph.name}"
     )
 
 
