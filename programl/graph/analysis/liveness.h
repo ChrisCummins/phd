@@ -40,9 +40,9 @@ class LivenessAnalysis : public InstructionRootDataFlowAnalysis {
  private:
   int dataFlowStepCount_;
 
-  // Live-in and live-out maps.
-  absl::flat_hash_map<int, absl::flat_hash_set<int>> liveInSets_;
-  absl::flat_hash_map<int, absl::flat_hash_set<int>> liveOutSets_;
+  // Live-in and live-out sets that are computed during Init().
+  std::vector<absl::flat_hash_set<int>> liveInSets_;
+  std::vector<absl::flat_hash_set<int>> liveOutSets_;
 };
 
 }  // namespace analysis

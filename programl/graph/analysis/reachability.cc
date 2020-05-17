@@ -51,12 +51,9 @@ Status ReachabilityAnalysis::RunOne(int rootNode,
 
   // Create the selector node features.
   for (int i = 0; i < graph().node_size(); ++i) {
-    (*(*features->mutable_node_features()
-            ->mutable_feature_list())["data_flow_root_node"]
-          .add_feature()) = i == rootNode ? trueFeature : falseFeature;
-    (*(*features->mutable_node_features()
-            ->mutable_feature_list())["data_flow_value"]
-          .add_feature()) = falseFeature;
+    AddNodeFeature(features, "data_flow_root_node",
+                   i == rootNode ? trueFeature : falseFeature);
+    AddNodeFeature(features, "data_flow_value", falseFeature);
   }
 
   int dataFlowStepCount = 0;

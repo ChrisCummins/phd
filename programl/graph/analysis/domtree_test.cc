@@ -111,8 +111,7 @@ TEST_F(DomtreeAnalysisTest, AnnotateG1FromRootA) {
   ASSERT_OK(analysis.RunOne(1, &f));
 
   EXPECT_ACTIVE_NODE_COUNT(f, 4);
-  int stepCount = SCALAR_INT64_GRAPH_FEATURE(f, "data_flow_step_count");
-  EXPECT_TRUE(stepCount == 2 || stepCount == 3);
+  EXPECT_STEP_COUNT(f, 4);
 
   // Features.
   EXPECT_NOT_ROOT(f, 0);
@@ -139,8 +138,7 @@ TEST_F(DomtreeAnalysisTest, AnnotateG2FromRootA) {
   ASSERT_OK(analysis.RunOne(1, &f));
 
   EXPECT_ACTIVE_NODE_COUNT(f, 2);
-  int stepCount = SCALAR_INT64_GRAPH_FEATURE(f, "data_flow_step_count");
-  EXPECT_TRUE(stepCount == 2 || stepCount == 3);
+  EXPECT_STEP_COUNT(f, 5);
 
   // Features.
   EXPECT_NOT_ROOT(f, 0);

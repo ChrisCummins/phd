@@ -16,13 +16,10 @@
 
 #include "programl/graph/analysis/domtree.h"
 
-#include "labm8/cpp/logging.h"
 #include "labm8/cpp/status.h"
 #include "programl/graph/features.h"
 
-#include <queue>
 #include <utility>
-#include <vector>
 
 using std::pair;
 using std::vector;
@@ -45,16 +42,17 @@ DomtreeAnalysis::ComputeDominators(const int rootNode) {
   // Because a node may only be dominated by a node from within the same
   // function, we need only consider the statements nodes within the same
   // function as the root node.
-  absl::flat_hash_set<int> instructionsInFunction;
+  vector<int> instructionsInFunction;
   for (int i = 0; i < graph().node_size(); ++i) {
     if (i && graph().node(i).function() == function) {
-      instructionsInFunction.insert(i);
+      instructionsInFunction.push_back(i);
     }
   }
 
   // Initialize the dominator sets. These map nodes to the set of nodes that
   // dominate it.
-  absl::flat_hash_set<int> initialDominators = instructionsInFunction;
+  absl::flat_hash_set<int> initialDominators{instructionsInFunction.begin(),
+                                             instructionsInFunction.end()};
   initialDominators.erase(rootNode);
 
   absl::flat_hash_map<int, absl::flat_hash_set<int>> dominators;
@@ -70,7 +68,6 @@ DomtreeAnalysis::ComputeDominators(const int rootNode) {
   int dataFlowSteps = 0;
   while (changed) {
     changed = false;
-    ++dataFlowSteps;
     for (const auto& node : instructionsInFunction) {
       if (node == rootNode) {
         continue;
@@ -95,6 +92,7 @@ DomtreeAnalysis::ComputeDominators(const int rootNode) {
       }
 
       if (newDom != dominators[node]) {
+        ++dataFlowSteps;
         dominators[node] = newDom;
         changed = true;
       }
@@ -102,12 +100,6 @@ DomtreeAnalysis::ComputeDominators(const int rootNode) {
   }
 
   return {dataFlowSteps, dominators};
-}
-
-void AddNodeFeature(ProgramGraphFeatures* features, const string& name,
-                    const Feature& value) {
-  (*(*features->mutable_node_features()->mutable_feature_list())[name]
-        .add_feature()) = value;
 }
 
 Status DomtreeAnalysis::RunOne(int rootNode, ProgramGraphFeatures* features) {

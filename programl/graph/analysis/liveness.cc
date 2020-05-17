@@ -35,6 +35,14 @@ Status LivenessAnalysis::Init() {
                       .data = true,
                       .reverse_data = true});
 
+  // Pre-compute all live-out sets.
+  liveInSets_.reserve(graph().node_size());
+  liveOutSets_.reserve(graph().node_size());
+  for (int i = 0; i < graph().node_size(); ++i) {
+    liveInSets_.push_back({});
+    liveOutSets_.push_back({});
+  }
+
   const auto& cfg = adjacencies().control;
   const auto& rcfg = adjacencies().reverse_control;
   const auto& dfg = adjacencies().data;
@@ -44,14 +52,17 @@ Status LivenessAnalysis::Init() {
       << " graph size: " << graph().node_size();
 
   std::queue<int> workList;
+  absl::flat_hash_set<int> workSet;
+
   // Liveness is computed backwards starting from the program exit.
   // Build a work list of exit nodes to begin from.
   for (int i = 0; i < graph().node_size(); ++i) {
-    if (graph().node(i).type() == Node::INSTRUCTION && cfg[i].size() == 0) {
+    if (graph().node(i).type() == Node::INSTRUCTION && !cfg[i].size()) {
+      LOG(INFO) << "Node " << i << " is exit";
       workList.push(i);
+      workSet.insert(i);
     }
   }
-
   LOG(INFO) << "Worklist init " << workList.size();
 
   // A graph may not have any exit nodes.
@@ -64,49 +75,54 @@ Status LivenessAnalysis::Init() {
     ++dataFlowStepCount_;
     int node = workList.front();
     workList.pop();
+    workSet.erase(node);
 
-    const auto& defs = dfg[node];
+    // Get immediate control and data neighbors.
     const auto& successors = cfg[node];
-
-    const auto& uses = rdfg[node];
     const auto& predecessors = rcfg[node];
+    const auto& defs = dfg[node];
+    const auto& uses = rdfg[node];
 
     // LiveOut(n) = U {LiveIn(p) for p in succ(n)}
-    absl::flat_hash_set<int> newOutSet;
+    absl::flat_hash_set<int> newOutSet{};
     for (const auto& successor : successors) {
       newOutSet.merge(liveInSets_[successor]);
     }
 
     // LiveIn(n) = Gen(n) U {LiveOut(n) - Kill(n)}
-    absl::flat_hash_set<int> newInSet;
-    for (const auto& use : uses) {
-      newInSet.insert(use);
+    absl::flat_hash_set<int> newInSet{uses.begin(), uses.end()};
+    absl::flat_hash_set<int> newOutSetMinusDefs = newOutSet;
+    for (const auto& d : defs) {
+      newOutSetMinusDefs.erase(d);
     }
-    absl::flat_hash_set<int> killSet{defs.begin(), defs.end()};
-    for (const auto& v : newOutSet) {
-      if (killSet.find(v) == killSet.end()) {
-        newInSet.insert(v);
-      }
-    }
+    newInSet.merge(newOutSetMinusDefs);
 
     // No need to visit predecessors if the in-set is non-empty and has not
     // changed.
     if (newInSet != liveInSets_[node]) {
       for (const auto& predecessor : predecessors) {
-        workList.push(predecessor);
+        if (!workSet.contains(predecessor)) {
+          workSet.insert(predecessor);
+          workList.push(predecessor);
+        }
       }
+      liveInSets_[node] = newInSet;
     }
 
-    liveInSets_[node] = newInSet;
     liveOutSets_[node] = newOutSet;
   }
-
-  LOG(INFO) << "Done " << dataFlowStepCount_;
 
   return Status::OK;
 }
 
 Status LivenessAnalysis::RunOne(int rootNode, ProgramGraphFeatures* features) {
+  if (rootNode < 0 || rootNode >= graph().node_size()) {
+    return Status(error::INVALID_ARGUMENT, "Root node is out-of-range");
+  }
+  if (graph().node(rootNode).type() != Node::INSTRUCTION) {
+    return Status(error::INVALID_ARGUMENT, "Root node must be an instruction");
+  }
+
   Feature falseFeature = CreateFeature(0);
   Feature trueFeature = CreateFeature(1);
 
@@ -119,20 +135,16 @@ Status LivenessAnalysis::RunOne(int rootNode, ProgramGraphFeatures* features) {
 
   // We have already pre-computed the live-out sets, so just add the
   // annotations.
+  const auto& outSet = liveOutSets_[rootNode];
   int dataFlowActiveNodeCount = 0;
   for (int i = 0; i < graph().node_size(); ++i) {
-    (*(*features->mutable_node_features()
-            ->mutable_feature_list())["data_flow_root_node"]
-          .add_feature()) = i == rootNode ? trueFeature : falseFeature;
-    if (liveOutSets_.find(i) == liveOutSets_.end()) {
-      (*(*features->mutable_node_features()
-              ->mutable_feature_list())["data_flow_value"]
-            .add_feature()) = falseFeature;
-    } else {
+    AddNodeFeature(features, "data_flow_root_node",
+                   i == rootNode ? trueFeature : falseFeature);
+    if (outSet.contains(i)) {
       ++dataFlowActiveNodeCount;
-      (*(*features->mutable_node_features()
-              ->mutable_feature_list())["data_flow_value"]
-            .add_feature()) = trueFeature;
+      AddNodeFeature(features, "data_flow_value", trueFeature);
+    } else {
+      AddNodeFeature(features, "data_flow_value", falseFeature);
     }
   }
 

@@ -114,6 +114,12 @@ Status InstructionRootDataFlowAnalysis::Init() {
   return Status::OK;
 }
 
+void AddNodeFeature(ProgramGraphFeatures* features, const string& name,
+                    const Feature& value) {
+  (*(*features->mutable_node_features()->mutable_feature_list())[name]
+        .add_feature()) = value;
+}
+
 }  // namespace analysis
 }  // namespace graph
 }  // namespace programl

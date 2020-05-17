@@ -92,6 +92,10 @@ class InstructionRootDataFlowAnalysis : public DataFlowPass {
   unsigned seed_;
 };
 
+// Utility function to add a new node feature a list of node features.
+void AddNodeFeature(ProgramGraphFeatures* features, const string& name,
+                    const Feature& value);
+
 }  // namespace analysis
 }  // namespace graph
 }  // namespace programl
