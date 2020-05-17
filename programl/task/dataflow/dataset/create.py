@@ -129,29 +129,32 @@ class ExportIrDatabase(progress.Progress):
 
   def __init__(self, path: pathlib.Path, db):
     self.path = path
-    self.db = _mysql.connect(
+    db = _mysql.connect(
       host=FLAGS.host, user=FLAGS.user, passwd=FLAGS.pwd, db=FLAGS.db
     )
-    self.db.query(
+    db.query(
       """
   SELECT COUNT(*) FROM intermediate_representation
   WHERE compilation_succeeded=1
   AND source NOT LIKE 'poj-104:%'
   """
     )
-    n = int(self.db.store_result().fetch_row()[0][0].decode("utf-8"))
+    n = int(db.store_result().fetch_row()[0][0].decode("utf-8"))
     super(ExportIrDatabase, self).__init__("ir db", i=0, n=n, unit="irs")
 
   def Run(self):
     with multiprocessing.Pool() as pool:
       # A counter used to produce a unique ID number for each exported file.
       n = 0
-      # Run many smaller queries in rather than one big query since MySQL
+      # Run many smaller queries rather than one big query since MySQL
       # connections will die if hanging around for too long.
       batch_size = 512
-      job_size = 32
+      job_size = 16
       for j in range(0, self.ctx.n, batch_size):
-        self.db.query(
+        db = _mysql.connect(
+          host=FLAGS.host, user=FLAGS.user, passwd=FLAGS.pwd, db=FLAGS.db
+        )
+        db.query(
           f"""\
 SELECT
   source,
@@ -166,7 +169,7 @@ OFFSET {j}
 """
         )
 
-        results = self.db.store_result()
+        results = db.store_result()
         rows = [
           (item, i)
           for i, item in enumerate(results.fetch_row(maxrows=0), start=n)
@@ -185,8 +188,8 @@ OFFSET {j}
 
 def ExportClassifyAppGraphs(classifyapp: pathlib.Path, path: pathlib.Path):
   app.Log(1, "Copying POJ-104 IR")
-  for path in (classifyapp / "ir").iterdir():
-    shutil.copy(graph, path / f"ir/poj104.{path.name}")
+  for ir in (classifyapp / "ir").iterdir():
+    shutil.copy(ir, path / f"ir/poj104.{path.name}")
   app.Log(1, "Copying POJ-104 graphs")
   for graph in (classifyapp / "graphs").iterdir():
     shutil.copy(graph, path / f"graphs/poj104.{graph.name}")
