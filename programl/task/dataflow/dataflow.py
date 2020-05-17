@@ -62,6 +62,7 @@ def TrainDataflowGGNN(
   val_graph_count: int,
   val_seed: int,
   batch_size: int,
+  use_cdfg: bool,
 ) -> pathlib.Path:
   # Since we are dealing with binary classification we calculate
   # precesion / recall / F1 wrt only the positive class.
@@ -114,6 +115,7 @@ def TrainDataflowGGNN(
         data_flow_step_max=data_flow_step_max,
         logfile=open(log_dir / "graph_loader" / "val.txt", "w"),
         seed=val_seed,
+        use_cdfg=use_cdfg,
       ),
       vocabulary=vocabulary,
       max_node_size=batch_size,
@@ -139,6 +141,7 @@ def TrainDataflowGGNN(
       logfile=open(
         log_dir / "graph_loader" / f"{epoch_step:03d}.train.txt", "w"
       ),
+      use_cdfg=use_cdfg,
     )
     # Construct batches from those graphs in a background thread.
     batch_builder = GgnnModelBatchBuilder(
@@ -185,6 +188,7 @@ def TestDataflowGGNN(
   analysis: str,
   limit_max_data_flow_steps: bool,
   batch_size: int,
+  use_cdfg: bool,
 ):
   # Since we are dealing with binary classification we calculate
   # precesion / recall / F1 wrt only the positive class.
@@ -237,6 +241,7 @@ def TestDataflowGGNN(
       analysis=analysis,
       data_flow_step_max=data_flow_step_max,
       logfile=open(log_dir / "graph_loader" / "test.txt", "w"),
+      use_cdfg=use_cdfg,
     ),
     vocabulary=vocabulary,
     max_node_size=batch_size,

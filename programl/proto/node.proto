@@ -50,3 +50,10 @@ message Node {
   int32 block = 7;
   Features features = 8;
 }
+
+// A node map is used to translate node indices between graphs.
+message NodeIndexList {
+  // The keys are node indices in the old graph representation, the
+  // values are node inidices in the new graph representation.
+  repeated int32 node = 1;
+}

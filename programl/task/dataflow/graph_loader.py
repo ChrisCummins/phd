@@ -22,6 +22,7 @@ import pathlib
 import queue
 import random
 import threading
+from typing import Any
 from typing import Iterable
 from typing import Tuple
 
@@ -30,11 +31,14 @@ from labm8.py import humanize
 from labm8.py import pbutil
 from programl.ml.batch import base_graph_loader
 from programl.proto import epoch_pb2
+from programl.proto import node_pb2
 from programl.proto import program_graph_features_pb2
 from programl.proto import program_graph_pb2
 
 
 class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
+  """A graph loader for dataflow graphs and features."""
+
   def __init__(
     self,
     path: pathlib.Path,
@@ -44,22 +48,32 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
     max_graph_count: int = None,
     data_flow_step_max: int = None,
     logfile=None,
+    use_cdfg: bool = False,
   ):
     self._inq = queue.Queue(maxsize=1)
     self._outq = queue.Queue(maxsize=10)
-    self._thread = self._Reader(
-      path,
-      epoch_type,
-      analysis,
-      self._inq,
-      self._outq,
-      seed=seed,
-      max_graph_count=max_graph_count,
-      data_flow_step_max=data_flow_step_max,
-      logfile=logfile,
-    )
+
+    reader_opts = {
+      "path": path,
+      "epoch_type": epoch_type,
+      "analysis": analysis,
+      "inq": self._inq,
+      "outq": self._outq,
+      "seed": seed,
+      "max_graph_count": max_graph_count,
+      "data_flow_step_max": data_flow_step_max,
+      "logfile": logfile,
+    }
+
+    if use_cdfg:
+      self._thread = self._CDFGReader(**reader_opts)
+    else:
+      self._thread = self._Reader(**reader_opts)
     self._thread.start()
     self._stopped = False
+
+  def IterableType(self) -> Any:
+    return self._thread.IterableType()
 
   def Stop(self):
     if self._stopped:
@@ -99,8 +113,8 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
       path,
       epoch_type: epoch_pb2.EpochType,
       analysis: str,
-      inq,
-      outq,
+      inq: queue.Queue,
+      outq: queue.Queue,
       seed: int = None,
       max_graph_count: int = None,
       data_flow_step_max: int = None,
@@ -123,6 +137,12 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
       self.labels_path = path / analysis
       if not self.labels_path.is_dir():
         raise FileNotFoundError(str(self.labels_path))
+
+    def IterableType(self) -> Any:
+      return (
+        program_graph_pb2.ProgramGraph,
+        program_graph_features_pb2.ProgramGraphFeatures,
+      )
 
     def run(self):
       files = list(self.graph_path.iterdir())
@@ -171,6 +191,121 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
             if self.logfile:
               self.logfile.write(f"{features_path} {j}\n")
             self.outq.put((graph, features), block=True)
+            if self.max_graph_count and i >= self.max_graph_count:
+              app.Log(2, "Stopping after reading %d graphs", i)
+              self._Done(i)
+              return
+
+      self._Done(i)
+
+    def _Done(self, i: int) -> None:
+      app.Log(
+        2,
+        "Skipped %s of %s graphs (%.2f%%)",
+        humanize.Commas(self.skip_count),
+        humanize.Commas(i + self.skip_count),
+        (self.skip_count / (i + self.skip_count)) * 100,
+      )
+      self.outq.put(DataflowGraphLoader._EndOfIterator(), block=True)
+      self.logfile.close()
+
+  class _CDFGReader(threading.Thread):
+    """CDFG graph reader."""
+
+    def __init__(
+      self,
+      path,
+      epoch_type: epoch_pb2.EpochType,
+      analysis: str,
+      inq: queue.Queue,
+      outq: queue.Queue,
+      seed: int = None,
+      max_graph_count: int = None,
+      data_flow_step_max: int = None,
+      logfile=None,
+    ):
+      self.inq = inq
+      self.outq = outq
+      self.max_graph_count = max_graph_count
+      self.data_flow_step_max = data_flow_step_max
+      self.seed = seed
+      # The number of skipped graphs.
+      self.skip_count = 0
+      self.logfile = logfile
+      super(DataflowGraphLoader._CDFGReader, self).__init__()
+
+      self.graph_path = path / epoch_pb2.EpochType.Name(epoch_type).lower()
+      if not self.graph_path.is_dir():
+        raise FileNotFoundError(str(self.graph_path))
+
+      self.labels_path = path / "labels" / analysis
+      if not self.labels_path.is_dir():
+        raise FileNotFoundError(str(self.labels_path))
+
+      self.cdfg_path = path / "cdfg"
+      if not self.cdfg_path.is_dir():
+        raise FileNotFoundError(str(self.cdfg_path))
+
+    def IterableType(self) -> Any:
+      return (
+        program_graph_pb2.ProgramGraph,
+        program_graph_features_pb2.ProgramGraphFeatures,
+        node_pb2.NodeIndexList,
+      )
+
+    def run(self):
+      files = list(self.graph_path.iterdir())
+      if self.seed:
+        # If we are setting a reproducible seed, first sort the list of files
+        # since iterdir() order is undefined, then seed the RNG for the shuffle.
+        files = sorted(files)
+        random.seed(self.seed)
+      random.shuffle(files)
+
+      i = 0
+
+      for path in files:
+        try:
+          self.inq.get(block=False)
+          break
+        except queue.Empty:
+          pass
+        stem = path.name[: -len("ProgramGraph.pb")]
+        name = f"{stem}ProgramGraphFeaturesList.pb"
+        features_path = self.labels_path / name
+        cdfg_path = self.cdfg_path / path.name
+        node_index_path = self.cdfg_path / f"{stem}NodeIndexList.pb"
+
+        if cdfg_path.is_file() and features_path.is_file():
+          app.Log(3, "Read %s", features_path)
+          graph = pbutil.FromFile(cdfg_path, program_graph_pb2.ProgramGraph())
+          node_list = pbutil.FromFile(node_index_path, node_pb2.NodeIndexList())
+          features_list = pbutil.FromFile(
+            features_path, program_graph_features_pb2.ProgramGraphFeaturesList()
+          )
+
+          for j, features in enumerate(features_list.graph):
+            step_count = features.features.feature[
+              "data_flow_step_count"
+            ].int64_list.value[0]
+            if self.data_flow_step_max and step_count > self.data_flow_step_max:
+              self.skip_count += 1
+              app.Log(
+                3,
+                "Skipped graph with data_flow_step_count %d > %d "
+                "(skipped %d / %d, %.2f%%)",
+                step_count,
+                self.data_flow_step_max,
+                self.skip_count,
+                (i + self.skip_count),
+                (self.skip_count / (i + self.skip_count)) * 100,
+              )
+              continue
+            i += 1
+            if self.logfile:
+              self.logfile.write(f"{features_path} {j}\n")
+
+            self.outq.put((graph, features, node_list.node), block=True)
             if self.max_graph_count and i >= self.max_graph_count:
               app.Log(2, "Stopping after reading %d graphs", i)
               self._Done(i)

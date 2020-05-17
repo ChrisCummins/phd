@@ -72,5 +72,7 @@ int main(int argc, char** argv) {
     Decode<programl::SourceFile>();
   } else if (name == "Checkpoint") {
     Decode<programl::Checkpoint>();
+  } else if (name == "NodeIndexList") {
+    Decode<programl::NodeIndexList>();
   }
 }

@@ -45,6 +45,12 @@ app.DEFINE_boolean(
   "If set, limit the size of dataflow-annotated graphs used to only those "
   "with data_flow_steps <= message_passing_step_count",
 )
+app.DEFINE_boolean(
+  "cdfg",
+  False,
+  "If set, use the CDFG representation for programs. Defaults to ProGraML "
+  "representations.",
+)
 FLAGS = app.FLAGS
 
 
@@ -56,6 +62,7 @@ def Main():
     analysis=FLAGS.analysis,
     limit_max_data_flow_steps=FLAGS.limit_max_data_flow_steps,
     batch_size=FLAGS.batch_size,
+    use_cdfg=FLAGS.cdfg,
   )
 
 

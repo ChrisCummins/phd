@@ -41,6 +41,9 @@ app.DEFINE_string("db", None, "The database to export from.")
 app.DEFINE_string("path", None, "The directory to export to.")
 FLAGS = app.FLAGS
 
+CREATE_CDFG = bazelutil.DataPath(
+  "phd/programl/task/dataflow/dataset/create_cdfg"
+)
 CREATE_LABELS = bazelutil.DataPath(
   "phd/programl/task/dataflow/dataset/create_labels"
 )
@@ -226,6 +229,9 @@ def Main():
   progress.Run(export)
 
   ExportClassifyAppGraphs(pathlib.Path(FLAGS.classifyapp), path)
+
+  app.Log(1, "Creating CDFG graphs")
+  subprocess.check_call([str(CREATE_CDFG), "--path", str(path)])
 
   app.Log(1, "Creating data flow analysis labels")
   subprocess.check_call([str(CREATE_LABELS), "--path", str(path)])

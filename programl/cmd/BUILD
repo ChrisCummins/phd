@@ -30,6 +30,17 @@ cc_binary(
 )
 
 cc_binary(
+    name = "graph2cdfg",
+    srcs = ["graph2cdfg.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//programl/graph/format:cdfg",
+        "//programl/proto:program_graph_cc",
+        "@com_google_protobuf//:protobuf",
+    ],
+)
+
+cc_binary(
     name = "graph2dot",
     srcs = ["graph2dot.cc"],
     visibility = ["//visibility:public"],

@@ -41,10 +41,6 @@ py_library(
     name = "base_graph_loader",
     srcs = ["base_graph_loader.py"],
     visibility = ["//visibility:public"],
-    deps = [
-        "//programl/proto:program_graph_features_py",
-        "//programl/proto:program_graph_py",
-    ],
 )
 
 py_library(

@@ -25,6 +25,9 @@ from programl.ml.batch.base_batch_builder import BaseBatchBuilder
 from programl.ml.batch.base_graph_loader import BaseGraphLoader
 from programl.ml.batch.batch_data import BatchData
 from programl.ml.model.ggnn.ggnn_batch import GgnnBatchData
+from programl.proto import node_pb2
+from programl.proto import program_graph_features_pb2
+from programl.proto import program_graph_pb2
 
 
 class GgnnModelBatchBuilder(BaseBatchBuilder):
@@ -52,6 +55,22 @@ class GgnnModelBatchBuilder(BaseBatchBuilder):
     self.node_labels = []
     self.batch_count = 0
 
+    # Determine the type of graph loader that we are building batches from.
+    iter_type = self.graph_loader.IterableType()
+    if self.graph_loader.IterableType() == (
+      program_graph_pb2.ProgramGraph,
+      program_graph_features_pb2.ProgramGraphFeatures,
+    ):
+      self.use_node_list = False
+    elif self.graph_loader.IterableType() == (
+      program_graph_pb2.ProgramGraph,
+      program_graph_features_pb2.ProgramGraphFeatures,
+      node_pb2.NodeIndexList,
+    ):
+      self.use_node_list = True
+    else:
+      raise TypeError(f"Unsupported graph reader iterable type: {iter_type}")
+
   def _Reset(self) -> None:
     self.vocab_ids = []
     self.selector_ids = []
@@ -73,7 +92,13 @@ class GgnnModelBatchBuilder(BaseBatchBuilder):
 
   def __iter__(self) -> Iterable[BatchData]:
     node_size = 0
-    for graph, features in self.graph_loader:
+    for item in self.graph_loader:
+      if self.use_node_list:
+        graph, features, node_list = item
+      else:
+        graph, features = item
+        node_list = range(len(graph.node))
+
       if node_size + len(graph.node) > self.max_node_size:
         yield self._Build()
         self.batch_count += 1
@@ -87,16 +112,20 @@ class GgnnModelBatchBuilder(BaseBatchBuilder):
         self.vocabulary.get(node.text, len(self.vocabulary))
         for node in graph.node
       ]
-      self.selector_ids += [
-        f.int64_list.value[0]
-        for f in features.node_features.feature_list[
-          "data_flow_root_node"
-        ].feature
-      ]
-      self.node_labels += [
-        f.int64_list.value[0]
-        for f in features.node_features.feature_list["data_flow_value"].feature
-      ]
+
+      # Read the graph node features.
+      for n in node_list:
+        self.selector_ids.append(
+          features.node_features.feature_list["data_flow_root_node"]
+          .feature[n]
+          .int64_list.value[0]
+        )
+        self.node_labels.append(
+          features.node_features.feature_list["data_flow_value"]
+          .feature[n]
+          .int64_list.value[0]
+        )
+
       node_size += len(graph.node)
 
     if node_size:

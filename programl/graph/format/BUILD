@@ -17,6 +17,32 @@
 # limitations under the License.
 
 cc_library(
+    name = "cdfg",
+    srcs = ["cdfg.cc"],
+    hdrs = ["cdfg.h"],
+    visibility = ["//programl:__subpackages__"],
+    deps = [
+        "//labm8/cpp:statusor",
+        "//programl/proto:edge_cc",
+        "//programl/proto:node_cc",
+        "//programl/proto:program_graph_cc",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
+    ],
+)
+
+cc_test(
+    name = "cdfg_test",
+    srcs = ["cdfg_test.cc"],
+    deps = [
+        ":cdfg",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:test",
+        "//programl/graph:program_graph_builder",
+    ],
+)
+
+cc_library(
     name = "graph_tuple",
     srcs = ["graph_tuple.cc"],
     hdrs = ["graph_tuple.h"],

@@ -71,6 +71,12 @@ app.DEFINE_list(
   ],
   "The list of cumulative training graph counts to evaluate at.",
 )
+app.DEFINE_boolean(
+  "cdfg",
+  False,
+  "If set, use the CDFG representation for programs. Defaults to ProGraML "
+  "representations.",
+)
 app.DEFINE_boolean("test", True, "Whether to test the model after training.")
 FLAGS = app.FLAGS
 
@@ -91,6 +97,7 @@ def Main():
     val_graph_count=FLAGS.val_graph_count,
     val_seed=FLAGS.val_seed,
     batch_size=FLAGS.batch_size,
+    use_cdfg=FLAGS.cdfg,
   )
 
   if FLAGS.test:
@@ -100,6 +107,7 @@ def Main():
       analysis=FLAGS.analysis,
       limit_max_data_flow_steps=FLAGS.limit_max_data_flow_steps,
       batch_size=FLAGS.batch_size,
+      use_cdfg=FLAGS.cdfg,
     )
 
 

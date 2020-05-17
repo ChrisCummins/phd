@@ -14,38 +14,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This module defines the interface for graph loaders."""
+from typing import Any
 from typing import Iterable
-from typing import Tuple
-
-from programl.proto import program_graph_features_pb2
-from programl.proto import program_graph_pb2
 
 
 class BaseGraphLoader(object):
   """Base class for loading graphs from some dataset.
 
-  This class behaves like an iterator over <ProgramGraph, ProgramGraphFeatures>
-  tuples, with addition of a Stop() method to signal that no further tuples
-  will be consumed.
+  This class behaves like an iterator over tuples of program graph
+  data, with the addition of a Stop() method to signal that no further
+  tuples will be consumed. The type of iterable values is described by
+  the class itself, accessible using loader.IterableType() method.
+  This enables you to "swap" in and out different loaders with different
+  behaviour.
 
   Example usage:
 
       graph_loader = MyGraphLoader(...)
+      assert graph_loader.IterableType() == (
+        ProgramGraph,
+        ProgramGraphFeatures,
+      )
       for graph, features in graph_loader:
         # ... do something with graphs
         if done:
           self.graph_loader.Stop()
+
   """
 
   def Stop(self) -> None:
     raise NotImplementedError("abstract class")
 
-  def __iter__(
-    self,
-  ) -> Iterable[
-    Tuple[
-      program_graph_pb2.ProgramGraph,
-      program_graph_features_pb2.ProgramGraphFeatures,
-    ]
-  ]:
+  def IterableType(self) -> Any:
+    raise NotImplementedError("abstract class")
+
+  def __iter__(self,) -> Iterable[IterableType]:
     raise NotImplementedError("abstract class")

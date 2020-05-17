@@ -17,7 +17,10 @@
 py_binary(
     name = "create",
     srcs = ["create.py"],
-    data = ["create_labels"],
+    data = [
+        ":create_cdfg",
+        ":create_labels",
+    ],
     deps = [
         "//labm8/py:app",
         "//labm8/py:bazelutil",
@@ -31,8 +34,45 @@ py_binary(
 )
 
 cc_binary(
+    name = "create_cdfg",
+    srcs = ["create_cdfg.cc"],
+    copts = ["-fopenmp"],
+    deps = [
+        ":graph_map",
+        "//labm8/cpp:app",
+        "//labm8/cpp:fsutil",
+        "//labm8/cpp:logging",
+        "//programl/graph/format:cdfg",
+        "//programl/proto:node_cc",
+        "//programl/proto:program_graph_cc",
+        "//third_party/openmp",
+        "@boost//:filesystem",
+        "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+cc_binary(
     name = "create_labels",
     srcs = ["create_labels.cc"],
+    deps = [
+        ":graph_map",
+        "//labm8/cpp:app",
+        "//labm8/cpp:fsutil",
+        "//labm8/cpp:logging",
+        "//programl/graph/analysis:domtree",
+        "//programl/graph/analysis:reachability",
+        "//programl/proto:program_graph_cc",
+        "//programl/proto:program_graph_features_cc",
+        "@boost//:filesystem",
+        "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+cc_library(
+    name = "graph_map",
+    srcs = ["graph_map.cc"],
+    hdrs = ["graph_map.h"],
+    copts = ["-fopenmp"],
     deps = [
         "//labm8/cpp:app",
         "//labm8/cpp:logging",
