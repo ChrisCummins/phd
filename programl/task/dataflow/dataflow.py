@@ -150,13 +150,14 @@ def TrainDataflowGGNN(
       ]
     )
     print(epoch, end="")
-    pbutil.ToFile(
-      epoch, log_dir / "epochs" / f"{epoch_step:03d}.EpochList.pbtxt"
+    epoch_path = log_dir / "epochs" / f"{epoch_step:03d}.EpochList.pbtxt"
+    checkpoint_path = (
+      log_dir / "checkpoints" / f"{epoch_step:03d}.Checkpoint.pb"
     )
-    pbutil.ToFile(
-      model.SaveCheckpoint(),
-      log_dir / "checkpoints" / f"{epoch_step:03d}.Checkpoint.pb",
-    )
+    pbutil.ToFile(epoch, epoch_path)
+    app.Log(1, "Wrote %s", epoch_path)
+    pbutil.ToFile(model.SaveCheckpoint(), checkpoint_path)
+    app.Log(1, "Wrote %s", checkpoint_path)
   return log_dir
 
 
@@ -233,7 +234,9 @@ def TestDataflowGGNN(
   )
   print(epoch, end="")
 
-  pbutil.ToFile(epoch, log_dir / "epochs" / "TEST.EpochList.pbtxt")
+  epoch_path = log_dir / "epochs" / "TEST.EpochList.pbtxt"
+  pbutil.ToFile(epoch, epoch_path)
+  app.Log(1, "Wrote %s", epoch_path)
 
 
 def LoadVocabulary(path: pathlib.Path) -> Dict[str, int]:
