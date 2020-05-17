@@ -22,6 +22,7 @@
 #include "boost/filesystem.hpp"
 #include "labm8/cpp/app.h"
 #include "labm8/cpp/logging.h"
+#include "programl/graph/analysis/domtree.h"
 #include "programl/graph/analysis/reachability.h"
 #include "programl/proto/program_graph.pb.h"
 #include "programl/proto/program_graph_features.pb.h"
@@ -59,6 +60,22 @@ vector<fs::path> EnumerateProgramGraphFiles(const fs::path& root) {
 
 int constexpr StrLen(const char* str) { return *str ? 1 + StrLen(str + 1) : 0; }
 
+// Instantiate and run an analysis on the given graph, writing resulting
+// features to file.
+template <typename Analysis>
+void RunAnalysis(const ProgramGraph& graph, const string& root,
+                 const string& analysisName, const string& nameStem) {
+  ProgramGraphFeaturesList labels;
+  Analysis analysis(graph);
+  CHECK(analysis.Run(&labels).ok());
+  if (labels.graph_size()) {
+    const string outPath = absl::StrFormat(
+        "%s/%s/%sProgramGraphFeaturesList.pb", root, analysisName, nameStem);
+    std::ofstream out(outPath);
+    labels.SerializeToOstream(&out);
+  }
+}
+
 void ProcessProgramGraph(const fs::path& root, const fs::path& path) {
   std::ifstream file(path.string());
   ProgramGraph graph;
@@ -68,19 +85,11 @@ void ProcessProgramGraph(const fs::path& root, const fs::path& path) {
   const string nameStem =
       baseName.substr(0, baseName.size() - StrLen("ProgramGraph.pb"));
 
-  // Reachability labels.
-  {
-    ProgramGraphFeaturesList labels;
-    graph::analysis::ReachabilityAnalysis analysis(graph);
-    CHECK(analysis.Run(&labels).ok());
-    if (labels.graph_size()) {
-      const string outPath =
-          absl::StrFormat("%s/reachability/%sProgramGraphFeaturesList.pb",
-                          root.string(), nameStem);
-      std::ofstream out(outPath);
-      labels.SerializeToOstream(&out);
-    }
-  }
+  // Run the analyses to produce graph features.
+  RunAnalysis<graph::analysis::ReachabilityAnalysis>(graph, root.string(),
+                                                     "reachability", nameStem);
+  RunAnalysis<graph::analysis::DomtreeAnalysis>(graph, root.string(), "domtree",
+                                                nameStem);
 }
 
 std::chrono::microseconds Now() {
@@ -89,7 +98,9 @@ std::chrono::microseconds Now() {
 }
 
 void CreateDataflowLabels(const fs::path& path) {
+  // Create a directory for each of the analyses that we will run.
   fs::create_directory(path / "reachability");
+  fs::create_directory(path / "domtree");
   std::chrono::microseconds startTime = Now();
 
   const vector<fs::path> files = EnumerateProgramGraphFiles(path / "graphs");

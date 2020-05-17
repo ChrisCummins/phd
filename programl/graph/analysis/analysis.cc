@@ -16,6 +16,7 @@
 
 #include "programl/graph/analysis/analysis.h"
 
+#include "programl/graph/analysis/domtree.h"
 #include "programl/graph/analysis/liveness.h"
 #include "programl/graph/analysis/reachability.h"
 
@@ -25,14 +26,20 @@ namespace programl {
 namespace graph {
 namespace analysis {
 
+template <typename T>
+Status Run(const ProgramGraph& graph, ProgramGraphFeaturesList* featuresList) {
+  T analysis(graph);
+  return analysis.Run(featuresList);
+}
+
 Status RunAnalysis(const string& analysisName, const ProgramGraph& graph,
                    ProgramGraphFeaturesList* featuresList) {
   if (analysisName == "reachability") {
-    ReachabilityAnalysis analysis(graph);
-    return analysis.Run(featuresList);
+    return Run<ReachabilityAnalysis>(graph, featuresList);
+  } else if (analysisName == "domtree") {
+    return Run<DomtreeAnalysis>(graph, featuresList);
   } else if (analysisName == "liveness") {
-    LivenessAnalysis analysis(graph);
-    return analysis.Run(featuresList);
+    return Run<LivenessAnalysis>(graph, featuresList);
   } else {
     return Status(error::Code::INVALID_ARGUMENT, "Invalid analysis: {}",
                   analysisName);

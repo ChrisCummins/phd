@@ -36,6 +36,7 @@ cc_binary(
     deps = [
         "//labm8/cpp:app",
         "//labm8/cpp:logging",
+        "//programl/graph/analysis:domtree",
         "//programl/graph/analysis:reachability",
         "//programl/proto:program_graph_cc",
         "//programl/proto:program_graph_features_cc",

@@ -22,6 +22,7 @@ cc_library(
     hdrs = ["analysis.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":domtree",
         ":liveness",
         ":reachability",
         "//labm8/cpp:status",
@@ -39,6 +40,36 @@ cc_library(
         "//labm8/cpp:status_macros",
         "//programl/proto:program_graph_cc",
         "//programl/proto:program_graph_features_cc",
+    ],
+)
+
+cc_library(
+    name = "domtree",
+    srcs = ["domtree.cc"],
+    hdrs = ["domtree.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":data_flow_pass",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:status",
+        "//programl/graph:features",
+        "//programl/proto:program_graph_cc",
+        "//programl/proto:program_graph_features_cc",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
+    ],
+)
+
+cc_test(
+    name = "domtree_test",
+    srcs = ["domtree_test.cc"],
+    deps = [
+        ":domtree",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:status",
+        "//labm8/cpp:test",
+        "//programl/graph:program_graph_builder",
+        "//programl/test:analysis_testutil",
     ],
 )
 
