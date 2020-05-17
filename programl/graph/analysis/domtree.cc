@@ -31,7 +31,7 @@ namespace graph {
 namespace analysis {
 
 Status DomtreeAnalysis::Init() {
-  ComputeAdjacencies({.reverse_control = true});
+  ComputeAdjacencies({.control = false, .reverse_control = true});
   return Status::OK;
 }
 
