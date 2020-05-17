@@ -184,6 +184,9 @@ OFFSET {j}
 
 
 def ExportClassifyAppGraphs(classifyapp: pathlib.Path, path: pathlib.Path):
+  app.Log(1, "Copying POJ-104 IR")
+  for path in (classifyapp / "ir").iterdir():
+    shutil.copy(graph, path / f"ir/poj104.{path.name}")
   app.Log(1, "Copying POJ-104 graphs")
   for graph in (classifyapp / "graphs").iterdir():
     shutil.copy(graph, path / f"graphs/poj104.{graph.name}")
