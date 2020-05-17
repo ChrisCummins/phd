@@ -15,6 +15,7 @@
 # limitations under the License.
 """This module defines functions for training and testing GGNN dataflow models.
 """
+import json
 import pathlib
 import socket
 import time
@@ -36,6 +37,21 @@ from programl.proto import epoch_pb2
 from programl.task.dataflow.graph_loader import DataflowGraphLoader
 
 FLAGS = app.FLAGS
+
+
+def RecordExperimentalSetup(log_dir: pathlib.Path) -> None:
+  """Create flags.txt and build_info.json files.
+
+  These two files record a snapshot of the configuration and build information,
+  useful for debugging and reproducibility.
+
+  Args:
+    log_dir: The path to write the files in.
+  """
+  with open(log_dir / "flags.txt", "w") as f:
+    f.write(app.FlagsToString())
+  with open(log_dir / "build_info.json", "w") as f:
+    json.dump(app.ToJson(), f, sort_keys=True, indent=2, separators=(",", ": "))
 
 
 def TrainDataflowGGNN(
@@ -63,6 +79,8 @@ def TrainDataflowGGNN(
   (log_dir / "epochs").mkdir()
   (log_dir / "checkpoints").mkdir()
   (log_dir / "graph_loader").mkdir()
+
+  RecordExperimentalSetup(log_dir)
 
   vocabulary = LoadVocabulary(path / "vocabulary.txt")
 
@@ -175,6 +193,8 @@ def TestDataflowGGNN(
   # warns that it iss undefined when there are missing instances from a class,
   # which is fine for our usage.
   warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
+
+  RecordExperimentalSetup(log_dir)
 
   # Create the logging directories.
   assert (log_dir / "epochs").is_dir()
