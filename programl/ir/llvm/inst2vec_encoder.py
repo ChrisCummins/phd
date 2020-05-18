@@ -66,13 +66,17 @@ class Inst2vecEncoder(object):
   ) -> program_graph_pb2.ProgramGraph:
     """Pre-process the node text and set the text embedding index.
 
-    For each node, this sets the 'preprocessed_text', 'x', and 'y' attributes.
+    For each node, this sets 'inst2vec_preprocessed' and 'inst2vec_embedding'
+    features.
 
     Args:
       proto: The ProgramGraph to encode.
       ir: The LLVM IR that was used to construct the graph. This is required for
         struct inlining. If struct inlining is not required, this may be
         omitted.
+
+    Returns:
+      The input proto.
     """
     # Gather the instruction texts to pre-process.
     lines = [
