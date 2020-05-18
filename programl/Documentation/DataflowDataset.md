@@ -33,6 +33,11 @@ The uncompressed dataset uses the following layout:
     * A directory containing symlinks to graphs in the `graphs/` directory, indicating which graphs should be used as part of the training set.
 * `val/`
     * A directory containing symlinks to graphs in the `graphs/` directory, indicating which graphs should be used as part of the validation set.
+* `vocal/`
+    * Directory containing vocabulary files.
+    * `vocab/<type>.csv`
+      * A vocabulary file, which lists unique node texts, their frequency in the dataset, and the cumulative proportion of total unique node texts that is covered.
+
 
 After running the dataflow experiments, log files are produced in this directory with the structure:
 

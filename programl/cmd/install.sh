@@ -16,7 +16,6 @@ EXES=(
   graph2nx
   inst2vec
   llvm2graph
-  node_text_freq
   pb2pbtxt
   select_vocab
   xla2graph

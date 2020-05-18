@@ -22,6 +22,7 @@ py_binary(
         ":create_labels",
     ],
     deps = [
+        ":create_vocab",
         ":encode_inst2vec",
         "//labm8/py:app",
         "//labm8/py:bazelutil",
@@ -67,6 +68,18 @@ cc_binary(
         "//programl/proto:program_graph_features_cc",
         "@boost//:filesystem",
         "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+py_binary(
+    name = "create_vocab",
+    srcs = ["create_vocab.py"],
+    deps = [
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
+        "//labm8/py:progress",
+        "//programl/proto:node_py",
+        "//programl/proto:program_graph_py",
     ],
 )
 

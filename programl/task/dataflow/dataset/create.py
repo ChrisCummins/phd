@@ -32,6 +32,7 @@ from labm8.py import pbutil
 from labm8.py import progress
 from programl.ir.llvm.py import llvm
 from programl.proto import ir_pb2
+from programl.task.dataflow.dataset.create_vocab import CreateVocabularyFiles
 from programl.task.dataflow.dataset.encode_inst2vec import Inst2vecEncodeGraphs
 
 app.DEFINE_string(
@@ -249,10 +250,14 @@ def Main():
 
   # Add inst2vec encoding features to graphs. Do this after CDFG construction
   # to save unnecessary features being copied over.
+  app.Log(1, "Encoding graphs with inst2vec")
   progress.Run(Inst2vecEncodeGraphs(path))
 
   app.Log(1, "Creating data flow analysis labels")
   subprocess.check_call([str(CREATE_LABELS), "--path", str(path)])
+
+  app.Log(1, "Creating vocabularies")
+  progress.Run(CreateVocabularyFiles(path))
 
 
 if __name__ == "__main__":

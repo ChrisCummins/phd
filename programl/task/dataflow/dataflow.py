@@ -17,7 +17,6 @@
 """
 import json
 import pathlib
-import socket
 import time
 import warnings
 from typing import Dict
@@ -76,8 +75,9 @@ def TrainDataflowGGNN(
   warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
 
   # Create the logging directories.
-  uid = f"{socket.gethostname()}@{time.strftime('%y:%m:%dT%H:%M:%S')}"
-  log_dir = path / "logs" / "programl" / analysis / uid
+  uid = time.strftime("%y:%m:%dT%H:%M:%S")
+  model_name = "cdfg" if use_cdfg else "programl"
+  log_dir = path / "logs" / model_name / analysis / uid
   app.Log(1, "Writing logs to %s", log_dir.absolute())
   log_dir.mkdir(parents=True)
   (log_dir / "epochs").mkdir()
@@ -208,7 +208,10 @@ def TestDataflowGGNN(
   assert (log_dir / "checkpoints").is_dir()
   assert (log_dir / "graph_loader").is_dir()
 
-  vocabulary = LoadVocabulary(path / "vocabulary.txt")
+  if use_cdfg:
+    vocabulary = LoadVocabulary(path / "vocab" / "cdfg.txt")
+  else:
+    vocabulary = LoadVocabulary(path / "vocab" / "programl.txt")
 
   # Create the model, defining the shape of the graphs that it will process.
   #
