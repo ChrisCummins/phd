@@ -24,6 +24,7 @@ py_binary(
     deps = [
         ":create_vocab",
         ":encode_inst2vec",
+        ":pathflag",
         "//labm8/py:app",
         "//labm8/py:bazelutil",
         "//labm8/py:labtypes",
@@ -75,6 +76,7 @@ py_binary(
     name = "create_vocab",
     srcs = ["create_vocab.py"],
     deps = [
+        ":pathflag",
         "//labm8/py:app",
         "//labm8/py:pbutil",
         "//labm8/py:progress",
@@ -87,6 +89,7 @@ py_binary(
     name = "encode_inst2vec",
     srcs = ["encode_inst2vec.py"],
     deps = [
+        ":pathflag",
         "//labm8/py:app",
         "//labm8/py:labtypes",
         "//labm8/py:pbutil",
@@ -112,5 +115,13 @@ cc_library(
         "//third_party/tbb",
         "@boost//:filesystem",
         "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+py_library(
+    name = "pathflag",
+    srcs = ["pathflag.py"],
+    deps = [
+        "//labm8/py:app",
     ],
 )

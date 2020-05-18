@@ -36,12 +36,8 @@ from labm8.py import pbutil
 from labm8.py import progress
 from programl.proto import node_pb2
 from programl.proto import program_graph_pb2
+from programl.task.dataflow.dataset import pathflag
 
-app.DEFINE_string(
-  "path",
-  str(pathlib.Path("~/programl/classifyapp").expanduser()),
-  "The directory to read ProgramGraph.pb files from.",
-)
 FLAGS = app.FLAGS
 
 
@@ -127,7 +123,7 @@ class CreateVocabularyFiles(progress.Progress):
 
 
 def Main():
-  path = pathlib.Path(FLAGS.path)
+  path = pathlib.Path(pathflag.path())
   progress.Run(CreateVocabularyFiles(path))
 
 

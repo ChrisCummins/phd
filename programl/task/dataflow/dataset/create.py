@@ -32,6 +32,7 @@ from labm8.py import pbutil
 from labm8.py import progress
 from programl.ir.llvm.py import llvm
 from programl.proto import ir_pb2
+from programl.task.dataflow.dataset import pathflag
 from programl.task.dataflow.dataset.create_vocab import CreateVocabularyFiles
 from programl.task.dataflow.dataset.encode_inst2vec import Inst2vecEncodeGraphs
 
@@ -44,11 +45,6 @@ app.DEFINE_string("host", None, "The database to export from.")
 app.DEFINE_string("user", None, "The database to export from.")
 app.DEFINE_string("pwd", None, "The database to export from.")
 app.DEFINE_string("db", None, "The database to export from.")
-app.DEFINE_string(
-  "path",
-  str(pathlib.Path("~/programl/dataflow").expanduser()),
-  "The directory to export to.",
-)
 FLAGS = app.FLAGS
 
 CREATE_CDFG = bazelutil.DataPath(
@@ -226,7 +222,7 @@ def ExportClassifyAppGraphs(classifyapp: pathlib.Path, path: pathlib.Path):
 
 
 def Main():
-  path = pathlib.Path(FLAGS.path)
+  path = pathlib.Path(pathflag.path())
   db = _mysql.connect(
     host=FLAGS.host, user=FLAGS.user, passwd=FLAGS.pwd, db=FLAGS.db
   )

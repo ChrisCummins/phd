@@ -28,12 +28,8 @@ from labm8.py import pbutil
 from labm8.py import progress
 from programl.ir.llvm.inst2vec_encoder import Inst2vecEncoder
 from programl.proto import program_graph_pb2
+from programl.task.dataflow.dataset import pathflag
 
-app.DEFINE_string(
-  "path",
-  str(pathlib.Path("~/programl/dataflow").expanduser()),
-  "The dataset directory.",
-)
 FLAGS = app.FLAGS
 
 
@@ -84,7 +80,7 @@ class Inst2vecEncodeGraphs(progress.Progress):
 
 
 def Main():
-  path = pathlib.Path(FLAGS.path)
+  path = pathlib.Path(pathflag.path())
   progress.Run(Inst2vecEncodeGraphs(path))
 
 
