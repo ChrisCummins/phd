@@ -22,6 +22,7 @@ py_binary(
         ":create_labels",
     ],
     deps = [
+        ":encode_inst2vec",
         "//labm8/py:app",
         "//labm8/py:bazelutil",
         "//labm8/py:labtypes",
@@ -66,6 +67,19 @@ cc_binary(
         "//programl/proto:program_graph_features_cc",
         "@boost//:filesystem",
         "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+py_binary(
+    name = "encode_inst2vec",
+    srcs = ["encode_inst2vec.py"],
+    deps = [
+        "//labm8/py:app",
+        "//labm8/py:labtypes",
+        "//labm8/py:pbutil",
+        "//labm8/py:progress",
+        "//programl/ir/llvm:inst2vec_encoder",
+        "//programl/proto:program_graph_py",
     ],
 )
 

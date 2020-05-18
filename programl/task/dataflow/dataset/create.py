@@ -32,13 +32,22 @@ from labm8.py import pbutil
 from labm8.py import progress
 from programl.ir.llvm.py import llvm
 from programl.proto import ir_pb2
+from programl.task.dataflow.dataset.encode_inst2vec import Inst2vecEncodeGraphs
 
-app.DEFINE_string("classifyapp", None, "Path of the classifyapp database.")
+app.DEFINE_string(
+  "classifyapp",
+  str(pathlib.Path("~/programl/classifyapp").expanduser()),
+  "Path of the classifyapp database.",
+)
 app.DEFINE_string("host", None, "The database to export from.")
 app.DEFINE_string("user", None, "The database to export from.")
 app.DEFINE_string("pwd", None, "The database to export from.")
 app.DEFINE_string("db", None, "The database to export from.")
-app.DEFINE_string("path", None, "The directory to export to.")
+app.DEFINE_string(
+  "path",
+  str(pathlib.Path("~/programl/dataflow").expanduser()),
+  "The directory to export to.",
+)
 FLAGS = app.FLAGS
 
 CREATE_CDFG = bazelutil.DataPath(
@@ -221,19 +230,26 @@ def Main():
     host=FLAGS.host, user=FLAGS.user, passwd=FLAGS.pwd, db=FLAGS.db
   )
 
+  # First create the output directories. Fail if they already exist.
   (path / "ir").mkdir(parents=True)
   (path / "graphs").mkdir()
   (path / "train").mkdir()
   (path / "val").mkdir()
   (path / "test").mkdir()
 
+  # Export the legacy IR database.
   export = ExportIrDatabase(path, db)
   progress.Run(export)
 
+  # Copy the classifyapp/ dataset.
   ExportClassifyAppGraphs(pathlib.Path(FLAGS.classifyapp), path)
 
   app.Log(1, "Creating CDFG graphs")
   subprocess.check_call([str(CREATE_CDFG), "--path", str(path)])
+
+  # Add inst2vec encoding features to graphs. Do this after CDFG construction
+  # to save unnecessary features being copied over.
+  progress.Run(Inst2vecEncodeGraphs(path))
 
   app.Log(1, "Creating data flow analysis labels")
   subprocess.check_call([str(CREATE_LABELS), "--path", str(path)])
