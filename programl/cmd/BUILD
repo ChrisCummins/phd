@@ -101,6 +101,18 @@ cc_binary(
     ],
 )
 
+cc_binary(
+    name = "graph2seq",
+    srcs = ["graph2seq.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//programl/graph/format:graph_serializer",
+        "//programl/proto:node_cc",
+        "//programl/proto:program_graph_cc",
+        "@com_google_protobuf//:protobuf",
+    ],
+)
+
 py_binary(
     name = "inst2vec",
     srcs = ["inst2vec.py"],

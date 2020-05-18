@@ -43,6 +43,28 @@ cc_test(
 )
 
 cc_library(
+    name = "graph_serializer",
+    srcs = ["graph_serializer.cc"],
+    hdrs = ["graph_serializer.h"],
+    visibility = ["//programl:__subpackages__"],
+    deps = [
+        "//programl/proto:program_graph_cc",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
+    ],
+)
+
+cc_test(
+    name = "graph_serializer_test",
+    srcs = ["graph_serializer_test.cc"],
+    deps = [
+        ":graph_serializer",
+        "//labm8/cpp:test",
+        "//programl/proto:program_graph_cc",
+    ],
+)
+
+cc_library(
     name = "graph_tuple",
     srcs = ["graph_tuple.cc"],
     hdrs = ["graph_tuple.h"],

@@ -13,24 +13,27 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "deeplearning/ml4pl/seq/graph_serializer.h"
+#include "programl/graph/format/graph_serializer.h"
 
 #include "absl/container/flat_hash_set.h"
 
 #include <deque>
 
-namespace ml4pl {
+namespace programl {
+namespace graph {
+namespace format {
 
+// We need to identify the root node in the graph so that we can mark all
+// outgoing call edges as functions to visit.
 static const int ROOT_NODE = 0;
 
-std::vector<int> SerializeStatements(const ProgramGraph& graph) {
-  std::vector<int> serialized;
-
+void SerializeInstructionsInProgramGraph(const ProgramGraph& graph,
+                                         vector<int>* serialized) {
   // An array of function entries to visit, where each function entry is a node
   // that is the destination of an outgoing call edge from the root node.
-  std::vector<int> function_entries_to_visit;
+  vector<int> function_entries_to_visit;
   // A map from source node to a list of destination control edges.
-  absl::flat_hash_map<int, std::vector<int>> forward_control_edges;
+  flat_hash_map<int, vector<int>> forward_control_edges;
 
   // First traverse the graph edges to build the list of function entries to
   // visit and forward control edge map.
@@ -38,24 +41,12 @@ std::vector<int> SerializeStatements(const ProgramGraph& graph) {
     const auto& edge = graph.edge(i);
 
     switch (edge.flow()) {
-      case Edge::CONTROL: {
-        // Insert an empty list in the forward control edge map if there is not
-        // one already.
-        auto existing = forward_control_edges.find(edge.source_node());
-        if (existing == forward_control_edges.end()) {
-          std::vector<int> new_edge_list;
-          forward_control_edges.insert({edge.source_node(), new_edge_list});
-        }
-
-        // Get the forward control edge list for this node.
-        auto edge_list = forward_control_edges.find(edge.source_node());
-
-        edge_list->second.push_back(edge.destination_node());
-      } break;
+      case Edge::CONTROL:
+        forward_control_edges[edge.source()].push_back(edge.target());
+        break;
       case Edge::CALL:
-        if (edge.source_node() == ROOT_NODE &&
-            graph.node(edge.destination_node()).has_function()) {
-          function_entries_to_visit.push_back(edge.destination_node());
+        if (edge.source() == ROOT_NODE) {
+          function_entries_to_visit.push_back(edge.target());
         }
         break;
       case Edge::DATA:
@@ -64,19 +55,26 @@ std::vector<int> SerializeStatements(const ProgramGraph& graph) {
   }
 
   for (const auto& function_entry : function_entries_to_visit) {
-    std::vector<int> serialized_function =
-        SerializeStatements(function_entry, forward_control_edges);
-    serialized.insert(serialized.end(), serialized_function.begin(),
-                      serialized_function.end());
+    vector<int> serialized_function = SerializeInstructionsInProgramGraph(
+        function_entry, forward_control_edges);
+    serialized->insert(serialized->end(), serialized_function.begin(),
+                       serialized_function.end());
   }
-
-  return serialized;
 }
 
-std::vector<int> SerializeStatements(
+void SerializeInstructionsInProgramGraph(const ProgramGraph& graph,
+                                         NodeIndexList* serialized) {
+  vector<int> vec;
+  SerializeInstructionsInProgramGraph(graph, &vec);
+  for (const auto& v : vec) {
+    serialized->add_node(v);
+  }
+}
+
+vector<int> SerializeInstructionsInProgramGraph(
     const int& root,
-    const absl::flat_hash_map<int, std::vector<int>>& forward_control_edges) {
-  std::vector<int> serialized;
+    const flat_hash_map<int, vector<int>>& forward_control_edges) {
+  vector<int> serialized;
 
   // A set of visited nodes.
   absl::flat_hash_set<int> visited;
@@ -107,4 +105,6 @@ std::vector<int> SerializeStatements(
   return serialized;
 }
 
-}  // namespace ml4pl
+}  // namespace format
+}  // namespace graph
+}  // namespace programl

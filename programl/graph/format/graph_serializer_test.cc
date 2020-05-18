@@ -13,79 +13,87 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "deeplearning/ml4pl/seq/graph_serializer.h"
+#include "programl/graph/format/graph_serializer.h"
 
-#include "deeplearning/ml4pl/graphs/programl.pb.h"
+#include "programl/proto/program_graph.pb.h"
 
 #include <vector>
 
 #include "labm8/cpp/test.h"
 
-namespace ml4pl {
+namespace programl {
+namespace graph {
+namespace format {
 namespace {
 
-TEST(SerializeStatements, EmptyGraph) {
+TEST(SerializeInstructionsInProgramGraph, EmptyGraph) {
   ProgramGraph graph;
 
-  auto serialized = SerializeStatements(graph);
+  vector<int> serialized;
+  SerializeInstructionsInProgramGraph(graph, &serialized);
   ASSERT_EQ(0, serialized.size());
 }
 
-TEST(SerializeStatements, RootNodeOnly) {
+TEST(SerializeInstructionsInProgramGraph, RootNodeOnly) {
   ProgramGraph graph;
   Node* root = graph.add_node();
-  root->set_type(Node::STATEMENT);
+  root->set_type(Node::INSTRUCTION);
 
-  auto serialized = SerializeStatements(graph);
+  vector<int> serialized;
+  SerializeInstructionsInProgramGraph(graph, &serialized);
   ASSERT_EQ(0, serialized.size());
 }
 
-TEST(SerializeStatements, SingleFunction) {
+TEST(SerializeInstructionsInProgramGraph, SingleFunction) {
   ProgramGraph graph;
   Node* root = graph.add_node();
-  root->set_type(Node::STATEMENT);
+  root->set_type(Node::INSTRUCTION);
   Node* a = graph.add_node();
-  a->set_type(Node::STATEMENT);
+  a->set_type(Node::INSTRUCTION);
   a->set_function(0);
   Edge* root_to_a = graph.add_edge();
   root_to_a->set_flow(Edge::CALL);
-  root_to_a->set_source_node(0);
-  root_to_a->set_destination_node(1);
+  root_to_a->set_source(0);
+  root_to_a->set_target(1);
 
-  auto serialized = SerializeStatements(graph);
+  vector<int> serialized;
+  SerializeInstructionsInProgramGraph(graph, &serialized);
   ASSERT_EQ(1, serialized.size());
   ASSERT_EQ(1, serialized[0]);
 }
 
-TEST(SerializeStatements, SingleFunctionWithLoop) {
+TEST(SerializeInstructionsInProgramGraph, SingleFunctionWithLoop) {
   ProgramGraph graph;
   Node* root = graph.add_node();
-  root->set_type(Node::STATEMENT);
+  root->set_type(Node::INSTRUCTION);
   Node* a = graph.add_node();
-  a->set_type(Node::STATEMENT);
+  a->set_type(Node::INSTRUCTION);
   a->set_function(0);
   Edge* root_to_a = graph.add_edge();
   root_to_a->set_flow(Edge::CALL);
-  root_to_a->set_source_node(0);
-  root_to_a->set_destination_node(1);
+  root_to_a->set_source(0);
+  root_to_a->set_target(1);
   Node* b = graph.add_node();
-  b->set_type(Node::STATEMENT);
+  b->set_type(Node::INSTRUCTION);
   Edge* a_to_b = graph.add_edge();
   a_to_b->set_flow(Edge::CONTROL);
-  a_to_b->set_source_node(1);
-  a_to_b->set_destination_node(2);
+  a_to_b->set_source(1);
+  a_to_b->set_target(2);
   Edge* b_to_a = graph.add_edge();
   b_to_a->set_flow(Edge::CONTROL);
-  b_to_a->set_source_node(2);
-  b_to_a->set_destination_node(1);
+  b_to_a->set_source(2);
+  b_to_a->set_target(1);
 
-  auto serialized = SerializeStatements(graph);
+  vector<int> serialized;
+  SerializeInstructionsInProgramGraph(graph, &serialized);
   ASSERT_EQ(2, serialized.size());
   ASSERT_EQ(1, serialized[0]);
   ASSERT_EQ(2, serialized[1]);
 }
 
 }  // namespace
-}  // namespace ml4pl
+}  // namespace format
+}  // namespace graph
+}  // namespace programl
 
 TEST_MAIN();
