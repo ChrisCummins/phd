@@ -16,6 +16,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+sh_binary(
+    name = "install",
+    srcs = ["install.sh"],
+    data = [
+        ":graph2cdfg",
+        ":graph2dot",
+        ":graph2json",
+        ":graph2nx",
+        ":inst2vec",
+        ":llvm2graph",
+        ":node_text_freq",
+        ":pb2pbtxt",
+        ":select_vocab",
+        ":xla2graph",
+    ],
+)
+
 cc_binary(
     name = "analyze",
     srcs = ["analyze.cc"],
