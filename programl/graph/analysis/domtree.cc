@@ -20,8 +20,6 @@
 #include "labm8/cpp/status_macros.h"
 #include "programl/graph/features.h"
 
-#include <utility>
-
 using std::pair;
 using std::vector;
 namespace error = labm8::error;
