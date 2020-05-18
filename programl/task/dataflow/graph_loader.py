@@ -134,7 +134,7 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
       if not self.graph_path.is_dir():
         raise FileNotFoundError(str(self.graph_path))
 
-      self.labels_path = path / analysis
+      self.labels_path = path / "labels" / analysis
       if not self.labels_path.is_dir():
         raise FileNotFoundError(str(self.labels_path))
 

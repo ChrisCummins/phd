@@ -64,6 +64,9 @@ def TrainDataflowGGNN(
   batch_size: int,
   use_cdfg: bool,
 ) -> pathlib.Path:
+  if not path.is_dir():
+    raise FileNotFoundError(path)
+
   # Since we are dealing with binary classification we calculate
   # precesion / recall / F1 wrt only the positive class.
   FLAGS.batch_results_averaging_method = "binary"
@@ -74,7 +77,7 @@ def TrainDataflowGGNN(
 
   # Create the logging directories.
   uid = f"{socket.gethostname()}@{time.strftime('%y:%m:%dT%H:%M:%S')}"
-  log_dir = path / "ml" / "logs" / "ggnnn" / analysis / uid
+  log_dir = path / "logs" / "programl" / analysis / uid
   app.Log(1, "Writing logs to %s", log_dir.absolute())
   log_dir.mkdir(parents=True)
   (log_dir / "epochs").mkdir()
