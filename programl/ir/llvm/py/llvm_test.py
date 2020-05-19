@@ -94,7 +94,7 @@ def test_invalid_ir():
   """Test equivalence of nodes that pre-process to the same text."""
   with test.Raises(ValueError) as e_ctx:
     llvm.BuildProgramGraph("foo bar")
-  assert str(e_ctx.value) == "expected top-level entity"
+  assert "expected top-level entity" in str(e_ctx.value)
 
 
 if __name__ == "__main__":

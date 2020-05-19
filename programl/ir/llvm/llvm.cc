@@ -52,8 +52,18 @@ Status BuildProgramGraph(const ::llvm::MemoryBuffer& irBuffer,
   ::llvm::LLVMContext ctx;
   auto module = ::llvm::parseIR(irBuffer.getMemBufferRef(), error, ctx);
   if (!module) {
+    // Format an error message in the style of clang, complete with line number,
+    // column number, then the offending line and a caret pointing at the
+    // column. For example:
+    //
+    // 1:0: error: expected top-level entity
+    //     node {
+    //     ^
     return Status(labm8::error::Code::INVALID_ARGUMENT,
-                  error.getMessage().str());
+                  "{}:{}: error: {}\n    {}\n    {}^", error.getLineNo(),
+                  error.getColumnNo(), error.getMessage().str(),
+                  error.getLineContents().str(),
+                  string(std::max(error.getColumnNo() - 1, 0), ' '));
   }
 
   return BuildProgramGraph(*module, graph, options);
