@@ -100,6 +100,7 @@ py_binary(
         "//labm8/py:pbutil",
         "//labm8/py:progress",
         "//programl/ir/llvm:inst2vec_encoder",
+        "//programl/proto:ir_py",
         "//programl/proto:program_graph_py",
     ],
 )

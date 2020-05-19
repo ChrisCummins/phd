@@ -91,10 +91,13 @@ class Inst2vecEncoder(object):
       # struct names. This is brittle string substitutions, in the future we
       # should do this inlining in llvm2graph where we have a parsed
       # llvm::Module.
-      structs = inst2vec_preprocess.GetStructTypes(ir)
-      for line in lines:
-        for struct, definition in structs.items():
-          line[0] = line[0].replace(struct, definition)
+      try:
+        structs = inst2vec_preprocess.GetStructTypes(ir)
+        for line in lines:
+          for struct, definition in structs.items():
+            line[0] = line[0].replace(struct, definition)
+      except ValueError:
+        pass
 
     preprocessed_lines, _ = inst2vec_preprocess.preprocess(lines)
     preprocessed_texts = [
@@ -127,6 +130,7 @@ class Inst2vecEncoder(object):
           const_embedding
         )
 
+    proto.features.feature["inst2vec_annotated"].int64_list.value.append(1)
     return proto
 
   @decorators.memoized_property

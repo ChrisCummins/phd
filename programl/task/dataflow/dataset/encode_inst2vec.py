@@ -27,6 +27,7 @@ from labm8.py import labtypes
 from labm8.py import pbutil
 from labm8.py import progress
 from programl.ir.llvm.inst2vec_encoder import Inst2vecEncoder
+from programl.proto import ir_pb2
 from programl.proto import program_graph_pb2
 from programl.task.dataflow.dataset import pathflag
 
@@ -37,9 +38,17 @@ def _ProcessRows(job) -> int:
   encoder: Inst2vecEncoder = job[0]
   paths: List[Tuple[pathlib.Path, pathlib.Path]] = job[1]
   for graph_path, ir_path in paths:
-    with open(ir_path) as f:
-      ir = f.read()
     graph = pbutil.FromFile(graph_path, program_graph_pb2.ProgramGraph())
+    # Check to see if we have already processed this file.
+    if len(graph.features.feature["inst2vec_annotated"].int64_list.value):
+      continue
+    if ir_path.is_file():
+      try:
+        ir = pbutil.FromFile(ir_path, ir_pb2.Ir()).text
+      except pbutil.DecodeError:
+        ir = None
+    else:
+      ir = None
     encoder.Encode(graph, ir=ir)
     pbutil.ToFile(graph, graph_path)
   return len(paths)
@@ -56,23 +65,21 @@ class Inst2vecEncodeGraphs(progress.Progress):
     self.paths = [
       (
         graph_path,
-        (path / "ir" / f"{graph_path.name[:-len('.ProgramGraph.pb')]}.ll"),
+        path / "ir" / f"{graph_path.name[:-len('.ProgramGraph.pb')]}.Ir.pb",
       )
       for graph_path in (path / "graphs").iterdir()
       if graph_path.name.endswith(".ProgramGraph.pb")
     ]
+
     super(Inst2vecEncodeGraphs, self).__init__(
       "inst2vec", i=0, n=len(self.paths), unit="graphs"
     )
 
-    # Sanity check that the IR files exist.
-    for _, ir_path in self.paths:
-      if not ir_path.is_file():
-        raise FileNotFoundError(str(ir_path))
-
   def Run(self):
     encoder = Inst2vecEncoder()
-    jobs = [(encoder, chunk) for chunk in labtypes.Chunkify(self.paths, 256)]
+    jobs = [
+      (encoder, chunk) for chunk in list(labtypes.Chunkify(self.paths, 128))
+    ]
     with multiprocessing.Pool() as pool:
       for processed_count in pool.imap_unordered(_ProcessRows, jobs):
         self.ctx.i += processed_count
