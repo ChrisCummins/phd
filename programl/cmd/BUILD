@@ -23,11 +23,8 @@ sh_binary(
         ":graph2cdfg",
         ":graph2dot",
         ":graph2json",
-        ":graph2nx",
-        ":inst2vec",
         ":llvm2graph",
         ":pb2pbtxt",
-        ":select_vocab",
         ":xla2graph",
     ],
 )
