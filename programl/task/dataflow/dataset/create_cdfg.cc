@@ -53,7 +53,7 @@ void ProcessProgramGraph(const fs::path& root, const fs::path& path) {
   const string baseName = path.string().substr(path.string().rfind("/") + 1);
   const string outPath = absl::StrFormat("%s/cdfg/%s", root.string(), baseName);
 
-  if (labm8::FileExists(outPath)) {
+  if (labm8::fsutil::FileExists(outPath)) {
     return;
   }
 

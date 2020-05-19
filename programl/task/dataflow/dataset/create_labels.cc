@@ -60,7 +60,7 @@ void RunAnalysis(const ProgramGraph& graph, const string& root,
 
   // Do nothing if the file already exists. This is to allow for incremental
   // runs in which the dataset is only partially exported.
-  if (labm8::FileExists(outPath)) {
+  if (labm8::fsutil::FileExists(outPath)) {
     return;
   }
 
