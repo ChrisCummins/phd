@@ -22,6 +22,39 @@ load(
 )
 
 py_library(
+    name = "graph_serializer",
+    srcs = ["graph_serializer.py"],
+    data = [":graph_serializer_pybind.so"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//programl/proto:program_graph_py",
+    ],
+)
+
+py_test(
+    name = "graph_serializer_test",
+    srcs = ["graph_serializer_test.py"],
+    deps = [
+        ":graph_serializer",
+        "//labm8/py:test",
+        "//programl/proto:edge_py",
+        "//programl/proto:node_py",
+        "//programl/proto:program_graph_py",
+    ],
+)
+
+pybind_extension(
+    "graph_serializer_pybind",
+    srcs = ["graph_serializer_pybind.cc"],
+    deps = [
+        "//labm8/cpp:status",
+        "//labm8/cpp:string",
+        "//programl/graph/format:graph_serializer",
+        "//programl/proto:program_graph_cc",
+    ],
+)
+
+py_library(
     name = "graph_tuple",
     srcs = ["graph_tuple.py"],
     visibility = ["//visibility:public"],
