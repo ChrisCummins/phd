@@ -304,6 +304,7 @@ size_t CreatePoj104Dataset(const string& url, const fs::path& outputPath) {
           }
         }
       });
+  std::cerr << "\n";
 
   LOG(INFO) << "Processed " << files.size() << " sources";
 
