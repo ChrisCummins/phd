@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
   google::protobuf::io::IstreamInputStream istream(&std::cin);
   programl::ProgramGraph graph;
   if (!google::protobuf::TextFormat::Parse(&istream, &graph)) {
-    std::cerr << "fatal: failed to parse ProgramGraph from stdin";
+    std::cerr << "fatal: failed to parse ProgramGraph from stdin\n";
     return 3;
   }
 

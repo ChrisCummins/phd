@@ -37,7 +37,7 @@ template <typename ProtocolBuffer>
 void Decode() {
   ProtocolBuffer proto;
   if (!proto.ParseFromIstream(&std::cin)) {
-    std::cerr << "fatal: failed to parse stdin";
+    std::cerr << "fatal: failed to parse stdin\n";
     exit(3);
   }
   std::cout << proto.DebugString();
