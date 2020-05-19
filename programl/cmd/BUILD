@@ -26,7 +26,6 @@ sh_binary(
         ":graph2nx",
         ":inst2vec",
         ":llvm2graph",
-        ":node_text_freq",
         ":pb2pbtxt",
         ":select_vocab",
         ":xla2graph",
@@ -139,17 +138,6 @@ cc_binary(
         "//programl/proto:program_graph_cc",
         "//programl/proto:program_graph_options_cc",
         "//third_party/llvm",
-    ],
-)
-
-py_binary(
-    name = "node_text_freq",
-    srcs = ["node_text_freq.py"],
-    deps = [
-        "//labm8/py:app",
-        "//labm8/py:pbutil",
-        "//labm8/py:progress",
-        "//programl/proto:program_graph_py",
     ],
 )
 
