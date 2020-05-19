@@ -197,28 +197,47 @@ OFFSET {j}
     self.ctx.i = self.ctx.n
 
 
+class CopyPoj104Dir(progress.Progress):
+  """Copy all files from a directory in the classifyapp dataset."""
+
+  def __init__(self, outpath, classifyapp, dirname):
+    self.outpath = outpath
+    self.paths = list((classifyapp / dirname).iterdir())
+    self.dirname = dirname
+    super(CopyPoj104Dir, self).__init__(i=0, n=len(self.paths), name=dirname)
+
+  def Run(self):
+    for self.ctx.i, path in enumerate(self.paths):
+      dst = self.outpath / self.dirname / f"poj104_{path.name}"
+      if not dst.is_file():
+        shutil.copy(path, dst)
+
+
+class CopyPoj104Symlinks(progress.Progress):
+  """Recreate all train/val/test symlinks from the classifyapp dataset."""
+
+  def __init__(self, outpath, classifyapp, typename):
+    self.outpath = outpath
+    self.paths = list((classifyapp / typename).iterdir())
+    self.typename = typename
+    super(CopyPoj104Symlinks, self).__init__(
+      i=0, n=len(self.paths), name=typename
+    )
+
+  def Run(self):
+    for self.ctx.i, path in enumerate(self.paths):
+      dst = self.outpath / self.typename / f"poj104_{path.name}"
+      if not dst.is_symlink():
+        os.symlink(f"../graphs/poj104_{path.name}", dst)
+
+
 def ExportClassifyAppGraphs(classifyapp: pathlib.Path, path: pathlib.Path):
-  app.Log(1, "Copying POJ-104 IR")
-  for ir in (classifyapp / "ir").iterdir():
-    shutil.copy(ir, path / f"ir/poj104_{path.name}")
-  app.Log(1, "Copying POJ-104 graphs")
-  for graph in (classifyapp / "graphs").iterdir():
-    shutil.copy(graph, path / f"graphs/poj104_{graph.name}")
-  app.Log(1, "Copying POJ-104 train")
-  for graph in (classifyapp / "train").iterdir():
-    os.symlink(
-      f"../graphs/poj104_{graph.name}", path / f"train/poj104_{graph.name}"
-    )
-  app.Log(1, "Copying POJ-104 val")
-  for graph in (classifyapp / "val").iterdir():
-    os.symlink(
-      f"../graphs/poj104_{graph.name}", path / f"val/poj104_{graph.name}"
-    )
-  app.Log(1, "Copying POJ-104 test")
-  for graph in (classifyapp / "test").iterdir():
-    os.symlink(
-      f"../graphs/poj104_{graph.name}", path / f"test/poj104_{graph.name}"
-    )
+  app.Log(1, "Copying files from classifyapp dataset")
+  progress.Run(CopyPoj104Dir(path, classifyapp, "ir"))
+  progress.Run(CopyPoj104Dir(path, classifyapp, "graphs"))
+  progress.Run(CopyPoj104Symlinks(path, classifyapp, "train"))
+  progress.Run(CopyPoj104Symlinks(path, classifyapp, "val"))
+  progress.Run(CopyPoj104Symlinks(path, classifyapp, "test"))
 
 
 def Main():
