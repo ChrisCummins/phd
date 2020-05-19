@@ -64,7 +64,10 @@ void ProcessProgramGraph(const fs::path& root, const fs::path& path) {
 
   std::ifstream file(path.string());
   ProgramGraph graph;
-  CHECK(graph.ParseFromIstream(&file));
+  if (!graph.ParseFromIstream(&file)) {
+    LOG(ERROR) << "Failed to parse: " << path.string();
+    return;
+  }
 
   graph::format::CDFGBuilder builder;
   ProgramGraph cdfg = builder.Build(graph);
