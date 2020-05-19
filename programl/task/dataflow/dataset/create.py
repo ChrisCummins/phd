@@ -33,7 +33,6 @@ from labm8.py import progress
 from programl.ir.llvm.py import llvm
 from programl.proto import ir_pb2
 from programl.task.dataflow.dataset import pathflag
-from programl.task.dataflow.dataset.create_vocab import CreateVocabularyFiles
 from programl.task.dataflow.dataset.encode_inst2vec import Inst2vecEncodeGraphs
 
 app.DEFINE_string(
@@ -52,6 +51,9 @@ CREATE_CDFG = bazelutil.DataPath(
 )
 CREATE_LABELS = bazelutil.DataPath(
   "phd/programl/task/dataflow/dataset/create_labels"
+)
+CREATE_VOCAB = bazelutil.DataPath(
+  "phd/programl/task/dataflow/dataset/create_vocab"
 )
 UNPACK_IR_LISTS = bazelutil.DataPath(
   "phd/programl/task/dataflow/dataset/unpack_ir_lists"
@@ -277,7 +279,7 @@ def Main():
   progress.Run(Inst2vecEncodeGraphs(path))
 
   app.Log(1, "Creating vocabularies")
-  progress.Run(CreateVocabularyFiles(path))
+  subprocess.check_call([str(CREATE_VOCAB), "--path", str(path)])
 
   app.Log(1, "Creating data flow analysis labels")
   subprocess.check_call([str(CREATE_LABELS), "--path", str(path)])

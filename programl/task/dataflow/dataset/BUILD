@@ -20,10 +20,10 @@ py_binary(
     data = [
         ":create_cdfg",
         ":create_labels",
+        ":create_vocab",
         ":unpack_ir_lists",
     ],
     deps = [
-        ":create_vocab",
         ":encode_inst2vec",
         ":pathflag",
         "//labm8/py:app",
@@ -75,16 +75,18 @@ cc_binary(
     ],
 )
 
-py_binary(
+cc_binary(
     name = "create_vocab",
-    srcs = ["create_vocab.py"],
+    srcs = ["create_vocab.cc"],
     deps = [
-        ":pathflag",
-        "//labm8/py:app",
-        "//labm8/py:pbutil",
-        "//labm8/py:progress",
-        "//programl/proto:node_py",
-        "//programl/proto:program_graph_py",
+        "//labm8/cpp:app",
+        "//labm8/cpp:fsutil",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:strutil",
+        "//programl/proto:program_graph_cc",
+        "@boost//:filesystem",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings:str_format",
     ],
 )
 
