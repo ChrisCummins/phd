@@ -13,7 +13,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include <sys/stat.h>
 #include <algorithm>
 #include <atomic>
 #include <cstdlib>
@@ -26,9 +25,10 @@
 #include "labm8/cpp/app.h"
 #include "labm8/cpp/fsutil.h"
 #include "labm8/cpp/logging.h"
+#include "labm8/cpp/strutil.h"
 
 #include "programl/proto/ir.pb.h"
-#include "programl/task/dataflow/dataset/graph_map.h"
+#include "programl/task/dataflow/dataset/parallel_file_map.h"
 
 #include "absl/strings/str_format.h"
 
@@ -48,13 +48,13 @@ namespace dataflow {
 
 inline string GetOutput(const fs::path& root, const string& nameStem,
                         int index) {
-  return absl::StrFormat("%s/ir/%s.%d.Ir.pb", root.string(), nameStem, index);
+  return absl::StrFormat("%s/ir/%s%d.Ir.pb", root.string(), nameStem, index);
 }
 
 void ProcessIrList(const fs::path& root, const fs::path& path) {
   const string baseName = path.string().substr(path.string().rfind("/") + 1);
   const string nameStem =
-      baseName.substr(0, baseName.size() - StrLen("IrList.pb"));
+      baseName.substr(0, baseName.size() - labm8::StrLen("IrList.pb"));
 
   std::ifstream file(path.string());
   IrList irList;
@@ -78,7 +78,7 @@ void ProcessIrList(const fs::path& root, const fs::path& path) {
 vector<fs::path> EnumerateIrLists(const fs::path& root) {
   vector<fs::path> files;
   for (auto it : fs::directory_iterator(root)) {
-    if (EndsWith(it.path().string(), ".IrList.pb")) {
+    if (labm8::HasSuffixString(it.path().string(), ".IrList.pb")) {
       files.push_back(it.path());
     }
   }
@@ -100,8 +100,8 @@ int main(int argc, char** argv) {
   const vector<fs::path> files =
       programl::task::dataflow::EnumerateIrLists(path / "ir");
 
-  programl::task::dataflow::ParallelMap<programl::task::dataflow::ProcessIrList,
-                                        128>(path, files);
+  programl::task::dataflow::ParallelFileMap<
+      programl::task::dataflow::ProcessIrList, 128>(path, files);
   LOG(INFO) << "done";
 
   return 0;

@@ -134,7 +134,7 @@ def _ProcessRows(job) -> int:
   return len(rows)
 
 
-class ExportIrDatabase(progress.Progress):
+class ImportIrDatabase(progress.Progress):
   """Export non-POJ104 IRs from MySQL database.
 
   The code which populated this MySQL database is the legacy
@@ -154,7 +154,7 @@ class ExportIrDatabase(progress.Progress):
   """
     )
     n = int(db.store_result().fetch_row()[0][0].decode("utf-8"))
-    super(ExportIrDatabase, self).__init__("ir db", i=0, n=n, unit="irs")
+    super(ImportIrDatabase, self).__init__("ir db", i=0, n=n, unit="irs")
 
   def Run(self):
     with multiprocessing.Pool() as pool:
@@ -217,7 +217,7 @@ class CopyPoj104Dir(progress.Progress):
 
 
 class CopyPoj104Symlinks(progress.Progress):
-  """Recreate all train/val/test symlinks from the classifyapp dataset."""
+  """Recreate train/val/test symlinks from the classifyapp dataset."""
 
   def __init__(self, outpath, classifyapp, typename):
     self.outpath = outpath
@@ -234,13 +234,16 @@ class CopyPoj104Symlinks(progress.Progress):
         os.symlink(f"../graphs/poj104_{path.name}", dst)
 
 
-def ExportClassifyAppGraphs(classifyapp: pathlib.Path, path: pathlib.Path):
+def ImportClassifyAppDataset(classifyapp: pathlib.Path, path: pathlib.Path):
   app.Log(1, "Copying files from classifyapp dataset")
   progress.Run(CopyPoj104Dir(path, classifyapp, "ir"))
   progress.Run(CopyPoj104Dir(path, classifyapp, "graphs"))
   progress.Run(CopyPoj104Symlinks(path, classifyapp, "train"))
   progress.Run(CopyPoj104Symlinks(path, classifyapp, "val"))
   progress.Run(CopyPoj104Symlinks(path, classifyapp, "test"))
+  # classifyapp uses IrList protocol buffers to store multiple IRs in a single
+  # file, whereas for dataflow we require one IR per file. Unpack the IrLists
+  # and delete them.
   app.Log(1, "Unpacking IrList protos")
   subprocess.check_call([str(UNPACK_IR_LISTS), "--path", str(path)])
 
@@ -259,11 +262,11 @@ def Main():
   (path / "test").mkdir()
 
   # Export the legacy IR database.
-  export = ExportIrDatabase(path, db)
+  export = ImportIrDatabase(path, db)
   progress.Run(export)
 
-  # Copy the classifyapp/ dataset.
-  ExportClassifyAppGraphs(pathlib.Path(FLAGS.classifyapp), path)
+  # Import the classifyapp dataset.
+  ImportClassifyAppDataset(pathlib.Path(FLAGS.classifyapp), path)
 
   app.Log(1, "Creating CDFG graphs")
   subprocess.check_call([str(CREATE_CDFG), "--path", str(path)])
@@ -273,11 +276,11 @@ def Main():
   app.Log(1, "Encoding graphs with inst2vec")
   progress.Run(Inst2vecEncodeGraphs(path))
 
-  app.Log(1, "Creating data flow analysis labels")
-  subprocess.check_call([str(CREATE_LABELS), "--path", str(path)])
-
   app.Log(1, "Creating vocabularies")
   progress.Run(CreateVocabularyFiles(path))
+
+  app.Log(1, "Creating data flow analysis labels")
+  subprocess.check_call([str(CREATE_LABELS), "--path", str(path)])
 
 
 if __name__ == "__main__":

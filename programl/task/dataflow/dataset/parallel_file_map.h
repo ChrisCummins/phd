@@ -15,7 +15,6 @@
 // limitations under the License.
 #pragma once
 
-#include <sys/stat.h>
 #include <algorithm>
 #include <atomic>
 #include <cstdlib>
@@ -38,22 +37,7 @@ namespace programl {
 namespace task {
 namespace dataflow {
 
-inline bool EndsWith(const string& value, const string& ending) {
-  if (ending.size() > value.size()) return false;
-  return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
-}
-
 vector<fs::path> EnumerateProgramGraphFiles(const fs::path& root);
-
-inline int constexpr StrLen(const char* str) {
-  return *str ? 1 + StrLen(str + 1) : 0;
-}
-
-// Return true if the given file exists.
-inline bool FileExists(const string& name) {
-  struct stat buffer;
-  return (stat(name.c_str(), &buffer) == 0);
-}
 
 inline std::chrono::milliseconds Now() {
   return std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -65,7 +49,7 @@ inline std::chrono::milliseconds Now() {
 // status updates.
 template <void (*ProcessOne)(const fs::path&, const fs::path&),
           size_t chunkSize = 16>
-void ParallelMap(const fs::path& path, const vector<fs::path>& files) {
+void ParallelFileMap(const fs::path& path, const vector<fs::path>& files) {
   std::chrono::milliseconds startTime = Now();
 
   std::atomic_uint64_t fileCount{0};
@@ -84,7 +68,7 @@ void ParallelMap(const fs::path& path, const vector<fs::path>& files) {
     std::chrono::milliseconds now = Now();
     int msPerGraph = ((now - startTime) / localFileCount).count();
     std::cout << "\r\033[K" << localFileCount << " of " << n
-              << " files processed (" << msPerGraph << " ms / graph, "
+              << " files processed (" << msPerGraph << " ms / file, "
               << std::setprecision(3)
               << (localFileCount / static_cast<float>(n)) * 100 << "%)"
               << std::flush;

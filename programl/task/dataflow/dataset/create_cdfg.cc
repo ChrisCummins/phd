@@ -13,7 +13,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include <sys/stat.h>
 #include <algorithm>
 #include <atomic>
 #include <cstdlib>
@@ -26,12 +25,13 @@
 #include "labm8/cpp/app.h"
 #include "labm8/cpp/fsutil.h"
 #include "labm8/cpp/logging.h"
+#include "labm8/cpp/strutil.h"
 
 #include "programl/graph/format/cdfg.h"
 #include "programl/proto/node.pb.h"
 #include "programl/proto/program_graph.pb.h"
 #include "programl/proto/program_graph_features.pb.h"
-#include "programl/task/dataflow/dataset/graph_map.h"
+#include "programl/task/dataflow/dataset/parallel_file_map.h"
 
 #include "absl/strings/str_format.h"
 
@@ -53,12 +53,12 @@ void ProcessProgramGraph(const fs::path& root, const fs::path& path) {
   const string baseName = path.string().substr(path.string().rfind("/") + 1);
   const string outPath = absl::StrFormat("%s/cdfg/%s", root.string(), baseName);
 
-  if (FileExists(outPath)) {
+  if (labm8::FileExists(outPath)) {
     return;
   }
 
   const string nameStem =
-      baseName.substr(0, baseName.size() - StrLen("ProgramGraph.pb"));
+      baseName.substr(0, baseName.size() - labm8::StrLen("ProgramGraph.pb"));
   const string nodeIndexPath =
       absl::StrFormat("%s/cdfg/%sNodeIndexList.pb", root.string(), nameStem);
 
@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
   const vector<fs::path> files =
       programl::task::dataflow::EnumerateProgramGraphFiles(path / "graphs");
 
-  programl::task::dataflow::ParallelMap<
+  programl::task::dataflow::ParallelFileMap<
       programl::task::dataflow::ProcessProgramGraph, 128>(path, files);
   LOG(INFO) << "done";
 

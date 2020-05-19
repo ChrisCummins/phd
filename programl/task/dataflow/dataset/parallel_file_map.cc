@@ -13,9 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "programl/task/dataflow/dataset/graph_map.h"
+#include "programl/task/dataflow/dataset/parallel_file_map.h"
 
-#include <sys/stat.h>
 #include <algorithm>
 #include <atomic>
 #include <cstdlib>
@@ -27,6 +26,7 @@
 #include "boost/filesystem.hpp"
 #include "labm8/cpp/app.h"
 #include "labm8/cpp/logging.h"
+#include "labm8/cpp/strutil.h"
 
 #include "absl/strings/str_format.h"
 
@@ -44,7 +44,7 @@ namespace dataflow {
 vector<fs::path> EnumerateProgramGraphFiles(const fs::path& root) {
   vector<fs::path> files;
   for (auto it : fs::directory_iterator(root)) {
-    if (EndsWith(it.path().string(), ".ProgramGraph.pb")) {
+    if (labm8::HasSuffixString(it.path().string(), ".ProgramGraph.pb")) {
       files.push_back(it.path());
     }
   }

@@ -42,10 +42,11 @@ cc_binary(
     srcs = ["create_cdfg.cc"],
     copts = ["-fopenmp"],
     deps = [
-        ":graph_map",
+        ":parallel_file_map",
         "//labm8/cpp:app",
         "//labm8/cpp:fsutil",
         "//labm8/cpp:logging",
+        "//labm8/cpp:strutil",
         "//programl/graph/format:cdfg",
         "//programl/proto:node_cc",
         "//programl/proto:program_graph_cc",
@@ -60,10 +61,11 @@ cc_binary(
     srcs = ["create_labels.cc"],
     copts = ["-fopenmp"],
     deps = [
-        ":graph_map",
+        ":parallel_file_map",
         "//labm8/cpp:app",
         "//labm8/cpp:fsutil",
         "//labm8/cpp:logging",
+        "//labm8/cpp:strutil",
         "//programl/graph/analysis:domtree",
         "//programl/graph/analysis:reachability",
         "//programl/proto:program_graph_cc",
@@ -101,13 +103,14 @@ py_binary(
 )
 
 cc_library(
-    name = "graph_map",
-    srcs = ["graph_map.cc"],
-    hdrs = ["graph_map.h"],
+    name = "parallel_file_map",
+    srcs = ["parallel_file_map.cc"],
+    hdrs = ["parallel_file_map.h"],
     copts = ["-fopenmp"],
     deps = [
         "//labm8/cpp:app",
         "//labm8/cpp:logging",
+        "//labm8/cpp:strutil",
         "//programl/graph/analysis:domtree",
         "//programl/graph/analysis:reachability",
         "//programl/proto:program_graph_cc",
@@ -132,10 +135,11 @@ cc_binary(
     srcs = ["unpack_ir_lists.cc"],
     copts = ["-fopenmp"],
     deps = [
-        ":graph_map",
+        ":parallel_file_map",
         "//labm8/cpp:app",
         "//labm8/cpp:fsutil",
         "//labm8/cpp:logging",
+        "//labm8/cpp:strutil",
         "//programl/graph/format:cdfg",
         "//programl/proto:ir_cc",
         "//third_party/openmp",
