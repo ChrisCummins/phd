@@ -74,6 +74,12 @@ def ReadEpochLogs(path: pathlib.Path):
   epochs = []
   for path in (path / "epochs").iterdir():
     epoch = pbutil.FromFile(path, epoch_pb2.EpochList())
+    # Skip files without data.
+    if not len(epoch.epoch):
+      continue
+    # Skip files without training results (e.g. test runs).
+    if not epoch.epoch[0].train_results.batch_count:
+      continue
     epochs += list(epoch.epoch)
   return epoch_pb2.EpochList(epoch=sorted(epochs, key=lambda x: x.epoch_num))
 
