@@ -65,10 +65,8 @@ inline std::chrono::milliseconds Now() {
 // status updates.
 template <void (*ProcessOne)(const fs::path&, const fs::path&),
           size_t chunkSize = 16>
-void ParallelMap(const fs::path& path) {
+void ParallelMap(const fs::path& path, const vector<fs::path>& files) {
   std::chrono::milliseconds startTime = Now();
-
-  const vector<fs::path> files = EnumerateProgramGraphFiles(path / "graphs");
 
   std::atomic_uint64_t fileCount{0};
 

@@ -27,10 +27,7 @@
 #include "labm8/cpp/fsutil.h"
 #include "labm8/cpp/logging.h"
 
-#include "programl/graph/format/cdfg.h"
-#include "programl/proto/node.pb.h"
-#include "programl/proto/program_graph.pb.h"
-#include "programl/proto/program_graph_features.pb.h"
+#include "programl/proto/ir.pb.h"
 #include "programl/task/dataflow/dataset/graph_map.h"
 
 #include "absl/strings/str_format.h"
@@ -49,39 +46,43 @@ namespace programl {
 namespace task {
 namespace dataflow {
 
-void ProcessProgramGraph(const fs::path& root, const fs::path& path) {
+inline string GetOutput(const fs::path& root, const string& nameStem,
+                        int index) {
+  return absl::StrFormat("%s/ir/%s.%d.Ir.pb", root.string(), nameStem, index);
+}
+
+void ProcessIrList(const fs::path& root, const fs::path& path) {
   const string baseName = path.string().substr(path.string().rfind("/") + 1);
-  const string outPath = absl::StrFormat("%s/cdfg/%s", root.string(), baseName);
-
-  if (FileExists(outPath)) {
-    return;
-  }
-
   const string nameStem =
-      baseName.substr(0, baseName.size() - StrLen("ProgramGraph.pb"));
-  const string nodeIndexPath =
-      absl::StrFormat("%s/cdfg/%sNodeIndexList.pb", root.string(), nameStem);
+      baseName.substr(0, baseName.size() - StrLen("IrList.pb"));
 
   std::ifstream file(path.string());
-  ProgramGraph graph;
-  if (!graph.ParseFromIstream(&file)) {
+  IrList irList;
+  if (!irList.ParseFromIstream(&file)) {
     LOG(ERROR) << "Failed to parse: " << path.string();
     return;
   }
 
-  graph::format::CDFGBuilder builder;
-  ProgramGraph cdfg = builder.Build(graph);
-
-  NodeIndexList nodeList;
-  for (const auto& nodeIndex : builder.GetNodeList()) {
-    nodeList.add_node(nodeIndex);
+  // Write each Ir to its own file.
+  for (int i = 0; i < irList.ir_size(); ++i) {
+    const string outPath =
+        absl::StrFormat("%s/ir/%s.%d.Ir.pb", root.string(), nameStem, i);
+    std::ofstream out(outPath);
+    irList.ir(i).SerializeToOstream(&out);
   }
 
-  std::ofstream out(outPath);
-  cdfg.SerializeToOstream(&out);
+  // Once we're done, delete the IrList.
+  fs::remove(path);
+}
 
-  std::ofstream nodeListOut(nodeIndexPath);
-  nodeList.SerializeToOstream(&nodeListOut);
+vector<fs::path> EnumerateIrLists(const fs::path& root) {
+  vector<fs::path> files;
+  for (auto it : fs::directory_iterator(root)) {
+    if (EndsWith(it.path().string(), ".IrList.pb")) {
+      files.push_back(it.path());
+    }
+  }
+  return files;
 }
 
 }  // namespace dataflow
@@ -96,13 +97,11 @@ int main(int argc, char** argv) {
   }
 
   const fs::path path(FLAGS_path);
-  fs::create_directory(path / "cdfg");
-
   const vector<fs::path> files =
-      programl::task::dataflow::EnumerateProgramGraphFiles(path / "graphs");
+      programl::task::dataflow::EnumerateIrLists(path / "ir");
 
-  programl::task::dataflow::ParallelMap<
-      programl::task::dataflow::ProcessProgramGraph, 128>(path, files);
+  programl::task::dataflow::ParallelMap<programl::task::dataflow::ProcessIrList,
+                                        128>(path, files);
   LOG(INFO) << "done";
 
   return 0;

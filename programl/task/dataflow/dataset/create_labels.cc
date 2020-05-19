@@ -112,8 +112,11 @@ int main(int argc, char** argv) {
   }
 
   const fs::path path(FLAGS_path);
+  const vector<fs::path> files =
+      programl::task::dataflow::EnumerateProgramGraphFiles(path / "graphs");
+
   programl::task::dataflow::ParallelMap<
-      programl::task::dataflow::ProcessProgramGraph, 16>(path);
+      programl::task::dataflow::ProcessProgramGraph, 16>(path, files);
   LOG(INFO) << "done";
 
   return 0;

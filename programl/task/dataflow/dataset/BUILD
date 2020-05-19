@@ -20,6 +20,7 @@ py_binary(
     data = [
         ":create_cdfg",
         ":create_labels",
+        ":unpack_ir_lists",
     ],
     deps = [
         ":create_vocab",
@@ -123,5 +124,22 @@ py_library(
     srcs = ["pathflag.py"],
     deps = [
         "//labm8/py:app",
+    ],
+)
+
+cc_binary(
+    name = "unpack_ir_lists",
+    srcs = ["unpack_ir_lists.cc"],
+    copts = ["-fopenmp"],
+    deps = [
+        ":graph_map",
+        "//labm8/cpp:app",
+        "//labm8/cpp:fsutil",
+        "//labm8/cpp:logging",
+        "//programl/graph/format:cdfg",
+        "//programl/proto:ir_cc",
+        "//third_party/openmp",
+        "@boost//:filesystem",
+        "@com_google_absl//absl/strings:str_format",
     ],
 )

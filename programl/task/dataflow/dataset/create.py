@@ -53,6 +53,9 @@ CREATE_CDFG = bazelutil.DataPath(
 CREATE_LABELS = bazelutil.DataPath(
   "phd/programl/task/dataflow/dataset/create_labels"
 )
+UNPACK_IR_LISTS = bazelutil.DataPath(
+  "phd/programl/task/dataflow/dataset/unpack_ir_lists"
+)
 
 
 def _ProcessRow(output_directory, row, file_id) -> None:
@@ -238,6 +241,8 @@ def ExportClassifyAppGraphs(classifyapp: pathlib.Path, path: pathlib.Path):
   progress.Run(CopyPoj104Symlinks(path, classifyapp, "train"))
   progress.Run(CopyPoj104Symlinks(path, classifyapp, "val"))
   progress.Run(CopyPoj104Symlinks(path, classifyapp, "test"))
+  app.Log(1, "Unpacking IrList protos")
+  subprocess.check_call([str(UNPACK_IR_LISTS), "--path", str(path)])
 
 
 def Main():
