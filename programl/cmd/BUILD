@@ -133,7 +133,9 @@ cc_binary(
     deps = [
         "//labm8/cpp:app",
         "//labm8/cpp:statusor",
+        "//labm8/cpp:strutil",
         "//programl/ir/llvm",
+        "//programl/proto:ir_cc",
         "//programl/proto:program_graph_cc",
         "//programl/proto:program_graph_options_cc",
         "//third_party/llvm",
