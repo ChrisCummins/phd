@@ -13,33 +13,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "programl/graph/format/graphviz_converter.h"
-#include "programl/proto/program_graph.pb.h"
 #include "programl/util/stdin_fmt.h"
 
-#include "labm8/cpp/app.h"
+DEFINE_string(stdin_fmt, "pbtxt",
+              "The type of input format to use. Valid options are: "
+              "\"pbtxt\" which reads a text format protocol buffer, "
+              "or \"pb\" which a binary format protocol buffer.");
 
-const char* usage = R"(Usage: graph2dot
-
-Convert a ProgramGraph message to GraphViz dot.
-)";
-
-int main(int argc, char** argv) {
-  labm8::InitApp(&argc, &argv, usage);
-  if (argc != 1) {
-    std::cerr << usage;
-    return 4;
+// Assert that the stdin format is legal.
+static bool ValidateStdoutFormat(const char* flagname, const string& value) {
+  if (value == "pb" || value == "pbtxt") {
+    return true;
   }
 
-  programl::ProgramGraph graph;
-  programl::util::ParseStdinOrDie(&graph);
-
-  Status status =
-      programl::graph::format::SerializeGraphVizToString(graph, &std::cout);
-  if (!status.ok()) {
-    std::cerr << "fatal: " << status.error_message() << std::endl;
-    return 2;
-  }
-
-  return 0;
+  LOG(FATAL) << "Unknown --" << flagname << ": `" << value << "`. Supported "
+             << "formats: pb,pbtxt";
+  return false;
 }
+DEFINE_validator(stdin_fmt, &ValidateStdoutFormat);

@@ -16,19 +16,19 @@
 #include <iomanip>
 #include <iostream>
 
-#include "google/protobuf/io/zero_copy_stream_impl.h"
-#include "google/protobuf/text_format.h"
-
 #include "labm8/cpp/app.h"
+#include "labm8/cpp/logging.h"
 #include "labm8/cpp/status.h"
 #include "programl/graph/analysis/analysis.h"
 #include "programl/proto/program_graph.pb.h"
 #include "programl/proto/program_graph_features.pb.h"
+#include "programl/util/stdin_fmt.h"
+#include "programl/util/stdout_fmt.h"
 
 using labm8::Status;
 namespace error = labm8::error;
 
-const char* usage = R"(Usage: analyze-graph
+const char* usage = R"(Usage: analyze <analysis> < /path/to/program_graph.pb
 
 Run an analysis pass on a graph.
 )";
@@ -37,25 +37,22 @@ int main(int argc, char** argv) {
   labm8::InitApp(&argc, &argv, usage);
 
   if (argc != 2) {
-    std::cerr << "Usage: graph-analysis <analysis>" << std::endl;
+    std::cerr << usage;
     return 4;
   }
 
-  google::protobuf::io::IstreamInputStream istream(&std::cin);
   programl::ProgramGraph graph;
-  if (!google::protobuf::TextFormat::Parse(&istream, &graph)) {
-    std::cerr << "fatal: failed to parse ProgramGraph from stdin" << std::endl;
-    return 3;
-  }
+  programl::util::ParseStdinOrDie(&graph);
 
   programl::ProgramGraphFeaturesList featuresList;
   Status status =
       programl::graph::analysis::RunAnalysis(argv[1], graph, &featuresList);
   if (!status.ok()) {
-    std::cerr << "fatal: " << status.error_message() << std::endl;
+    LOG(ERROR) << status.error_message();
     return 4;
   }
 
-  std::cout << featuresList.DebugString();
+  programl::util::WriteStdout(featuresList);
+
   return 0;
 }

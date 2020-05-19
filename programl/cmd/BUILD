@@ -41,7 +41,8 @@ cc_binary(
         "//programl/graph/analysis",
         "//programl/proto:program_graph_cc",
         "//programl/proto:program_graph_features_cc",
-        "@com_google_protobuf//:protobuf",
+        "//programl/util:stdin_fmt",
+        "//programl/util:stdout_fmt",
     ],
 )
 
@@ -50,9 +51,11 @@ cc_binary(
     srcs = ["graph2cdfg.cc"],
     visibility = ["//visibility:public"],
     deps = [
+        "//labm8/cpp:app",
         "//programl/graph/format:cdfg",
         "//programl/proto:program_graph_cc",
-        "@com_google_protobuf//:protobuf",
+        "//programl/util:stdin_fmt",
+        "//programl/util:stdout_fmt",
     ],
 )
 
@@ -61,9 +64,10 @@ cc_binary(
     srcs = ["graph2dot.cc"],
     visibility = ["//visibility:public"],
     deps = [
+        "//labm8/cpp:app",
         "//programl/graph/format:graphviz_converter",
         "//programl/proto:program_graph_cc",
-        "@com_google_protobuf//:protobuf",
+        "//programl/util:stdin_fmt",
     ],
 )
 
@@ -75,7 +79,7 @@ cc_binary(
         "//labm8/cpp:app",
         "//programl/graph/format:node_link_graph",
         "//programl/proto:program_graph_cc",
-        "@com_google_protobuf//:protobuf",
+        "//programl/util:stdin_fmt",
     ],
 )
 
@@ -84,19 +88,10 @@ py_binary(
     srcs = ["graph2nx.py"],
     visibility = ["//visibility:public"],
     deps = [
+        "//labm8/py:app",
         "//labm8/py:pbutil",
         "//programl/graph/format/py:nx_format",
         "//programl/proto:program_graph_py",
-    ],
-)
-
-cc_binary(
-    name = "graph2pb",
-    srcs = ["graph2pb.cc"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//programl/proto:program_graph_cc",
-        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -137,6 +132,7 @@ cc_binary(
         "//programl/proto:ir_cc",
         "//programl/proto:program_graph_cc",
         "//programl/proto:program_graph_options_cc",
+        "//programl/util:stdout_fmt",
         "//third_party/llvm",
     ],
 )
@@ -174,6 +170,7 @@ cc_binary(
         "//labm8/cpp:statusor",
         "//labm8/cpp:string",
         "//programl/ir/xla:hlo_module_graph_builder",
+        "//programl/util:stdin_fmt",
         "@org_tensorflow//tensorflow/compiler/xla/service:hlo_proto",
     ],
 )

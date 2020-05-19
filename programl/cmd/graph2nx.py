@@ -13,33 +13,35 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""A module for encoding node embeddings.
-
-When executed as a binary, this program reads a single program graph from
-stdin, encodes it, and writes a graph to stdout. Use --stdin_fmt and
---stdout_fmt to convert between different graph types, and --ir to read the
-IR file that the graph was constructed from, required for resolving struct
-definitions.
-
-Example usage:
-
-  Encode a program graph binary proto and write the result as text format:
-
-    $ bazel run //deeplearning/ml4pl/graphs/llvm2graph:node_encoder -- \
-        --stdin_fmt=pb \
-        --stdout_fmt=pbtxt \
-        --ir=/tmp/source.ll \
-        < /tmp/proto.pb > /tmp/proto.pbtxt
+"""A program for converting program graphs to NetworkX.
 """
 import pickle
 import sys
 
+from labm8.py import app
 from labm8.py import pbutil
 from programl.graph.format.py import nx_format
 from programl.proto import program_graph_pb2
 
 
-if __name__ == "__main__":
+app.DEFINE_string(
+  "stdin_fmt", "pbtxt", "The format for stdin. One of {pb,pbtxt}"
+)
+FLAGS = app.FLAGS
+
+
+def Main():
   proto = program_graph_pb2.ProgramGraph()
-  pbutil.FromString(sys.stdin.buffer.read().decode("utf-8"), proto)
+  if FLAGS.stdin_fmt == "pb":
+    proto.ParseFromString(sys.stdin.buffer.read())
+  elif FLAGS.stdin_fmt == "pbtxt":
+    pbutil.FromString(sys.stdin.buffer.read().decode("utf-8"), proto)
+  else:
+    raise app.UsageError(
+      "Unknown --stdin_fmt={FLAGS.stdin_fmt}. " "Expected one of {pb,pbtxt}"
+    )
   pickle.dump(nx_format.ProgramGraphToNetworkX(proto), sys.stdout.buffer)
+
+
+if __name__ == "__main__":
+  app.Run(Main)

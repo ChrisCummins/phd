@@ -13,33 +13,32 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "programl/graph/format/graphviz_converter.h"
-#include "programl/proto/program_graph.pb.h"
-#include "programl/util/stdin_fmt.h"
+#pragma once
 
 #include "labm8/cpp/app.h"
+#include "labm8/cpp/logging.h"
+#include "labm8/cpp/status.h"
 
-const char* usage = R"(Usage: graph2dot
+#include <iostream>
 
-Convert a ProgramGraph message to GraphViz dot.
-)";
+DECLARE_string(stdout_fmt);
 
-int main(int argc, char** argv) {
-  labm8::InitApp(&argc, &argv, usage);
-  if (argc != 1) {
-    std::cerr << usage;
-    return 4;
+namespace programl {
+namespace util {
+
+namespace error = labm8::error;
+using labm8::Status;
+
+template <typename ProtocolBuffer>
+void WriteStdout(const ProtocolBuffer& message) {
+  if (FLAGS_stdout_fmt == "pb") {
+    message.SerializeToOstream(&std::cout);
+  } else if (FLAGS_stdout_fmt == "pbtxt") {
+    std::cout << message.DebugString();
+  } else {
+    LOG(FATAL) << "unreachable! Unrecognized --stdout_fmt";
   }
-
-  programl::ProgramGraph graph;
-  programl::util::ParseStdinOrDie(&graph);
-
-  Status status =
-      programl::graph::format::SerializeGraphVizToString(graph, &std::cout);
-  if (!status.ok()) {
-    std::cerr << "fatal: " << status.error_message() << std::endl;
-    return 2;
-  }
-
-  return 0;
 }
+
+}  // namespace util
+}  // namespace programl

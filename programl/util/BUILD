@@ -38,3 +38,29 @@ cc_library(
         "@subprocess",
     ],
 )
+
+cc_library(
+    name = "stdin_fmt",
+    srcs = ["stdin_fmt.cc"],
+    hdrs = ["stdin_fmt.h"],
+    visibility = ["//programl:__subpackages__"],
+    deps = [
+        "//labm8/cpp:app",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:status",
+        "@com_google_protobuf//:protobuf",
+    ],
+)
+
+cc_library(
+    name = "stdout_fmt",
+    srcs = ["stdout_fmt.cc"],
+    hdrs = ["stdout_fmt.h"],
+    visibility = ["//programl:__subpackages__"],
+    deps = [
+        "//labm8/cpp:app",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:status",
+        "@com_google_protobuf//:protobuf",
+    ],
+)

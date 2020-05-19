@@ -13,16 +13,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include <cstring>
-#include <iomanip>
-#include <iostream>
-
-#include "google/protobuf/io/zero_copy_stream_impl.h"
-#include "google/protobuf/text_format.h"
-
-#include "labm8/cpp/app.h"
 #include "programl/graph/format/node_link_graph.h"
 #include "programl/proto/program_graph.pb.h"
+#include "programl/util/stdin_fmt.h"
+
+#include "labm8/cpp/app.h"
+
+#include <iomanip>
 
 const char* usage = R"(Usage: graph2json
 
@@ -33,18 +30,13 @@ DEFINE_bool(pretty_print, false, "Pretty-print the generated JSON.");
 
 int main(int argc, char** argv) {
   labm8::InitApp(&argc, &argv, usage);
-
   if (argc != 1) {
-    std::cerr << "Usage: graph2json" << std::endl;
+    std::cerr << usage;
     return 4;
   }
 
-  google::protobuf::io::IstreamInputStream istream(&std::cin);
   programl::ProgramGraph graph;
-  if (!google::protobuf::TextFormat::Parse(&istream, &graph)) {
-    std::cerr << "fatal: failed to parse ProgramGraph from stdin\n";
-    return 3;
-  }
+  programl::util::ParseStdinOrDie(&graph);
 
   auto nodeLinkGraph = json({});
   Status status = programl::graph::format::ProgramGraphToNodeLinkGraph(

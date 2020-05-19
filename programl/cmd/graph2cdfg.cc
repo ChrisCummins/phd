@@ -13,15 +13,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include <cstring>
-#include <iomanip>
-#include <iostream>
-
-#include "google/protobuf/io/zero_copy_stream_impl.h"
-#include "google/protobuf/text_format.h"
-
 #include "programl/graph/format/cdfg.h"
 #include "programl/proto/program_graph.pb.h"
+#include "programl/util/stdin_fmt.h"
+#include "programl/util/stdout_fmt.h"
+
+#include "labm8/cpp/app.h"
 
 const char* usage = R"(Usage: graph2dot
 
@@ -35,25 +32,18 @@ instructions and users. The format is described in:
 )";
 
 int main(int argc, char** argv) {
-  if (argc == 2 && !strcmp(argv[1], "--help")) {
-    std::cerr << usage;
-    return 0;
-  }
-
+  labm8::InitApp(&argc, &argv, usage);
   if (argc != 1) {
     std::cerr << usage;
     return 4;
   }
 
-  google::protobuf::io::IstreamInputStream istream(&std::cin);
   programl::ProgramGraph graph;
-  if (!google::protobuf::TextFormat::Parse(&istream, &graph)) {
-    std::cerr << "fatal: failed to parse ProgramGraph from stdin\n";
-    return 3;
-  }
+  programl::util::ParseStdinOrDie(&graph);
 
   programl::graph::format::CDFGBuilder builder;
-  std::cout << builder.Build(graph).DebugString();
+  programl::ProgramGraph cdfg = builder.Build(graph);
+  programl::util::WriteStdout(cdfg);
 
   return 0;
 }

@@ -22,16 +22,12 @@
 #include "labm8/cpp/string.h"
 #include "programl/ir/xla/hlo_module_graph_builder.h"
 
-#include "google/protobuf/io/zero_copy_stream_impl.h"
-#include "google/protobuf/text_format.h"
+#include "programl/util/stdin_fmt.h"
 #include "tensorflow/compiler/xla/service/hlo.pb.h"
 
 #include <fstream>
 #include <sstream>
 #include <streambuf>
-
-using labm8::Status;
-namespace error = labm8::error;
 
 static const char* usage = R"(
 Generate program graph from a HLO module.
@@ -50,21 +46,21 @@ Then read and convert the HloProto to a ProgramGraph using:
   $ xla2graph /tmp/hlo/module_0000.before_optimizations.hlo.pb
 )";
 
-labm8::StatusOr<xla::HloProto> GetProtoFromFileorSTDIN(const string& path) {
-  xla::HloProto proto;
+using labm8::Status;
+namespace error = labm8::error;
 
-  // Read from stdin if path is '-'.
-  if (path == "-") {
-    google::protobuf::io::IstreamInputStream istream(&std::cin);
-    if (!google::protobuf::TextFormat::Parse(&istream, &proto)) {
-      return Status(error::INVALID_ARGUMENT, "Failed to parse HloProto");
-    }
-    return proto;
+template <typename ProtocolBuffer, int exitCode = 4>
+void ParseInputOrDie(const string& filename, ProtocolBuffer* message) {
+  // Read from stdin if filename is '-'.
+  if (filename == "-") {
+    programl::util::ParseStdinOrDie(message);
+    return;
   }
 
-  std::ifstream file(path, std::ios::ate);
+  std::ifstream file(filename, std::ios::ate);
   if (!file) {
-    return Status(error::INVALID_ARGUMENT, "File not found: {}", path);
+    LOG(ERROR) << "File not found: " << filename;
+    exit(exitCode);
   }
 
   string str;
@@ -74,29 +70,29 @@ labm8::StatusOr<xla::HloProto> GetProtoFromFileorSTDIN(const string& path) {
   str.assign((std::istreambuf_iterator<char>(file)),
              std::istreambuf_iterator<char>());
 
-  if (!proto.ParseFromString(str)) {
-    return Status(error::INVALID_ARGUMENT, "Failed to parse HloProto");
+  if (!message->ParseFromString(str)) {
+    LOG(ERROR) << "Failed to parse proto file: " << filename;
+    exit(exitCode);
   }
-
-  return proto;
 }
 
 int main(int argc, char** argv) {
   labm8::InitApp(&argc, &argv, usage);
-
-  if (argc != 2) {
-    std::cerr << "Usage: xla2graph <filepath>" << std::endl;
+  if (argc > 2) {
+    std::cerr << usage;
     return 4;
   }
 
-  auto protoOr = GetProtoFromFileorSTDIN(argv[1]);
-  if (!protoOr.ok()) {
-    std::cerr << protoOr.status().error_message() << std::endl;
-    return 1;
+  string filename("-");
+  if (argc == 2) {
+    filename = string(argv[1]);
   }
 
+  xla::HloProto hlo;
+  ParseInputOrDie(filename, &hlo);
+
   programl::ir::xla::HloModuleGraphBuilder builder;
-  auto graphOr = builder.Build(protoOr.ValueOrDie());
+  auto graphOr = builder.Build(hlo);
   if (!graphOr.ok()) {
     std::cerr << graphOr.status().error_message() << std::endl;
     return 1;

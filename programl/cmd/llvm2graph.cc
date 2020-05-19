@@ -24,6 +24,7 @@
 #include "programl/proto/ir.pb.h"
 #include "programl/proto/program_graph.pb.h"
 #include "programl/proto/program_graph_options.pb.h"
+#include "programl/util/stdout_fmt.h"
 
 #include "llvm/Support/ErrorOr.h"
 #include "llvm/Support/SourceMgr.h"
@@ -32,11 +33,11 @@ using labm8::StatusOr;
 
 const char* usage = R"(Generate program graph from an IR.
 
-Read an LLVM-IR module from file and print the program graph to stdout:
+Read an LLVM-IR module from stdin and print the program graph to stdout. For example:
 
-  $ llvm2graph /path/to/llvm.ll
+  $ llvm2graph < /path/to/llvm.ll
 
-Use '-' to read the input from stdin:
+Or pipe the output directly from clang:
 
   $ clang foo.c -emit-llvm -o - | llvm2graph -
 
@@ -81,7 +82,7 @@ llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> GetInputAsBuffer(
     std::ifstream file(filename);
     programl::IrList irList;
     if (!irList.ParseFromIstream(&file)) {
-      std::cerr << "Failed to parse IrList protocol buffer" << std::endl;
+      LOG(ERROR) << "Failed to parse IrList protocol buffer";
       return nullptr;
     }
     const auto& ir = irList.ir(FLAGS_ir_list_index);
@@ -90,14 +91,14 @@ llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> GetInputAsBuffer(
     std::ifstream file(filename);
     programl::Ir ir;
     if (!ir.ParseFromIstream(&file)) {
-      std::cerr << "Failed to parse Ir protocol buffer" << std::endl;
+      LOG(ERROR) << "Failed to parse Ir protocol buffer";
       return nullptr;
     }
     return llvm::MemoryBuffer::getMemBuffer(ir.text());
   } else {
     auto buf = llvm::MemoryBuffer::getFileOrSTDIN(filename);
     if (!buf) {
-      std::cerr << "File not found: " << filename << std::endl;
+      LOG(ERROR) << "File not found: " << filename;
       return nullptr;
     }
     return buf;
@@ -107,19 +108,23 @@ llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> GetInputAsBuffer(
 int main(int argc, char** argv) {
   labm8::InitApp(&argc, &argv, usage);
 
-  if (argc != 2) {
-    std::cerr << "Usage: llvm2graph <filepath>" << std::endl;
+  string filename("-");
+
+  if (argc > 2) {
+    std::cerr << usage;
     return 4;
+  } else if (argc == 2) {
+    filename = string(argv[1]);
   }
 
-  auto buffer = GetInputAsBuffer(argv[1]);
+  auto buffer = GetInputAsBuffer(filename);
   if (!buffer) {
     return 1;
   }
 
   auto options = GetProgramGraphOptionsFromFlags();
   if (!options.ok()) {
-    std::cerr << options.status().error_message() << std::endl;
+    LOG(ERROR) << options.status().error_message();
     return 4;
   }
 
@@ -127,11 +132,11 @@ int main(int argc, char** argv) {
   Status status = programl::ir::llvm::BuildProgramGraph(*buffer.get(), &graph,
                                                         options.ValueOrDie());
   if (!status.ok()) {
-    std::cerr << status.error_message() << std::endl;
+    LOG(ERROR) << status.error_message();
     return 2;
   }
 
-  std::cout << graph.DebugString();
+  programl::util::WriteStdout(graph);
 
   return 0;
 }
