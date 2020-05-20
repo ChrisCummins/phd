@@ -22,3 +22,19 @@ cc_library(
     hdrs = ["analysis_testutil.h"],
     visibility = ["//programl:__subpackages__"],
 )
+
+cc_library(
+    name = "llvm_program_graphs",
+    testonly = 1,
+    srcs = ["llvm_program_graphs.cc"],
+    hdrs = ["llvm_program_graphs.h"],
+    data = ["//programl/test/data:llvm_ir_graphs_pb"],
+    visibility = ["//programl:__subpackages__"],
+    deps = [
+        "//labm8/cpp:bazelutil",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:strutil",
+        "//programl/proto:program_graph_cc",
+        "@boost//:filesystem",
+    ],
+)

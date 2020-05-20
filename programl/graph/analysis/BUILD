@@ -71,6 +71,7 @@ cc_test(
         "//labm8/cpp:test",
         "//programl/graph:program_graph_builder",
         "//programl/test:analysis_testutil",
+        "//programl/test:llvm_program_graphs",
     ],
 )
 
@@ -128,5 +129,6 @@ cc_test(
         "//labm8/cpp:test",
         "//programl/graph:program_graph_builder",
         "//programl/test:analysis_testutil",
+        "//programl/test:llvm_program_graphs",
     ],
 )

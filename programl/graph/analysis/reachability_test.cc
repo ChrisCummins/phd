@@ -20,6 +20,7 @@
 #include "labm8/cpp/test.h"
 #include "programl/graph/program_graph_builder.h"
 #include "programl/test/analysis_testutil.h"
+#include "programl/test/llvm_program_graphs.h"
 
 using labm8::Status;
 
@@ -135,6 +136,15 @@ TEST_F(ReachabilityAnalysisTest, RootNodeFromRootD) {
   EXPECT_NOT_ROOT(f, 2);
   EXPECT_NOT_ROOT(f, 3);
   EXPECT_ROOT(f, 4);
+}
+
+TEST_F(ReachabilityAnalysisTest, RealLlvmGraphs) {
+  for (const auto& graph : test::ReadLlvmProgramGraphs()) {
+    ReachabilityAnalysis analysis(graph);
+    ProgramGraphFeaturesList features;
+    ASSERT_OK(analysis.Run(&features));
+    EXPECT_TRUE(features.graph_size());
+  }
 }
 
 }  // anonymous namespace

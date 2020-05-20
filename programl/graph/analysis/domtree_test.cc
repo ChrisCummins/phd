@@ -20,6 +20,7 @@
 #include "labm8/cpp/test.h"
 #include "programl/graph/program_graph_builder.h"
 #include "programl/test/analysis_testutil.h"
+#include "programl/test/llvm_program_graphs.h"
 
 using labm8::Status;
 
@@ -155,6 +156,19 @@ TEST_F(DomtreeAnalysisTest, AnnotateG2FromRootA) {
   EXPECT_NODE_TRUE(f, 3);
   EXPECT_NODE_FALSE(f, 4);
   EXPECT_NODE_FALSE(f, 5);
+}
+
+TEST_F(DomtreeAnalysisTest, RealLlvmGraphs) {
+  const auto llvmGraphs = test::ReadLlvmProgramGraphs();
+  for (size_t i = 0; i < std::min(llvmGraphs.size(), size_t(50)); ++i) {
+    const auto& graph = llvmGraphs[i];
+    DomtreeAnalysis analysis(graph);
+    ProgramGraphFeaturesList features;
+    auto status = analysis.Run(&features);
+    if (status.ok()) {
+      EXPECT_TRUE(features.graph_size());
+    }
+  }
 }
 
 }  // anonymous namespace
