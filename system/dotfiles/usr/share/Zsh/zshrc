@@ -550,6 +550,7 @@ path_dirs=( \
     ~/.gem/*/ruby/*/bin \
     ~/.local/opt/go/bin \
     ~/go/bin \
+    /usr/local/opt/programl/bin \
     /Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin \
     /usr/local/opt/coreutils/libexec/gnubin \
     /usr/local/opt/findutils/libexec/gnubin \
