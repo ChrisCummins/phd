@@ -26,11 +26,13 @@ namespace programl {
 namespace graph {
 namespace analysis {
 
-class ReachabilityAnalysis : public InstructionRootDataFlowAnalysis {
+class ReachabilityAnalysis : public RoodNodeDataFlowAnalysis {
  public:
-  using InstructionRootDataFlowAnalysis::InstructionRootDataFlowAnalysis;
+  using RoodNodeDataFlowAnalysis::RoodNodeDataFlowAnalysis;
 
   virtual Status RunOne(int rootNode, ProgramGraphFeatures* features) override;
+
+  virtual vector<int> GetEligibleRootNodes() override;
 
   virtual Status Init() override;
 };

@@ -22,7 +22,6 @@
 #include <queue>
 
 using std::pair;
-using std::vector;
 namespace error = labm8::error;
 
 namespace programl {
@@ -34,36 +33,38 @@ Status LivenessAnalysis::Init() {
                       .reverse_control = true,
                       .data = true,
                       .reverse_data = true});
+  const auto& cfg = adjacencies().control;
+  DCHECK(cfg.size() == graph().node_size())
+      << cfg.size() << " != " << graph().node_size();
+  const auto& rcfg = adjacencies().reverse_control;
+  DCHECK(rcfg.size() == graph().node_size())
+      << rcfg.size() << " != " << graph().node_size();
+  const auto& dfg = adjacencies().data;
+  DCHECK(dfg.size() == graph().node_size())
+      << dfg.size() << " != " << graph().node_size();
+  const auto& rdfg = adjacencies().reverse_data;
+  DCHECK(rdfg.size() == graph().node_size())
+      << rdfg.size() << " != " << graph().node_size();
 
   // Pre-compute all live-out sets.
   liveInSets_.reserve(graph().node_size());
   liveOutSets_.reserve(graph().node_size());
   for (int i = 0; i < graph().node_size(); ++i) {
-    liveInSets_.push_back({});
-    liveOutSets_.push_back({});
+    liveInSets_.emplace_back();
+    liveOutSets_.emplace_back();
   }
 
-  const auto& cfg = adjacencies().control;
-  const auto& rcfg = adjacencies().reverse_control;
-  const auto& dfg = adjacencies().data;
-  const auto& rdfg = adjacencies().reverse_data;
-  DCHECK(cfg.size() == graph().node_size())
-      << "CFG size: " << cfg.size() << " != "
-      << " graph size: " << graph().node_size();
-
   std::queue<int> workList;
-  absl::flat_hash_set<int> workSet;
+  flat_hash_set<int> workSet;
 
   // Liveness is computed backwards starting from the program exit.
   // Build a work list of exit nodes to begin from.
   for (int i = 0; i < graph().node_size(); ++i) {
     if (graph().node(i).type() == Node::INSTRUCTION && !cfg[i].size()) {
-      LOG(INFO) << "Node " << i << " is exit";
       workList.push(i);
       workSet.insert(i);
     }
   }
-  LOG(INFO) << "Worklist init " << workList.size();
 
   // A graph may not have any exit nodes.
   if (workList.empty()) {
@@ -84,14 +85,15 @@ Status LivenessAnalysis::Init() {
     const auto& uses = rdfg[node];
 
     // LiveOut(n) = U {LiveIn(p) for p in succ(n)}
-    absl::flat_hash_set<int> newOutSet{};
+    flat_hash_set<int> newOutSet{};
     for (const auto& successor : successors) {
-      newOutSet.merge(liveInSets_[successor]);
+      newOutSet.merge(flat_hash_set<int>(liveInSets_[successor].begin(),
+                                         liveInSets_[successor].end()));
     }
 
     // LiveIn(n) = Gen(n) U {LiveOut(n) - Kill(n)}
-    absl::flat_hash_set<int> newInSet{uses.begin(), uses.end()};
-    absl::flat_hash_set<int> newOutSetMinusDefs = newOutSet;
+    flat_hash_set<int> newInSet{uses.begin(), uses.end()};
+    flat_hash_set<int> newOutSetMinusDefs = newOutSet;
     for (const auto& d : defs) {
       newOutSetMinusDefs.erase(d);
     }
@@ -100,19 +102,24 @@ Status LivenessAnalysis::Init() {
     // No need to visit predecessors if the in-set is non-empty and has not
     // changed.
     if (newInSet != liveInSets_[node]) {
+      liveInSets_[node] = newInSet;
+
       for (const auto& predecessor : predecessors) {
         if (!workSet.contains(predecessor)) {
-          workSet.insert(predecessor);
           workList.push(predecessor);
+          workSet.insert(predecessor);
         }
       }
-      liveInSets_[node] = newInSet;
     }
 
     liveOutSets_[node] = newOutSet;
   }
 
   return Status::OK;
+}
+
+vector<int> LivenessAnalysis::GetEligibleRootNodes() {
+  return GetInstructionsInFunctionsNodeIndices(graph());
 }
 
 Status LivenessAnalysis::RunOne(int rootNode, ProgramGraphFeatures* features) {

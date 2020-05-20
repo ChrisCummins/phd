@@ -16,9 +16,11 @@
 
 #include "programl/graph/analysis/analysis.h"
 
+#include "programl/graph/analysis/datadep.h"
 #include "programl/graph/analysis/domtree.h"
 #include "programl/graph/analysis/liveness.h"
 #include "programl/graph/analysis/reachability.h"
+#include "programl/graph/analysis/subexpressions.h"
 
 namespace error = labm8::error;
 
@@ -40,6 +42,10 @@ Status RunAnalysis(const string& analysisName, const ProgramGraph& graph,
     return Run<DomtreeAnalysis>(graph, featuresList);
   } else if (analysisName == "liveness") {
     return Run<LivenessAnalysis>(graph, featuresList);
+  } else if (analysisName == "datadep") {
+    return Run<DatadepAnalysis>(graph, featuresList);
+  } else if (analysisName == "subexpressions") {
+    return Run<DatadepAnalysis>(graph, featuresList);
   } else {
     return Status(error::Code::INVALID_ARGUMENT, "Invalid analysis: {}",
                   analysisName);

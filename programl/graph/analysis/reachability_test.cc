@@ -74,7 +74,7 @@ TEST_F(ReachabilityAnalysisTest, StepCountFromRootA) {
   ProgramGraphFeatures f;
 
   ASSERT_OK(analysis.RunOne(1, &f));
-  EXPECT_STEP_COUNT(f, 3);
+  EXPECT_STEP_COUNT(f, 4);
 }
 
 TEST_F(ReachabilityAnalysisTest, StepCountFromRootD) {
@@ -83,7 +83,7 @@ TEST_F(ReachabilityAnalysisTest, StepCountFromRootD) {
   ProgramGraphFeatures f;
 
   ASSERT_OK(analysis.RunOne(4, &f));
-  EXPECT_STEP_COUNT(f, 0);
+  EXPECT_STEP_COUNT(f, 1);
 }
 
 TEST_F(ReachabilityAnalysisTest, NodeLabelsFromRootA) {

@@ -33,6 +33,10 @@ Status DomtreeAnalysis::Init() {
   return Status::OK;
 }
 
+vector<int> DomtreeAnalysis::GetEligibleRootNodes() {
+  return GetInstructionsInFunctionsNodeIndices(graph());
+}
+
 Status DomtreeAnalysis::ComputeDominators(
     const int rootNode, int* dataFlowSteps,
     absl::flat_hash_map<int, absl::flat_hash_set<int>>* dominators) {

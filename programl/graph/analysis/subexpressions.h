@@ -23,38 +23,39 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 
-#include <vector>
-
-using absl::flat_hash_set;
-using labm8::Status;
-using std::vector;
-
 namespace programl {
 namespace graph {
 namespace analysis {
 
-class LivenessAnalysis : public RoodNodeDataFlowAnalysis {
+using absl::flat_hash_map;
+using absl::flat_hash_set;
+using labm8::Status;
+using std::pair;
+using std::vector;
+
+class SubexpressionsAnalysis : public RoodNodeDataFlowAnalysis {
  public:
   using RoodNodeDataFlowAnalysis::RoodNodeDataFlowAnalysis;
 
-  Status RunOne(int rootNode, ProgramGraphFeatures* features) override;
+  virtual Status RunOne(int rootNode, ProgramGraphFeatures* features) override;
 
-  vector<int> GetEligibleRootNodes() override;
+  virtual vector<int> GetEligibleRootNodes() override;
 
-  Status Init() override;
+  virtual Status Init() override;
 
-  const vector<flat_hash_set<int>>& live_in_sets() const { return liveInSets_; }
+  string ToString() const;
 
-  const vector<flat_hash_set<int>>& live_out_sets() const {
-    return liveOutSets_;
-  }
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const SubexpressionsAnalysis& dt);
+
+  // Return a list of instruction node indices which compute the same
+  // subexpression.
+  const vector<flat_hash_set<int>>& subexpression_sets() const {
+    return subexpressionSets_;
+  };
 
  private:
-  int dataFlowStepCount_;
-
-  // Live-in and live-out sets that are computed during Init().
-  vector<flat_hash_set<int>> liveInSets_;
-  vector<flat_hash_set<int>> liveOutSets_;
+  vector<flat_hash_set<int>> subexpressionSets_;
 };
 
 }  // namespace analysis

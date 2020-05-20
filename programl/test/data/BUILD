@@ -2063,7 +2063,7 @@ genrule(
 genrule(
     name = "llvm_ir_graphs_nx",
     testonly = 1,
-    srcs = [":llvm_ir_graphs"],
+    srcs = [":llvm_ir_graphs_pb"],
     outs = [
         "llvm_ir_nx/000.nx",
         "llvm_ir_nx/001.nx",
@@ -3068,7 +3068,7 @@ genrule(
     ],
     cmd = (
         "mkdir -p $(@D)/llvm_ir_nx && " +
-        "for f in $(locations :llvm_ir_graphs); do" +
+        "for f in $(locations :llvm_ir_graphs_pb); do" +
         "    basename=$$(basename $$f); " +
         "    out=$(@D)/llvm_ir_nx/$${basename%.pb}.nx;" +
         "    $(location //programl/cmd:graph2nx) < $$f > $$out --stdin_fmt=pb;" +

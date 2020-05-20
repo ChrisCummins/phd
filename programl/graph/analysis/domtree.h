@@ -35,11 +35,13 @@ namespace analysis {
 //
 // Instruction node A dominates statement node B iff all control paths to B pass
 // through A.
-class DomtreeAnalysis : public InstructionRootDataFlowAnalysis {
+class DomtreeAnalysis : public RoodNodeDataFlowAnalysis {
  public:
-  using InstructionRootDataFlowAnalysis::InstructionRootDataFlowAnalysis;
+  using RoodNodeDataFlowAnalysis::RoodNodeDataFlowAnalysis;
 
   virtual Status RunOne(int rootNode, ProgramGraphFeatures* features) override;
+
+  virtual vector<int> GetEligibleRootNodes() override;
 
   virtual Status Init() override;
 

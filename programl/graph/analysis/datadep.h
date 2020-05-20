@@ -20,41 +20,21 @@
 #include "programl/proto/program_graph.pb.h"
 #include "programl/proto/program_graph_features.pb.h"
 
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-
-#include <vector>
-
-using absl::flat_hash_set;
 using labm8::Status;
-using std::vector;
 
 namespace programl {
 namespace graph {
 namespace analysis {
 
-class LivenessAnalysis : public RoodNodeDataFlowAnalysis {
+class DatadepAnalysis : public RoodNodeDataFlowAnalysis {
  public:
   using RoodNodeDataFlowAnalysis::RoodNodeDataFlowAnalysis;
 
-  Status RunOne(int rootNode, ProgramGraphFeatures* features) override;
+  virtual Status RunOne(int rootNode, ProgramGraphFeatures* features) override;
 
-  vector<int> GetEligibleRootNodes() override;
+  virtual vector<int> GetEligibleRootNodes() override;
 
-  Status Init() override;
-
-  const vector<flat_hash_set<int>>& live_in_sets() const { return liveInSets_; }
-
-  const vector<flat_hash_set<int>>& live_out_sets() const {
-    return liveOutSets_;
-  }
-
- private:
-  int dataFlowStepCount_;
-
-  // Live-in and live-out sets that are computed during Init().
-  vector<flat_hash_set<int>> liveInSets_;
-  vector<flat_hash_set<int>> liveOutSets_;
+  virtual Status Init() override;
 };
 
 }  // namespace analysis

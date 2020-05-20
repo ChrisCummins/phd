@@ -34,6 +34,7 @@ struct AdjacencyListOptions {
   bool reverse_control;
   bool data;
   bool reverse_data;
+  bool reverse_data_positions;
 };
 
 struct AdjacencyLists {
@@ -41,6 +42,9 @@ struct AdjacencyLists {
   vector<vector<int>> reverse_control;
   vector<vector<int>> data;
   vector<vector<int>> reverse_data;
+  vector<vector<int>> reverse_data_positions;
+
+  friend std::ostream& operator<<(std::ostream& os, const AdjacencyLists& dt);
 };
 
 // A data flow analysis pass.
@@ -63,19 +67,29 @@ class DataFlowPass {
   AdjacencyLists adjacencies_;
 };
 
-class InstructionRootDataFlowAnalysis : public DataFlowPass {
+// A data flow analysis which begins at starts at a "root" node in the graph.
+//
+// For root-node data flow analyses, multiple sets of labels may be computed be
+// selecting different root nodes from the set of elligible roots.
+class RoodNodeDataFlowAnalysis : public DataFlowPass {
  public:
-  InstructionRootDataFlowAnalysis(const ProgramGraph& graph)
-      : InstructionRootDataFlowAnalysis(graph, 10) {}
+  RoodNodeDataFlowAnalysis(const ProgramGraph& graph)
+      : RoodNodeDataFlowAnalysis(graph, 10) {}
 
-  InstructionRootDataFlowAnalysis(const ProgramGraph& graph,
-                                  int maxInstancesPerGraph)
+  RoodNodeDataFlowAnalysis(const ProgramGraph& graph, int maxInstancesPerGraph)
       : DataFlowPass(graph),
         maxInstancesPerGraph_(maxInstancesPerGraph),
-        seed_(std::chrono::system_clock::now().time_since_epoch().count()){}
+        seed_(std::chrono::system_clock::now().time_since_epoch().count()) {}
 
-            [[nodiscard]] virtual Status
-        Run(ProgramGraphFeaturesList * featuresList) override;
+  // Return a list of nodes that are elligible for use as the root node of this
+  // analysis.
+  //
+  // Consider using utility functions GetInstructionsInFunctionsNodeIndices() or
+  // GetVariableNodeIndices() to implement this.
+  virtual vector<int> GetEligibleRootNodes() = 0;
+
+  [[nodiscard]] virtual Status Run(
+      ProgramGraphFeaturesList* featuresList) override;
 
   [[nodiscard]] virtual Status Init();
 
@@ -95,6 +109,10 @@ class InstructionRootDataFlowAnalysis : public DataFlowPass {
 // Utility function to add a new node feature a list of node features.
 void AddNodeFeature(ProgramGraphFeatures* features, const string& name,
                     const Feature& value);
+
+vector<int> GetInstructionsInFunctionsNodeIndices(const ProgramGraph& graph);
+
+vector<int> GetVariableNodeIndices(const ProgramGraph& graph);
 
 }  // namespace analysis
 }  // namespace graph

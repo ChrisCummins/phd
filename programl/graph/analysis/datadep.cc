@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "programl/graph/analysis/reachability.h"
+#include "programl/graph/analysis/datadep.h"
 
 #include "labm8/cpp/logging.h"
 #include "labm8/cpp/status.h"
@@ -32,40 +32,40 @@ namespace programl {
 namespace graph {
 namespace analysis {
 
-Status ReachabilityAnalysis::Init() {
-  ComputeAdjacencies({.control = true});
+Status DatadepAnalysis::Init() {
+  ComputeAdjacencies({.control = false,
+                      .reverse_control = false,
+                      .data = false,
+                      .reverse_data = true});
   return Status::OK;
 }
 
-vector<int> ReachabilityAnalysis::GetEligibleRootNodes() {
-  return GetInstructionsInFunctionsNodeIndices(graph());
+vector<int> DatadepAnalysis::GetEligibleRootNodes() {
+  return GetVariableNodeIndices(graph());
 }
 
-Status ReachabilityAnalysis::RunOne(int rootNode,
-                                    ProgramGraphFeatures* features) {
+Status DatadepAnalysis::RunOne(int rootNode, ProgramGraphFeatures* features) {
   vector<bool> visited(graph().node_size(), false);
 
-  int dataFlowStepCount = 0;
-  std::queue<pair<int, int>> q;
-  q.push({rootNode, 1});
-
-  const vector<vector<int>>& cfg = adjacencies().control;
-  DCHECK(cfg.size() == graph().node_size())
-      << "CFG size: " << cfg.size() << " != "
+  const vector<vector<int>>& rdfg = adjacencies().reverse_data;
+  DCHECK(rdfg.size() == graph().node_size())
+      << "RDFG size: " << rdfg.size() << " != "
       << " graph size: " << graph().node_size();
 
-  int activeNodeCount = 0;
+  int dataFlowStepCount = 1;
+  std::queue<pair<int, int>> q;
+  q.push({rootNode, 0});
+
   while (!q.empty()) {
     int current = q.front().first;
     dataFlowStepCount = q.front().second;
     q.pop();
 
     visited[current] = true;
-    ++activeNodeCount;
 
-    for (int neighbour : cfg[current]) {
-      if (!visited[neighbour]) {
-        q.push({neighbour, dataFlowStepCount + 1});
+    for (int next : rdfg[current]) {
+      if (!visited[next]) {
+        q.push({next, dataFlowStepCount + 1});
       }
     }
   }
@@ -74,11 +74,16 @@ Status ReachabilityAnalysis::RunOne(int rootNode,
   Feature falseFeature = CreateFeature(0);
   Feature trueFeature = CreateFeature(1);
 
+  int activeNodeCount = 0;
   for (int i = 0; i < graph().node_size(); ++i) {
     AddNodeFeature(features, "data_flow_root_node",
                    i == rootNode ? trueFeature : falseFeature);
-    AddNodeFeature(features, "data_flow_value",
-                   visited[i] ? trueFeature : falseFeature);
+    if (visited[i] && graph().node(i).type() == Node::INSTRUCTION) {
+      ++activeNodeCount;
+      AddNodeFeature(features, "data_flow_value", trueFeature);
+    } else {
+      AddNodeFeature(features, "data_flow_value", falseFeature);
+    }
   }
 
   SetFeature(features->mutable_features(), "data_flow_step_count",
