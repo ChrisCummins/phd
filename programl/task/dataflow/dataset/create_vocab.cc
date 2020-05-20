@@ -144,10 +144,11 @@ void CreateVocabularyFiles(const fs::path& root) {
                        : graphs.size();
 
   for (size_t i = 0; i < n; ++i) {
-    // Read the graph.
-    std::ifstream graphFile(graphs[i].string());
     ProgramGraph graph;
-    graph.ParseFromIstream(&graphFile);
+    std::ifstream graphFile(graphs[i].string());
+    if (!graph.ParseFromIstream(&graphFile)) {
+      LOG(ERROR) << "Corrupt file: " << graphs[i].string();
+    }
 
     totalNodeCount += graph.node_size();
 
