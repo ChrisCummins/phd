@@ -49,8 +49,11 @@ def _ProcessRows(job) -> int:
         ir = None
     else:
       ir = None
-    encoder.Encode(graph, ir=ir)
-    pbutil.ToFile(graph, graph_path)
+    try:
+      encoder.Encode(graph, ir=ir)
+      pbutil.ToFile(graph, graph_path)
+    except AssertionError:
+      pass
   return len(paths)
 
 
