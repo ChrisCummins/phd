@@ -20,6 +20,7 @@ sh_binary(
     name = "install",
     srcs = ["install.sh"],
     data = [
+        ":analyze",
         ":graph2cdfg",
         ":graph2dot",
         ":graph2json",
@@ -32,6 +33,7 @@ sh_binary(
 cc_binary(
     name = "analyze",
     srcs = ["analyze.cc"],
+    visibility = ["//visibility:public"],
     deps = [
         "//labm8/cpp:app",
         "//labm8/cpp:status",

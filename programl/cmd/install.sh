@@ -10,6 +10,7 @@ PREFIX=/usr/local/opt/programl
 mkdir -pv "$PREFIX/bin"
 
 EXES=(
+  analyze
   graph2cdfg
   graph2dot
   graph2json

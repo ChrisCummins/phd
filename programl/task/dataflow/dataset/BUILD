@@ -56,22 +56,12 @@ cc_binary(
     ],
 )
 
-cc_binary(
+sh_binary(
     name = "create_labels",
-    srcs = ["create_labels.cc"],
-    copts = ["-fopenmp"],
-    deps = [
-        ":parallel_file_map",
-        "//labm8/cpp:app",
-        "//labm8/cpp:fsutil",
-        "//labm8/cpp:logging",
-        "//labm8/cpp:strutil",
-        "//programl/graph/analysis:domtree",
-        "//programl/graph/analysis:reachability",
-        "//programl/proto:program_graph_cc",
-        "//programl/proto:program_graph_features_cc",
-        "@boost//:filesystem",
-        "@com_google_absl//absl/strings:str_format",
+    srcs = ["create_labels.sh"],
+    data = [
+        "//labm8/sh:app",
+        "//programl/cmd:analyze",
     ],
 )
 
