@@ -33,6 +33,12 @@ from programl.ir.llvm import inst2vec_encoder
 from programl.proto import program_graph_pb2
 
 FLAGS = app.FLAGS
+app.DEFINE_string(
+  "stdin_fmt", "pbtxt", "The format for stdin. One of {pb,pbtxt}"
+)
+app.DEFINE_string(
+  "stdout_fmt", "pbtxt", "The format for stdout. One of {pb,pbtxt}"
+)
 app.DEFINE_output_path(
   "ir",
   None,
@@ -44,13 +50,27 @@ app.DEFINE_output_path(
 
 def Main():
   proto = program_graph_pb2.ProgramGraph()
-  pbutil.FromString(sys.stdin.buffer.read().decode("utf-8"), proto)
+  if FLAGS.stdin_fmt == "pb":
+    proto.ParseFromString(sys.stdin.buffer.read())
+  elif FLAGS.stdin_fmt == "pbtxt":
+    pbutil.FromString(sys.stdin.buffer.read().decode("utf-8"), proto)
+  else:
+    raise app.UsageError(
+      f"Unknown --stdin_fmt={FLAGS.stdin_fmt}. Expected one of {{pb,pbtxt}}"
+    )
 
   ir = fs.Read(FLAGS.ir) if FLAGS.ir else None
-
   encoder = inst2vec_encoder.Inst2vecEncoder()
   encoder.Encode(proto, ir)
-  print(proto)
+
+  if FLAGS.stdout_fmt == "pb":
+    sys.stdout.buffer.write(proto.SerializeToString())
+  elif FLAGS.stdout_fmt == "pbtxt":
+    print(proto)
+  else:
+    raise app.UsageError(
+      f"Unknown --stdout_fmt={FLAGS.stdout_fmt}. Expected one of {{pb,pbtxt}}"
+    )
 
 
 if __name__ == "__main__":

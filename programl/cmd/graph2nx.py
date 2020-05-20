@@ -38,7 +38,7 @@ def Main():
     pbutil.FromString(sys.stdin.buffer.read().decode("utf-8"), proto)
   else:
     raise app.UsageError(
-      "Unknown --stdin_fmt={FLAGS.stdin_fmt}. " "Expected one of {pb,pbtxt}"
+      f"Unknown --stdin_fmt={FLAGS.stdin_fmt}. " "Expected one of {pb,pbtxt}"
     )
   pickle.dump(nx_format.ProgramGraphToNetworkX(proto), sys.stdout.buffer)
 
