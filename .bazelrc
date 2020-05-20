@@ -24,6 +24,10 @@ test --cxxopt='-Werror=unused-result'
 build --cxxopt='-Werror=dangling-else'
 test --cxxopt='-Werror=dangling-else'
 
+# Promote warnings about returning references to local objects.
+build --cxxopt='-Werror=return-stack-address'
+test --cxxopt='-Werror=return-stack-address'
+
 # Default to continuing on build error. Override using --keep_going=false.
 build --keep_going
 test --keep_going
