@@ -22,6 +22,7 @@ py_library(
     deps = [
         ":graph_loader",
         "//labm8/py:app",
+        "//labm8/py:humanize",
         "//labm8/py:pbutil",
         "//labm8/py:ppar",
         "//programl/ml/batch:async_batch_builder",
@@ -29,6 +30,7 @@ py_library(
         "//programl/ml/model/ggnn:ggnn_batch_builder",
         "//programl/proto:checkpoint_py",
         "//programl/proto:epoch_py",
+        "//third_party/py/numpy",
     ],
 )
 

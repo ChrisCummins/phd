@@ -23,9 +23,11 @@ from typing import Dict
 from typing import List
 from typing import Tuple
 
+import numpy as np
 from sklearn.exceptions import UndefinedMetricWarning
 
 from labm8.py import app
+from labm8.py import humanize
 from labm8.py import pbutil
 from labm8.py import ppar
 from programl.ml.batch.async_batch_builder import AsyncBatchBuilder
@@ -86,7 +88,7 @@ def TrainDataflowGGNN(
 
   RecordExperimentalSetup(log_dir)
 
-  vocabulary = LoadVocabulary(path / "vocabulary.txt")
+  vocabulary = LoadVocabulary(path, use_cdfg=use_cdfg)
 
   # Create the model, defining the shape of the graphs that it will process.
   #
@@ -126,39 +128,50 @@ def TrainDataflowGGNN(
   )
   val_batches.start()
 
-  train_graph_count = 0
-  for epoch_step, target_train_graph_count in enumerate(
-    train_graph_counts, start=1
+  # Cumulative totals for training graph counts at each "epoch".
+  train_graph_cumsums = np.array(train_graph_counts, dtype=np.int32)
+  # The number of training graphs in each "epoch".
+  train_graph_counts = train_graph_cumsums - np.concatenate(
+    ([0], train_graph_counts[:-1])
+  )
+
+  for epoch_step, (train_graph_cumsum, train_graph_count) in enumerate(
+    zip(train_graph_cumsums, train_graph_counts), start=1
   ):
     start_time = time.time()
-    log_prefix = f"Epoch {epoch_step} of {len(train_graph_counts)}"
 
-    # Read a training "step" worth of graphs.
-    train_graphs_in_step = target_train_graph_count - train_graph_count
-    graph_loader = DataflowGraphLoader(
-      path,
-      epoch_type=epoch_pb2.TRAIN,
-      analysis=analysis,
-      max_graph_count=train_graphs_in_step,
-      data_flow_step_max=data_flow_step_max,
-      logfile=open(
-        log_dir / "graph_loader" / f"{epoch_step:03d}.train.txt", "w"
+    train_batches = ppar.ThreadedIterator(
+      GgnnModelBatchBuilder(
+        DataflowGraphLoader(
+          path,
+          epoch_type=epoch_pb2.TRAIN,
+          analysis=analysis,
+          max_graph_count=train_graph_count,
+          data_flow_step_max=data_flow_step_max,
+          logfile=open(
+            log_dir / "graph_loader" / f"{epoch_step:03d}.train.txt", "w"
+          ),
+          use_cdfg=use_cdfg,
+        ),
+        vocabulary,
+        max_node_size=batch_size,
       ),
-      use_cdfg=use_cdfg,
+      max_queue_size=100,
     )
-    # Construct batches from those graphs in a background thread.
-    batch_builder = GgnnModelBatchBuilder(
-      graph_loader, vocabulary, max_node_size=batch_size
-    )
-    train_batches = ppar.ThreadedIterator(batch_builder, max_queue_size=5)
 
-    train_results = model.RunBatches(epoch_pb2.TRAIN, train_batches, log_prefix)
+    train_results = model.RunBatches(
+      epoch_pb2.TRAIN,
+      train_batches,
+      f"Training to {humanize.Commas(train_graph_cumsum)} graphs",
+    )
 
     # During validation, wait for the batch builder to finish and then
     # iterate over those.
     val_batches.join()
     val_results = model.RunBatches(
-      epoch_pb2.VAL, val_batches.batches, log_prefix
+      epoch_pb2.VAL,
+      val_batches.batches,
+      f"Validation at {humanize.Commas(train_graph_cumsum)} graphs",
     )
 
     # Write the epoch to file as an epoch list.
@@ -208,10 +221,7 @@ def TestDataflowGGNN(
   assert (log_dir / "checkpoints").is_dir()
   assert (log_dir / "graph_loader").is_dir()
 
-  if use_cdfg:
-    vocabulary = LoadVocabulary(path / "vocab" / "cdfg.txt")
-  else:
-    vocabulary = LoadVocabulary(path / "vocab" / "programl.txt")
+  vocabulary = LoadVocabulary(path, use_cdfg=use_cdfg)
 
   # Create the model, defining the shape of the graphs that it will process.
   #
@@ -270,8 +280,14 @@ def TestDataflowGGNN(
   app.Log(1, "Wrote %s", epoch_path)
 
 
-def LoadVocabulary(path: pathlib.Path) -> Dict[str, int]:
-  with open(path) as f:
+def LoadVocabulary(
+  dataset_root: pathlib.Path, use_cdfg: bool
+) -> Dict[str, int]:
+  if use_cdfg:
+    vocab_path = dataset_root / "vocab" / "cdfg.txt"
+  else:
+    vocab_path = dataset_root / "vocab" / "programl.txt"
+  with open(vocab_path) as f:
     vocab = f.readlines()
   return {v: i for i, v in enumerate(vocab)}
 

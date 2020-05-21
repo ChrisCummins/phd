@@ -91,12 +91,13 @@ class Model(object):
     log_prefix: str,
   ) -> epoch_pb2.EpochResults:
     rolling_results = RollingResults()
-    for batch_data in batches:
+    for i, batch_data in enumerate(batches):
       batch_results = self.RunBatch(epoch_type, batch_data)
       rolling_results.Update(batch_data, batch_results, weight=None)
-      print(
-        f"\r\033[K{log_prefix}: {rolling_results}", end="", file=sys.stderr,
-      )
+      if not i % 8:
+        print(
+          f"\r\033[K{log_prefix}: {rolling_results}", end="", file=sys.stderr,
+        )
     print("", file=sys.stderr)
     return rolling_results.ToEpochResults()
 
