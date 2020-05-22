@@ -15,7 +15,6 @@
 # limitations under the License.
 """Base class for implementing classifier models."""
 import pickle
-import sys
 from typing import Any
 from typing import Iterable
 
@@ -23,7 +22,7 @@ from labm8.py.progress import NullContext
 from labm8.py.progress import ProgressContext
 from programl.ml.batch.batch_data import BatchData
 from programl.ml.batch.batch_results import BatchResults
-from programl.ml.batch.rolling_results import RollingResults
+from programl.ml.batch.rolling_results_builder import RollingResultsBuilder
 from programl.proto import checkpoint_pb2
 from programl.proto import epoch_pb2
 
@@ -90,16 +89,11 @@ class Model(object):
     batches: Iterable[BatchData],
     log_prefix: str,
   ) -> epoch_pb2.EpochResults:
-    rolling_results = RollingResults()
-    for i, batch_data in enumerate(batches):
-      batch_results = self.RunBatch(epoch_type, batch_data)
-      rolling_results.Update(batch_data, batch_results, weight=None)
-      if not i % 8:
-        print(
-          f"\r\033[K{log_prefix}: {rolling_results}", end="", file=sys.stderr,
-        )
-    print("", file=sys.stderr)
-    return rolling_results.ToEpochResults()
+    with RollingResultsBuilder(log_prefix) as results_builder:
+      for i, batch_data in enumerate(batches):
+        batch_results = self.RunBatch(epoch_type, batch_data)
+        results_builder.AddBatch(batch_data, batch_results, weight=None)
+    return results_builder.results.ToEpochResults()
 
   def RestoreCheckpoint(self, checkpoint: checkpoint_pb2.Checkpoint):
     """Restore a model from a checkpoint."""

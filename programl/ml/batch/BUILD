@@ -81,3 +81,14 @@ py_test(
         "//labm8/py:test",
     ],
 )
+
+py_library(
+    name = "rolling_results_builder",
+    srcs = ["rolling_results_builder.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":batch_data",
+        ":batch_results",
+        ":rolling_results",
+    ],
+)
