@@ -21,6 +21,7 @@ py_library(
     srcs = ["dataflow.py"],
     deps = [
         ":graph_loader",
+        ":vocabulary",
         "//labm8/py:app",
         "//labm8/py:humanize",
         "//labm8/py:pbutil",
@@ -75,5 +76,14 @@ py_binary(
     deps = [
         ":dataflow",
         "//labm8/py:app",
+    ],
+)
+
+py_library(
+    name = "vocabulary",
+    srcs = ["vocabulary.py"],
+    deps = [
+        "//labm8/py:app",
+        "//labm8/py:humanize",
     ],
 )

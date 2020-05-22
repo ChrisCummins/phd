@@ -35,6 +35,7 @@ from programl.ml.model.ggnn.ggnn import Ggnn
 from programl.ml.model.ggnn.ggnn_batch_builder import GgnnModelBatchBuilder
 from programl.proto import checkpoint_pb2
 from programl.proto import epoch_pb2
+from programl.task.dataflow import vocabulary
 from programl.task.dataflow.graph_loader import DataflowGraphLoader
 
 FLAGS = app.FLAGS
@@ -64,6 +65,8 @@ def TrainDataflowGGNN(
   val_seed: int,
   batch_size: int,
   use_cdfg: bool,
+  max_vocab_size: int,
+  target_vocab_cumfreq: float,
 ) -> pathlib.Path:
   if not path.is_dir():
     raise FileNotFoundError(path)
@@ -88,14 +91,19 @@ def TrainDataflowGGNN(
 
   RecordExperimentalSetup(log_dir)
 
-  vocabulary = LoadVocabulary(path, use_cdfg=use_cdfg)
+  vocab = vocabulary.LoadVocabulary(
+    path,
+    use_cdfg=use_cdfg,
+    max_items=max_vocab_size,
+    target_cumfreq=target_vocab_cumfreq,
+  )
 
   # Create the model, defining the shape of the graphs that it will process.
   #
   # For these data flow experiments, our graphs contain per-node binary
   # classification targets (e.g. reachable / not-reachable).
   model = Ggnn(
-    vocabulary=vocabulary,
+    vocabulary=vocab,
     test_only=False,
     node_y_dimensionality=2,
     graph_y_dimensionality=0,
@@ -122,7 +130,7 @@ def TrainDataflowGGNN(
         seed=val_seed,
         use_cdfg=use_cdfg,
       ),
-      vocabulary=vocabulary,
+      vocabulary=vocab,
       max_node_size=batch_size,
     ),
   )
@@ -153,7 +161,7 @@ def TrainDataflowGGNN(
           ),
           use_cdfg=use_cdfg,
         ),
-        vocabulary,
+        vocabulary=vocab,
         max_node_size=batch_size,
       ),
       max_queue_size=100,
@@ -205,6 +213,8 @@ def TestDataflowGGNN(
   limit_max_data_flow_steps: bool,
   batch_size: int,
   use_cdfg: bool,
+  max_vocab_size: int,
+  target_vocab_cumfreq: float,
 ):
   # Since we are dealing with binary classification we calculate
   # precesion / recall / F1 wrt only the positive class.
@@ -221,14 +231,19 @@ def TestDataflowGGNN(
   assert (log_dir / "checkpoints").is_dir()
   assert (log_dir / "graph_loader").is_dir()
 
-  vocabulary = LoadVocabulary(path, use_cdfg=use_cdfg)
+  vocab = vocabulary.LoadVocabulary(
+    path,
+    use_cdfg=use_cdfg,
+    max_items=max_vocab_size,
+    target_cumfreq=target_vocab_cumfreq,
+  )
 
   # Create the model, defining the shape of the graphs that it will process.
   #
   # For these data flow experiments, our graphs contain per-node binary
   # classification targets (e.g. reachable / not-reachable).
   model = Ggnn(
-    vocabulary=vocabulary,
+    vocabulary=vocab,
     test_only=True,
     node_y_dimensionality=2,
     graph_y_dimensionality=0,
@@ -259,7 +274,7 @@ def TestDataflowGGNN(
       logfile=open(log_dir / "graph_loader" / "test.txt", "w"),
       use_cdfg=use_cdfg,
     ),
-    vocabulary=vocabulary,
+    vocabulary=vocab,
     max_node_size=batch_size,
   )
 
@@ -278,18 +293,6 @@ def TestDataflowGGNN(
   epoch_path = log_dir / "epochs" / "TEST.EpochList.pbtxt"
   pbutil.ToFile(epoch, epoch_path)
   app.Log(1, "Wrote %s", epoch_path)
-
-
-def LoadVocabulary(
-  dataset_root: pathlib.Path, use_cdfg: bool
-) -> Dict[str, int]:
-  if use_cdfg:
-    vocab_path = dataset_root / "vocab" / "cdfg.txt"
-  else:
-    vocab_path = dataset_root / "vocab" / "programl.txt"
-  with open(vocab_path) as f:
-    vocab = f.readlines()
-  return {v: i for i, v in enumerate(vocab)}
 
 
 def SelectCheckpoint(

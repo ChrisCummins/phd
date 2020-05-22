@@ -77,14 +77,16 @@ app.DEFINE_boolean(
   "If set, use the CDFG representation for programs. Defaults to ProGraML "
   "representations.",
 )
+app.DEFINE_integer(
+  "max_vocab_size",
+  0,
+  "If > 0, limit the size of the vocabulary to this number.",
+)
+app.DEFINE_float(
+  "target_vocab_cumfreq", 1.0, "The target cumulative frequency that."
+)
 app.DEFINE_boolean("test", True, "Whether to test the model after training.")
 FLAGS = app.FLAGS
-
-
-def LoadVocabulary(path: pathlib.Path) -> Dict[str, int]:
-  with open(path) as f:
-    vocab = f.readlines()
-  return {v: i for i, v in enumerate(vocab)}
 
 
 def Main():
@@ -98,6 +100,8 @@ def Main():
     val_seed=FLAGS.val_seed,
     batch_size=FLAGS.batch_size,
     use_cdfg=FLAGS.cdfg,
+    max_vocab_size=FLAGS.max_vocab_size,
+    target_vocab_cumfreq=FLAGS.target_vocab_cumfreq,
   )
 
   if FLAGS.test:
@@ -108,6 +112,8 @@ def Main():
       limit_max_data_flow_steps=FLAGS.limit_max_data_flow_steps,
       batch_size=FLAGS.batch_size,
       use_cdfg=FLAGS.cdfg,
+      max_vocab_size=FLAGS.max_vocab_size,
+      target_vocab_cumfreq=FLAGS.target_vocab_cumfreq,
     )
 
 
