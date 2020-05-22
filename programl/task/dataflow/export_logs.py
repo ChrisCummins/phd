@@ -42,19 +42,21 @@ Alternatively the summary can be uploaded to Google Sheets using:
       --google_sheets_default_share_with=joe@example.com
 """
 import pathlib
+import subprocess
 import sys
+from typing import Optional
 
 import pandas as pd
 
 from labm8.py import app
 from labm8.py import google_sheets
+from labm8.py import humanize
 from labm8.py import pbutil
 from labm8.py import pdutil
+from labm8.py import prof
 from programl.proto import epoch_pb2
 
-app.DEFINE_input_path(
-  "path", None, "The directory containing logs to export.", is_dir=True
-)
+app.DEFINE_input_path("path", None, "The dataset directory root.", is_dir=True)
 app.DEFINE_string(
   "google_sheet",
   None,
@@ -77,44 +79,58 @@ def ReadEpochLogs(path: pathlib.Path):
     # Skip files without data.
     if not len(epoch.epoch):
       continue
-    # Skip files without training results (e.g. test runs).
-    if not epoch.epoch[0].train_results.batch_count:
-      continue
     epochs += list(epoch.epoch)
   return epoch_pb2.EpochList(epoch=sorted(epochs, key=lambda x: x.epoch_num))
 
 
-def EpochsToDataFrame(epochs: epoch_pb2.EpochList) -> pd.DataFrame:
+def EpochsToDataFrame(epochs: epoch_pb2.EpochList) -> Optional[pd.DataFrame]:
+  def V(results, field):
+    if results.batch_count:
+      return getattr(results, field)
+    else:
+      return None
+
   rows = []
   for e in epochs.epoch:
     rows.append(
       {
         "epoch_num": e.epoch_num,
         "walltime_seconds": e.walltime_seconds,
-        "train_graph_count": e.train_results.graph_count,
-        "train_batch_count": e.train_results.batch_count,
-        "train_target_count": e.train_results.target_count,
-        "train_learning_rate": e.train_results.mean_learning_rate,
-        "train_loss": e.train_results.mean_loss,
-        "train_accuracy": e.train_results.mean_accuracy,
-        "train_precision": e.train_results.mean_precision,
-        "train_recall": e.train_results.mean_recall,
-        "train_f1": e.train_results.mean_f1,
-        "train_walltime_seconds": e.train_results.walltime_seconds,
-        "val_graph_count": e.val_results.graph_count,
-        "val_batch_count": e.val_results.batch_count,
-        "val_target_count": e.val_results.target_count,
-        "val_learning_rate": e.val_results.mean_learning_rate,
-        "val_loss": e.val_results.mean_loss,
-        "val_accuracy": e.val_results.mean_accuracy,
-        "val_precision": e.val_results.mean_precision,
-        "val_recall": e.val_results.mean_recall,
-        "val_f1": e.val_results.mean_f1,
-        "val_walltime_seconds": e.val_results.walltime_seconds,
+        "train_graph_count": V(e.train_results, "graph_count"),
+        "train_batch_count": V(e.train_results, "batch_count"),
+        "train_target_count": V(e.train_results, "target_count"),
+        "train_learning_rate": V(e.train_results, "mean_learning_rate"),
+        "train_loss": V(e.train_results, "mean_loss"),
+        "train_accuracy": V(e.train_results, "mean_accuracy"),
+        "train_precision": V(e.train_results, "mean_precision"),
+        "train_recall": V(e.train_results, "mean_recall"),
+        "train_f1": V(e.train_results, "mean_f1"),
+        "train_walltime_seconds": V(e.train_results, "walltime_seconds"),
+        "val_graph_count": V(e.val_results, "graph_count"),
+        "val_batch_count": V(e.val_results, "batch_count"),
+        "val_target_count": V(e.val_results, "target_count"),
+        "val_learning_rate": V(e.val_results, "mean_learning_rate"),
+        "val_loss": V(e.val_results, "mean_loss"),
+        "val_accuracy": V(e.val_results, "mean_accuracy"),
+        "val_precision": V(e.val_results, "mean_precision"),
+        "val_recall": V(e.val_results, "mean_recall"),
+        "val_f1": V(e.val_results, "mean_f1"),
+        "val_walltime_seconds": V(e.val_results, "walltime_seconds"),
+        "test_graph_count": V(e.test_results, "graph_count"),
+        "test_batch_count": V(e.test_results, "batch_count"),
+        "test_target_count": V(e.test_results, "target_count"),
+        "test_learning_rate": V(e.test_results, "mean_learning_rate"),
+        "test_loss": V(e.test_results, "mean_loss"),
+        "test_accuracy": V(e.test_results, "mean_accuracy"),
+        "test_precision": V(e.test_results, "mean_precision"),
+        "test_recall": V(e.test_results, "mean_recall"),
+        "test_f1": V(e.test_results, "mean_f1"),
+        "test_walltime_seconds": V(e.test_results, "walltime_seconds"),
       }
     )
+  if not len(rows):
+    return
   df = pd.DataFrame(rows)
-  df = df.set_index("epoch_num", drop=True).sort_index()
 
   # Add columns for cumulative totals.
   df["train_graph_count_cumsum"] = df.train_graph_count.cumsum()
@@ -150,8 +166,54 @@ def EpochsToDataFrame(epochs: epoch_pb2.EpochList) -> pd.DataFrame:
       "val_recall",
       "val_f1",
       "val_walltime_seconds",
+      "test_batch_count",
+      "test_graph_count",
+      "test_target_count",
+      "test_learning_rate",
+      "test_loss",
+      "test_accuracy",
+      "test_precision",
+      "test_recall",
+      "test_f1",
+      "test_walltime_seconds",
     ]
   ]
+
+
+def LogsToDataFrame(path: pathlib.Path) -> pd.DataFrame:
+  logdirs = (
+    subprocess.check_output(
+      [
+        "find",
+        str(path / "logs"),
+        "-maxdepth",
+        "3",
+        "-mindepth",
+        "3",
+        "-type",
+        "d",
+      ],
+      universal_newlines=True,
+    )
+    .rstrip()
+    .split("\n")
+  )
+
+  dfs = []
+  for logdir in logdirs:
+    logdir = pathlib.Path(logdir)
+    epochs = ReadEpochLogs(logdir)
+    df = EpochsToDataFrame(epochs)
+    if df is None:
+      continue
+    df.insert(0, "run_id", logdir.name)
+    df.insert(0, "model", logdir.parent.parent.name)
+    df.insert(0, "analysis", logdir.parent.name)
+    dfs.append(df)
+
+  df = pd.concat(dfs)
+  df.sort_values(["analysis", "model", "run_id"], inplace=True)
+  return df
 
 
 def Main():
@@ -160,15 +222,21 @@ def Main():
   spreadsheet_name = FLAGS.google_sheet
   worksheet_name = FLAGS.worksheet
 
-  epochs = ReadEpochLogs(path)
-  df = EpochsToDataFrame(epochs)
+  with prof.Profile("loading logs"):
+    df = LogsToDataFrame(path)
 
   if spreadsheet_name:
     gsheets = google_sheets.GoogleSheets.FromFlagsOrDie()
     spreadsheet = gsheets.GetOrCreateSpreadsheet(spreadsheet_name)
     worksheet = gsheets.GetOrCreateWorksheet(spreadsheet, worksheet_name)
-    gsheets.ExportDataFrame(worksheet, df)
-    print(f"Exported Google Sheet to {spreadsheet_name}:{worksheet_name}")
+    gsheets.ExportDataFrame(worksheet, df, index=False)
+    app.Log(
+      1,
+      f"Exported %s rows to Google Sheet to %s:%s",
+      humanize.Commas(len(df)),
+      spreadsheet_name,
+      worksheet_name,
+    )
   elif fmt == "csv":
     df.to_csv(sys.stdout, header=True)
   elif fmt == "txt":

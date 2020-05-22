@@ -41,8 +41,10 @@ py_binary(
     deps = [
         "//labm8/py:app",
         "//labm8/py:google_sheets",
+        "//labm8/py:humanize",
         "//labm8/py:pbutil",
         "//labm8/py:pdutil",
+        "//labm8/py:prof",
         "//programl/proto:epoch_py",
         "//third_party/py/pandas",
     ],
