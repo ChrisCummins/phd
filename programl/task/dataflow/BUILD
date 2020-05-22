@@ -63,6 +63,11 @@ py_library(
     ],
 )
 
+sh_binary(
+    name = "overview",
+    srcs = ["overview.sh"],
+)
+
 py_binary(
     name = "train_ggnn",
     srcs = ["train_ggnn.py"],
