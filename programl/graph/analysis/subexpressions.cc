@@ -62,7 +62,8 @@ Status SubexpressionsAnalysis::Init() {
     }
 
     // Build a list of operand <position, operand> pairs.
-    vector<pair<int, int>> positionOrderedPairs;
+    using Operand = pair<int, int>;
+    vector<Operand> positionOrderedPairs;
     positionOrderedPairs.reserve(rdfg[i].size());
     for (int j = 0; j < rdfg[i].size(); ++j) {
       positionOrderedPairs.emplace_back(rdp[i][j], rdfg[i][j]);
@@ -90,13 +91,15 @@ Status SubexpressionsAnalysis::Init() {
         // Bitwise binary operators:
         opcodeName == "or" || opcodeName == "and" || opcodeName == "xor") {
       // Commutative statement, order by identifier name.
-      std::sort(
-          positionOrderedPairs.begin(), positionOrderedPairs.end(),
-          [](const auto& a, const auto& b) { return a.second < b.second; });
+      std::sort(positionOrderedPairs.begin(), positionOrderedPairs.end(),
+                [](const Operand& a, const Operand& b) {
+                  return a.second < b.second;
+                });
     } else {
       // Non-commutative statement, order by position.
-      std::sort(positionOrderedPairs.begin(), positionOrderedPairs.end(),
-                [](const auto& a, const auto& b) { return a.first < b.first; });
+      std::sort(
+          positionOrderedPairs.begin(), positionOrderedPairs.end(),
+          [](const Operand& a, const Operand& b) { return a.first < b.first; });
     }
 
     // Now that we have ordered the list, strip the order key to make a list
