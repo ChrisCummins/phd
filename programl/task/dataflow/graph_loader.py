@@ -164,9 +164,18 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
         stem = path.name[: -len("ProgramGraph.pb")]
         name = f"{stem}ProgramGraphFeaturesList.pb"
         features_path = self.labels_path / name
-        if features_path.is_file():
+        # There is no guarantee that we have generated features for this program
+        # graph, so we check for its existence. As a *very* defennsive measure,
+        # we also check for the existence of the graph file that we enumearted
+        # at the start of this function. This check can be removed later, it is
+        # only useful during development when you might be modifying the dataset
+        # at the same time as having test jobs running.
+        if path.is_file() and features_path.is_file():
           app.Log(3, "Read %s", features_path)
           graph = pbutil.FromFile(path, program_graph_pb2.ProgramGraph())
+          # Skip empty graphs.
+          if not len(graph.node):
+            continue
           features_list = pbutil.FromFile(
             features_path, program_graph_features_pb2.ProgramGraphFeaturesList()
           )
