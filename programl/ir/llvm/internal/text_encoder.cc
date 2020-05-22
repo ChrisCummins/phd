@@ -15,6 +15,7 @@
 // limitations under the License.
 #include "programl/ir/llvm/internal/text_encoder.h"
 
+#include "labm8/cpp/logging.h"
 #include "llvm/IR/Type.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -42,16 +43,34 @@ string PrintToString(const T &value) {
   return str;
 }
 
+// Resolve the base type after dereferencing pointer indirection(s).
+// If the type is not a pointer, the type argument is returned.
+// Argument pointerDepth is incremented for every level of pointer
+// dereferencing.
+const ::llvm::Type *GetDereferencedType(const ::llvm::Type *type,
+                                        int *pointerDepth) {
+  CHECK(type) << "nullptr type at pointer depth " << *pointerDepth;
+  if (type->isPointerTy()) {
+    *pointerDepth = *pointerDepth + 1;
+    return GetDereferencedType(type->getPointerElementType(), pointerDepth);
+  } else {
+    return type;
+  }
+}
+
 // Specialization for LLVM types which returns "struct" or "struct*" for
 // struct or pointer to struct types, respectively. All other types are
 // serialized as normal.
 template <>
 string PrintToString(const ::llvm::Type &value) {
   string str;
-  if (value.isPointerTy() && value.getPointerElementType()->isStructTy()) {
-    str = "struct*";
-  } else if (value.isStructTy()) {
+
+  int pointerDepth = 0;
+  if (GetDereferencedType(&value, &pointerDepth)->isStructTy()) {
     str = "struct";
+    for (int i = 0; i < pointerDepth; ++i) {
+      str.push_back('*');
+    }
   } else {
     ::llvm::raw_string_ostream rso(str);
     value.print(rso);

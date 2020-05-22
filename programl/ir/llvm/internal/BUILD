@@ -69,6 +69,7 @@ cc_library(
     srcs = ["text_encoder.cc"],
     hdrs = ["text_encoder.h"],
     deps = [
+        "//labm8/cpp:logging",
         "//labm8/cpp:string",
         "//third_party/llvm",
         "@com_google_absl//absl/container:flat_hash_map",
