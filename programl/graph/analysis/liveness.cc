@@ -74,6 +74,12 @@ Status LivenessAnalysis::Init() {
   dataFlowStepCount_ = 0;
   while (!workList.empty()) {
     ++dataFlowStepCount_;
+
+    if (dataFlowStepCount_ > 5000) {
+      return Status(error::FAILED_PRECONDITION,
+                    "Failed to terminate liveness computation in 5000 steps");
+    }
+
     int node = workList.front();
     workList.pop();
     workSet.erase(node);
@@ -99,11 +105,9 @@ Status LivenessAnalysis::Init() {
     }
     newInSet.merge(newOutSetMinusDefs);
 
-    // No need to visit predecessors if the in-set is non-empty and has not
-    // changed.
-    if (newInSet != liveInSets_[node]) {
+    // Visit predecessors if inSet is empty or has changed.
+    if (newInSet.empty() || newInSet != liveInSets_[node]) {
       liveInSets_[node] = newInSet;
-
       for (const auto& predecessor : predecessors) {
         if (!workSet.contains(predecessor)) {
           workList.push(predecessor);
