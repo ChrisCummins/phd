@@ -123,7 +123,13 @@ Status LivenessAnalysis::Init() {
 }
 
 vector<int> LivenessAnalysis::GetEligibleRootNodes() {
-  return GetInstructionsInFunctionsNodeIndices(graph());
+  vector<int> nodes;
+  for (int i = 0; i < liveOutSets_.size(); ++i) {
+    if (liveOutSets_[i].size()) {
+      nodes.push_back(i);
+    }
+  }
+  return nodes;
 }
 
 Status LivenessAnalysis::RunOne(int rootNode, ProgramGraphFeatures* features) {
