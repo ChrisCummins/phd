@@ -137,6 +137,8 @@ const AdjacencyLists& DataFlowPass::ComputeAdjacencies(
 const AdjacencyLists& DataFlowPass::adjacencies() const { return adjacencies_; }
 
 Status RoodNodeDataFlowAnalysis::Run(ProgramGraphFeaturesList* featuresList) {
+  RETURN_IF_ERROR(Init());
+
   vector<int> rootNodes = GetEligibleRootNodes();
   if (!rootNodes.size()) {
     return Status(error::Code::FAILED_PRECONDITION,
@@ -145,8 +147,6 @@ Status RoodNodeDataFlowAnalysis::Run(ProgramGraphFeaturesList* featuresList) {
   }
   std::shuffle(rootNodes.begin(), rootNodes.end(),
                std::default_random_engine(seed()));
-
-  RETURN_IF_ERROR(Init());
 
   int numRoots = std::min(static_cast<int>(ceil(rootNodes.size() / 10.0)),
                           max_instances_per_graph());
