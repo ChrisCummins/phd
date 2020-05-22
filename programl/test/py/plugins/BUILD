@@ -33,7 +33,7 @@ py_library(
     name = "llvm_program_graph",
     testonly = 1,
     srcs = ["llvm_program_graph.py"],
-    data = ["//programl/test/data:llvm_ir_graphs_pb"],
+    data = ["//programl/test/data:llvm_ir_graphs"],
     deps = [
         "//labm8/py:bazelutil",
         "//labm8/py:pbutil",
@@ -51,5 +51,15 @@ py_library(
         "//labm8/py:bazelutil",
         "//labm8/py:test",
         "//third_party/py/networkx",
+    ],
+)
+
+py_library(
+    name = "llvm_reachability_features",
+    testonly = 1,
+    srcs = ["llvm_reachability_features.py"],
+    data = ["//programl/test/data:llvm_ir_reachability_features"],
+    deps = [
+        "//labm8/py:bazelutil",
     ],
 )

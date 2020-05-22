@@ -28,7 +28,7 @@ cc_library(
     testonly = 1,
     srcs = ["llvm_program_graphs.cc"],
     hdrs = ["llvm_program_graphs.h"],
-    data = ["//programl/test/data:llvm_ir_graphs_pb"],
+    data = ["//programl/test/data:llvm_ir_graphs"],
     visibility = ["//programl:__subpackages__"],
     deps = [
         "//labm8/cpp:bazelutil",

@@ -41,7 +41,7 @@ vector<ProtocolBuffer> ReadDirectoryOfProtos(const fs::path& path) {
 
 vector<ProgramGraph> ReadLlvmProgramGraphs() {
   const auto path =
-      labm8::BazelDataPathOrDie("phd/programl/test/data/llvm_ir_graphs_pb");
+      labm8::BazelDataPathOrDie("phd/programl/test/data/llvm_ir_graphs");
   return ReadDirectoryOfProtos<ProgramGraph>(path);
 }
 
