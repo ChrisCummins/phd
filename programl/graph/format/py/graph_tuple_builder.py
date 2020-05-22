@@ -45,9 +45,9 @@ class GraphTupleBuilder(graph_tuple_pybind.GraphTuple):
     a = self._adjacencies
     return np.array(
       [
-        np.array(a[0], dtype=np.int32),
-        np.array(a[1], dtype=np.int32),
-        np.array(a[2], dtype=np.int32),
+        np.array(a[0], dtype=np.int32).reshape((-1, 2)),
+        np.array(a[1], dtype=np.int32).reshape((-1, 2)),
+        np.array(a[2], dtype=np.int32).reshape((-1, 2)),
       ]
     )
 
