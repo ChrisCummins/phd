@@ -25,6 +25,7 @@ from typing import List
 from typing import Tuple
 
 from labm8.py import app
+from labm8.py import decorators
 from labm8.py import labtypes
 from labm8.py import pbutil
 from labm8.py import progress
@@ -34,6 +35,20 @@ from programl.proto import program_graph_pb2
 from programl.task.dataflow.dataset import pathflag
 
 FLAGS = app.FLAGS
+
+
+@decorators.timeout(seconds=60)
+def Encode(encoder, graph, graph_path, ir_path):
+  if ir_path.is_file():
+    try:
+      ir = pbutil.FromFile(ir_path, ir_pb2.Ir()).text
+    except pbutil.DecodeError:
+      ir = None
+  else:
+    ir = None
+
+  encoder.Encode(graph, ir=ir)
+  pbutil.ToFile(graph, graph_path)
 
 
 def _ProcessRows(job) -> Tuple[int, int, float]:
@@ -49,17 +64,12 @@ def _ProcessRows(job) -> Tuple[int, int, float]:
       continue
 
     encoded_count += 1
-    if ir_path.is_file():
-      try:
-        ir = pbutil.FromFile(ir_path, ir_pb2.Ir()).text
-      except pbutil.DecodeError:
-        ir = None
-
     try:
-      encoder.Encode(graph, ir=ir)
-      pbutil.ToFile(graph, graph_path)
+      Encode(encoder, graph, graph_path, ir_path)
     except AssertionError:
       # NCC codebase uses assertions to check for errors.
+      pass
+    except TimeoutError:
       pass
   return len(paths), encoded_count, time.time() - start_time
 

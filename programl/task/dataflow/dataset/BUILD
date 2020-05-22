@@ -86,6 +86,7 @@ py_binary(
     deps = [
         ":pathflag",
         "//labm8/py:app",
+        "//labm8/py:decorators",
         "//labm8/py:labtypes",
         "//labm8/py:pbutil",
         "//labm8/py:progress",
