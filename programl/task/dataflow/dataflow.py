@@ -20,6 +20,7 @@ import pathlib
 import time
 import warnings
 from typing import List
+from typing import Optional
 from typing import Tuple
 
 import numpy as np
@@ -129,6 +130,7 @@ def TrainDataflowGGNN(
         path,
         epoch_type=epoch_pb2.VAL,
         analysis=analysis,
+        min_graph_count=val_graph_count,
         max_graph_count=val_graph_count,
         data_flow_step_max=data_flow_step_max,
         logfile=open(log_dir / "graph_loader" / "val.txt", "w"),
@@ -159,6 +161,7 @@ def TrainDataflowGGNN(
           path,
           epoch_type=epoch_pb2.TRAIN,
           analysis=analysis,
+          min_graph_count=train_graph_count,
           max_graph_count=train_graph_count,
           data_flow_step_max=data_flow_step_max,
           logfile=open(
@@ -202,14 +205,12 @@ def TrainDataflowGGNN(
       ]
     )
     print(epoch, end="")
-    epoch_path = log_dir / "epochs" / f"{epoch_step:03d}.EpochList.pbtxt"
-    checkpoint_path = (
-      log_dir / "checkpoints" / f"{epoch_step:03d}.Checkpoint.pb"
-    )
-    pbutil.ToFile(epoch, epoch_path)
-    app.Log(1, "Wrote %s", epoch_path)
-    pbutil.ToFile(model.SaveCheckpoint(), checkpoint_path)
-    app.Log(1, "Wrote %s", checkpoint_path)
+    epoch_relpath = f"epochs/{epoch_step:03d}.EpochList.pbtxt"
+    checkpoint_relpath = f"checkpoints/{epoch_step:03d}.Checkpoint.pb"
+    pbutil.ToFile(epoch, log_dir / epoch_relpath)
+    app.Log(1, "Wrote %s", log_relpath / epoch_relpath)
+    pbutil.ToFile(model.SaveCheckpoint(), log_dir / checkpoint_relpath)
+    app.Log(1, "Wrote %s", log_relpath / checkpoint_relpath)
   return log_dir
 
 
