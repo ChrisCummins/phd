@@ -16,6 +16,7 @@
 """Base class for implementing classifier models."""
 import pickle
 from typing import Any
+from typing import Dict
 from typing import Iterable
 
 from labm8.py.progress import NullContext
@@ -60,8 +61,12 @@ class Model(object):
     model.RunBatches(...)
   """
 
-  def __init__(self, test_only: bool = False):
+  def __init__(
+    self, name: str, vocabulary: Dict[str, int], test_only: bool = False
+  ):
     self._initialized = False
+    self.name = name
+    self.vocabulary = vocabulary
     self.test_only = test_only
 
   def Initialize(self) -> None:

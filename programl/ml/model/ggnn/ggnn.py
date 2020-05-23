@@ -172,9 +172,12 @@ class Ggnn(Model):
     graph_x_dimensionality: int,
     use_selector_embeddings: bool,
     test_only: bool = False,
+    name: str = "ggnn",
   ):
     """Constructor."""
-    super(Ggnn, self).__init__(test_only=test_only)
+    super(Ggnn, self).__init__(
+      name=name, vocabulary=vocabulary, test_only=test_only
+    )
 
     # Graph attribute shapes.
     self.node_y_dimensionality = node_y_dimensionality
@@ -193,6 +196,7 @@ class Ggnn(Model):
       use_selector_embeddings=self.node_selector_dimensionality > 0,
       selector_embedding_value=FLAGS.selector_embedding_value,
       embedding_shape=(
+        # Add one to the vocabulary size to account for the out-of-vocab token.
         len(vocabulary) + 1,
         FLAGS.text_embedding_dimensionality,
       ),

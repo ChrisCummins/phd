@@ -19,10 +19,10 @@ This script reads ProGraML graphs and uses a GGNN to predict binary
 classification targets for data flow problems.
 """
 import pathlib
-from typing import Dict
 
 from labm8.py import app
-from programl.task.dataflow import dataflow
+from programl.task.dataflow import ggnn
+from programl.task.dataflow import vocabulary
 
 app.DEFINE_string(
   "path",
@@ -92,9 +92,10 @@ app.DEFINE_string(
   "Optionally specify a name for the run. This must be unique. If not "
   "provided, a run ID is generated using the current time.",
 )
-
 app.DEFINE_boolean("cprofile", False, "Whether to profile the run of the model.")
-
+app.DEFINE_input_path(
+  "model_to_test", None, "The working directory for writing logs", is_dir=True
+)
 FLAGS = app.FLAGS
 
 
@@ -128,32 +129,42 @@ def Main():
     import pstats
     p = pstats.Stats(profile)
     p.sort_stats('tottime').print_stats(50)
+    return
 
-  else: # not --cprofile
-    log_dir = dataflow.TrainDataflowGGNN(
-      path=pathlib.Path(FLAGS.path),
+  path = pathlib.Path(FLAGS.path)
+
+  vocab = vocabulary.LoadVocabulary(
+    path,
+    model_name="cdfg" if FLAGS.cdfg else "programl",
+    max_items=FLAGS.max_vocab_size,
+    target_cumfreq=FLAGS.target_vocab_cumfreq,
+  )
+
+  if FLAGS.model_to_test:
+    log_dir = FLAGS.model_to_test
+  else:
+    log_dir = ggnn.TrainDataflowGGNN(
+      path=path,
       analysis=FLAGS.analysis,
+      vocab=vocab,
       limit_max_data_flow_steps=FLAGS.limit_max_data_flow_steps,
       train_graph_counts=[int(x) for x in FLAGS.train_graph_counts],
       val_graph_count=FLAGS.val_graph_count,
       val_seed=FLAGS.val_seed,
       batch_size=FLAGS.batch_size,
       use_cdfg=FLAGS.cdfg,
-      max_vocab_size=FLAGS.max_vocab_size,
-      target_vocab_cumfreq=FLAGS.target_vocab_cumfreq,
       run_id=FLAGS.run_id,
     )
 
-    if FLAGS.test:
-      dataflow.TestDataflowGGNN(
-        path=pathlib.Path(FLAGS.path),
-        log_dir=log_dir,
-        analysis=FLAGS.analysis,
-        limit_max_data_flow_steps=FLAGS.limit_max_data_flow_steps,
-        batch_size=FLAGS.batch_size,
-        use_cdfg=FLAGS.cdfg,
-        max_vocab_size=FLAGS.max_vocab_size,
-        target_vocab_cumfreq=FLAGS.target_vocab_cumfreq,
+  if FLAGS.test:
+    ggnn.TestDataflowGGNN(
+      path=path,
+      log_dir=log_dir,
+      analysis=FLAGS.analysis,
+      vocab=vocab,
+      limit_max_data_flow_steps=FLAGS.limit_max_data_flow_steps,
+      batch_size=FLAGS.batch_size,
+      use_cdfg=FLAGS.cdfg,
     )
 
 

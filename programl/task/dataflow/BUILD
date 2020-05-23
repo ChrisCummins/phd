@@ -17,8 +17,8 @@
 # limitations under the License.
 
 py_library(
-    name = "batch_builder",
-    srcs = ["batch_builder.py"],
+    name = "ggnn_batch_builder",
+    srcs = ["ggnn_batch_builder.py"],
     visibility = ["//visibility:public"],
     deps = [
         "//labm8/py:app",
@@ -36,9 +36,8 @@ py_library(
     srcs = ["dataflow.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":batch_builder",
+        ":ggnn_batch_builder",
         ":graph_loader",
-        ":vocabulary",
         "//labm8/py:app",
         "//labm8/py:humanize",
         "//labm8/py:pbutil",
@@ -92,15 +91,7 @@ py_binary(
     srcs = ["train_ggnn.py"],
     deps = [
         ":dataflow",
-        "//labm8/py:app",
-    ],
-)
-
-py_binary(
-    name = "test_ggnn",
-    srcs = ["test_ggnn.py"],
-    deps = [
-        ":dataflow",
+        ":vocabulary",
         "//labm8/py:app",
     ],
 )

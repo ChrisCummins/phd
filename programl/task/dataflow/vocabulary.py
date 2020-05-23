@@ -23,15 +23,11 @@ from labm8.py import humanize
 
 def LoadVocabulary(
   dataset_root: pathlib.Path,
-  use_cdfg: bool,
+  model_name: str,
   max_items: int = 0,
   target_cumfreq: float = 1.0,
 ):
-  if use_cdfg:
-    vocab_csv = dataset_root / "vocab" / "cdfg.csv"
-  else:
-    vocab_csv = dataset_root / "vocab" / "programl.csv"
-
+  vocab_csv = dataset_root / "vocab" / f"{model_name}.csv"
   vocab = {}
   cumfreq = 0
   with open(vocab_csv) as f:
