@@ -54,8 +54,8 @@ py_test(
 )
 
 sh_test(
-    name = "llvm2graph",
-    srcs = ["llvm2graph.sh"],
+    name = "llvm2graph_benchmark",
+    srcs = ["llvm2graph_benchmark.sh"],
     data = [
         "//labm8/sh:app",
         "//programl/cmd:llvm2graph",
