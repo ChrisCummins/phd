@@ -34,6 +34,24 @@ py_test(
 )
 
 py_test(
+    name = "dataflow_lstm_benchmark",
+    srcs = ["dataflow_lstm_benchmark.py"],
+    deps = [
+        "//deeplearning/ncc:vocabulary",
+        "//labm8/py:app",
+        "//labm8/py:ppar",
+        "//labm8/py:prof",
+        "//programl/ml/model/lstm",
+        "//programl/proto:epoch_py",
+        "//programl/task/dataflow:graph_loader",
+        "//programl/task/dataflow:lstm_batch_builder",
+        "//programl/test/py/plugins:llvm_program_graph",
+        "//programl/test/py/plugins:llvm_reachability_features",
+        "//third_party/py/tqdm",
+    ],
+)
+
+py_test(
     name = "legacy_pipeline",
     srcs = ["legacy_pipeline.py"],
     data = [

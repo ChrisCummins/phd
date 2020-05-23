@@ -81,6 +81,42 @@ py_library(
     ],
 )
 
+py_library(
+    name = "lstm_batch_builder",
+    srcs = ["lstm_batch_builder.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//labm8/py:app",
+        "//programl/graph/format/py:graph_serializer",
+        "//programl/ml/batch:base_batch_builder",
+        "//programl/ml/batch:base_graph_loader",
+        "//programl/ml/batch:batch_data",
+        "//programl/ml/model/lstm:lstm_batch",
+        "//programl/proto:program_graph_features_py",
+        "//programl/proto:program_graph_py",
+        "//third_party/py/numpy",
+    ],
+)
+
+py_binary(
+    name = "ncc",
+    srcs = ["ncc.py"],
+    deps = [
+        ":dataflow",
+        ":graph_loader",
+        ":lstm_batch_builder",
+        "//deeplearning/ncc:vocabulary",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:pbutil",
+        "//labm8/py:ppar",
+        "//programl/ml/batch:async_batch_builder",
+        "//programl/ml/model/lstm",
+        "//programl/proto:epoch_py",
+        "//third_party/py/numpy",
+    ],
+)
+
 sh_binary(
     name = "overview",
     srcs = ["overview.sh"],

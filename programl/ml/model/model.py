@@ -75,7 +75,7 @@ class Model(object):
       raise TypeError("CreateModelData() called on already-initialized model")
 
     self._initialized = True
-    self.CreateModelData()
+    self.CreateModelData(test_only=self.test_only)
 
   def CreateModelData(self, test_only: bool) -> None:
     """Initialize the starting state of a model.
