@@ -13,15 +13,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This module defines data structures for mini-batches."""
-from typing import Any
-from typing import NamedTuple
+from labm8.py import bazelutil
 
-
-class BatchData(NamedTuple):
-  """Container for a mini-batch of data."""
-
-  # The number of graphs in the batch.
-  graph_count: int
-  # The model data for this batch.
-  model_data: Any
+# Directory containing ProgramGraphFeatures protocol messages for reachability
+# analysis.
+LLVM_REACHABILITY_FEATURES = bazelutil.DataPath(
+  "phd/programl/test/data/llvm_ir_reachability"
+)

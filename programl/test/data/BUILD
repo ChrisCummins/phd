@@ -2054,10 +2054,13 @@ genrule(
         "for f in $(locations :llvm_ir); do" +
         "    basename=$$(basename $$f); " +
         "    out=$(@D)/llvm_ir_graphs/$${basename%.ll}.ProgramGraph.pb;" +
-        "    $(location //programl/cmd:llvm2graph) < $$f > $$out --stdout_fmt=pb;" +
+        "    $(location //programl/cmd:llvm2graph) --stdout_fmt=pb <$$f | $(location //programl/cmd:inst2vec) --stdin_fmt=pb --stdout_fmt=pb >$$out;" +
         "done"
     ),
-    tools = ["//programl/cmd:llvm2graph"],
+    tools = [
+        "//programl/cmd:inst2vec",
+        "//programl/cmd:llvm2graph",
+    ],
 )
 
 genrule(

@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""TODO."""
+"""This module defines a helper class for building graph tuples."""
 import numpy as np
 
 from programl.graph.format.py.graph_tuple import GraphTuple
@@ -21,7 +21,25 @@ from programl.proto import program_graph_pb2
 
 
 class GraphTupleBuilder(object):
-  """TODO."""
+  """Helper class for constructing GraphTuples.
+
+  A graph tuple concatenates the adjacency and edge position lists of disjoint
+  program graphs into a single disconnected graph. This is useful for feeding
+  graphs as inputs into graph neural networks - by batching numerous graphs
+  together into a single input, a model can process multiple graphs in parallel,
+  providing enormous throughput improvements during training and inference.
+
+  In practice, batch construction is one of the more expensive parts of a
+  model's data ingestion pipeline, so some care should be taken to provide a
+  high-performance implementation of this class. Originally, I implemented
+  it in C++ and used pybind11 to generate python bindings, but I found that
+  the overhead of serializing the input graphs and copying the STL output
+  data structures to be slower than this implementation using python and numpy.
+  However, performance could still be improved.
+
+  Have a look in //programl/test/benchmarks for benchmarks of data ingestion
+  pipelines which use this class.
+  """
 
   def __init__(self):
     self.graph_size = 0

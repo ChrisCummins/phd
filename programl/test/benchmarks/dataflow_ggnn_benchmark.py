@@ -29,7 +29,7 @@ from labm8.py import ppar
 from labm8.py import prof
 from programl.ml.model.ggnn.ggnn import Ggnn
 from programl.proto import epoch_pb2
-from programl.task.dataflow.batch_builder import DataflowGgnnBatchBuilder
+from programl.task.dataflow.ggnn_batch_builder import DataflowGgnnBatchBuilder
 from programl.task.dataflow.graph_loader import DataflowGraphLoader
 from programl.test.py.plugins import llvm_program_graph
 from programl.test.py.plugins import llvm_reachability_features
@@ -108,7 +108,7 @@ def Main():
         pass
 
     Print("=== BENCHMARK 2: Batch construction ===")
-    batches = DataflowGgnnBatchBuilder(GraphLoader(path), Vocab())
+    batches = BatchBuilder(GraphLoader(path), Vocab())
     batches = ppar.ThreadedIterator(batches, max_queue_size=100)
     cached_batches = []
     with prof.Profile("Benchmark batch construction"):

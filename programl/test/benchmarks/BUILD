@@ -17,15 +17,15 @@
 # limitations under the License.
 
 py_test(
-    name = "dataflow_benchmark",
-    srcs = ["dataflow_benchmark.py"],
+    name = "dataflow_ggnn_benchmark",
+    srcs = ["dataflow_ggnn_benchmark.py"],
     deps = [
         "//labm8/py:app",
         "//labm8/py:ppar",
         "//labm8/py:prof",
         "//programl/ml/model/ggnn",
         "//programl/proto:epoch_py",
-        "//programl/task/dataflow:batch_builder",
+        "//programl/task/dataflow:ggnn_batch_builder",
         "//programl/task/dataflow:graph_loader",
         "//programl/test/py/plugins:llvm_program_graph",
         "//programl/test/py/plugins:llvm_reachability_features",
