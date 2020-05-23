@@ -28,7 +28,8 @@ namespace format {
 static const int ROOT_NODE = 0;
 
 void SerializeInstructionsInProgramGraph(const ProgramGraph& graph,
-                                         vector<int>* serialized) {
+                                         vector<int>* serialized,
+                                         int maxNodes) {
   // An array of function entries to visit, where each function entry is a node
   // that is the destination of an outgoing call edge from the root node.
   vector<int> function_entries_to_visit;
@@ -55,27 +56,27 @@ void SerializeInstructionsInProgramGraph(const ProgramGraph& graph,
   }
 
   for (const auto& function_entry : function_entries_to_visit) {
-    vector<int> serialized_function = SerializeInstructionsInProgramGraph(
-        function_entry, forward_control_edges);
-    serialized->insert(serialized->end(), serialized_function.begin(),
-                       serialized_function.end());
+    if (SerializeInstructionsInFunction(function_entry, forward_control_edges,
+                                        serialized, maxNodes)) {
+      return;
+    }
   }
 }
 
 void SerializeInstructionsInProgramGraph(const ProgramGraph& graph,
-                                         NodeIndexList* serialized) {
+                                         NodeIndexList* serialized,
+                                         int maxNodes) {
   vector<int> vec;
-  SerializeInstructionsInProgramGraph(graph, &vec);
+  SerializeInstructionsInProgramGraph(graph, &vec, maxNodes);
   for (const auto& v : vec) {
     serialized->add_node(v);
   }
 }
 
-vector<int> SerializeInstructionsInProgramGraph(
+bool SerializeInstructionsInFunction(
     const int& root,
-    const flat_hash_map<int, vector<int>>& forward_control_edges) {
-  vector<int> serialized;
-
+    const flat_hash_map<int, vector<int>>& forward_control_edges,
+    vector<int>* serialized, int maxNodes) {
   // A set of visited nodes.
   absl::flat_hash_set<int> visited;
   // A queue of nodes to visit.
@@ -89,7 +90,10 @@ vector<int> SerializeInstructionsInProgramGraph(
     visited.insert(node);
 
     // Emit the node in the serialized node list.
-    serialized.push_back(node);
+    serialized->push_back(node);
+    if (serialized->size() >= maxNodes) {
+      return true;
+    }
 
     // Add the unvisited outgoing control edges to the queue.
     const auto& outgoing_edges = forward_control_edges.find(node);
@@ -102,7 +106,7 @@ vector<int> SerializeInstructionsInProgramGraph(
     }
   }
 
-  return serialized;
+  return false;
 }
 
 }  // namespace format

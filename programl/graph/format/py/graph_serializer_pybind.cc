@@ -32,7 +32,7 @@ PYBIND11_MODULE(graph_serializer_pybind, m) {
   m.doc() = "Python bindings for serializing program graphs";
 
   m.def("_SerializeInstructionsInProgramGraph",
-        [&](const string& serializedProto) {
+        [&](const string& serializedProto, int maxNodes) {
           // De-serialize the input graph.
           ProgramGraph graph;
           if (!graph.ParseFromString(serializedProto)) {
@@ -40,7 +40,7 @@ PYBIND11_MODULE(graph_serializer_pybind, m) {
           }
 
           vector<int> nodeList;
-          SerializeInstructionsInProgramGraph(graph, &nodeList);
+          SerializeInstructionsInProgramGraph(graph, &nodeList, maxNodes);
 
           return nodeList;
         },

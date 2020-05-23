@@ -33,20 +33,22 @@ using std::vector;
 // Order is determined by a depth first traversal of the instructions in each
 // function.
 void SerializeInstructionsInProgramGraph(const ProgramGraph& graph,
-                                         vector<int>* serialized);
+                                         vector<int>* serialized, int maxNodes);
 
 // Produce a serialized list of node indices for the instructions in a graph.
 // Order is determined by a depth first traversal of the instructions in each
 // function.
 void SerializeInstructionsInProgramGraph(const ProgramGraph& graph,
-                                         NodeIndexList* serialized);
+                                         NodeIndexList* serialized,
+                                         int maxNodes);
 
 // Produce a serialized list of node indices for the instructions in a graph.
 // Order is determined by a depth first traversal of the instructions in each
 // function.
-vector<int> SerializeInstructionsInProgramGraph(
+bool SerializeInstructionsInFunction(
     const int& root,
-    const flat_hash_map<int, vector<int>>& forward_control_edges);
+    const flat_hash_map<int, vector<int>>& forward_control_edges,
+    vector<int>* serialized, int maxNodes);
 
 }  // namespace format
 }  // namespace graph

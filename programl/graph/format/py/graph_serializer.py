@@ -25,7 +25,7 @@ from programl.proto import program_graph_pb2
 
 
 def SerializeInstructionsInProgramGraph(
-  proto: program_graph_pb2.ProgramGraph,
+  proto: program_graph_pb2.ProgramGraph, max_nodes: int
 ) -> List[int]:
   """Convert a ProgramGraph message to a NetworkX graph.
 
@@ -39,5 +39,5 @@ def SerializeInstructionsInProgramGraph(
     ValueError: If the graph cannot be converted.
   """
   return graph_serializer_pybind._SerializeInstructionsInProgramGraph(
-    proto.SerializeToString()
+    proto.SerializeToString(), max_nodes
   )
