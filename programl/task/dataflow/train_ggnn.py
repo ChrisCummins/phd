@@ -86,6 +86,12 @@ app.DEFINE_float(
   "target_vocab_cumfreq", 1.0, "The target cumulative frequency that."
 )
 app.DEFINE_boolean("test", True, "Whether to test the model after training.")
+app.DEFINE_string(
+  "run_id",
+  None,
+  "Optionally specify a name for the run. This must be unique. If not "
+  "provided, a run ID is generated using the current time.",
+)
 FLAGS = app.FLAGS
 
 
@@ -102,6 +108,7 @@ def Main():
     use_cdfg=FLAGS.cdfg,
     max_vocab_size=FLAGS.max_vocab_size,
     target_vocab_cumfreq=FLAGS.target_vocab_cumfreq,
+    run_id=FLAGS.run_id,
   )
 
   if FLAGS.test:

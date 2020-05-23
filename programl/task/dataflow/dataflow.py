@@ -66,6 +66,7 @@ def TrainDataflowGGNN(
   use_cdfg: bool,
   max_vocab_size: int,
   target_vocab_cumfreq: float,
+  run_id: Optional[str] = None,
 ) -> pathlib.Path:
   if not path.is_dir():
     raise FileNotFoundError(path)
@@ -79,10 +80,15 @@ def TrainDataflowGGNN(
   warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
 
   # Create the logging directories.
-  uid = time.strftime("%y:%m:%dT%H:%M:%S")
+  run_id = run_id or time.strftime("%y:%m:%dT%H:%M:%S")
   model_name = "cdfg" if use_cdfg else "programl"
-  log_dir = path / "logs" / model_name / analysis / uid
-  app.Log(1, "Writing logs to %s", log_dir.absolute())
+  log_relpath = "logs" / model_name / analysis / run_id
+  log_dir = path / log_relpath
+  if log_dir.is_dir():
+    raise OSError(
+      f"Logs directory already exists. Refusing to overwrite: {log_dir}"
+    )
+  app.Log(1, "Writing logs to %s", log_relpath)
   log_dir.mkdir(parents=True)
   (log_dir / "epochs").mkdir()
   (log_dir / "checkpoints").mkdir()
