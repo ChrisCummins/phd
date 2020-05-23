@@ -36,6 +36,10 @@ class GgnnBatchData(NamedTuple):
   # This can be useful for debugging, but is not required by the model.
   graphs: Optional[List[program_graph_pb2.ProgramGraph]] = None
 
+  # Shape: (node_size, num_classes), dtype np.int32
   node_labels: Optional[np.array] = None
-  graph_features: Optional[np.array] = None
+  # Shape: (num_classes), dtype np.int32
   graph_labels: Optional[np.array] = None
+
+  # Graph-level feature vectors.
+  graph_features: Optional[np.array] = None

@@ -30,7 +30,7 @@ from programl.proto import program_graph_features_pb2
 from programl.proto import program_graph_pb2
 
 
-class GgnnModelBatchBuilder(BaseBatchBuilder):
+class DataflowGgnnBatchBuilder(BaseBatchBuilder):
   """The GGNN batch builder.
 
   Constructs a graph tuple per-batch.
@@ -43,7 +43,7 @@ class GgnnModelBatchBuilder(BaseBatchBuilder):
     max_node_size: int = 10000,
     max_batch_count: int = None,
   ):
-    super(GgnnModelBatchBuilder, self).__init__(graph_loader)
+    super(DataflowGgnnBatchBuilder, self).__init__(graph_loader)
     self.vocabulary = vocabulary
     self.max_node_size = max_node_size
     self.max_batch_count = max_batch_count
@@ -78,13 +78,19 @@ class GgnnModelBatchBuilder(BaseBatchBuilder):
 
   def _Build(self) -> BatchData:
     gt = self.builder.Build()
+
+    # Expand node indices to 1-hot.
+    indices = np.arange(len(self.node_labels))
+    node_labels_1hot = np.zeros((len(self.node_labels), 2), dtype=np.int32)
+    node_labels_1hot[indices, self.node_labels] = 1
+
     batch = BatchData(
       graph_count=gt.graph_size,
       model_data=GgnnBatchData(
         graph_tuple=gt,
         vocab_ids=np.array(self.vocab_ids, dtype=np.int32),
         selector_ids=np.array(self.selector_ids, dtype=np.int32),
-        node_labels=np.array(self.node_labels, dtype=np.int32),
+        node_labels=node_labels_1hot,
       ),
     )
     self._Reset()

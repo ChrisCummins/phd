@@ -32,10 +32,10 @@ from labm8.py import pbutil
 from labm8.py import ppar
 from programl.ml.batch.async_batch_builder import AsyncBatchBuilder
 from programl.ml.model.ggnn.ggnn import Ggnn
-from programl.ml.model.ggnn.ggnn_batch_builder import GgnnModelBatchBuilder
 from programl.proto import checkpoint_pb2
 from programl.proto import epoch_pb2
 from programl.task.dataflow import vocabulary
+from programl.task.dataflow.batch_builder import DataflowGgnnBatchBuilder
 from programl.task.dataflow.graph_loader import DataflowGraphLoader
 
 FLAGS = app.FLAGS
@@ -76,7 +76,7 @@ def TrainDataflowGGNN(
   # precesion / recall / F1 wrt only the positive class.
   FLAGS.batch_results_averaging_method = "binary"
   # NOTE(github.com/ChrisCummins/ProGraML/issues/13): F1 score computation
-  # warns that it iss undefined when there are missing instances from a class,
+  # warns that it is undefined when there are missing instances from a class,
   # which is fine for our usage.
   warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
 
@@ -125,7 +125,7 @@ def TrainDataflowGGNN(
 
   # Read val batches asynchronously
   val_batches = AsyncBatchBuilder(
-    batch_builder=GgnnModelBatchBuilder(
+    batch_builder=DataflowGgnnBatchBuilder(
       graph_loader=DataflowGraphLoader(
         path,
         epoch_type=epoch_pb2.VAL,
@@ -156,7 +156,7 @@ def TrainDataflowGGNN(
     start_time = time.time()
 
     train_batches = ppar.ThreadedIterator(
-      GgnnModelBatchBuilder(
+      DataflowGgnnBatchBuilder(
         DataflowGraphLoader(
           path,
           epoch_type=epoch_pb2.TRAIN,
@@ -228,7 +228,7 @@ def TestDataflowGGNN(
   # precesion / recall / F1 wrt only the positive class.
   FLAGS.batch_results_averaging_method = "binary"
   # NOTE(github.com/ChrisCummins/ProGraML/issues/13): F1 score computation
-  # warns that it iss undefined when there are missing instances from a class,
+  # warns that it is undefined when there are missing instances from a class,
   # which is fine for our usage.
   warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
 
@@ -273,7 +273,7 @@ def TestDataflowGGNN(
   else:
     data_flow_step_max = None
 
-  batches = GgnnModelBatchBuilder(
+  batches = DataflowGgnnBatchBuilder(
     graph_loader=DataflowGraphLoader(
       path,
       epoch_type=epoch_pb2.TEST,

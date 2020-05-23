@@ -46,8 +46,7 @@ app.DEFINE_string(
   "constant",
   "The unroll strategy to use. One of: "
   "{none, constant, edge_count, data_flow_max_steps, label_convergence} "
-  "constant: Unroll by a constant number of steps. The total number of steps is "
-  "defined in FLAGS.test_layer_timesteps",
+  "constant: Unroll by a constant number of steps.",
 )
 app.DEFINE_float(
   "unroll_convergence_threshold",
@@ -279,7 +278,7 @@ class Ggnn(Model):
 
   def PrepareModelInputs(
     self, epoch_type: epoch_pb2.EpochType, batch: BatchData
-  ) -> Tuple[np.array, Dict[str, torch.Tensor]]:
+  ) -> Dict[str, torch.Tensor]:
     """RunBatch() helper method to prepare inputs to model.
 
     Args:
@@ -287,7 +286,7 @@ class Ggnn(Model):
       batch: A batch of data to prepare inputs from:
 
     Returns:
-      A tuple of <expected outcomes, model inputs>.
+      A dictionary of model inputs.
     """
     del epoch_type
     batch_data: GgnnBatchData = batch.model_data
@@ -304,33 +303,20 @@ class Ggnn(Model):
     selector_ids = torch.from_numpy(batch_data.selector_ids).to(
       self.model.dev, torch.long
     )
-    # we need those as a result on cpu and can save device i/o
-    # Expand to 1-hot.
-    labels = batch_data.node_labels
-    labels_1hot = np.zeros((labels.size, 2))
-    labels_1hot[np.arange(labels.size), labels] = 1
 
-    if app.GetVerbosity() >= 5:
-      app.Log(
-        5,
-        "labels shape %s 1-hot shape %s, num true %s",
-        labels.shape,
-        labels_1hot.shape,
-        np.count_nonzero(labels),
-      )
-
-    cpu_labels = labels_1hot
-    labels = torch.from_numpy(cpu_labels).to(self.model.dev)
+    # TODO(github.com/ChrisCummins/ProGraML/issues/27): Consider performing
+    # 1-hot expansion of node labels on device to save on data transfer.
+    labels = torch.from_numpy(batch_data.node_labels).to(
+      self.model.dev, torch.long
+    )
     edge_lists = [
       torch.from_numpy(x).to(self.model.dev, torch.long)
       for x in graph_tuple.adjacencies
     ]
-
     edge_positions = [
       torch.from_numpy(x).to(self.model.dev, torch.long)
       for x in graph_tuple.edge_positions
     ]
-
     model_inputs = {
       "vocab_ids": vocab_ids,
       "selector_ids": selector_ids,
@@ -364,7 +350,7 @@ class Ggnn(Model):
     #     }
     #   )
 
-    return cpu_labels, model_inputs
+    return model_inputs
 
   def RunBatch(
     self,
@@ -382,7 +368,7 @@ class Ggnn(Model):
     Returns:
       A batch results instance.
     """
-    cpu_labels, model_inputs = self.PrepareModelInputs(epoch_type, batch)
+    model_inputs = self.PrepareModelInputs(epoch_type, batch)
     unroll_steps = np.array(
       GetUnrollSteps(epoch_type, batch, FLAGS.unroll_strategy), dtype=np.int64,
     )
@@ -400,15 +386,7 @@ class Ggnn(Model):
       with torch.no_grad():
         outputs = self.model(**model_inputs)
 
-    (
-      logits,
-      accuracy,
-      logits,
-      correct,
-      targets,
-      graph_features,
-      *unroll_stats,
-    ) = outputs
+    (targets, logits, graph_features, *unroll_stats,) = outputs
 
     loss = self.model.loss((logits, graph_features), targets)
 
@@ -430,7 +408,7 @@ class Ggnn(Model):
     iteration_count = unroll_stats[0] if unroll_stats else unroll_steps
 
     return BatchResults.Create(
-      targets=cpu_labels,
+      targets=batch.model_data.node_labels,
       predictions=logits.detach().cpu().numpy(),
       model_converged=model_converged,
       learning_rate=self.model.learning_rate,

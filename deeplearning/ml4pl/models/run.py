@@ -671,7 +671,7 @@ def Run(
   graph_db: graph_tuple_database.Database = graph_db or FLAGS.graph_db()
 
   # NOTE(github.com/ChrisCummins/ProGraML/issues/13): F1 score computation
-  # warns that it iss undefined when there are missing instances from a class,
+  # warns that it is undefined when there are missing instances from a class,
   # which is fine for our usage.
   warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
 

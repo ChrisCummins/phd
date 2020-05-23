@@ -17,9 +17,26 @@
 # limitations under the License.
 
 py_library(
+    name = "batch_builder",
+    srcs = ["batch_builder.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//labm8/py:app",
+        "//programl/graph/format/py:graph_tuple_builder",
+        "//programl/ml/batch:base_batch_builder",
+        "//programl/ml/batch:base_graph_loader",
+        "//programl/ml/batch:batch_data",
+        "//programl/ml/model/ggnn:ggnn_batch",
+        "//third_party/py/numpy",
+    ],
+)
+
+py_library(
     name = "dataflow",
     srcs = ["dataflow.py"],
+    visibility = ["//visibility:public"],
     deps = [
+        ":batch_builder",
         ":graph_loader",
         ":vocabulary",
         "//labm8/py:app",
@@ -28,7 +45,6 @@ py_library(
         "//labm8/py:ppar",
         "//programl/ml/batch:async_batch_builder",
         "//programl/ml/model/ggnn",
-        "//programl/ml/model/ggnn:ggnn_batch_builder",
         "//programl/proto:checkpoint_py",
         "//programl/proto:epoch_py",
         "//third_party/py/numpy",
@@ -53,6 +69,7 @@ py_binary(
 py_library(
     name = "graph_loader",
     srcs = ["graph_loader.py"],
+    visibility = ["//visibility:public"],
     deps = [
         "//labm8/py:app",
         "//labm8/py:humanize",
@@ -62,22 +79,6 @@ py_library(
         "//programl/proto:node_py",
         "//programl/proto:program_graph_features_py",
         "//programl/proto:program_graph_py",
-    ],
-)
-
-py_test(
-    name = "graph_loader_benchmark",
-    srcs = ["graph_loader_benchmark.py"],
-    deps = [
-        ":graph_loader",
-        "//labm8/py:app",
-        "//labm8/py:ppar",
-        "//labm8/py:prof",
-        "//programl/ml/model/ggnn:ggnn_batch_builder",
-        "//programl/proto:epoch_py",
-        "//programl/test/py/plugins:llvm_program_graph",
-        "//programl/test/py/plugins:llvm_reachability_features",
-        "//third_party/py/tqdm",
     ],
 )
 

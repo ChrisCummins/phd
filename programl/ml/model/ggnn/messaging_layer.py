@@ -100,8 +100,8 @@ class MessagingLayer(nn.Module):
       )
 
     for i, edge_list in enumerate(edge_lists):
-      edge_targets = edge_list[:, 1]
       edge_sources = edge_list[:, 0]
+      edge_targets = edge_list[:, 1]
 
       messages_by_source = F.embedding(
         edge_sources, propagated_states[i].transpose(0, 1)

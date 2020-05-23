@@ -51,24 +51,10 @@ py_library(
 py_library(
     name = "ggnn_batch",
     srcs = ["ggnn_batch.py"],
+    visibility = ["//visibility:public"],
     deps = [
         "//programl/graph/format/py:graph_tuple",
         "//programl/proto:program_graph_py",
-        "//third_party/py/numpy",
-    ],
-)
-
-py_library(
-    name = "ggnn_batch_builder",
-    srcs = ["ggnn_batch_builder.py"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":ggnn_batch",
-        "//labm8/py:app",
-        "//programl/graph/format/py:graph_tuple_builder",
-        "//programl/ml/batch:base_batch_builder",
-        "//programl/ml/batch:base_graph_loader",
-        "//programl/ml/batch:batch_data",
         "//third_party/py/numpy",
     ],
 )

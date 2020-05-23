@@ -104,11 +104,10 @@ class GGNNModel(nn.Module):
       logits, graphwise_readout = self.aux_readout(logits, aux_in)
 
     # accuracy, pred_targets, correct, targets
-    metrics_tuple = self.metrics(logits, labels)
+    # metrics_tuple = self.metrics(logits, labels)
+    targets = labels.argmax(dim=1)
 
-    outputs = (
-      (logits,) + metrics_tuple + (graphwise_readout,) + tuple(unroll_stats)
-    )
+    outputs = (targets, logits, graphwise_readout,) + tuple(unroll_stats)
 
     return outputs
 
