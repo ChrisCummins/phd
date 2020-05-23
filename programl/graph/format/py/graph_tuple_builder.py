@@ -35,6 +35,12 @@ class GraphTupleBuilder(graph_tuple_pybind.GraphTuple):
       edge_size=self.edge_size,
     )
     self.Clear()
+    if not graph_tuple.graph_size:
+      raise ValueError(f"Graph tuple contains no graphs: {graph_tuple}")
+    if not graph_tuple.node_size:
+      raise ValueError(f"Graph tuple contains no nodes: {graph_tuple}")
+    if not graph_tuple.edge_size:
+      raise ValueError(f"Graph tuple contains no edges: {graph_tuple}")
     return graph_tuple
 
   def AddProgramGraph(self, graph: program_graph_pb2.ProgramGraph) -> None:
