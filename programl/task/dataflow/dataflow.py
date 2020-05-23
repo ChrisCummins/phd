@@ -19,7 +19,6 @@ import json
 import pathlib
 import time
 import warnings
-from typing import Dict
 from typing import List
 from typing import Tuple
 
@@ -170,7 +169,8 @@ def TrainDataflowGGNN(
     train_results = model.RunBatches(
       epoch_pb2.TRAIN,
       train_batches,
-      f"Training to {humanize.Commas(train_graph_cumsum)} graphs",
+      log_prefix=f"Train to {humanize.Commas(train_graph_cumsum)} graphs",
+      total_graph_count=train_graph_count,
     )
 
     # During validation, wait for the batch builder to finish and then
@@ -179,7 +179,8 @@ def TrainDataflowGGNN(
     val_results = model.RunBatches(
       epoch_pb2.VAL,
       val_batches.batches,
-      f"Validation at {humanize.Commas(train_graph_cumsum)} graphs",
+      log_prefix=f"Val at {humanize.Commas(train_graph_cumsum)} graphs",
+      total_graph_count=val_graph_count,
     )
 
     # Write the epoch to file as an epoch list.
@@ -279,12 +280,13 @@ def TestDataflowGGNN(
   )
 
   start_time = time.time()
+  test_results = model.RunBatches(epoch_pb2.TEST, batches, log_prefix="Test")
   epoch = epoch_pb2.EpochList(
     epoch=[
       epoch_pb2.Epoch(
         walltime_seconds=time.time() - start_time,
         epoch_num=restored_epoch.epoch_num,
-        test_results=model.RunBatches(epoch_pb2.TEST, batches, "Test epoch"),
+        test_results=test_results,
       )
     ]
   )

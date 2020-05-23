@@ -87,9 +87,11 @@ class Model(object):
     self,
     epoch_type: epoch_pb2.EpochType,
     batches: Iterable[BatchData],
-    log_prefix: str,
+    **rolling_results_builder_opts,
   ) -> epoch_pb2.EpochResults:
-    with RollingResultsBuilder(log_prefix) as results_builder:
+    with RollingResultsBuilder(
+      **rolling_results_builder_opts
+    ) as results_builder:
       for i, batch_data in enumerate(batches):
         batch_results = self.RunBatch(epoch_type, batch_data)
         results_builder.AddBatch(batch_data, batch_results, weight=None)

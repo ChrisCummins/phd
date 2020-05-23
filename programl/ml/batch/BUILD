@@ -90,5 +90,6 @@ py_library(
         ":batch_data",
         ":batch_results",
         ":rolling_results",
+        "//third_party/py/tqdm",
     ],
 )
