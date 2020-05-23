@@ -74,13 +74,6 @@ app.DEFINE_float("learning_rate", 0.00025, "The initial learning rate.")
 app.DEFINE_float("lr_decay_rate", 0.95, "Learning rate decay; multiplicative factor for lr after every epoch.")
 app.DEFINE_float("clip_gradient_norm", 0.0, "Clip gradients to L-2 norm.")
 
-app.DEFINE_list(
-  "test_layer_timesteps",
-  ["0"],
-  "Set when unroll_strategy is 'constant'. Assumes that the length <= len(layer_timesteps)."
-  "Unrolls the GGNN proper for a fixed number of timesteps during eval().",
-)
-
 # Edge and message flags.
 app.DEFINE_boolean("use_backward_edges", True, "Add backward edges.")
 app.DEFINE_boolean("use_edge_bias", True, "")
