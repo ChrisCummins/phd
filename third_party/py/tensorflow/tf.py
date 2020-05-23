@@ -12,9 +12,7 @@ This wrapper is required to workaround a known bug with packaging Tensorflow
 as a pip dependency with bazel. See:
 github.com/bazelbuild/rules_python/issues/71
 """
-import importlib
 import pathlib
-import site
 import sys
 
 try:
@@ -42,9 +40,17 @@ except (ImportError, ModuleNotFoundError):
         # Restore python path.
         del sys.path[0]
 
+# Disable deprecation warnings on the glob import below.
+import tensorflow as tf
+
+tf.get_logger().setLevel("ERROR")
+
 # Import Tensorflow into this module's namespace. If the above import attempts
 # failed, this will raise an error.
 from tensorflow import *
+
+# Reset logging level now that we have imported everything.
+tf.get_logger().setLevel("INFO")
 
 # Spoof that we've imported the package generically.
 __file__ = tensorflow.__file__
