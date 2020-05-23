@@ -71,6 +71,7 @@ py_test(
     deps = [
         ":graph_loader",
         "//labm8/py:app",
+        "//labm8/py:ppar",
         "//labm8/py:prof",
         "//programl/ml/model/ggnn:ggnn_batch_builder",
         "//programl/proto:epoch_py",

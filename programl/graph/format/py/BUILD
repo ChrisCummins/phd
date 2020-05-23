@@ -66,7 +66,6 @@ py_library(
 py_library(
     name = "graph_tuple_builder",
     srcs = ["graph_tuple_builder.py"],
-    data = [":graph_tuple_pybind.so"],
     visibility = ["//visibility:public"],
     deps = [
         ":graph_tuple",

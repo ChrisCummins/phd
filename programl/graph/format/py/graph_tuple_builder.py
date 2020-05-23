@@ -16,13 +16,32 @@
 """TODO."""
 import numpy as np
 
-from programl.graph.format.py import graph_tuple_pybind
 from programl.graph.format.py.graph_tuple import GraphTuple
 from programl.proto import program_graph_pb2
 
 
-class GraphTupleBuilder(graph_tuple_pybind.GraphTuple):
+class GraphTupleBuilder(object):
   """TODO."""
+
+  def __init__(self):
+    self.graph_size = 0
+    self.node_size = 0
+    self.edge_size = 0
+    self.node_sizes = []
+    self.edge_sizes = []
+    self._adjacencies = [[], [], []]
+    self._edge_positions = [[], [], []]
+
+    self.Clear()
+
+  def Clear(self):
+    self.graph_size = 0
+    self.node_size = 0
+    self.edge_size = 0
+    self.node_sizes = []
+    self.edge_sizes = []
+    self._adjacencies = [[], [], []]
+    self._edge_positions = [[], [], []]
 
   def Build(self) -> GraphTuple:
     graph_tuple = GraphTuple(
@@ -44,26 +63,36 @@ class GraphTupleBuilder(graph_tuple_pybind.GraphTuple):
     return graph_tuple
 
   def AddProgramGraph(self, graph: program_graph_pb2.ProgramGraph) -> None:
-    self._AddProgramGraph(graph.SerializeToString())
+    for edge in graph.edge:
+      self._adjacencies[edge.flow].append(
+        (edge.source + self.node_size, edge.target + self.node_size)
+      )
+      self._edge_positions[edge.flow].append(edge.position)
+
+    # Update counters. We must do this after iterating over the edges since
+    # we use the current node size to calculate an offset.
+    self.graph_size += 1
+    self.node_size += len(graph.node)
+    self.edge_size += len(graph.edge)
+    self.node_sizes.append(len(graph.node))
+    self.edge_sizes.append(len(graph.edge))
 
   @property
   def adjacencies(self) -> np.array:
-    a = self._adjacencies
     return np.array(
       [
-        np.array(a[0], dtype=np.int32).reshape((-1, 2)),
-        np.array(a[1], dtype=np.int32).reshape((-1, 2)),
-        np.array(a[2], dtype=np.int32).reshape((-1, 2)),
+        np.array(self._adjacencies[0], dtype=np.int32).reshape((-1, 2)),
+        np.array(self._adjacencies[1], dtype=np.int32).reshape((-1, 2)),
+        np.array(self._adjacencies[2], dtype=np.int32).reshape((-1, 2)),
       ]
     )
 
   @property
   def edge_positions(self) -> np.array:
-    a = self._edge_positions
     return np.array(
       [
-        np.array(a[0], dtype=np.int32),
-        np.array(a[1], dtype=np.int32),
-        np.array(a[2], dtype=np.int32),
+        np.array(self._edge_positions[0], dtype=np.int32),
+        np.array(self._edge_positions[1], dtype=np.int32),
+        np.array(self._edge_positions[2], dtype=np.int32),
       ]
     )

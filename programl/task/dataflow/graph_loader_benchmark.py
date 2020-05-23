@@ -66,20 +66,21 @@ def Main():
       for _ in tqdm(graph_loader, unit=" graphs"):
         pass
 
-    batch_builder = GgnnModelBatchBuilder(
+    batches = GgnnModelBatchBuilder(
       graph_loader=DataflowGraphLoader(
         path=path,
         epoch_type=epoch_pb2.TRAIN,
         analysis="reachability",
         min_graph_count=FLAGS.graph_count,
         max_graph_count=FLAGS.graph_count,
+        logfile=open(path / "graph_reader_log.txt", "w"),
       ),
       vocabulary={"": 0},
       max_node_size=FLAGS.batch_size,
     )
-
+    batches = ppar.ThreadedIterator(batches, max_queue_size=100)
     with prof.Profile("Benchmark batch construction"):
-      for _ in tqdm(batch_builder, unit=" batches"):
+      for _ in tqdm(batches, unit=" batches"):
         pass
 
 

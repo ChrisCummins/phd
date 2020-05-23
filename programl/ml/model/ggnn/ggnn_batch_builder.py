@@ -93,38 +93,42 @@ class GgnnModelBatchBuilder(BaseBatchBuilder):
   def __iter__(self) -> Iterable[BatchData]:
     node_size = 0
     for item in self.graph_loader:
+
       if self.use_node_list:
         graph, features, node_list = item
       else:
         graph, features = item
-        node_list = range(len(graph.node))
+        node_list = list(range(len(graph.node)))
 
       if node_size + len(graph.node) > self.max_node_size:
         yield self._Build()
+        node_size = 0
         self.batch_count += 1
         if self.max_batch_count and self.batch_count >= self.max_batch_count:
           app.Log(2, "Stopping after producing %d batches", self.batch_count)
           # Signal to the graph reader that we do not require any more graphs.
           self.graph_loader.Stop()
           return
+
       self.builder.AddProgramGraph(graph)
-      self.vocab_ids += [
-        self.vocabulary.get(node.text, len(self.vocabulary))
-        for node in graph.node
-      ]
 
       # Read the graph node features.
-      for n in node_list:
-        self.selector_ids.append(
-          features.node_features.feature_list["data_flow_root_node"]
-          .feature[n]
-          .int64_list.value[0]
-        )
-        self.node_labels.append(
-          features.node_features.feature_list["data_flow_value"]
-          .feature[n]
-          .int64_list.value[0]
-        )
+      self.vocab_ids += [
+        self.vocabulary.get(graph.node[n].text, len(self.vocabulary))
+        for n in node_list
+      ]
+      self.selector_ids += [
+        features.node_features.feature_list["data_flow_root_node"]
+        .feature[n]
+        .int64_list.value[0]
+        for n in node_list
+      ]
+      self.node_labels += [
+        features.node_features.feature_list["data_flow_value"]
+        .feature[n]
+        .int64_list.value[0]
+        for n in node_list
+      ]
 
       node_size += len(graph.node)
 
