@@ -83,13 +83,13 @@ def TrainDataflowGGNN(
   # Create the logging directories.
   run_id = run_id or time.strftime("%y:%m:%dT%H:%M:%S")
   model_name = "cdfg" if use_cdfg else "programl"
-  log_relpath = "logs" / model_name / analysis / run_id
+  log_relpath = f"logs/{model_name}/{analysis}/{run_id}"
   log_dir = path / log_relpath
   if log_dir.is_dir():
     raise OSError(
       f"Logs directory already exists. Refusing to overwrite: {log_dir}"
     )
-  app.Log(1, "Writing logs to %s", log_relpath)
+  app.Log(1, "Writing logs to %s", log_dir)
   log_dir.mkdir(parents=True)
   (log_dir / "epochs").mkdir()
   (log_dir / "checkpoints").mkdir()
@@ -208,9 +208,9 @@ def TrainDataflowGGNN(
     epoch_relpath = f"epochs/{epoch_step:03d}.EpochList.pbtxt"
     checkpoint_relpath = f"checkpoints/{epoch_step:03d}.Checkpoint.pb"
     pbutil.ToFile(epoch, log_dir / epoch_relpath)
-    app.Log(1, "Wrote %s", log_relpath / epoch_relpath)
+    app.Log(1, "Wrote %s/%s", log_relpath, epoch_relpath)
     pbutil.ToFile(model.SaveCheckpoint(), log_dir / checkpoint_relpath)
-    app.Log(1, "Wrote %s", log_relpath / checkpoint_relpath)
+    app.Log(1, "Wrote %s/%s", log_relpath, checkpoint_relpath)
   return log_dir
 
 
