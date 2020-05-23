@@ -108,7 +108,10 @@ app.DEFINE_boolean(
   "False may be a good default for small datasets.",
 )
 app.DEFINE_float(
-  "selector_embedding_value", 50, "",
+  "selector_embedding_value",
+  50,
+  "The value used for the positive class in the 1-hot selector embedding "
+  "vectors. Has no effect when selector embeddings are not used.",
 )
 # Loss.
 app.DEFINE_float(

@@ -39,6 +39,7 @@ class GraphTuple {
 
   Status AddProgramGraph(const ProgramGraph& graph);
 
+  // Remove all elements from the graph tuple.
   void Clear();
 
   const array<vector<pair<int, int>>, 3>& adjacencies() const {
@@ -70,12 +71,15 @@ class GraphTuple {
   array<vector<pair<int, int>>, 3>* mutable_adjacencies() {
     return &adjacencies_;
   }
+
   array<vector<int>, 3>* mutable_edge_positions() { return &edge_positions_; }
 
   inline void set_node_size(size_t node_size) { node_size_ = node_size; }
+
   inline void add_node_size(size_t node_size) {
     node_sizes_.push_back(node_size);
   }
+
   inline void add_edge_size(size_t edge_size) {
     edge_sizes_.push_back(edge_size);
   }
