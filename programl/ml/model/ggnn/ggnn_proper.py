@@ -49,6 +49,7 @@ class GGNNProper(nn.Module):
     self.use_backward_edges = use_backward_edges
     self.layer_timesteps = layer_timesteps
     self.position_embeddings = use_position_embeddings
+    self.msg_mean_aggregation = msg_mean_aggregation
 
     # optional eval time unrolling parameter
     self.unroll_strategy = unroll_strategy
@@ -78,7 +79,6 @@ class GGNNProper(nn.Module):
           use_backward_edges=use_backward_edges,
           use_position_embeddings=use_position_embeddings,
           use_edge_bias=use_edge_bias,
-          msg_mean_aggregation=msg_mean_aggregation,
           edge_weight_dropout=edge_weight_dropout,
         )
       )
@@ -125,9 +125,29 @@ class GGNNProper(nn.Module):
       )
       return node_states, old_node_states, unroll_steps, converged
 
+    # Compute incoming message divisor.
+    if self.msg_mean_aggregation:
+      bincount = torch.zeros(
+        node_states.size()[0], dtype=torch.long, device=node_states.device
+      )
+      for edge_list in edge_lists:
+        edge_targets = edge_list[:, 1]
+        edge_bincount = edge_targets.bincount(minlength=node_states.size()[0])
+        bincount += edge_bincount
+      msg_mean_divisor = bincount.float()
+      # Avoid division by zero for lonely nodes.
+      msg_mean_divisor[msg_mean_divisor == 0] = 1.0
+    else:
+      msg_mean_divisor = None
+
     for (layer_idx, num_timesteps) in enumerate(self.layer_timesteps):
       for t in range(num_timesteps):
-        messages = self.message[layer_idx](edge_lists, node_states, pos_lists)
+        messages = self.message[layer_idx](
+          edge_lists,
+          node_states,
+          msg_mean_divisor=msg_mean_divisor,
+          pos_lists=pos_lists,
+        )
         node_states = self.update[layer_idx](messages, node_states, node_types)
 
     return node_states, old_node_states

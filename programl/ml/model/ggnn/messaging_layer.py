@@ -21,8 +21,6 @@ from torch import nn
 from programl.ml.model.ggnn.linear_net import LinearNet
 from programl.ml.model.ggnn.position_embeddings import PositionEmbeddings
 
-SMALL_NUMBER = 1e-8
-
 
 class MessagingLayer(nn.Module):
   """takes an edge_list (for a single edge type) and node_states <N, D+S> and
@@ -75,10 +73,11 @@ class MessagingLayer(nn.Module):
         dropout=edge_weight_dropout,
       )
 
-  def forward(self, edge_lists, node_states, pos_lists=None):
+  def forward(
+    self, edge_lists, node_states, msg_mean_divisor=None, pos_lists=None
+  ):
     """edge_lists: [<M_i, 2>, ...]"""
     # Conditionally set variables:
-    bincount = None
     pos_gating = None
 
     if self.pos_transform:
@@ -93,11 +92,6 @@ class MessagingLayer(nn.Module):
     )
 
     messages_by_targets = torch.zeros_like(node_states)
-    if self.msg_mean_aggregation:
-      device = node_states.device
-      bincount = torch.zeros(
-        node_states.size()[0], dtype=torch.long, device=device
-      )
 
     for i, edge_list in enumerate(edge_lists):
       edge_sources = edge_list[:, 0]
@@ -114,12 +108,6 @@ class MessagingLayer(nn.Module):
 
       messages_by_targets.index_add_(0, edge_targets, messages_by_source)
 
-      if self.msg_mean_aggregation:
-        bins = edge_targets.bincount(minlength=node_states.size()[0])
-        bincount += bins
-
-    if self.msg_mean_aggregation:
-      divisor = bincount.float()
-      divisor[bincount == 0] = 1.0  # avoid div by zero for lonely nodes
-      messages_by_targets /= divisor.unsqueeze_(1) + SMALL_NUMBER
+    if msg_mean_divisor:
+      messages_by_targets /= msg_mean_divisor.unsqueeze_(1)
     return messages_by_targets
