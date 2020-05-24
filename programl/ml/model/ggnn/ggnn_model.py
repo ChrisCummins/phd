@@ -74,7 +74,7 @@ class GGNNModel(nn.Module):
     if self.schedule is None:
       return 0.0
     else:
-      return self.schedule.get_lr()[1]
+      return self.schedule.get_lr()[0]
 
   def GetOptimizer(self, learning_rate: float):
     return optim.AdamW(self.parameters(), lr=learning_rate)

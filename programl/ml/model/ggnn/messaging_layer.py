@@ -34,7 +34,6 @@ class MessagingLayer(nn.Module):
     use_backward_edges: bool,
     use_position_embeddings: bool,
     use_edge_bias: bool,
-    msg_mean_aggregation: bool,
     edge_weight_dropout: float,
   ):
     super().__init__()
@@ -43,7 +42,6 @@ class MessagingLayer(nn.Module):
       if use_backward_edges
       else forward_edge_type_count
     )
-    self.msg_mean_aggregation = msg_mean_aggregation
     self.dimensionality = (
       text_embedding_dimensionality + selector_embedding_dimensionality
     )

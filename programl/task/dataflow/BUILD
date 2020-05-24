@@ -17,6 +17,25 @@
 # limitations under the License.
 
 py_library(
+    name = "ggnn",
+    srcs = ["ggnn.py"],
+    deps = [
+        ":dataflow",
+        ":ggnn_batch_builder",
+        ":graph_loader",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:pbutil",
+        "//labm8/py:ppar",
+        "//programl/ml/batch:async_batch_builder",
+        "//programl/ml/model/ggnn",
+        "//programl/proto:checkpoint_py",
+        "//programl/proto:epoch_py",
+        "//third_party/py/numpy",
+    ],
+)
+
+py_library(
     name = "ggnn_batch_builder",
     srcs = ["ggnn_batch_builder.py"],
     visibility = ["//visibility:public"],
@@ -36,7 +55,6 @@ py_library(
     srcs = ["dataflow.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":ggnn_batch_builder",
         ":graph_loader",
         "//labm8/py:app",
         "//labm8/py:humanize",
@@ -127,6 +145,7 @@ py_binary(
     srcs = ["train_ggnn.py"],
     deps = [
         ":dataflow",
+        ":ggnn",
         ":vocabulary",
         "//labm8/py:app",
     ],
