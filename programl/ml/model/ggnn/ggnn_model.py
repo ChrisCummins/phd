@@ -38,6 +38,7 @@ class GGNNModel(nn.Module):
     has_graph_labels: bool,
     test_only: bool,
     learning_rate: float,
+    lr_decay_rate: float,
   ):
     super().__init__()
 
@@ -57,8 +58,6 @@ class GGNNModel(nn.Module):
     )
     self.to(self.dev)
 
-    self.learning_rate = learning_rate
-
     # Not instantiating the optimizer should save 2 x #model_params of GPU
     # memory, bc. Adam carries two momentum params per trainable model
     # parameter.
@@ -67,9 +66,22 @@ class GGNNModel(nn.Module):
       self.eval()
     else:
       self.opt = self.GetOptimizer(learning_rate)
+      self.schedule = self.GetLRSchedule(self.opt, lr_decay_rate)
+
+  @property
+  def learning_rate(self):
+    if self.schedule:
+      return self.schedule.get_lr()
+    else:
+      return 0.0
 
   def GetOptimizer(self, learning_rate: float):
     return optim.AdamW(self.parameters(), lr=learning_rate)
+  
+  def GetLRSchedule(self, optimizer, gamma):
+    """Exponential decay LR schedule. at each schedule.step(), the LR is
+    multiplied by gamma."""
+    return optim.lr_scheduler.ExponentialLR(optimizer, gamma, last_epoch=-1)
 
   def forward(
     self,

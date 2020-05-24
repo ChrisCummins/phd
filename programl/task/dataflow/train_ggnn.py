@@ -92,12 +92,22 @@ app.DEFINE_string(
   "Optionally specify a name for the run. This must be unique. If not "
   "provided, a run ID is generated using the current time.",
 )
+
+app.DEFINE_boolean("cprofile", False, "Whether to profile the run of the model.")
+
 FLAGS = app.FLAGS
 
 
 def Main():
   """Main entry point."""
-  log_dir = dataflow.TrainDataflowGGNN(
+  
+  if FLAGS.cprofile: 
+    assert not FLAGS.test, "don't run --test when you --cprofile the code."
+    import cProfile
+    profile = cProfile.Profile()
+    #profile.runctx("sleeep()", globals(), locals())
+    
+    profstr = """log_dir = dataflow.TrainDataflowGGNN(
     path=pathlib.Path(FLAGS.path),
     analysis=FLAGS.analysis,
     limit_max_data_flow_steps=FLAGS.limit_max_data_flow_steps,
@@ -109,18 +119,41 @@ def Main():
     max_vocab_size=FLAGS.max_vocab_size,
     target_vocab_cumfreq=FLAGS.target_vocab_cumfreq,
     run_id=FLAGS.run_id,
-  )
+  )"""
+    
+    profile.runctx(profstr, globals(), locals())
+    profile.dump_stats('/home/zacharias/profiling/out.profile')
 
-  if FLAGS.test:
-    dataflow.TestDataflowGGNN(
+    print("printing results")
+    import pstats
+    p = pstats.Stats(profile)
+    p.sort_stats('tottime').print_stats(50)
+
+  else: # not --cprofile
+    log_dir = dataflow.TrainDataflowGGNN(
       path=pathlib.Path(FLAGS.path),
-      log_dir=log_dir,
       analysis=FLAGS.analysis,
       limit_max_data_flow_steps=FLAGS.limit_max_data_flow_steps,
+      train_graph_counts=[int(x) for x in FLAGS.train_graph_counts],
+      val_graph_count=FLAGS.val_graph_count,
+      val_seed=FLAGS.val_seed,
       batch_size=FLAGS.batch_size,
       use_cdfg=FLAGS.cdfg,
       max_vocab_size=FLAGS.max_vocab_size,
       target_vocab_cumfreq=FLAGS.target_vocab_cumfreq,
+      run_id=FLAGS.run_id,
+    )
+
+    if FLAGS.test:
+      dataflow.TestDataflowGGNN(
+        path=pathlib.Path(FLAGS.path),
+        log_dir=log_dir,
+        analysis=FLAGS.analysis,
+        limit_max_data_flow_steps=FLAGS.limit_max_data_flow_steps,
+        batch_size=FLAGS.batch_size,
+        use_cdfg=FLAGS.cdfg,
+        max_vocab_size=FLAGS.max_vocab_size,
+        target_vocab_cumfreq=FLAGS.target_vocab_cumfreq,
     )
 
 
