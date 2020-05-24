@@ -64,20 +64,21 @@ class GGNNModel(nn.Module):
     if test_only:
       self.opt = None
       self.eval()
+      self.schedule = None
     else:
       self.opt = self.GetOptimizer(learning_rate)
       self.schedule = self.GetLRSchedule(self.opt, lr_decay_rate)
 
   @property
-  def learning_rate(self):
-    if self.schedule:
-      return self.schedule.get_lr()
-    else:
+  def learning_rate(self) -> float:
+    if self.schedule is None:
       return 0.0
+    else:
+      return self.schedule.get_lr()[1]
 
   def GetOptimizer(self, learning_rate: float):
     return optim.AdamW(self.parameters(), lr=learning_rate)
-  
+
   def GetLRSchedule(self, optimizer, gamma):
     """Exponential decay LR schedule. at each schedule.step(), the LR is
     multiplied by gamma."""

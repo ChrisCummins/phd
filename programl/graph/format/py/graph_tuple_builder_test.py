@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //program/graph/format/py:graph_tuple."""
-import pickle
-
 import numpy as np
 
 from labm8.py import test
@@ -30,9 +28,9 @@ FLAGS = test.FLAGS
 def test_GraphTuple_empty_shapes():
   """Build from an empty proto."""
   builder = GraphTupleBuilder()
-  gt = builder.Build()
-  assert gt.adjacencies.shape == (3, 0)
-  assert gt.edge_positions.shape == (3, 0)
+  with test.Raises(ValueError) as e_ctx:
+    gt = builder.Build()
+  assert "contains no graphs" in str(e_ctx.value)
 
 
 def test_GraphTuple_one_graph():
@@ -50,7 +48,9 @@ def test_GraphTuple_one_graph():
   gt = builder.Build()
 
   assert np.array_equal(gt.adjacencies[edge_pb2.Edge.CONTROL], [(0, 1), (0, 2)])
-  assert np.array_equal(gt.adjacencies[edge_pb2.Edge.DATA], [])
+  assert np.array_equal(
+    gt.adjacencies[edge_pb2.Edge.DATA], np.zeros((0, 2), dtype=np.int32)
+  )
   assert np.array_equal(gt.adjacencies[edge_pb2.Edge.CALL], [(1, 0)])
 
   assert np.array_equal(gt.edge_positions[edge_pb2.Edge.CONTROL], [0, 1])

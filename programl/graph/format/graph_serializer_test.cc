@@ -30,7 +30,7 @@ TEST(SerializeInstructionsInProgramGraph, EmptyGraph) {
   ProgramGraph graph;
 
   vector<int> serialized;
-  SerializeInstructionsInProgramGraph(graph, &serialized);
+  SerializeInstructionsInProgramGraph(graph, &serialized, /*nodeMax=*/1000);
   ASSERT_EQ(0, serialized.size());
 }
 
@@ -40,7 +40,7 @@ TEST(SerializeInstructionsInProgramGraph, RootNodeOnly) {
   root->set_type(Node::INSTRUCTION);
 
   vector<int> serialized;
-  SerializeInstructionsInProgramGraph(graph, &serialized);
+  SerializeInstructionsInProgramGraph(graph, &serialized, /*nodeMax=*/1000);
   ASSERT_EQ(0, serialized.size());
 }
 
@@ -57,7 +57,7 @@ TEST(SerializeInstructionsInProgramGraph, SingleFunction) {
   root_to_a->set_target(1);
 
   vector<int> serialized;
-  SerializeInstructionsInProgramGraph(graph, &serialized);
+  SerializeInstructionsInProgramGraph(graph, &serialized, /*nodeMax=*/1000);
   ASSERT_EQ(1, serialized.size());
   ASSERT_EQ(1, serialized[0]);
 }
@@ -85,7 +85,7 @@ TEST(SerializeInstructionsInProgramGraph, SingleFunctionWithLoop) {
   b_to_a->set_target(1);
 
   vector<int> serialized;
-  SerializeInstructionsInProgramGraph(graph, &serialized);
+  SerializeInstructionsInProgramGraph(graph, &serialized, /*nodeMax=*/1000);
   ASSERT_EQ(2, serialized.size());
   ASSERT_EQ(1, serialized[0]);
   ASSERT_EQ(2, serialized[1]);

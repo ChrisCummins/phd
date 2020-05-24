@@ -49,8 +49,8 @@ int main(int argc, char** argv) {
   }
 
   programl::NodeIndexList serialized;
-  programl::graph::format::SerializeInstructionsInProgramGraph(graph,
-                                                               &serialized);
+  programl::graph::format::SerializeInstructionsInProgramGraph(
+      graph, &serialized, /*maxNodes=*/1000000);
   std::cout << serialized.DebugString();
 
   return 0;

@@ -26,7 +26,9 @@ FLAGS = test.FLAGS
 
 def test_SerializeInstructionsInProgramGraph_empty_graph():
   proto = program_graph_pb2.ProgramGraph()
-  n = graph_serializer.SerializeInstructionsInProgramGraph(proto)
+  n = graph_serializer.SerializeInstructionsInProgramGraph(
+    proto, max_nodes=1000
+  )
   assert n == []
 
 
@@ -34,7 +36,9 @@ def test_SerializeInstructionsInProgramGraph_root_node_only():
   proto = program_graph_pb2.ProgramGraph(
     node=[node_pb2.Node(type=node_pb2.Node.INSTRUCTION),]
   )
-  n = graph_serializer.SerializeInstructionsInProgramGraph(proto)
+  n = graph_serializer.SerializeInstructionsInProgramGraph(
+    proto, max_nodes=1000
+  )
   assert n == []
 
 
@@ -50,7 +54,9 @@ def test_SerializeInstructionsInProgramGraph_single_function():
       edge_pb2.Edge(flow=edge_pb2.Edge.CONTROL, source=1, target=2),
     ],
   )
-  n = graph_serializer.SerializeInstructionsInProgramGraph(proto)
+  n = graph_serializer.SerializeInstructionsInProgramGraph(
+    proto, max_nodes=1000
+  )
   assert n == [1, 2]
 
 
