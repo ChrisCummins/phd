@@ -35,6 +35,7 @@ class MessagingLayer(nn.Module):
     use_position_embeddings: bool,
     use_edge_bias: bool,
     edge_weight_dropout: float,
+    edge_position_max: int = 4096,
   ):
     super().__init__()
     self.forward_and_backward_edge_type_count = (
@@ -42,8 +43,11 @@ class MessagingLayer(nn.Module):
       if use_backward_edges
       else forward_edge_type_count
     )
+    self.text_embedding_dimensionality = text_embedding_dimensionality
+    self.selector_embedding_dimensionality = selector_embedding_dimensionality
     self.dimensionality = (
-      text_embedding_dimensionality + selector_embedding_dimensionality
+      self.text_embedding_dimensionality
+      + self.selector_embedding_dimensionality
     )
 
     self.transform = LinearNet(
@@ -58,7 +62,7 @@ class MessagingLayer(nn.Module):
       self.register_buffer(
         "position_embs",
         PositionEmbeddings()(
-          torch.arange(512, dtype=torch.get_default_dtype()),
+          torch.arange(edge_position_max, dtype=torch.get_default_dtype()),
           demb=text_embedding_dimensionality,
           # Padding to exclude selector embeddings from positional offset.
           dpad=selector_embedding_dimensionality,

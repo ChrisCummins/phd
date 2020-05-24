@@ -43,6 +43,7 @@ class GGNNProper(nn.Module):
     unroll_convergence_steps: int,
     graph_state_dropout: float,
     edge_weight_dropout: float,
+    edge_position_max: int = 4096,
   ):
     super().__init__()
     self.readout = readout
@@ -50,6 +51,7 @@ class GGNNProper(nn.Module):
     self.layer_timesteps = layer_timesteps
     self.position_embeddings = use_position_embeddings
     self.msg_mean_aggregation = msg_mean_aggregation
+    self.edge_position_max = edge_position_max
 
     # optional eval time unrolling parameter
     self.unroll_strategy = unroll_strategy
@@ -80,6 +82,7 @@ class GGNNProper(nn.Module):
           use_position_embeddings=use_position_embeddings,
           use_edge_bias=use_edge_bias,
           edge_weight_dropout=edge_weight_dropout,
+          edge_position_max=edge_position_max,
         )
       )
 
@@ -139,6 +142,10 @@ class GGNNProper(nn.Module):
       msg_mean_divisor[msg_mean_divisor == 0] = 1.0
     else:
       msg_mean_divisor = None
+
+    if pos_lists:
+      for pos_list in pos_lists:
+        assert pos_list.max() < self.edge_position_max
 
     for (layer_idx, num_timesteps) in enumerate(self.layer_timesteps):
       for t in range(num_timesteps):
