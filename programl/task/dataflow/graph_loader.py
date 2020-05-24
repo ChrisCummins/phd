@@ -160,12 +160,11 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
         if self.seed:
           # If we are setting a reproducible seed, first sort the list of files
           # since iterdir() order is undefined, then seed the RNG for the shuffle.
-          files = sorted(files)
-          random.seed(self.seed)
+          files = sorted(files, key=lambda x: x.name)
           # Change the seed so that on the next execution of this loop we will
           # chose a different random ordering.
           self.seed += 1
-        random.shuffle(files)
+        random.Random(self.seed).shuffle(files)
 
         for path in files:
           try:
