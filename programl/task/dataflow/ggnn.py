@@ -134,7 +134,7 @@ def TrainDataflowGGNN(
     train_results = model.RunBatches(
       epoch_pb2.TRAIN,
       train_batches,
-      log_prefix=f"Train to {humanize.Commas(train_graph_cumsum)} graphs",
+      log_prefix=f"Train to {humanize.DecimalPrefix(train_graph_cumsum, '')} graphs",
       total_graph_count=train_graph_count,
     )
 
@@ -144,7 +144,7 @@ def TrainDataflowGGNN(
     val_results = model.RunBatches(
       epoch_pb2.VAL,
       val_batches.batches,
-      log_prefix=f"Val at {humanize.Commas(train_graph_cumsum)} graphs",
+      log_prefix=f"Val at {humanize.DecimalPrefix(train_graph_cumsum, '')} graphs",
       total_graph_count=val_graph_count,
     )
 
