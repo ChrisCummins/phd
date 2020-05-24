@@ -112,7 +112,7 @@ class PerformanceMonitor(threading.Thread):
       "observation_frequency_sec": self.observation_frequency,
     }
     for _ in GPUtil.getGPUs():
-      self.stats["gpus"].append({})
+      self.stats.get("gpus", []).append({})
     self.prev_disk_counters = psutil.disk_io_counters(perdisk=False)
     self.prev_net_counters = psutil.net_io_counters(pernic=False)
     self.last_record_time = time.time()
