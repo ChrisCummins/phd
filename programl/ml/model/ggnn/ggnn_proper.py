@@ -143,9 +143,11 @@ class GGNNProper(nn.Module):
     else:
       msg_mean_divisor = None
 
+    # Clamp the position lists in the range [0,edge_position_max) to match
+    # the pre-computed position embeddings table.
     if pos_lists:
       for pos_list in pos_lists:
-        pos_list.clamp_(0, self.edge_position_max)
+        pos_list.clamp_(0, self.edge_position_max - 1)
 
     for (layer_idx, num_timesteps) in enumerate(self.layer_timesteps):
       for t in range(num_timesteps):
