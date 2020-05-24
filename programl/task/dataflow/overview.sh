@@ -42,10 +42,10 @@ main() {
   set -u
 
   echo "=========================="
-  echo "#. runs: " $(find logs -mindepth 3 -maxdepth 3 -type d | wc -l)
+  echo "#. runs: " $(find -L logs -mindepth 3 -maxdepth 3 -type d | wc -l)
   echo
   echo "Epochs: "
-  for run in $(find logs -mindepth 3 -maxdepth 3 -type d | sort); do
+  for run in $(find -L logs -mindepth 3 -maxdepth 3 -type d | sort); do
     echo "    $(find $run/epochs -type f | wc -l) $run"
   done
 
