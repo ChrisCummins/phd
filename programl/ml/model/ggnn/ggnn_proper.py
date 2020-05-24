@@ -43,7 +43,7 @@ class GGNNProper(nn.Module):
     unroll_convergence_steps: int,
     graph_state_dropout: float,
     edge_weight_dropout: float,
-    edge_position_max: int = 4096,
+    edge_position_max: int = 1024,
   ):
     super().__init__()
     self.readout = readout
@@ -137,15 +137,15 @@ class GGNNProper(nn.Module):
         edge_targets = edge_list[:, 1]
         edge_bincount = edge_targets.bincount(minlength=node_states.size()[0])
         bincount += edge_bincount
-      msg_mean_divisor = bincount.float()
       # Avoid division by zero for lonely nodes.
-      msg_mean_divisor[msg_mean_divisor == 0] = 1.0
+      bincount[bincount == 0] = 1
+      msg_mean_divisor = bincount.float().unsqueeze_(1)
     else:
       msg_mean_divisor = None
 
     if pos_lists:
       for pos_list in pos_lists:
-        assert pos_list.max() < self.edge_position_max
+        pos_list.clamp_(0, self.edge_position_max)
 
     for (layer_idx, num_timesteps) in enumerate(self.layer_timesteps):
       for t in range(num_timesteps):

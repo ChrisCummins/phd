@@ -110,6 +110,6 @@ class MessagingLayer(nn.Module):
 
       messages_by_targets.index_add_(0, edge_targets, messages_by_source)
 
-    if msg_mean_divisor:
-      messages_by_targets /= msg_mean_divisor.unsqueeze_(1)
+    if msg_mean_divisor is not None:
+      messages_by_targets /= msg_mean_divisor
     return messages_by_targets
