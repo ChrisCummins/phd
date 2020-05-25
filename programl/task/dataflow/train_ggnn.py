@@ -92,7 +92,9 @@ app.DEFINE_string(
   "Optionally specify a name for the run. This must be unique. If not "
   "provided, a run ID is generated using the current time.",
 )
-app.DEFINE_boolean("cprofile", False, "Whether to profile the run of the model.")
+app.DEFINE_boolean(
+  "cprofile", False, "Whether to profile the run of the model."
+)
 app.DEFINE_input_path(
   "model_to_test", None, "The working directory for writing logs", is_dir=True
 )
@@ -101,13 +103,14 @@ FLAGS = app.FLAGS
 
 def Main():
   """Main entry point."""
-  
-  if FLAGS.cprofile: 
+
+  if FLAGS.cprofile:
     assert not FLAGS.test, "don't run --test when you --cprofile the code."
     import cProfile
+
     profile = cProfile.Profile()
-    #profile.runctx("sleeep()", globals(), locals())
-    
+    # profile.runctx("sleeep()", globals(), locals())
+
     profstr = """log_dir = dataflow.TrainDataflowGGNN(
     path=pathlib.Path(FLAGS.path),
     analysis=FLAGS.analysis,
@@ -121,14 +124,15 @@ def Main():
     target_vocab_cumfreq=FLAGS.target_vocab_cumfreq,
     run_id=FLAGS.run_id,
   )"""
-    
+
     profile.runctx(profstr, globals(), locals())
-    profile.dump_stats('/home/zacharias/profiling/out.profile')
+    profile.dump_stats("/home/zacharias/profiling/out.profile")
 
     print("printing results")
     import pstats
+
     p = pstats.Stats(profile)
-    p.sort_stats('tottime').print_stats(50)
+    p.sort_stats("tottime").print_stats(50)
     return
 
   path = pathlib.Path(FLAGS.path)
@@ -139,6 +143,10 @@ def Main():
     max_items=FLAGS.max_vocab_size,
     target_cumfreq=FLAGS.target_vocab_cumfreq,
   )
+
+  # CDFG doesn't use positional embeddings.
+  if FLAGS.use_cdfg:
+    FLAGS.use_position_embeddings = False
 
   if FLAGS.model_to_test:
     log_dir = FLAGS.model_to_test
