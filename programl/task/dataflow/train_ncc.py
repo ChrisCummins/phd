@@ -78,42 +78,70 @@ app.DEFINE_list(
   ],
   "The list of cumulative training graph counts to evaluate at.",
 )
-app.DEFINE_boolean("test", True, "Whether to test the model after training.")
 app.DEFINE_string(
   "run_id",
   None,
   "Optionally specify a name for the run. This must be unique. If not "
-  "provided, a run ID is generated using the current time.",
+  "provided, a run ID is generated using the current time. If --restore_from "
+  "is set, the ID of the restored run is used and this flag has no effect.",
 )
 app.DEFINE_input_path(
-  "model_to_test", None, "The working directory for writing logs", is_dir=True
+  "restore_from", None, "The working directory for writing logs", is_dir=True
 )
+app.DEFINE_boolean("test", True, "Whether to test the model after training.")
 FLAGS = app.FLAGS
 
 
 def TrainDataflowLSTM(
-  path: pathlib.Path, vocab: Dict[str, int], val_seed: int,
+  path: pathlib.Path,
+  vocab: Dict[str, int],
+  val_seed: int,
+  restore_from: pathlib.Path,
 ) -> pathlib.Path:
   if not path.is_dir():
     raise FileNotFoundError(path)
 
-  # Create the logging directories.
-  log_dir = dataflow.CreateLoggingDirectories(
-    dataset_root=path,
-    model_name="ncc",
-    analysis=FLAGS.analysis,
-    run_id=FLAGS.run_id,
-  )
+  if restore_from:
+    log_dir = restore_from
+  else:
+    # Create the logging directories.
+    log_dir = dataflow.CreateLoggingDirectories(
+      dataset_root=path,
+      model_name="ncc",
+      analysis=FLAGS.analysis,
+      run_id=FLAGS.run_id,
+    )
 
   dataflow.PatchWarnings()
   dataflow.RecordExperimentalSetup(log_dir)
+
+  # Cumulative totals for training graph counts at each "epoch".
+  train_graph_counts = [int(x) for x in FLAGS.train_graph_counts]
+  train_graph_cumsums = np.array(train_graph_counts, dtype=np.int32)
+  # The number of training graphs in each "epoch".
+  train_graph_counts = train_graph_cumsums - np.concatenate(
+    ([0], train_graph_counts[:-1])
+  )
 
   # Create the model, defining the shape of the graphs that it will process.
   #
   # For these data flow experiments, our graphs contain per-node binary
   # classification targets (e.g. reachable / not-reachable).
   model = Lstm(vocabulary=vocab, test_only=False, node_y_dimensionality=2,)
-  model.Initialize()
+
+  if restore_from:
+    # Pick up training where we left off.
+    restored_epoch, checkpoint = dataflow.SelectTrainingCheckpoint(log_dir)
+    # Skip the epochs that we have already done.
+    # This requires that --train_graph_counts is the same as it was in the
+    # run that we are resuming!
+    start_epoch_step = restored_epoch.epoch_num
+    train_graph_counts = train_graph_counts[start_epoch_step:]
+    train_graph_cumsums = train_graph_cumsums[start_epoch_step:]
+    model.RestoreCheckpoint(checkpoint)
+  else:
+    # Else initialize a new model.
+    model.Initialize()
 
   # Read val batches asynchronously
   val_batches = AsyncBatchBuilder(
@@ -136,14 +164,6 @@ def TrainDataflowLSTM(
     ),
   )
   val_batches.start()
-
-  # Cumulative totals for training graph counts at each "epoch".
-  train_graph_counts = [int(x) for x in FLAGS.train_graph_counts]
-  train_graph_cumsums = np.array(train_graph_counts, dtype=np.int32)
-  # The number of training graphs in each "epoch".
-  train_graph_counts = train_graph_cumsums - np.concatenate(
-    ([0], train_graph_counts[:-1])
-  )
 
   for epoch_step, (train_graph_cumsum, train_graph_count) in enumerate(
     zip(train_graph_cumsums, train_graph_counts), start=1
@@ -273,12 +293,12 @@ def Main():
   with vocabulary.VocabularyZipFile.CreateFromPublishedResults() as inst2vec:
     vocab = inst2vec.dictionary
 
-  if FLAGS.model_to_test:
-    log_dir = FLAGS.model_to_test
-  else:
-    log_dir = TrainDataflowLSTM(
-      path=path, vocab=vocab, val_seed=FLAGS.val_seed,
-    )
+  log_dir = TrainDataflowLSTM(
+    path=path,
+    vocab=vocab,
+    val_seed=FLAGS.val_seed,
+    restore_from=FLAGS.restore_from,
+  )
 
   if FLAGS.test:
     TestDataflowLSTM(

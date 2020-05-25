@@ -91,6 +91,40 @@ def SelectCheckpoint(
   return epoch.epoch[0], checkpoint
 
 
+def SelectTrainingCheckpoint(
+  log_dir: pathlib.Path,
+) -> Tuple[epoch_pb2.Epoch, checkpoint_pb2.Checkpoint]:
+  """Select a checkpoint to load to resume training.
+
+  Returns:
+    A tuple of <Epoch, Checkpoint> messages.
+  """
+  epoch_num = -1
+  for path in (log_dir / "epochs").iterdir():
+    if path.name.endswith(".EpochList.pbtxt"):
+      epoch = pbutil.FromFile(path, epoch_pb2.EpochList())
+      f1 = epoch.epoch[0].val_results.mean_f1
+      if not epoch.epoch[0].train_results.graph_count:
+        continue
+      epoch_num = max(epoch_num, epoch.epoch[0].epoch_num)
+
+  epoch = pbutil.FromFile(
+    log_dir / "epochs" / f"{epoch_num:03d}.EpochList.pbtxt",
+    epoch_pb2.EpochList(),
+  )
+  checkpoint = pbutil.FromFile(
+    log_dir / "checkpoints" / f"{epoch_num:03d}.Checkpoint.pb",
+    checkpoint_pb2.Checkpoint(),
+  )
+  app.Log(
+    1,
+    "Selected checkpoint at epoch %d to restore with val F1 score %.4f",
+    epoch.epoch[0].epoch_num,
+    epoch.epoch[0].val_results.mean_f1,
+  )
+  return epoch.epoch[0], checkpoint
+
+
 def CreateLoggingDirectories(
   dataset_root: pathlib.Path, model_name: str, analysis: str, run_id: str = None
 ):
