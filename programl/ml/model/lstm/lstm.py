@@ -39,6 +39,12 @@ app.DEFINE_integer(
   "hidden_size", 64, "The size of hidden layer(s).",
 )
 app.DEFINE_integer(
+  "hidden_dense_layer_count",
+  0,
+  "The number of hidden dense layers between the final LSTM layer and the "
+  "output.",
+)
+app.DEFINE_integer(
   "batch_size",
   256,
   "The number of padded sequences to concatenate into a batch.",
@@ -141,9 +147,10 @@ class Lstm(Model):
     )(lang_model)
 
     # Dense layers.
-    # lang_model = tf.compat.v1.keras.layers.Dense(
-    #   FLAGS.hidden_size, activation="relu", name="dense_1",
-    # )(lang_model)
+    for i in range(1, FLAGS.hidden_dense_layer_count + 1):
+      lang_model = tf.compat.v1.keras.layers.Dense(
+        FLAGS.hidden_size, activation="relu", name=f"dense_{i}",
+      )(lang_model)
     node_out = tf.compat.v1.keras.layers.Dense(
       self.node_y_dimensionality, activation="sigmoid", name="node_out",
     )(lang_model)
