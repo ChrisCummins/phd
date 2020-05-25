@@ -49,6 +49,12 @@ app.DEFINE_integer(
   "For node-level models, the padded/truncated length of encoded node "
   "sequences.",
 )
+app.DEFINE_integer(
+  "selector_embedding_value",
+  50,
+  "The value used for the positive class in the 1-hot selector embedding "
+  "vectors. Has no effect when selector embeddings are not used.",
+)
 app.DEFINE_boolean(
   "cudnn_lstm",
   True,
@@ -57,6 +63,7 @@ app.DEFINE_boolean(
   "incompatible - a model saved using one LSTM type cannot be restored using "
   "the other LSTM type.",
 )
+app.DEFINE_float("learning_rate", 0.00025, "The mode learning rate.")
 
 
 class Lstm(Model):
@@ -134,9 +141,9 @@ class Lstm(Model):
     )(lang_model)
 
     # Dense layers.
-    lang_model = tf.compat.v1.keras.layers.Dense(
-      FLAGS.hidden_size, activation="relu", name="dense_1",
-    )(lang_model)
+    # lang_model = tf.compat.v1.keras.layers.Dense(
+    #   FLAGS.hidden_size, activation="relu", name="dense_1",
+    # )(lang_model)
     node_out = tf.compat.v1.keras.layers.Dense(
       self.node_y_dimensionality, activation="sigmoid", name="node_out",
     )(lang_model)
@@ -145,7 +152,9 @@ class Lstm(Model):
       inputs=[sequence_input, selector_vector], outputs=[node_out],
     )
     model.compile(
-      optimizer="adam",
+      optimizer=tf.compat.v1.keras.optimizers.Adam(
+        learning_rate=FLAGS.learning_rate
+      ),
       metrics=["accuracy"],
       loss=["categorical_crossentropy"],
       loss_weights=[1.0],

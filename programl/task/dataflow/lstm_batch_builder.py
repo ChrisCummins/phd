@@ -29,6 +29,8 @@ from programl.proto import program_graph_features_pb2
 from programl.proto import program_graph_pb2
 from third_party.py.tensorflow import tf
 
+FLAGS = app.FLAGS
+
 
 class DataflowLstmBatchBuilder(BaseBatchBuilder):
   """The LSTM batch builder."""
@@ -160,7 +162,9 @@ class DataflowLstmBatchBuilder(BaseBatchBuilder):
         dtype=np.int32,
       )
       selector_vectors = np.zeros((selector_values.size, 2), dtype=np.int32)
-      selector_vectors[np.arange(selector_values.size), selector_values] = 1
+      selector_vectors[
+        np.arange(selector_values.size), selector_values
+      ] = FLAGS.selector_embedding_value
       self.selector_vectors.append(selector_vectors)
 
       targets = np.array(
