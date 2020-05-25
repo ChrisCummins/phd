@@ -19,24 +19,14 @@ import json
 import pathlib
 import time
 import warnings
-from typing import Dict
-from typing import List
-from typing import Optional
 from typing import Tuple
 
-import numpy as np
 from sklearn.exceptions import UndefinedMetricWarning
 
 from labm8.py import app
-from labm8.py import humanize
 from labm8.py import pbutil
-from labm8.py import ppar
-from programl.ml.batch.async_batch_builder import AsyncBatchBuilder
-from programl.ml.model.ggnn.ggnn import Ggnn
 from programl.proto import checkpoint_pb2
 from programl.proto import epoch_pb2
-from programl.task.dataflow.ggnn_batch_builder import DataflowGgnnBatchBuilder
-from programl.task.dataflow.graph_loader import DataflowGraphLoader
 
 FLAGS = app.FLAGS
 
