@@ -118,11 +118,12 @@ class DataflowGgnnBatchBuilder(BaseBatchBuilder):
 
       self.builder.AddProgramGraph(graph)
 
-      # Read the graph node features.
+      # Find the vocabulary indices for the nodes in the graph.
       self.vocab_ids += [
-        self.vocabulary.get(graph.node[n].text, len(self.vocabulary))
-        for n in node_list
+        self.vocabulary.get(node.text, len(self.vocabulary))
+        for node in graph.node
       ]
+      # Read the graph node features using the given node list.
       self.selector_ids += [
         features.node_features.feature_list["data_flow_root_node"]
         .feature[n]
