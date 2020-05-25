@@ -56,7 +56,12 @@ from labm8.py import pdutil
 from labm8.py import prof
 from programl.proto import epoch_pb2
 
-app.DEFINE_input_path("path", None, "The dataset directory root.", is_dir=True)
+app.DEFINE_input_path(
+  "path",
+  pathlib.Path("~/programl/dataflow").expanduser(),
+  "The dataset directory root.",
+  is_dir=True,
+)
 app.DEFINE_string(
   "google_sheet",
   None,
@@ -72,7 +77,9 @@ app.DEFINE_string(
 FLAGS = app.FLAGS
 
 
-def ReadEpochLogs(path: pathlib.Path):
+def ReadEpochLogs(path: pathlib.Path) -> Optional[epoch_pb2.EpochList]:
+  if not (path / "epochs").is_dir():
+    return None
   epochs = []
   for path in (path / "epochs").iterdir():
     epoch = pbutil.FromFile(path, epoch_pb2.EpochList())
@@ -140,6 +147,7 @@ def EpochsToDataFrame(epochs: epoch_pb2.EpochList) -> Optional[pd.DataFrame]:
   # Re-order columns.
   return df[
     [
+      "epoch_num",
       "train_batch_count",
       "train_batch_count_cumsum",
       "train_graph_count",
@@ -176,11 +184,12 @@ def EpochsToDataFrame(epochs: epoch_pb2.EpochList) -> Optional[pd.DataFrame]:
   ]
 
 
-def LogsToDataFrame(path: pathlib.Path) -> pd.DataFrame:
+def LogsToDataFrame(path: pathlib.Path) -> Optional[pd.DataFrame]:
   logdirs = (
     subprocess.check_output(
       [
         "find",
+        "-L",
         str(path / "logs"),
         "-maxdepth",
         "3",
@@ -197,8 +206,11 @@ def LogsToDataFrame(path: pathlib.Path) -> pd.DataFrame:
 
   dfs = []
   for logdir in logdirs:
+    app.Log(2, "%s", logdir)
     logdir = pathlib.Path(logdir)
     epochs = ReadEpochLogs(logdir)
+    if epochs is None:
+      continue
     df = EpochsToDataFrame(epochs)
     if df is None:
       continue
@@ -207,6 +219,8 @@ def LogsToDataFrame(path: pathlib.Path) -> pd.DataFrame:
     df.insert(0, "analysis", logdir.parent.name)
     dfs.append(df)
 
+  if not dfs:
+    return None
   df = pd.concat(dfs)
   df.sort_values(["analysis", "model", "run_id"], inplace=True)
   return df
@@ -220,6 +234,10 @@ def Main():
 
   with prof.Profile("loading logs"):
     df = LogsToDataFrame(path)
+
+  if df is None:
+    print("No logs found", file=sys.stderr)
+    sys.exit(1)
 
   if spreadsheet_name:
     gsheets = google_sheets.GoogleSheets.FromFlagsOrDie()
