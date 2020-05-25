@@ -217,7 +217,8 @@ class Lstm(Model):
       )
     outputs = []
     for graph_node_size, padded_output in zip(
-      model_data.graph_node_sizes, padded_outputs
+      model_data.graph_node_sizes,
+      padded_outputs[: len(model_data.graph_node_sizes)],
     ):
       active_nodes = padded_output[:graph_node_size]
       padding = np.zeros(

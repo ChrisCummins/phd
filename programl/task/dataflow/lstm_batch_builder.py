@@ -77,6 +77,14 @@ class DataflowLstmBatchBuilder(BaseBatchBuilder):
 
   def _Build(self) -> BatchData:
     self.batch_count += 1
+
+    if self.graph_count < self.batch_size:
+      self.vocab_ids += [] * (self.batch_size - self.graph_count)
+      self.selector_vectors += [] * (self.batch_size - self.graph_count)
+      self.targets += [np.zeros((0, self.node_y_dimensionality), dtype=2)] * (
+        self.batch_size - self.graph_count
+      )
+
     batch = BatchData(
       graph_count=self.graph_count,
       model_data=LstmBatchData(
@@ -173,6 +181,9 @@ class DataflowLstmBatchBuilder(BaseBatchBuilder):
           # Signal to the graph reader that we do not require any more graphs.
           self.graph_loader.Stop()
           return
+
+    if self.graph_count:
+      yield self._Build()
 
     # Note that there may be graphs
     self._Reset()
