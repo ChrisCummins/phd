@@ -145,7 +145,7 @@ def Main():
   )
 
   # CDFG doesn't use positional embeddings.
-  if FLAGS.use_cdfg:
+  if FLAGS.cdfg:
     FLAGS.use_position_embeddings = False
 
   if FLAGS.model_to_test:
