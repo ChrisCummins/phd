@@ -170,9 +170,9 @@ def TrainDataflowGGNN(
     pbutil.ToFile(model.SaveCheckpoint(), checkpoint_path)
 
     # If scheduler exists, then step it after every epoch
-    if model.model.schedule is not None:
+    if model.model.scheduler is not None:
       old_learning_rate = model.model.learning_rate
-      model.model.schedule.step()
+      model.model.scheduler.step()
       app.Log(
         1,
         "LR Scheduler step. New learning rate is %s (was %s)",
