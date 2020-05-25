@@ -71,7 +71,11 @@ app.DEFINE_list(
   "A list of layers, and the number of steps for each layer.",
 )
 app.DEFINE_float("learning_rate", 0.00025, "The initial learning rate.")
-app.DEFINE_float("lr_decay_rate", 0.95, "Learning rate decay; multiplicative factor for lr after every epoch.")
+app.DEFINE_float(
+  "lr_decay_rate",
+  0.95,
+  "Learning rate decay; multiplicative factor for lr after every epoch.",
+)
 app.DEFINE_float("clip_gradient_norm", 0.0, "Clip gradients to L-2 norm.")
 
 # Edge and message flags.
