@@ -78,12 +78,17 @@ class DataflowLstmBatchBuilder(BaseBatchBuilder):
   def _Build(self) -> BatchData:
     self.batch_count += 1
 
+    # A batch may contain fewer graphs than batch_size.
+    # If so, pad with empty graphs.
     if self.graph_count < self.batch_size:
-      self.vocab_ids += [] * (self.batch_size - self.graph_count)
-      self.selector_vectors += [] * (self.batch_size - self.graph_count)
-      self.targets += [np.zeros((0, self.node_y_dimensionality), dtype=2)] * (
-        self.batch_size - self.graph_count
-      )
+      padding_graphs = self.batch_size - self.graph_count
+      self.vocab_ids += [np.zeros(0, dtype=np.int32)] * padding_graphs
+      self.selector_vectors += [
+        np.zeros((0, 2), dtype=np.int32)
+      ] * padding_graphs
+      self.targets += [
+        np.zeros((0, self.node_y_dimensionality), dtype=np.int32)
+      ] * padding_graphs
 
     batch = BatchData(
       graph_count=self.graph_count,

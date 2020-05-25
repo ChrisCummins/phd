@@ -18,6 +18,7 @@ import pathlib
 import tempfile
 from typing import Any
 from typing import Dict
+from typing import List
 
 import numpy as np
 
@@ -188,7 +189,7 @@ class Lstm(Model):
     padded_predictions = self.model.predict_on_batch(x)
 
     # Reshape the outputs.
-    predictions = self.ReshapePaddedModelOutput(model_data, padded_predictions)
+    predictions = self.ReshapePaddedModelOutput(batch_data, padded_predictions)
 
     # Flatten the targets and predictions lists.
     # Shape (batch_node_count, node_y_dimensionality).
@@ -200,11 +201,21 @@ class Lstm(Model):
     )
 
   def ReshapePaddedModelOutput(
-    self, model_data: LstmBatchData, padded_outputs
-  ) -> np.array:
+    self, batch_data: BatchData, padded_outputs: np.array
+  ) -> List[np.array]:
     """Reshape the model outputs to an array of predictions of same shape as
     targets. Zeros are used as padding values when the model produces fewer
     outputs than there are nodes in a graph.
+
+    Args:
+      batch_data: The input batch data.
+      padded_outputs: Model outputs with shape 
+        (batch_size, padded_node_count, node_y_dimensionality).
+
+    Returns:
+      A list of length batch_data.graph_count np arrays, where each array is
+      of shape (?, node_y_dimensionality), where ? is the true number of nodes
+      in that graph.
     """
     if padded_outputs.shape != (
       self.batch_size,
@@ -217,16 +228,15 @@ class Lstm(Model):
       )
     outputs = []
     for graph_node_size, padded_output in zip(
-      model_data.graph_node_sizes,
-      padded_outputs[: len(model_data.graph_node_sizes)],
+      batch_data.model_data.graph_node_sizes,
+      padded_outputs[: batch_data.graph_count],
     ):
       active_nodes = padded_output[:graph_node_size]
-      padding = np.zeros(
-        (
-          max(graph_node_size - self.padded_sequence_length, 0),
-          self.node_y_dimensionality,
-        ),
-        dtype=np.float32,
+      # Truncated graph input. Fill with random values since the model didn't see
+      # this bit of the graph.
+      padding = np.random.randn(
+        max(graph_node_size - self.padded_sequence_length, 0),
+        self.node_y_dimensionality,
       )
       outputs.append(np.concatenate((active_nodes, padding)))
     return outputs
