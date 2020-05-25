@@ -207,9 +207,10 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
             features_path, program_graph_features_pb2.ProgramGraphFeaturesList()
           )
           for j, features in enumerate(features_list.graph):
-            step_count = features.features.feature[
+            step_count_feature = features.features.feature[
               "data_flow_step_count"
-            ].int64_list.value[0]
+            ].int64_list.value
+            step_count = step_count_feature[0] if len(step_count_feature) else 0
             if self.data_flow_step_max and step_count > self.data_flow_step_max:
               self.skip_count += 1
               app.Log(
