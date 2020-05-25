@@ -51,11 +51,10 @@ class DataflowLstmBatchBuilder(BaseBatchBuilder):
 
     # Mutable state.
     self.graph_count = 0
-    self.graph_sizes = []
+    self.graph_node_sizes = []
     self.vocab_ids = []
     self.selector_vectors = []
     self.targets = []
-    self.node_labels = []
     self.batch_count = 0
 
     iter_type = self.graph_loader.IterableType()
@@ -67,11 +66,10 @@ class DataflowLstmBatchBuilder(BaseBatchBuilder):
 
   def _Reset(self) -> None:
     self.graph_count = 0
-    self.graph_sizes = []
+    self.graph_node_sizes = []
     self.vocab_ids = []
     self.selector_vectors = []
     self.targets = []
-    self.node_labels = []
 
   @property
   def padding_element(self):
@@ -82,7 +80,7 @@ class DataflowLstmBatchBuilder(BaseBatchBuilder):
     batch = BatchData(
       graph_count=self.graph_count,
       model_data=LstmBatchData(
-        graph_sizes=np.array(self.graph_sizes, dtype=np.int32),
+        graph_node_sizes=np.array(self.graph_node_sizes, dtype=np.int32),
         encoded_sequences=tf.compat.v1.keras.preprocessing.sequence.pad_sequences(
           self.vocab_ids,
           maxlen=self.padded_sequence_length,
@@ -100,22 +98,16 @@ class DataflowLstmBatchBuilder(BaseBatchBuilder):
           value=np.zeros(2, dtype=np.int32),
         ),
         node_labels=tf.compat.v1.keras.preprocessing.sequence.pad_sequences(
-          self.node_labels,
+          self.targets,
           maxlen=self.padded_sequence_length,
           dtype="int32",
           padding="pre",
           truncating="post",
           value=np.zeros(self.node_y_dimensionality, dtype=np.int32),
         ),
+        # We don't pad or truncate targets.
         targets=self.targets,
       ),
-    )
-    app.Log(
-      1,
-      "Shapes: encoded_sequences=%s, selector_vectors=%s, node_labels=%s",
-      batch.model_data.encoded_sequences.shape,
-      batch.model_data.selector_vectors.shape,
-      batch.model_data.node_labels.shape,
     )
     self._Reset()
     return batch
@@ -130,7 +122,7 @@ class DataflowLstmBatchBuilder(BaseBatchBuilder):
       node_list = graph_serializer.SerializeInstructionsInProgramGraph(
         graph, self.padded_sequence_length
       )
-      self.graph_sizes.append(len(node_list))
+      self.graph_node_sizes.append(len(node_list))
 
       self.vocab_ids.append(
         [
@@ -158,7 +150,7 @@ class DataflowLstmBatchBuilder(BaseBatchBuilder):
       selector_vectors[np.arange(selector_values.size), selector_values] = 1
       self.selector_vectors.append(selector_vectors)
 
-      node_labels = np.array(
+      targets = np.array(
         [
           features.node_features.feature_list["data_flow_value"]
           .feature[n]
@@ -167,13 +159,13 @@ class DataflowLstmBatchBuilder(BaseBatchBuilder):
         ],
         dtype=np.int32,
       )
-      self.targets.append(node_labels)
-
-      node_labels_1hot = np.zeros(
-        (node_labels.size, self.node_y_dimensionality), dtype=np.int32
+      targets_1hot = np.zeros(
+        (targets.size, self.node_y_dimensionality), dtype=np.int32
       )
-      node_labels_1hot[np.arange(node_labels.size), node_labels] = 1
-      self.node_labels.append(node_labels_1hot)
+      targets_1hot[np.arange(targets.size), targets] = 1
+      self.targets.append(targets_1hot)
+      self.graph_count += 1
+
       if self.graph_count >= self.batch_size:
         yield self._Build()
         if self.max_batch_count and self.batch_count >= self.max_batch_count:
@@ -181,9 +173,6 @@ class DataflowLstmBatchBuilder(BaseBatchBuilder):
           # Signal to the graph reader that we do not require any more graphs.
           self.graph_loader.Stop()
           return
-      self.graph_count += 1
 
-    if self.graph_count:
-      yield self._Build()
-
+    # Note that there may be graphs
     self._Reset()

@@ -77,20 +77,6 @@ app.DEFINE_list(
   ],
   "The list of cumulative training graph counts to evaluate at.",
 )
-app.DEFINE_boolean(
-  "cdfg",
-  False,
-  "If set, use the CDFG representation for programs. Defaults to ProGraML "
-  "representations.",
-)
-app.DEFINE_integer(
-  "max_vocab_size",
-  0,
-  "If > 0, limit the size of the vocabulary to this number.",
-)
-app.DEFINE_float(
-  "target_vocab_cumfreq", 1.0, "The target cumulative frequency that."
-)
 app.DEFINE_boolean("test", True, "Whether to test the model after training.")
 app.DEFINE_string(
   "run_id",
@@ -143,6 +129,7 @@ def TrainDataflowLSTM(
       vocabulary=vocab,
       padded_sequence_length=model.padded_sequence_length,
       batch_size=model.batch_size,
+      node_y_dimensionality=model.node_y_dimensionality,
     ),
   )
   val_batches.start()
@@ -176,6 +163,7 @@ def TrainDataflowLSTM(
         vocabulary=vocab,
         padded_sequence_length=model.padded_sequence_length,
         batch_size=model.batch_size,
+        node_y_dimensionality=model.node_y_dimensionality,
       ),
       max_queue_size=100,
     )
@@ -253,6 +241,7 @@ def TestDataflowLSTM(
     vocabulary=vocab,
     padded_sequence_length=model.padded_sequence_length,
     batch_size=model.batch_size,
+    node_y_dimensionality=model.node_y_dimensionality,
   )
 
   start_time = time.time()

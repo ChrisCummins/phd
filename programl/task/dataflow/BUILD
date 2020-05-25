@@ -117,8 +117,8 @@ py_library(
 )
 
 py_binary(
-    name = "ncc",
-    srcs = ["ncc.py"],
+    name = "train_ncc",
+    srcs = ["train_ncc.py"],
     deps = [
         ":dataflow",
         ":graph_loader",

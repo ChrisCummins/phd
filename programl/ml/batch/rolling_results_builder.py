@@ -96,7 +96,7 @@ class RollingResultsBuilder(object):
       self._results.Update(data, results, weight)
       self._bar.update(data.graph_count)
       self._bar.set_postfix(
-        loss=f"{self._results.loss:.4f}",
+        loss="-" if self._results.loss is None else f"{self._results.loss:.4f}",
         prec=f"{self._results.precision:.3f}",
         rec=f"{self._results.recall:.3f}",
         f1=f"{self._results.f1:.3f}",

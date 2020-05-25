@@ -97,8 +97,8 @@ class BatchResults(NamedTuple):
     cls,
     targets: np.array,
     predictions: np.array,
-    iteration_count: int = 1,
-    model_converged: bool = True,
+    iteration_count: int = 0,
+    model_converged: bool = False,
     learning_rate: Optional[float] = None,
     loss: Optional[float] = None,
   ):
