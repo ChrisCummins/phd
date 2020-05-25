@@ -139,48 +139,53 @@ class DataflowLstmBatchBuilder(BaseBatchBuilder):
       )
       self.graph_node_sizes.append(len(node_list))
 
-      self.vocab_ids.append(
-        [
-          self.vocabulary.get(
-            graph.node[n]
-            .features.feature["inst2vec_preprocessed"]
-            .bytes_list.value[0]
-            .decode("utf-8"),
-            self.vocabulary["!UNK"],
-          )
-          for n in node_list
-        ]
-      )
+      try:
+        self.vocab_ids.append(
+          [
+            self.vocabulary.get(
+              graph.node[n]
+              .features.feature["inst2vec_preprocessed"]
+              .bytes_list.value[0]
+              .decode("utf-8"),
+              self.vocabulary["!UNK"],
+            )
+            for n in node_list
+          ]
+        )
 
-      selector_values = np.array(
-        [
-          features.node_features.feature_list["data_flow_root_node"]
-          .feature[n]
-          .int64_list.value[0]
-          for n in node_list
-        ],
-        dtype=np.int32,
-      )
-      selector_vectors = np.zeros((selector_values.size, 2), dtype=np.int32)
-      selector_vectors[
-        np.arange(selector_values.size), selector_values
-      ] = FLAGS.selector_embedding_value
-      self.selector_vectors.append(selector_vectors)
+        selector_values = np.array(
+          [
+            features.node_features.feature_list["data_flow_root_node"]
+            .feature[n]
+            .int64_list.value[0]
+            for n in node_list
+          ],
+          dtype=np.int32,
+        )
+        selector_vectors = np.zeros((selector_values.size, 2), dtype=np.int32)
+        selector_vectors[
+          np.arange(selector_values.size), selector_values
+        ] = FLAGS.selector_embedding_value
+        self.selector_vectors.append(selector_vectors)
 
-      targets = np.array(
-        [
-          features.node_features.feature_list["data_flow_value"]
-          .feature[n]
-          .int64_list.value[0]
-          for n in node_list
-        ],
-        dtype=np.int32,
-      )
-      targets_1hot = np.zeros(
-        (targets.size, self.node_y_dimensionality), dtype=np.int32
-      )
-      targets_1hot[np.arange(targets.size), targets] = 1
-      self.targets.append(targets_1hot)
+        targets = np.array(
+          [
+            features.node_features.feature_list["data_flow_value"]
+            .feature[n]
+            .int64_list.value[0]
+            for n in node_list
+          ],
+          dtype=np.int32,
+        )
+        targets_1hot = np.zeros(
+          (targets.size, self.node_y_dimensionality), dtype=np.int32
+        )
+        targets_1hot[np.arange(targets.size), targets] = 1
+        self.targets.append(targets_1hot)
+      except IndexError:
+        app.Log(2, "Encoding error")
+        continue
+
       self.graph_count += 1
 
       if self.graph_count >= self.batch_size:
