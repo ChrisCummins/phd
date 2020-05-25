@@ -45,20 +45,31 @@ def TrainDataflowGGNN(
   batch_size: int,
   use_cdfg: bool,
   run_id: Optional[str] = None,
+  restore_from: pathlib.Path = None,
 ) -> pathlib.Path:
   if not path.is_dir():
     raise FileNotFoundError(path)
 
-  # Create the logging directories.
-  log_dir = dataflow.CreateLoggingDirectories(
-    dataset_root=path,
-    model_name="cdfg" if use_cdfg else "programl",
-    analysis=analysis,
-    run_id=run_id,
-  )
+  if restore_from:
+    log_dir = restore_from
+  else:
+    # Create the logging directories.
+    log_dir = dataflow.CreateLoggingDirectories(
+      dataset_root=path,
+      model_name="cdfg" if use_cdfg else "programl",
+      analysis=analysis,
+      run_id=run_id,
+    )
 
   dataflow.PatchWarnings()
   dataflow.RecordExperimentalSetup(log_dir)
+
+  # Cumulative totals for training graph counts at each "epoch".
+  train_graph_cumsums = np.array(train_graph_counts, dtype=np.int32)
+  # The number of training graphs in each "epoch".
+  train_graph_counts = train_graph_cumsums - np.concatenate(
+    ([0], train_graph_counts[:-1])
+  )
 
   # Create the model, defining the shape of the graphs that it will process.
   #
@@ -72,6 +83,20 @@ def TrainDataflowGGNN(
     graph_x_dimensionality=0,
     use_selector_embeddings=True,
   )
+
+  if restore_from:
+    # Pick up training where we left off.
+    restored_epoch, checkpoint = dataflow.SelectTrainingCheckpoint(log_dir)
+    # Skip the epochs that we have already done.
+    # This requires that --train_graph_counts is the same as it was in the
+    # run that we are resuming!
+    start_epoch_step = restored_epoch.epoch_num
+    train_graph_counts = train_graph_counts[start_epoch_step:]
+    train_graph_cumsums = train_graph_cumsums[start_epoch_step:]
+    model.RestoreCheckpoint(checkpoint)
+  else:
+    # Else initialize a new model.
+    model.Initialize()
 
   # Optionally limit the size of graphs we use.
   if limit_max_data_flow_steps:
@@ -98,13 +123,6 @@ def TrainDataflowGGNN(
     ),
   )
   val_batches.start()
-
-  # Cumulative totals for training graph counts at each "epoch".
-  train_graph_cumsums = np.array(train_graph_counts, dtype=np.int32)
-  # The number of training graphs in each "epoch".
-  train_graph_counts = train_graph_cumsums - np.concatenate(
-    ([0], train_graph_counts[:-1])
-  )
 
   for epoch_step, (train_graph_cumsum, train_graph_count) in enumerate(
     zip(train_graph_cumsums, train_graph_counts), start=1

@@ -85,19 +85,20 @@ app.DEFINE_integer(
 app.DEFINE_float(
   "target_vocab_cumfreq", 1.0, "The target cumulative frequency that."
 )
-app.DEFINE_boolean("test", True, "Whether to test the model after training.")
+app.DEFINE_boolean(
+  "cprofile", False, "Whether to profile the run of the model."
+)
 app.DEFINE_string(
   "run_id",
   None,
   "Optionally specify a name for the run. This must be unique. If not "
-  "provided, a run ID is generated using the current time.",
-)
-app.DEFINE_boolean(
-  "cprofile", False, "Whether to profile the run of the model."
+  "provided, a run ID is generated using the current time. If --restore_from "
+  "is set, the ID of the restored run is used and this flag has no effect.",
 )
 app.DEFINE_input_path(
-  "model_to_test", None, "The working directory for writing logs", is_dir=True
+  "restore_from", None, "The working directory for writing logs", is_dir=True
 )
+app.DEFINE_boolean("test", True, "Whether to test the model after training.")
 FLAGS = app.FLAGS
 
 
@@ -148,21 +149,19 @@ def Main():
   if FLAGS.cdfg:
     FLAGS.use_position_embeddings = False
 
-  if FLAGS.model_to_test:
-    log_dir = FLAGS.model_to_test
-  else:
-    log_dir = ggnn.TrainDataflowGGNN(
-      path=path,
-      analysis=FLAGS.analysis,
-      vocab=vocab,
-      limit_max_data_flow_steps=FLAGS.limit_max_data_flow_steps,
-      train_graph_counts=[int(x) for x in FLAGS.train_graph_counts],
-      val_graph_count=FLAGS.val_graph_count,
-      val_seed=FLAGS.val_seed,
-      batch_size=FLAGS.batch_size,
-      use_cdfg=FLAGS.cdfg,
-      run_id=FLAGS.run_id,
-    )
+  log_dir = ggnn.TrainDataflowGGNN(
+    path=path,
+    analysis=FLAGS.analysis,
+    vocab=vocab,
+    limit_max_data_flow_steps=FLAGS.limit_max_data_flow_steps,
+    train_graph_counts=[int(x) for x in FLAGS.train_graph_counts],
+    val_graph_count=FLAGS.val_graph_count,
+    val_seed=FLAGS.val_seed,
+    batch_size=FLAGS.batch_size,
+    use_cdfg=FLAGS.cdfg,
+    run_id=FLAGS.run_id,
+    restore_from=FLAGS.restore_from,
+  )
 
   if FLAGS.test:
     ggnn.TestDataflowGGNN(
