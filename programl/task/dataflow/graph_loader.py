@@ -51,6 +51,7 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
     data_flow_step_max: int = None,
     logfile=None,
     use_cdfg: bool = False,
+    require_inst2vec: bool = False,
   ):
     self._inq = Queue(maxsize=1)
     self._outq = Queue(maxsize=50)
@@ -71,6 +72,7 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
     if use_cdfg:
       self._thread = self._CDFGReader(**reader_opts)
     else:
+      reader_opts["require_inst2vec"] = require_inst2vec
       self._thread = self._Reader(**reader_opts)
     self._thread.start()
     self._stopped = False
@@ -123,6 +125,7 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
       max_graph_count: int = None,
       data_flow_step_max: int = None,
       logfile=None,
+      require_inst2vec: bool = False,
     ):
       self.inq = inq
       self.outq = outq
@@ -130,6 +133,7 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
       self.max_graph_count = max_graph_count
       self.data_flow_step_max = data_flow_step_max
       self.seed = seed
+      self.require_inst2vec = require_inst2vec
       # The number of skipped graphs.
       self.skip_count = 0
       self.logfile = logfile
@@ -191,6 +195,14 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
           if not len(graph.node):
             app.Log(2, "empty graph!")
             continue
+
+          # Skip a graph without inst2vec
+          if self.require_inst2vec and not len(
+            graph.features.feature["inst2vec_annotated"].int64_list.value
+          ):
+            app.Log(2, "Skipping graph without inst2vec annotations")
+            continue
+
           features_list = pbutil.FromFile(
             features_path, program_graph_features_pb2.ProgramGraphFeaturesList()
           )

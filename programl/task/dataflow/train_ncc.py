@@ -26,6 +26,7 @@ import numpy as np
 
 from deeplearning.ncc import vocabulary
 from labm8.py import app
+from labm8.py import gpu_scheduler
 from labm8.py import humanize
 from labm8.py import pbutil
 from labm8.py import ppar
@@ -112,6 +113,7 @@ def TrainDataflowLSTM(
   # For these data flow experiments, our graphs contain per-node binary
   # classification targets (e.g. reachable / not-reachable).
   model = Lstm(vocabulary=vocab, test_only=False, node_y_dimensionality=2,)
+  model.Initialize()
 
   # Read val batches asynchronously
   val_batches = AsyncBatchBuilder(
@@ -125,6 +127,7 @@ def TrainDataflowLSTM(
         data_flow_step_max=FLAGS.max_data_flow_steps,
         logfile=open(log_dir / "graph_loader" / "val.txt", "w"),
         seed=val_seed,
+        require_inst2vec=True,
       ),
       vocabulary=vocab,
       padded_sequence_length=model.padded_sequence_length,
@@ -159,6 +162,7 @@ def TrainDataflowLSTM(
           logfile=open(
             log_dir / "graph_loader" / f"{epoch_step:03d}.train.txt", "w"
           ),
+          require_inst2vec=True,
         ),
         vocabulary=vocab,
         padded_sequence_length=model.padded_sequence_length,
@@ -208,10 +212,7 @@ def TrainDataflowLSTM(
 
 
 def TestDataflowLSTM(
-  path: pathlib.Path,
-  log_dir: pathlib.Path,
-  vocab: Dict[str, int],
-  use_cdfg: bool,
+  path: pathlib.Path, log_dir: pathlib.Path, vocab: Dict[str, int],
 ):
   dataflow.PatchWarnings()
   dataflow.RecordExperimentalSetup(log_dir)
@@ -236,7 +237,7 @@ def TestDataflowLSTM(
       analysis=FLAGS.analysis,
       data_flow_step_max=FLAGS.max_data_flow_steps,
       logfile=open(log_dir / "graph_loader" / "test.txt", "w"),
-      use_cdfg=use_cdfg,
+      require_inst2vec=True,
     ),
     vocabulary=vocab,
     padded_sequence_length=model.padded_sequence_length,
@@ -265,6 +266,8 @@ def TestDataflowLSTM(
 def Main():
   """Main entry point."""
   path = pathlib.Path(FLAGS.path)
+
+  gpu_scheduler.LockExclusiveProcessGpuAccess()
 
   with vocabulary.VocabularyZipFile.CreateFromPublishedResults() as inst2vec:
     vocab = inst2vec.dictionary

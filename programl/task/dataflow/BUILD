@@ -125,6 +125,7 @@ py_binary(
         ":lstm_batch_builder",
         "//deeplearning/ncc:vocabulary",
         "//labm8/py:app",
+        "//labm8/py:gpu_scheduler",
         "//labm8/py:humanize",
         "//labm8/py:pbutil",
         "//labm8/py:ppar",
