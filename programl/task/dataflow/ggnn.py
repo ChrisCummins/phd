@@ -50,7 +50,7 @@ def TrainDataflowGGNN(
     raise FileNotFoundError(path)
 
   # Create the logging directories.
-  log_dir, log_relpath = dataflow.CreateLoggingDirectories(
+  log_dir = dataflow.CreateLoggingDirectories(
     dataset_root=path,
     model_name="cdfg" if use_cdfg else "programl",
     analysis=analysis,
@@ -161,17 +161,20 @@ def TrainDataflowGGNN(
       ]
     )
     print(epoch, end="")
-    epoch_relpath = f"epochs/{epoch_step:03d}.EpochList.pbtxt"
-    checkpoint_relpath = f"checkpoints/{epoch_step:03d}.Checkpoint.pb"
-    pbutil.ToFile(epoch, log_dir / epoch_relpath)
-    app.Log(1, "Wrote %s/%s", log_relpath, epoch_relpath)
-    pbutil.ToFile(model.SaveCheckpoint(), log_dir / checkpoint_relpath)
-    app.Log(1, "Wrote %s/%s", log_relpath, checkpoint_relpath)
-    
+    epoch_path = log_dir / "epochs" / f"{epoch_step:03d}.EpochList.pbtxt"
+    pbutil.ToFile(epoch, epoch_path)
+    app.Log(1, "Wrote %s", epoch_path)
+    checkpoint_path = (
+      log_dir / "checkpoints" / f"{epoch_step:03d}.Checkpoint.pb"
+    )
+    pbutil.ToFile(model.SaveCheckpoint(), checkpoint_path)
+
     # If scheduler exists, then step it after every epoch
     if model.scheduler is not None:
       model.scheduler.step()
-      app.Log(1, "LR Scheduler step. New learning rate is %s", model.learning_rate)
+      app.Log(
+        1, "LR Scheduler step. New learning rate is %s", model.learning_rate
+      )
   return log_dir
 
 

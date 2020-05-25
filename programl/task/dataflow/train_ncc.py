@@ -98,7 +98,7 @@ def TrainDataflowLSTM(
     raise FileNotFoundError(path)
 
   # Create the logging directories.
-  log_dir, log_relpath = dataflow.CreateLoggingDirectories(
+  log_dir = dataflow.CreateLoggingDirectories(
     dataset_root=path,
     model_name="ncc",
     analysis=FLAGS.analysis,
@@ -202,12 +202,13 @@ def TrainDataflowLSTM(
       ]
     )
     print(epoch, end="")
-    epoch_relpath = f"epochs/{epoch_step:03d}.EpochList.pbtxt"
-    checkpoint_relpath = f"checkpoints/{epoch_step:03d}.Checkpoint.pb"
-    pbutil.ToFile(epoch, log_dir / epoch_relpath)
-    app.Log(1, "Wrote %s/%s", log_relpath, epoch_relpath)
-    pbutil.ToFile(model.SaveCheckpoint(), log_dir / checkpoint_relpath)
-    app.Log(1, "Wrote %s/%s", log_relpath, checkpoint_relpath)
+    epoch_path = log_dir / "epochs" / f"{epoch_step:03d}.EpochList.pbtxt"
+    pbutil.ToFile(epoch, epoch_path)
+    app.Log(1, "Wrote %s", epoch_path)
+    checkpoint_path = (
+      log_dir / "checkpoints" / f"{epoch_step:03d}.Checkpoint.pb"
+    )
+    pbutil.ToFile(model.SaveCheckpoint(), checkpoint_path)
   return log_dir
 
 

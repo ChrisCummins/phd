@@ -96,8 +96,7 @@ def CreateLoggingDirectories(
 ):
   # Create the logging directories.
   run_id = run_id or time.strftime("%y:%m:%dT%H:%M:%S")
-  log_relpath = f"logs/{model_name}/{analysis}/{run_id}"
-  log_dir = dataset_root / log_relpath
+  log_dir = dataset_root / "logs" / model_name / analysis / run_id
   if log_dir.is_dir():
     raise OSError(
       f"Logs directory already exists. Refusing to overwrite: {log_dir}"
@@ -107,4 +106,4 @@ def CreateLoggingDirectories(
   (log_dir / "epochs").mkdir()
   (log_dir / "checkpoints").mkdir()
   (log_dir / "graph_loader").mkdir()
-  return log_dir, log_relpath
+  return log_dir
