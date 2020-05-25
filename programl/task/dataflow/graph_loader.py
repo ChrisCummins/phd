@@ -258,12 +258,14 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
       inq: Queue,
       outq: Queue,
       seed: int = None,
+      min_graph_count: int = None,
       max_graph_count: int = None,
       data_flow_step_max: int = None,
       logfile=None,
     ):
       self.inq = inq
       self.outq = outq
+      self.min_graph_count = min_graph_count
       self.max_graph_count = max_graph_count
       self.data_flow_step_max = data_flow_step_max
       self.seed = seed
@@ -293,64 +295,72 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
 
     def run(self):
       files = list(self.graph_path.iterdir())
-      app.Log(2, "Enumerated %s files", humanize.Commas(len(files)))
-      if self.seed:
-        # If we are setting a reproducible seed, first sort the list of files
-        # since iterdir() order is undefined, then seed the RNG for the shuffle.
-        files = sorted(files)
-        random.seed(self.seed)
-      random.shuffle(files)
+      app.Log(
+        2, "Enumerated %s graph files to load", humanize.Commas(len(files))
+      )
 
-      i = 0
+      graph_count = 0
+      while graph_count < self.min_graph_count:
+        if self.seed:
+          files = sorted(files, key=lambda x: x.name)
+          # Change the seed so that on the next execution of this loop we will
+          # chose a different random ordering.
+          self.seed += 1
+        random.Random(self.seed).shuffle(files)
 
-      for path in files:
-        try:
-          self.inq.get(block=False)
-          break
-        except Empty:
-          pass
-        stem = path.name[: -len("ProgramGraph.pb")]
-        name = f"{stem}ProgramGraphFeaturesList.pb"
-        features_path = self.labels_path / name
-        cdfg_path = self.cdfg_path / path.name
-        node_index_path = self.cdfg_path / f"{stem}NodeIndexList.pb"
+        for path in files:
+          try:
+            self.inq.get(block=False)
+            break
+          except Empty:
+            pass
+          stem = path.name[: -len("ProgramGraph.pb")]
+          name = f"{stem}ProgramGraphFeaturesList.pb"
+          features_path = self.labels_path / name
+          cdfg_path = self.cdfg_path / path.name
+          node_index_path = self.cdfg_path / f"{stem}NodeIndexList.pb"
 
-        if cdfg_path.exists() and features_path.exists():
-          app.Log(3, "Read %s", features_path)
-          graph = pbutil.FromFile(cdfg_path, program_graph_pb2.ProgramGraph())
-          node_list = pbutil.FromFile(node_index_path, node_pb2.NodeIndexList())
-          features_list = pbutil.FromFile(
-            features_path, program_graph_features_pb2.ProgramGraphFeaturesList()
-          )
+          if cdfg_path.exists() and features_path.exists():
+            app.Log(3, "Read %s", features_path)
+            graph = pbutil.FromFile(cdfg_path, program_graph_pb2.ProgramGraph())
+            node_list = pbutil.FromFile(
+              node_index_path, node_pb2.NodeIndexList()
+            )
+            features_list = pbutil.FromFile(
+              features_path,
+              program_graph_features_pb2.ProgramGraphFeaturesList(),
+            )
 
-          for j, features in enumerate(features_list.graph):
-            step_count = features.features.feature[
-              "data_flow_step_count"
-            ].int64_list.value[0]
-            if self.data_flow_step_max and step_count > self.data_flow_step_max:
-              self.skip_count += 1
-              app.Log(
-                3,
-                "Skipped graph with data_flow_step_count %d > %d "
-                "(skipped %d / %d, %.2f%%)",
-                step_count,
-                self.data_flow_step_max,
-                self.skip_count,
-                (i + self.skip_count),
-                (self.skip_count / (i + self.skip_count)) * 100,
-              )
-              continue
-            i += 1
-            if self.logfile:
-              self.logfile.write(f"{features_path} {j}\n")
+            for j, features in enumerate(features_list.graph):
+              step_count = features.features.feature[
+                "data_flow_step_count"
+              ].int64_list.value[0]
+              if (
+                self.data_flow_step_max and step_count > self.data_flow_step_max
+              ):
+                self.skip_count += 1
+                app.Log(
+                  3,
+                  "Skipped graph with data_flow_step_count %d > %d "
+                  "(skipped %d / %d, %.2f%%)",
+                  step_count,
+                  self.data_flow_step_max,
+                  self.skip_count,
+                  (graph_count + self.skip_count),
+                  (self.skip_count / (graph_count + self.skip_count)) * 100,
+                )
+                continue
+              graph_count += 1
+              if self.logfile:
+                self.logfile.write(f"{features_path} {j}\n")
 
-            self.outq.put((graph, features, node_list.node), block=True)
-            if self.max_graph_count and i >= self.max_graph_count:
-              app.Log(2, "Stopping after reading %d graphs", i)
-              self._Done(i)
-              return
+              self.outq.put((graph, features, node_list.node), block=True)
+              if self.max_graph_count and graph_count >= self.max_graph_count:
+                app.Log(2, "Stopping after reading %d graphs", graph_count)
+                self._Done(graph_count)
+                return
 
-      self._Done(i)
+      self._Done(graph_count)
 
     def _Done(self, graph_count: int) -> None:
       app.Log(
