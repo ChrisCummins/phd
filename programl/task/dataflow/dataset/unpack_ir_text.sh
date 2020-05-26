@@ -50,7 +50,7 @@ unpack_ir_text() {
   # pbq command to extract the Ir.text field.
   "$FIND" ir -type f -printf '%f\n' |
     sed 's/\.Ir\.pb$//' |
-    parallel --resume --shuf --joblog ll.joblog.txt --bar \
+    parallel \
       "$PBQ" Ir.text --stdin_fmt=pb \
       '<' ir/{}.Ir.pb \
       '>' ll/{}.ll
