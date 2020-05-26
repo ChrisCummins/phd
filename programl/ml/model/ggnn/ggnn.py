@@ -138,12 +138,28 @@ app.DEFINE_float(
 app.DEFINE_float(
   "output_layer_dropout", 0.0, "Dropout rate on the output layer.",
 )
+
+# Loss flags
+app.DEFINE_boolean("loss_weighting",
+                   False,
+                   "Weight loss contribution in batch by inverse class prevalence"
+                   "to mitigate class imbalance in the dataset."
+                   "currently implemented as a fixed [0.1, 0.9] weighting for 2 class problems"
+                   "this flag will crash the program if set to trum and num_classes != 2.")
+
+# not implemented yet
+#app.DEFINE_boolean("loss_masking",
+#                   False,
+#                   "Mask loss computation on nodes chosen at random from each class"
+#                   "such that balanced class distributions (per batch) remain")
+
 # Debug flags.
 app.DEFINE_boolean(
   "debug_nan_hooks",
   False,
   "If set, add hooks to model execution to trap on NaNs.",
 )
+
 
 
 def NanHook(self, _, output):
@@ -248,6 +264,7 @@ class Ggnn(Model):
         num_classes=self.num_classes,
         has_aux_input=self.has_aux_input,
         intermediate_loss_weight=FLAGS.intermediate_loss_weight,
+        class_prevalence_weighting=FLAGS.loss_weighting
       ),
       has_graph_labels=self.has_graph_labels,
       test_only=self.test_only,

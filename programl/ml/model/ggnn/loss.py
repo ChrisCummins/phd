@@ -14,18 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """A torch loss module."""
+import torch
 from torch import nn
-
 
 class Loss(nn.Module):
   """[Binary] Cross Entropy loss with weighted intermediate loss."""
 
   def __init__(
-    self, num_classes: int, has_aux_input: bool, intermediate_loss_weight: float
+    self, num_classes: int,
+    has_aux_input: bool,
+    intermediate_loss_weight: float,
+    class_prevalence_weighting: bool,
   ):
     super().__init__()
     self.has_aux_input = has_aux_input
     self.intermediate_loss_weight = intermediate_loss_weight
+    self.class_prevalence_weighting = class_prevalence_weighting
 
     if num_classes == 1:
       self.loss = nn.BCELoss()  # in: (N, *), target: (N, *)
@@ -34,7 +38,10 @@ class Loss(nn.Module):
       # don't contribute to the gradient. I was under the impression that we
       # wanted to exploit this fact somewhere. I.e. not predicting labels on
       # nodes that don't constitute branching statements. Let's discuss.
-      self.loss = nn.CrossEntropyLoss(ignore_index=-1)
+
+      # obs: no need to normalize if reduction='mean'
+      weight = torch.tensor([0.1, 0.9]) if self.class_prevalence_weighting else None
+      self.loss = nn.CrossEntropyLoss(weight=weight, ignore_index=-1)
 
   def forward(self, inputs, targets):
     """inputs: (predictions) or (predictions, intermediate_predictions)"""

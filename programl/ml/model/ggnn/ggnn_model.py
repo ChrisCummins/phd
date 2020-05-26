@@ -20,12 +20,16 @@ import torch
 from torch import nn
 from torch import optim
 
-from labm8.py import gpu_scheduler
+from labm8.py import gpu_scheduler, app
 from programl.ml.model.ggnn.aux_readout import AuxiliaryReadout
 from programl.ml.model.ggnn.ggnn_proper import GGNNProper
 from programl.ml.model.ggnn.loss import Loss
 from programl.ml.model.ggnn.metrics import Metrics
 from programl.ml.model.ggnn.node_embeddings import NodeEmbeddings
+
+FLAGS = app.FLAGS
+
+app.DEFINE_boolean("block_gpu", True, "Prevent model from hitchhiking on an occupied gpu.")
 
 
 class GGNNModel(nn.Module):
@@ -51,11 +55,15 @@ class GGNNModel(nn.Module):
     self.metrics = Metrics()
 
     # Move the model to device before making the optimizer.
-    self.dev = (
-      torch.device("cuda")
-      if gpu_scheduler.LockExclusiveProcessGpuAccess()
-      else torch.device("cpu")
-    )
+    if FLAGS.block_gpu:
+      self.dev = (
+        torch.device("cuda")
+        if gpu_scheduler.LockExclusiveProcessGpuAccess()
+        else torch.device("cpu")
+      )
+    else:
+      self.dev = torch.device("cuda")
+
     self.to(self.dev)
 
     # Not instantiating the optimizer should save 2 x #model_params of GPU
