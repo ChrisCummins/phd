@@ -50,8 +50,6 @@ class LivenessAnalysis : public RoodNodeDataFlowAnalysis {
   }
 
  private:
-  int dataFlowStepCount_;
-
   // Live-in and live-out sets that are computed during Init().
   vector<flat_hash_set<int>> liveInSets_;
   vector<flat_hash_set<int>> liveOutSets_;

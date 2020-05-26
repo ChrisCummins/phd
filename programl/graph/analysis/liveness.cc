@@ -71,11 +71,11 @@ Status LivenessAnalysis::Init() {
     return Status::OK;
   }
 
-  dataFlowStepCount_ = 0;
+  size_t stepCount = 0;
   while (!workList.empty()) {
-    ++dataFlowStepCount_;
+    ++stepCount;
 
-    if (dataFlowStepCount_ > 5000) {
+    if (stepCount > std::max(graph().node_size() * 2, 5000)) {
       return Status(error::FAILED_PRECONDITION,
                     "Failed to terminate liveness computation in 5000 steps");
     }
@@ -165,7 +165,35 @@ Status LivenessAnalysis::RunOne(int rootNode, ProgramGraphFeatures* features) {
     }
   }
 
-  AddScalarFeature(features, "data_flow_step_count", dataFlowStepCount_);
+  // BFS from root node to compute maximum distance from root node to a live-out
+  // node.
+  int maxDistance = 0;
+  std::queue<pair<int, int>> q;
+  q.push({rootNode, 1});
+  vector<bool> visited(graph().node_size(), false);
+  while (!q.empty()) {
+    int node = q.front().first;
+    int distance = q.front().second;
+    q.pop();
+
+    if (liveOutSets_[rootNode].contains(node)) {
+      maxDistance = std::max(distance, maxDistance);
+    }
+
+    visited[node] = true;
+    for (const auto next : adjacencies().control[node]) {
+      if (!visited[next]) {
+        q.push({next, distance + 1});
+      }
+    }
+    for (const auto next : adjacencies().data[node]) {
+      if (!visited[next]) {
+        q.push({next, distance + 1});
+      }
+    }
+  }
+
+  AddScalarFeature(features, "data_flow_step_count", maxDistance);
   AddScalarFeature(features, "data_flow_active_node_count",
                    dataFlowActiveNodeCount);
 
