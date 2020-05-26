@@ -63,11 +63,11 @@ After running the dataflow experiments, log files are produced in this directory
 ### File Types
 
 To save disk space, most of the protocol buffers are stored in binary wire format, indicated by the
-`.pb` file extension. The [pb2pbtxt](/programl/cmd/pb2pbtxt.cc) program can used to decode binary
+`.pb` file extension. The [pbq](/programl/cmd/pbq.cc) program can used to decode binary
 protocol buffers into a human-readable text format. To do so, you must specify the type of the
 message, indicated using a `.<type>.pb` suffix on the filename. For example, to decode the
 ProgramGraph protocol buffer `graphs/foo.c.ProgramGraph.pb`, run:
 
 ```sh
-$ pb2pbtxt ProgramGraph < graphs/foo.c.ProgramGraph.pb
+$ pbq ProgramGraph --stdin_fmt=pb < graphs/foo.c.ProgramGraph.pb
 ```

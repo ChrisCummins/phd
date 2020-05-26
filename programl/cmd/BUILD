@@ -25,7 +25,7 @@ sh_binary(
         ":graph2dot",
         ":graph2json",
         ":llvm2graph",
-        ":pb2pbtxt",
+        ":pbq",
         ":xla2graph",
     ],
 )
@@ -137,15 +137,17 @@ cc_binary(
 )
 
 cc_binary(
-    name = "pb2pbtxt",
-    srcs = ["pb2pbtxt.cc"],
+    name = "pbq",
+    srcs = ["pbq.cc"],
     visibility = ["//visibility:public"],
     deps = [
+        "//labm8/cpp:app",
         "//programl/proto:checkpoint_cc",
         "//programl/proto:ir_cc",
         "//programl/proto:program_graph_cc",
         "//programl/proto:program_graph_features_cc",
         "//programl/proto:src_cc",
+        "//programl/util:stdin_fmt",
         "@com_google_protobuf//:protobuf",
     ],
 )

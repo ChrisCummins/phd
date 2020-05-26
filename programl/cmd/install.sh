@@ -15,7 +15,7 @@ EXES=(
   graph2dot
   graph2json
   llvm2graph
-  pb2pbtxt
+  pbq
   xla2graph
 )
 
