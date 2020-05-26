@@ -37,6 +37,16 @@ from programl.proto import program_graph_features_pb2
 from programl.proto import program_graph_pb2
 
 
+app.DEFINE_integer(
+  "max_graph_node_count",
+  60000,
+  "The maximum node count in a single graph. Graphs with greater than this "
+  "many nodes are ignored. Use this to prevent OOM errors when loading very "
+  "large graphs.",
+)
+FLAGS = app.FLAGS
+
+
 class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
   """A graph loader for dataflow graphs and features."""
 
@@ -192,8 +202,15 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
           app.Log(3, "Read %s", features_path)
           graph = pbutil.FromFile(path, program_graph_pb2.ProgramGraph())
           # Skip empty graphs.
-          if not len(graph.node):
-            app.Log(2, "empty graph!")
+          if (
+            not len(graph.node) or len(graph.node) > FLAGS.max_graph_node_count
+          ):
+            app.Log(
+              2,
+              "Graph node count %s is not in range (1,%s]",
+              len(graph.node),
+              FLAGS.max_graph_node_count,
+            )
             continue
 
           # Skip a graph without inst2vec
@@ -330,6 +347,18 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
               features_path,
               program_graph_features_pb2.ProgramGraphFeaturesList(),
             )
+
+            if (
+              not len(graph.node)
+              or len(graph.node) > FLAGS.max_graph_node_count
+            ):
+              app.Log(
+                2,
+                "Graph node count %s is not in range (1,%s]",
+                len(graph.node),
+                FLAGS.max_graph_node_count,
+              )
+              continue
 
             for j, features in enumerate(features_list.graph):
               step_count = features.features.feature[
