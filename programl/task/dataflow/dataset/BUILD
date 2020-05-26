@@ -141,3 +141,12 @@ cc_binary(
         "@com_google_absl//absl/strings:str_format",
     ],
 )
+
+sh_binary(
+    name = "unpack_ir_text",
+    srcs = ["unpack_ir_text.sh"],
+    data = [
+        "//labm8/sh:app",
+        "//programl/cmd:pbq",
+    ],
+)
