@@ -116,27 +116,33 @@ class DataflowGgnnBatchBuilder(BaseBatchBuilder):
           self.graph_loader.Stop()
           return
 
+      try:
+        # Find the vocabulary indices for the nodes in the graph.
+        vocab_ids = [
+          self.vocabulary.get(node.text, len(self.vocabulary))
+          for node in graph.node
+        ]
+        # Read the graph node features using the given node list.
+        selector_ids = [
+          features.node_features.feature_list["data_flow_root_node"]
+          .feature[n]
+          .int64_list.value[0]
+          for n in node_list
+        ]
+        node_labels = [
+          features.node_features.feature_list["data_flow_value"]
+          .feature[n]
+          .int64_list.value[0]
+          for n in node_list
+        ]
+      except IndexError:
+        app.Log(2, "Encoding error")
+        continue
+
       self.builder.AddProgramGraph(graph)
-
-      # Find the vocabulary indices for the nodes in the graph.
-      self.vocab_ids += [
-        self.vocabulary.get(node.text, len(self.vocabulary))
-        for node in graph.node
-      ]
-      # Read the graph node features using the given node list.
-      self.selector_ids += [
-        features.node_features.feature_list["data_flow_root_node"]
-        .feature[n]
-        .int64_list.value[0]
-        for n in node_list
-      ]
-      self.node_labels += [
-        features.node_features.feature_list["data_flow_value"]
-        .feature[n]
-        .int64_list.value[0]
-        for n in node_list
-      ]
-
+      self.vocab_ids += vocab_ids
+      self.selector_ids += selector_ids
+      self.node_labels += node_labels
       node_size += len(graph.node)
 
     if node_size:
