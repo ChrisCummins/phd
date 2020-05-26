@@ -46,9 +46,6 @@ app.DEFINE_string("pwd", None, "The database to export from.")
 app.DEFINE_string("db", None, "The database to export from.")
 FLAGS = app.FLAGS
 
-CREATE_CDFG = bazelutil.DataPath(
-  "phd/programl/task/dataflow/dataset/create_cdfg"
-)
 CREATE_LABELS = bazelutil.DataPath(
   "phd/programl/task/dataflow/dataset/create_labels"
 )
@@ -270,11 +267,7 @@ def Main():
   # Import the classifyapp dataset.
   ImportClassifyAppDataset(pathlib.Path(FLAGS.classifyapp), path)
 
-  app.Log(1, "Creating CDFG graphs")
-  subprocess.check_call([str(CREATE_CDFG), "--path", str(path)])
-
-  # Add inst2vec encoding features to graphs. Do this after CDFG construction
-  # to save unnecessary features being copied over.
+  # Add inst2vec encoding features to graphs.
   app.Log(1, "Encoding graphs with inst2vec")
   progress.Run(Inst2vecEncodeGraphs(path))
 

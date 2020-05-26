@@ -18,7 +18,6 @@ py_binary(
     name = "create",
     srcs = ["create.py"],
     data = [
-        ":create_cdfg",
         ":create_labels",
         ":create_vocab",
         ":unpack_ir_lists",
@@ -34,25 +33,6 @@ py_binary(
         "//programl/ir/llvm/py:llvm",
         "//programl/proto:ir_py",
         "//third_party/py/mysql",
-    ],
-)
-
-cc_binary(
-    name = "create_cdfg",
-    srcs = ["create_cdfg.cc"],
-    copts = ["-fopenmp"],
-    deps = [
-        ":parallel_file_map",
-        "//labm8/cpp:app",
-        "//labm8/cpp:fsutil",
-        "//labm8/cpp:logging",
-        "//labm8/cpp:strutil",
-        "//programl/graph/format:cdfg",
-        "//programl/proto:node_cc",
-        "//programl/proto:program_graph_cc",
-        "//third_party/openmp",
-        "@boost//:filesystem",
-        "@com_google_absl//absl/strings:str_format",
     ],
 )
 

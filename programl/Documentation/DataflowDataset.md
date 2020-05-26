@@ -7,12 +7,6 @@ languages, and includes labels for several compiler data flows.
 
 The uncompressed dataset uses the following layout:
 
-* `cdfg/`
-    * Directory containing [CDFG](/programl/graph/format/cdfg.h) representations of programs.
-    * `cdfg/<source>.<id>.<lang>.ProgramGraph.pb`
-        * A [ProgramGraph](/programl/proto/program_graph.proto) protocol buffer of a program in the CDFG representation.
-    * `cdfg/<source>.<id>.<lang>.NodeIndexList.pb`
-        * A [NodeIndexList](/programl/proto/node.proto) protocol buffer containing a list of node indices used to translate from a full ProGraML graph to a CDFG graph.
 * `labels/`
     * Directory containing machine learning features and labels for programs for compiler data flow analyses.
     * `labels/<analysis>/<source>.<id>.<lang>.ProgramFeaturesList.pb`

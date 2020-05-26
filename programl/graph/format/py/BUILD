@@ -22,6 +22,19 @@ load(
 )
 
 py_library(
+    name = "cdfg",
+    srcs = ["cdfg.py"],
+    data = [
+        "//programl/cmd:graph2cdfg",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//labm8/py:bazelutil",
+        "//programl/proto:program_graph_py",
+    ],
+)
+
+py_library(
     name = "graph_serializer",
     srcs = ["graph_serializer.py"],
     data = [":graph_serializer_pybind.so"],

@@ -15,6 +15,7 @@
 // limitations under the License.
 #include "programl/graph/format/cdfg.h"
 
+#include "programl/graph/features.h"
 #include "programl/proto/edge.pb.h"
 #include "programl/proto/node.pb.h"
 #include "programl/proto/program_graph.pb.h"
@@ -43,6 +44,7 @@ ProgramGraph CDFGBuilder::Build(const ProgramGraph& graph) {
       newNode->set_text(node.text());
       newNode->set_function(node.function());
       *newNode->mutable_features() = node.features();
+      AddScalarFeature(newNode, "source_node_index", int64_t(i));
     }
   }
 

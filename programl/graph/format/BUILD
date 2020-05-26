@@ -23,6 +23,7 @@ cc_library(
     visibility = ["//programl:__subpackages__"],
     deps = [
         "//labm8/cpp:statusor",
+        "//programl/graph:features",
         "//programl/proto:edge_cc",
         "//programl/proto:node_cc",
         "//programl/proto:program_graph_cc",

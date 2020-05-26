@@ -120,6 +120,7 @@ def TrainDataflowGGNN(
       ),
       vocabulary=vocab,
       max_node_size=batch_size,
+      use_cdfg=use_cdfg,
     ),
   )
   val_batches.start()
@@ -145,6 +146,7 @@ def TrainDataflowGGNN(
         ),
         vocabulary=vocab,
         max_node_size=batch_size,
+        use_cdfg=use_cdfg,
       ),
       max_queue_size=100,
     )
@@ -248,6 +250,7 @@ def TestDataflowGGNN(
       use_cdfg=use_cdfg,
     ),
     vocabulary=vocab,
+    use_cdfg=use_cdfg,
     max_node_size=batch_size,
   )
 

@@ -23,16 +23,15 @@ import random
 import threading
 from queue import Empty
 from queue import Queue
-from typing import Any
 from typing import Iterable
 from typing import Tuple
 
 from labm8.py import app
 from labm8.py import humanize
 from labm8.py import pbutil
+from programl.graph.format.py import cdfg
 from programl.ml.batch import base_graph_loader
 from programl.proto import epoch_pb2
-from programl.proto import node_pb2
 from programl.proto import program_graph_features_pb2
 from programl.proto import program_graph_pb2
 
@@ -63,32 +62,31 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
     use_cdfg: bool = False,
     require_inst2vec: bool = False,
   ):
+    self.graph_path = path / epoch_pb2.EpochType.Name(epoch_type).lower()
+    if not self.graph_path.is_dir():
+      raise FileNotFoundError(str(self.graph_path))
+
+    self.labels_path = path / "labels" / analysis
+    if not self.labels_path.is_dir():
+      raise FileNotFoundError(str(self.labels_path))
+
+    # Configuration options.
+    self.min_graph_count = min_graph_count
+    self.max_graph_count = max_graph_count
+    self.data_flow_step_max = data_flow_step_max
+    self.seed = seed
+    self.logfile = logfile
+    self.use_cdfg = use_cdfg
+    self.require_inst2vec = require_inst2vec
+
+    # The number of graphs that have been skipped.
+    self.skip_count = 0
+
     self._inq = Queue(maxsize=1)
     self._outq = Queue(maxsize=50)
-
-    reader_opts = {
-      "path": path,
-      "epoch_type": epoch_type,
-      "analysis": analysis,
-      "inq": self._inq,
-      "outq": self._outq,
-      "seed": seed,
-      "min_graph_count": min_graph_count,
-      "max_graph_count": max_graph_count,
-      "data_flow_step_max": data_flow_step_max,
-      "logfile": logfile,
-    }
-
-    if use_cdfg:
-      self._thread = self._CDFGReader(**reader_opts)
-    else:
-      reader_opts["require_inst2vec"] = require_inst2vec
-      self._thread = self._Reader(**reader_opts)
+    self._thread = threading.Thread(target=self._Worker)
     self._thread.start()
     self._stopped = False
-
-  def IterableType(self) -> Any:
-    return self._thread.IterableType()
 
   def Stop(self):
     if self._stopped:
@@ -120,285 +118,118 @@ class DataflowGraphLoader(base_graph_loader.BaseGraphLoader):
 
     pass
 
-  class _Reader(threading.Thread):
-    """Private graph reader."""
+  def _Worker(self):
+    """Threaded graph reader."""
+    files = list(self.graph_path.iterdir())
+    app.Log(2, "Enumerated %s graph files to load", humanize.Commas(len(files)))
 
-    def __init__(
-      self,
-      path,
-      epoch_type: epoch_pb2.EpochType,
-      analysis: str,
-      inq: Queue,
-      outq: Queue,
-      seed: int = None,
-      min_graph_count: int = None,
-      max_graph_count: int = None,
-      data_flow_step_max: int = None,
-      logfile=None,
-      require_inst2vec: bool = False,
-    ):
-      self.inq = inq
-      self.outq = outq
-      self.min_graph_count = min_graph_count
-      self.max_graph_count = max_graph_count
-      self.data_flow_step_max = data_flow_step_max
-      self.seed = seed
-      self.require_inst2vec = require_inst2vec
-      # The number of skipped graphs.
-      self.skip_count = 0
-      self.logfile = logfile
-      super(DataflowGraphLoader._Reader, self).__init__()
+    graph_count = 0
+    while graph_count < self.min_graph_count:
+      if self.seed:
+        # If we are setting a reproducible seed, first sort the list of files
+        # since iterdir() order is undefined, then seed the RNG for the
+        # shuffle.
+        files = sorted(files, key=lambda x: x.name)
+        # Change the seed so that on the next execution of this loop we will
+        # chose a different random ordering.
+        self.seed += 1
+      random.Random(self.seed).shuffle(files)
 
-      self.graph_path = path / epoch_pb2.EpochType.Name(epoch_type).lower()
-      if not self.graph_path.is_dir():
-        raise FileNotFoundError(str(self.graph_path))
+      for graph_path in files:
+        # Check if there is a message telling us to stop.
+        try:
+          self._inq.get(block=False)
+          break
+        except Empty:
+          # Bad luck buddy! Looks like you're going to have to do some work.
+          # Be a good little graph loader, you.
+          pass
 
-      self.labels_path = path / "labels" / analysis
-      if not self.labels_path.is_dir():
-        raise FileNotFoundError(str(self.labels_path))
+        stem = graph_path.name[: -len("ProgramGraph.pb")]
+        name = f"{stem}ProgramGraphFeaturesList.pb"
+        features_path = self.labels_path / name
+        # There is no guarantee that we have generated features for this
+        # program graph, so we check for its existence. As a *very* defensive
+        # measure, we also check for the existence of the graph file that we
+        # enumerated at the start of this function. This check can be removed
+        # later, it is only useful during development when you might be
+        # modifying the dataset at the same time as having test jobs running.
+        if not graph_path.is_file() or not features_path.is_file():
+          self.skip_count += 1
+          continue
 
-    def IterableType(self) -> Any:
-      return (
-        program_graph_pb2.ProgramGraph,
-        program_graph_features_pb2.ProgramGraphFeatures,
-      )
+        # Read the graph from disk, maybe performing a cheeky wee conversion
+        # to CDFG format.
+        app.Log(3, "Read %s", features_path)
+        if self.use_cdfg:
+          graph = cdfg.FromProgramGraphFile(graph_path)
+        else:
+          graph = pbutil.FromFile(graph_path, program_graph_pb2.ProgramGraph())
 
-    def run(self):
-      files = list(self.graph_path.iterdir())
-      app.Log(
-        2, "Enumerated %s graph files to load", humanize.Commas(len(files))
-      )
+        if not graph:
+          app.Log(2, "Failed to load graph %s", graph_path)
+          self.skip_count += 1
+          continue
 
-      graph_count = 0
-      while graph_count < self.min_graph_count:
-        if self.seed:
-          # If we are setting a reproducible seed, first sort the list of files
-          # since iterdir() order is undefined, then seed the RNG for the shuffle.
-          files = sorted(files, key=lambda x: x.name)
-          # Change the seed so that on the next execution of this loop we will
-          # chose a different random ordering.
-          self.seed += 1
-        random.Random(self.seed).shuffle(files)
-
-        for path in files:
-          try:
-            self.inq.get(block=False)
-            break
-          except Empty:
-            pass
-          stem = path.name[: -len("ProgramGraph.pb")]
-          name = f"{stem}ProgramGraphFeaturesList.pb"
-          features_path = self.labels_path / name
-          # There is no guarantee that we have generated features for this program
-          # graph, so we check for its existence. As a *very* defennsive measure,
-          # we also check for the existence of the graph file that we enumearted
-          # at the start of this function. This check can be removed later, it is
-          # only useful during development when you might be modifying the dataset
-          # at the same time as having test jobs running.
-          if not path.is_file() or not features_path.is_file():
-            self.skip_count += 1
-            continue
-
-          app.Log(3, "Read %s", features_path)
-          graph = pbutil.FromFile(path, program_graph_pb2.ProgramGraph())
-          # Skip empty graphs.
-          if (
-            not len(graph.node) or len(graph.node) > FLAGS.max_graph_node_count
-          ):
-            app.Log(
-              2,
-              "Graph node count %s is not in range (1,%s]",
-              len(graph.node),
-              FLAGS.max_graph_node_count,
-            )
-            continue
-
-          # Skip a graph without inst2vec
-          if self.require_inst2vec and not len(
-            graph.features.feature["inst2vec_annotated"].int64_list.value
-          ):
-            app.Log(2, "Skipping graph without inst2vec annotations")
-            continue
-
-          features_list = pbutil.FromFile(
-            features_path, program_graph_features_pb2.ProgramGraphFeaturesList()
+        # Skip empty graphs.
+        if not len(graph.node) or len(graph.node) > FLAGS.max_graph_node_count:
+          app.Log(
+            2,
+            "Graph node count %s is not in range (1,%s]",
+            len(graph.node),
+            FLAGS.max_graph_node_count,
           )
-          for j, features in enumerate(features_list.graph):
-            step_count_feature = features.features.feature[
-              "data_flow_step_count"
-            ].int64_list.value
-            step_count = step_count_feature[0] if len(step_count_feature) else 0
-            if self.data_flow_step_max and step_count > self.data_flow_step_max:
-              self.skip_count += 1
-              app.Log(
-                3,
-                "Skipped graph with data_flow_step_count %d > %d "
-                "(skipped %d / %d, %.2f%%)",
-                step_count,
-                self.data_flow_step_max,
-                self.skip_count,
-                (graph_count + self.skip_count),
-                (self.skip_count / (graph_count + self.skip_count)) * 100,
-              )
-              continue
-            graph_count += 1
-            if self.logfile:
-              self.logfile.write(f"{features_path} {j}\n")
-            self.outq.put((graph, features), block=True)
-            if self.max_graph_count and graph_count >= self.max_graph_count:
-              app.Log(2, "Stopping after reading %d graphs", graph_count)
-              self._Done(graph_count)
-              return
+          continue
 
-      self._Done(graph_count)
+        # Skip a graph without inst2vec
+        if self.require_inst2vec and not len(
+          graph.features.feature["inst2vec_annotated"].int64_list.value
+        ):
+          app.Log(2, "Skipping graph without inst2vec annotations")
+          continue
 
-    def _Done(self, graph_count: int) -> None:
-      app.Log(
-        2,
-        "Skipped %s of %s graphs (%.2f%%)",
-        humanize.Commas(self.skip_count),
-        humanize.Commas(graph_count + self.skip_count),
-        (self.skip_count / max(graph_count + self.skip_count, 1)) * 100,
-      )
-      self.outq.put(DataflowGraphLoader._EndOfIterator(), block=True)
-      if self.logfile:
-        self.logfile.close()
+        features_list = pbutil.FromFile(
+          features_path, program_graph_features_pb2.ProgramGraphFeaturesList()
+        )
 
-  class _CDFGReader(threading.Thread):
-    """CDFG graph reader."""
-
-    def __init__(
-      self,
-      path,
-      epoch_type: epoch_pb2.EpochType,
-      analysis: str,
-      inq: Queue,
-      outq: Queue,
-      seed: int = None,
-      min_graph_count: int = None,
-      max_graph_count: int = None,
-      data_flow_step_max: int = None,
-      logfile=None,
-    ):
-      self.inq = inq
-      self.outq = outq
-      self.min_graph_count = min_graph_count
-      self.max_graph_count = max_graph_count
-      self.data_flow_step_max = data_flow_step_max
-      self.seed = seed
-      # The number of skipped graphs.
-      self.skip_count = 0
-      self.logfile = logfile
-      super(DataflowGraphLoader._CDFGReader, self).__init__()
-
-      self.graph_path = path / epoch_pb2.EpochType.Name(epoch_type).lower()
-      if not self.graph_path.is_dir():
-        raise FileNotFoundError(str(self.graph_path))
-
-      self.labels_path = path / "labels" / analysis
-      if not self.labels_path.is_dir():
-        raise FileNotFoundError(str(self.labels_path))
-
-      self.cdfg_path = path / "cdfg"
-      if not self.cdfg_path.is_dir():
-        raise FileNotFoundError(str(self.cdfg_path))
-
-    def IterableType(self) -> Any:
-      return (
-        program_graph_pb2.ProgramGraph,
-        program_graph_features_pb2.ProgramGraphFeatures,
-        node_pb2.NodeIndexList,
-      )
-
-    def run(self):
-      files = list(self.graph_path.iterdir())
-      app.Log(
-        2, "Enumerated %s graph files to load", humanize.Commas(len(files))
-      )
-
-      graph_count = 0
-      while graph_count < self.min_graph_count:
-        if self.seed:
-          files = sorted(files, key=lambda x: x.name)
-          # Change the seed so that on the next execution of this loop we will
-          # chose a different random ordering.
-          self.seed += 1
-        random.Random(self.seed).shuffle(files)
-
-        for path in files:
-          try:
-            self.inq.get(block=False)
-            break
-          except Empty:
-            pass
-          stem = path.name[: -len("ProgramGraph.pb")]
-          name = f"{stem}ProgramGraphFeaturesList.pb"
-          features_path = self.labels_path / name
-          cdfg_path = self.cdfg_path / path.name
-          node_index_path = self.cdfg_path / f"{stem}NodeIndexList.pb"
-
-          if cdfg_path.exists() and features_path.exists():
-            app.Log(3, "Read %s", features_path)
-            graph = pbutil.FromFile(cdfg_path, program_graph_pb2.ProgramGraph())
-            node_list = pbutil.FromFile(
-              node_index_path, node_pb2.NodeIndexList()
+        # Iterate over the features list to yield <graph, features> pairs.
+        for j, features in enumerate(features_list.graph):
+          step_count_feature = features.features.feature[
+            "data_flow_step_count"
+          ].int64_list.value
+          step_count = step_count_feature[0] if len(step_count_feature) else 0
+          if self.data_flow_step_max and step_count > self.data_flow_step_max:
+            self.skip_count += 1
+            app.Log(
+              3,
+              "Skipped graph with data_flow_step_count %d > %d "
+              "(skipped %d / %d, %.2f%%)",
+              step_count,
+              self.data_flow_step_max,
+              self.skip_count,
+              (graph_count + self.skip_count),
+              (self.skip_count / (graph_count + self.skip_count)) * 100,
             )
-            features_list = pbutil.FromFile(
-              features_path,
-              program_graph_features_pb2.ProgramGraphFeaturesList(),
-            )
+            continue
+          graph_count += 1
+          if self.logfile:
+            self.logfile.write(f"{features_path} {j}\n")
+          self._outq.put((graph, features), block=True)
+          if self.max_graph_count and graph_count >= self.max_graph_count:
+            app.Log(2, "Stopping after reading %d graphs", graph_count)
+            self._Done(graph_count)
+            return
 
-            if (
-              not len(graph.node)
-              or len(graph.node) > FLAGS.max_graph_node_count
-            ):
-              app.Log(
-                2,
-                "Graph node count %s is not in range (1,%s]",
-                len(graph.node),
-                FLAGS.max_graph_node_count,
-              )
-              continue
+    self._Done(graph_count)
 
-            for j, features in enumerate(features_list.graph):
-              step_count = features.features.feature[
-                "data_flow_step_count"
-              ].int64_list.value[0]
-              if (
-                self.data_flow_step_max and step_count > self.data_flow_step_max
-              ):
-                self.skip_count += 1
-                app.Log(
-                  3,
-                  "Skipped graph with data_flow_step_count %d > %d "
-                  "(skipped %d / %d, %.2f%%)",
-                  step_count,
-                  self.data_flow_step_max,
-                  self.skip_count,
-                  (graph_count + self.skip_count),
-                  (self.skip_count / (graph_count + self.skip_count)) * 100,
-                )
-                continue
-              graph_count += 1
-              if self.logfile:
-                self.logfile.write(f"{features_path} {j}\n")
-
-              self.outq.put((graph, features, node_list.node), block=True)
-              if self.max_graph_count and graph_count >= self.max_graph_count:
-                app.Log(2, "Stopping after reading %d graphs", graph_count)
-                self._Done(graph_count)
-                return
-
-      self._Done(graph_count)
-
-    def _Done(self, graph_count: int) -> None:
-      app.Log(
-        2,
-        "Skipped %s of %s graphs (%.2f%%)",
-        humanize.Commas(self.skip_count),
-        humanize.Commas(graph_count + self.skip_count),
-        (self.skip_count / max(graph_count + self.skip_count, 1)) * 100,
-      )
-      self.outq.put(DataflowGraphLoader._EndOfIterator(), block=True)
-      if self.logfile:
-        self.logfile.close()
+  def _Done(self, graph_count: int) -> None:
+    app.Log(
+      2,
+      "Skipped %s of %s graphs (%.2f%%)",
+      humanize.Commas(self.skip_count),
+      humanize.Commas(graph_count + self.skip_count),
+      (self.skip_count / max(graph_count + self.skip_count, 1)) * 100,
+    )
+    self._outq.put(DataflowGraphLoader._EndOfIterator(), block=True)
+    if self.logfile:
+      self.logfile.close()

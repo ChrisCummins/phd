@@ -42,11 +42,13 @@ class DataflowGgnnBatchBuilder(BaseBatchBuilder):
     vocabulary: Dict[str, int],
     max_node_size: int = 10000,
     max_batch_count: int = None,
+    use_cdfg: bool = False,
   ):
     super(DataflowGgnnBatchBuilder, self).__init__(graph_loader)
     self.vocabulary = vocabulary
     self.max_node_size = max_node_size
     self.max_batch_count = max_batch_count
+    self.use_cdfg = use_cdfg
 
     # Mutable state.
     self.builder = GraphTupleBuilder()
@@ -54,22 +56,6 @@ class DataflowGgnnBatchBuilder(BaseBatchBuilder):
     self.selector_ids = []
     self.node_labels = []
     self.batch_count = 0
-
-    # Determine the type of graph loader that we are building batches from.
-    iter_type = self.graph_loader.IterableType()
-    if self.graph_loader.IterableType() == (
-      program_graph_pb2.ProgramGraph,
-      program_graph_features_pb2.ProgramGraphFeatures,
-    ):
-      self.use_node_list = False
-    elif self.graph_loader.IterableType() == (
-      program_graph_pb2.ProgramGraph,
-      program_graph_features_pb2.ProgramGraphFeatures,
-      node_pb2.NodeIndexList,
-    ):
-      self.use_node_list = True
-    else:
-      raise TypeError(f"Unsupported graph reader iterable type: {iter_type}")
 
   def _Reset(self) -> None:
     self.vocab_ids = []
@@ -98,12 +84,15 @@ class DataflowGgnnBatchBuilder(BaseBatchBuilder):
 
   def __iter__(self) -> Iterable[BatchData]:
     node_size = 0
-    for item in self.graph_loader:
+    for graph, features in self.graph_loader:
 
-      if self.use_node_list:
-        graph, features, node_list = item
+      # Determine the node
+      if self.use_cdfg:
+        node_list = [
+          node.features.feature["source_node_index"].int64_list.value[0]
+          for node in graph.node
+        ]
       else:
-        graph, features = item
         node_list = list(range(len(graph.node)))
 
       if node_size + len(graph.node) > self.max_node_size:
@@ -143,7 +132,7 @@ class DataflowGgnnBatchBuilder(BaseBatchBuilder):
       self.vocab_ids += vocab_ids
       self.selector_ids += selector_ids
       self.node_labels += node_labels
-      node_size += len(graph.node)
+      node_size += len(node_list)
 
     if node_size:
       self.batch_count += 1

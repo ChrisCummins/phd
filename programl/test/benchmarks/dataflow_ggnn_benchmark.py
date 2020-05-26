@@ -63,23 +63,27 @@ def data_directory() -> pathlib.Path:
     yield d
 
 
-def GraphLoader(path):
+def GraphLoader(path, use_cdfg: bool = False):
   return DataflowGraphLoader(
     path=path,
     epoch_type=epoch_pb2.TRAIN,
     analysis="reachability",
-    min_graph_count=FLAGS.graph_count,
+    min_graph_count=FLAGS.graph_count or 1,
     max_graph_count=FLAGS.graph_count,
     logfile=open(path / "graph_reader_log.txt", "w"),
+    use_cdfg=use_cdfg,
   )
 
 
-def BatchBuilder(graph_loader, vocab, max_batch_count=None):
+def BatchBuilder(
+  graph_loader, vocab, max_batch_count=None, use_cdfg: bool = False
+):
   return DataflowGgnnBatchBuilder(
     graph_loader=graph_loader,
     vocabulary=vocab,
     max_node_size=FLAGS.batch_size,
     max_batch_count=max_batch_count,
+    use_cdfg=use_cdfg,
   )
 
 
@@ -106,9 +110,30 @@ def Main():
     with prof.Profile("Benchmark graph loader"):
       for _ in tqdm(graphs, unit=" graphs"):
         pass
+    app.Log(1, "Skip count: %s", graph_loader.skip_count)
+
+    Print(
+      "=== BENCHMARK 1: Loading graphs from filesystem and converting to CDFG ==="
+    )
+    graph_loader = GraphLoader(path, use_cdfg=True)
+    graphs = ppar.ThreadedIterator(graph_loader, max_queue_size=100)
+    with prof.Profile("Benchmark CDFG graph loader"):
+      for _ in tqdm(graphs, unit=" graphs"):
+        pass
+    app.Log(1, "Skip count: %s", graph_loader.skip_count)
 
     Print("=== BENCHMARK 2: Batch construction ===")
     batches = BatchBuilder(GraphLoader(path), Vocab())
+    batches = ppar.ThreadedIterator(batches, max_queue_size=100)
+    cached_batches = []
+    with prof.Profile("Benchmark batch construction"):
+      for batch in tqdm(batches, unit=" batches"):
+        cached_batches.append(batch)
+
+    Print("=== BENCHMARK 2: CDFG batch construction ===")
+    batches = BatchBuilder(
+      GraphLoader(path, use_cdfg=True), Vocab(), use_cdfg=True
+    )
     batches = ppar.ThreadedIterator(batches, max_queue_size=100)
     cached_batches = []
     with prof.Profile("Benchmark batch construction"):
