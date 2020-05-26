@@ -140,15 +140,17 @@ app.DEFINE_float(
 )
 
 # Loss flags
-app.DEFINE_boolean("loss_weighting",
-                   False,
-                   "Weight loss contribution in batch by inverse class prevalence"
-                   "to mitigate class imbalance in the dataset."
-                   "currently implemented as a fixed [0.1, 0.9] weighting for 2 class problems"
-                   "this flag will crash the program if set to trum and num_classes != 2.")
+app.DEFINE_boolean(
+  "loss_weighting",
+  False,
+  "Weight loss contribution in batch by inverse class prevalence"
+  "to mitigate class imbalance in the dataset."
+  "currently implemented as a fixed [0.1, 0.9] weighting for 2 class problems"
+  "this flag will crash the program if set to trum and num_classes != 2.",
+)
 
 # not implemented yet
-#app.DEFINE_boolean("loss_masking",
+# app.DEFINE_boolean("loss_masking",
 #                   False,
 #                   "Mask loss computation on nodes chosen at random from each class"
 #                   "such that balanced class distributions (per batch) remain")
@@ -159,7 +161,6 @@ app.DEFINE_boolean(
   False,
   "If set, add hooks to model execution to trap on NaNs.",
 )
-
 
 
 def NanHook(self, _, output):
@@ -264,7 +265,7 @@ class Ggnn(Model):
         num_classes=self.num_classes,
         has_aux_input=self.has_aux_input,
         intermediate_loss_weight=FLAGS.intermediate_loss_weight,
-        class_prevalence_weighting=FLAGS.loss_weighting
+        class_prevalence_weighting=FLAGS.loss_weighting,
       ),
       has_graph_labels=self.has_graph_labels,
       test_only=self.test_only,
@@ -440,6 +441,7 @@ class Ggnn(Model):
     return {
       "model_state_dict": self.model.state_dict(),
       "optimizer_state_dict": self.model.opt.state_dict(),
+      "scheduler_state_dict": self.model.scheduler.state_dict(),
     }
 
   def LoadModelData(self, data_to_load: typing.Any) -> None:
@@ -447,6 +449,7 @@ class Ggnn(Model):
     # only restore opt if needed. opt should be None o/w.
     if not self.test_only:
       self.model.opt.load_state_dict(data_to_load["optimizer_state_dict"])
+      self.model.scheduler.load_state_dict(data_to_load["scheduler_state_dict"])
 
 
 def GetUnrollSteps(
