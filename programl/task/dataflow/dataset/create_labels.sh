@@ -61,6 +61,8 @@ run_analysis() {
     parallel timeout -s9 60 "$ANALYZE" "$analysis" \
       '<' graphs/{}.ProgramGraph.pb --stdin_fmt=pb \
       '>' labels/"$analysis"/{}.ProgramGraphFeaturesList.pb --stdout_fmt=pb
+  # Any failed analyses will appear as empty files.
+  "$FIND" labels/"$analysis" -type f -size 0 -delete
 }
 
 main() {
