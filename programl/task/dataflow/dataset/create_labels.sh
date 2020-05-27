@@ -55,14 +55,12 @@ run_analysis() {
 
   echo "Generating $analysis labels ..."
   mkdir -p labels/"$analysis"
-  # One big GNU parallel invocation to enumerate all program graphs and feed them through the
-  # `analyze` command.
+  # Enumerate all program graphs and feed them through the `analyze` command.
   "$FIND" graphs -type f -printf '%f\n' |
     sed 's/\.ProgramGraph\.pb$//' |
-    parallel --resume --shuf --joblog labels/"$analysis".joblog.txt --bar \
-      cat graphs/{}.ProgramGraph.pb '|' \
-      "$ANALYZE" "$analysis" --stdin_fmt=pb --stdout_fmt=pb '>' \
-      labels/"$analysis"/{}.ProgramGraphFeaturesList.pb
+    parallel timeout -s9 60 "$ANALYZE" "$analysis" \
+      '<' graphs/{}.ProgramGraph.pb --stdin_fmt=pb \
+      '>' labels/"$analysis"/{}.ProgramGraphFeaturesList.pb --stdout_fmt=pb
 }
 
 main() {
