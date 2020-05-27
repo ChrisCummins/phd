@@ -50,6 +50,21 @@ overview() {
   find graphs -type f | grep -v poj104 | grep -v github | cut -d'.' -f1 | sort | uniq -c
   find graphs -type f -name 'poj104*' | cut -d'_' -f1 | sort | uniq -c
   find graphs -type f -name 'github*' | cut -d'.' -f1,3 | sort | uniq -c
+
+  if [[ -d ll ]]; then
+    echo
+    echo "=========================="
+    echo "IR line counts:"
+    echo "BLAS          $(find ll -type f -name 'blas*.ll' | xargs wc -l | tail -n1 | sed -r 's/^ +//' | cut -d' ' -f1)"
+    echo "Linux         $(find ll -type f -name 'linux*.ll' | xargs wc -l | tail -n1 | sed -r 's/^ +//' | cut -d' ' -f1)"
+    echo "OpenCL        $(find ll -type f -name 'opencl*.ll' | xargs wc -l | tail -n1 | sed -r 's/^ +//' | cut -d' ' -f1)"
+    echo "OpenCV        $(find ll -type f -name 'opencv*.ll' | xargs wc -l | tail -n1 | sed -r 's/^ +//' | cut -d' ' -f1)"
+    echo "POJ-104       $(find ll -type f -name 'poj104*.ll' | xargs wc -l | tail -n1 | sed -r 's/^ +//' | cut -d' ' -f1)"
+    echo "TensorFlow    $(find ll -type f -name 'tensorflow*.ll' | xargs wc -l | tail -n1 | sed -r 's/^ +//' | cut -d' ' -f1)"
+    echo "Github C      $(find ll -type f -name 'github.*.c.ll' | xargs wc -l | tail -n1 | sed -r 's/^ +//' | cut -d' ' -f1)"
+    echo "Github OpenCL $(find ll -type f -name 'github.*.cl.ll' | xargs wc -l | tail -n1 | sed -r 's/^ +//' | cut -d' ' -f1)"
+    echo "Github Swift  $(find ll -type f -name 'github.*.swift.ll' | xargs wc -l | tail -n1 | sed -r 's/^ +//' | cut -d' ' -f1)"
+  fi
 }
 
 main() {
