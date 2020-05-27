@@ -2,9 +2,7 @@
 
 Currently, pip package deployment is supported through the DEPLOY_PIP function.
 """
-import configparser
 import contextlib
-import os
 import pathlib
 import shutil
 import subprocess
