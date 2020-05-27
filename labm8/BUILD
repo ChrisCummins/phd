@@ -60,6 +60,6 @@ exports_pip(
         "protobuf",
     ],
     license = "Apache License, Version 2.0",
-    long_description_file = "//labm8/py:README.md",
+    long_description_file = "//labm8:README.md",
     package_root = "//labm8",
 )
