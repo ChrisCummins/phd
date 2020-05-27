@@ -84,17 +84,6 @@ def DeploymentDirectory(workspace: phd_workspace.PhdWorkspace) -> str:
     shutil.rmtree(deployment_directory)
 
 
-def GetPypiCredentials() -> typing.Tuple[str, str]:
-  """Read PyPi username and password from ~/.pypirc."""
-  pypirc = pathlib.Path("~/.pypirc").expanduser()
-  if not pypirc.is_file():
-    raise OSError("~/.pypirc not found")
-
-  config = configparser.ConfigParser()
-  config.read(pypirc)
-  return config["pypi"]["username"], config["pypi"]["password"]
-
-
 def GetUrlFromCnameFile(
   workspace: phd_workspace.PhdWorkspace, package_root: str
 ):
@@ -119,8 +108,6 @@ def _DoDeployPip(
   if release_type not in {"release", "testing"}:
     raise OSError("--release_type must be one of: {testing,release}")
 
-  pypi_username, pypi_password = GetPypiCredentials()
-
   source_path = pathlib.Path(workspace_status.STABLE_UNSAFE_WORKSPACE)
   workspace = phd_workspace.PhdWorkspace(source_path)
 
@@ -134,6 +121,12 @@ def _DoDeployPip(
     requirements = workspace.GetPythonRequirementsForTarget(targets)
     requirements = [r.split()[0] for r in requirements]
 
+    def QuotedList(items, indent: int = 8):
+      """Produce an indented, quoted list."""
+      prefix = " " * indent
+      list = f",\n{prefix}".join([f'"{x}"' for x in items])
+      return f"{prefix}{list},"
+
     rules = f"""
 load(
     "@graknlabs_bazel_distribution//pip:rules.bzl",
@@ -143,17 +136,25 @@ load(
 
 py_library(
     name = "{package_name}",
-    deps = [{",".join([f'"{x}"' for x in targets])}],
+    deps = [
+{QuotedList(targets)}
+    ],
 )
 
 assemble_pip(
     name = "package",
     author = "Chris Cummins",
     author_email ="chrisc.101@gmail.com",
-    classifiers=[{",".join([f'"{x}"' for x in classifiers])}],
+    classifiers=[
+{QuotedList(classifiers)}
+    ],
     description="{description}",
-    install_requires=[{",".join([f'"{x}"' for x in requirements])}],
-    keywords=[{",".join([f'"{x}"' for x in keywords])}],
+    install_requires=[
+{QuotedList(requirements)}
+    ],
+    keywords=[
+{QuotedList(keywords)}
+    ],
     license="{license}",
     long_description_file="{long_description_file}",
     package_name="{package_name}",
@@ -168,6 +169,7 @@ deploy_pip(
   target = ":package",
 )
 """
+    app.Log(2, "Generated rules:\n%s", rules)
 
     fs.Write(
       workspace.workspace_root / deployment_package / "BUILD",
@@ -183,12 +185,8 @@ deploy_pip(
       raise OSError("package build failed")
 
     app.Log(1, "Deploying package ...")
-    env = os.environ.copy()
-    env["DEPLOY_PIP_USERNAME"] = pypi_username
-    env["DEPLOY_PIP_PASSWORD"] = pypi_password
-
     build = workspace.Bazel(
-      "run", [f"//{deployment_package}:deploy", "--", release_type], env=env
+      "run", [f"//{deployment_package}:deploy", "--", release_type],
     )
     build.communicate()
     if build.returncode:

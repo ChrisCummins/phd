@@ -3,6 +3,7 @@ import datetime
 import glob
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import typing
@@ -87,6 +88,68 @@ class PhdWorkspace(bazelutil.Workspace):
       auxiliary_exports += GlobToPaths(f"{dirname}/LICENSE*")
 
     return auxiliary_exports
+
+  def GetPythonRequirementsForTarget(
+    self, targets: typing.List[str]
+  ) -> typing.List[str]:
+    """Get the subset of requirements.txt which is needed for a target."""
+    # The set of bazel dependencies for all targets.
+    dependencies = set()
+    for target in targets:
+      bazel = self.BazelQuery([f"deps({target})"], stdout=subprocess.PIPE)
+      grep = subprocess.Popen(
+        ["grep", "^@requirements_pypi__"],
+        stdout=subprocess.PIPE,
+        stdin=bazel.stdout,
+        universal_newlines=True,
+      )
+      stdout, _ = grep.communicate()
+      if bazel.returncode:
+        raise OSError("bazel query failed")
+      output = stdout.rstrip()
+      if output:
+        dependencies = dependencies.union(set(output.split("\n")))
+
+    with open(str(self.workspace_root / "requirements.txt")) as f:
+      all_requirements = set(f.readlines())
+
+    needed = []
+    all_dependencies = set()
+    # This is a pretty hacky approach that tries to match the package component
+    # of the generated @pypi__<package>_<vesion> package to the name as it
+    # appears in requirements.txt.
+    for dependency in dependencies:
+      if not dependency.startswith("@requirements_pypi__"):
+        continue
+      dependency = (
+        dependency[len("@requirements_pypi__") :].lower().split("//:")[0]
+      )
+      all_dependencies.add(dependency)
+
+    def _GetMatchingRequirements(dependency: str, all_requirements):
+      requirements = []
+      for requirement in all_requirements:
+        requirement_to_match = requirement.replace("-", "_").lower().rstrip()
+        requirement_to_match = requirement_to_match.split("==")[0]
+        requirement_to_match = re.sub(r"#.*", "", requirement_to_match)
+        if not requirement_to_match:
+          continue
+        if dependency.startswith(requirement_to_match):
+          requirements.append(requirement.rstrip())
+      return requirements
+
+    for dependency in all_dependencies:
+      requirements = _GetMatchingRequirements(dependency, all_requirements)
+      if not requirements:
+        continue
+      needed += requirements
+      # Total hack workaround for the fact that
+      # //third_party/py/scipy:BUILD pulls in multiple packages.
+      for requirement in requirements:
+        if requirement.startswith("scipy"):
+          needed += _GetMatchingRequirements("scikit", all_requirements)
+
+    return list(sorted(set(needed)))
 
   def FilterExcludedPaths(
     self, paths: typing.List[pathlib.Path]
