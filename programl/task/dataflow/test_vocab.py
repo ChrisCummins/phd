@@ -52,15 +52,12 @@ class TestVocab(progress.Progress):
     cdfg = defaultdict(int)
     programl = defaultdict(int)
     node_count = 0
-    instr_count = 0
 
     for self.ctx.i, path in enumerate(self.graphs, start=1):
       graph = pbutil.FromFile(path, program_graph_pb2.ProgramGraph())
 
       for node in graph.node:
         node_count += 1
-        if node.type == node_pb2.Node.INSTRUCTION:
-          instr_count += 1
 
         try:
           n = (
@@ -80,53 +77,33 @@ class TestVocab(progress.Progress):
           programl[node.text] += 1
 
     ToCsv(
-      self.path / "vocab" / "inst2vec_test_coverage.csv",
-      inst2vec,
-      node_count,
-      instr_count,
+      self.path / "vocab" / "inst2vec_test_coverage.csv", inst2vec, node_count,
     )
     ToCsv(
-      self.path / "vocab" / "cdfg_test_coverage.csv",
-      cdfg,
-      node_count,
-      instr_count,
+      self.path / "vocab" / "cdfg_test_coverage.csv", cdfg, node_count,
     )
     ToCsv(
-      self.path / "vocab" / "programl_test_coverage.csv",
-      programl,
-      node_count,
-      instr_count,
+      self.path / "vocab" / "programl_test_coverage.csv", programl, node_count,
     )
 
 
 def ToCsv(
-  path: pathlib.Path,
-  vocab_counts: defaultdict,
-  node_count: int,
-  instr_count: int,
+  path: pathlib.Path, vocab_counts: defaultdict, node_count: int,
 ):
   vocab_entries = sorted(vocab_counts.items(), key=lambda x: -x[1])
   total_count = sum(vocab_counts.values())
 
   cumfreq = 0
-  instr_cumfreq = 0
   node_cumfreq = 0
   with open(str(path), "w") as f:
     writer = csv.writer(f, delimiter="\t")
     writer.writerow(
-      (
-        "cumulative_frequency",
-        "cumulative_instr_frequency",
-        "cumulative_node_frequency",
-        "count",
-        "text",
-      )
+      ("cumulative_frequency", "cumulative_node_frequency", "count", "text",)
     )
     for text, count in vocab_entries:
       cumfreq += count / total_count
-      instr_cumfreq += count / instr_count
       node_cumfreq += count / node_count
-      writer.writerow((cumfreq, instr_cumfreq, node_cumfreq, count, text))
+      writer.writerow((cumfreq, node_cumfreq, count, text))
 
 
 def Main():

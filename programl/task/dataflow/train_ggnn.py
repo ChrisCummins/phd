@@ -52,11 +52,6 @@ app.DEFINE_boolean(
 app.DEFINE_list(
   "train_graph_counts",
   [
-    1000,
-    2000,
-    3000,
-    4000,
-    5000,
     10000,
     20000,
     30000,
@@ -67,7 +62,16 @@ app.DEFINE_list(
     300000,
     400000,
     500000,
+    600000,
+    700000,
+    800000,
+    900000,
     1000000,
+    1100000,
+    1200000,
+    1300000,
+    1400000,
+    1500000,
   ],
   "The list of cumulative training graph counts to evaluate at.",
 )
