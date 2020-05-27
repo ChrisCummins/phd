@@ -142,6 +142,22 @@ sh_binary(
 )
 
 py_binary(
+    name = "test_vocab",
+    srcs = ["test_vocab.py"],
+    deps = [
+        ":vocabulary",
+        "//deeplearning/ncc:vocabulary",
+        "//labm8/py:app",
+        "//labm8/py:jsonutil",
+        "//labm8/py:pbutil",
+        "//labm8/py:progress",
+        "//programl/proto:node_py",
+        "//programl/proto:program_graph_py",
+        "//programl/task/dataflow/dataset:pathflag",
+    ],
+)
+
+py_binary(
     name = "train_ggnn",
     srcs = ["train_ggnn.py"],
     deps = [

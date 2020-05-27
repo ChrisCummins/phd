@@ -99,6 +99,7 @@ cc_library(
 py_library(
     name = "pathflag",
     srcs = ["pathflag.py"],
+    visibility = ["//programl/task/dataflow:__subpackages__"],
     deps = [
         "//labm8/py:app",
     ],
