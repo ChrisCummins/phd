@@ -41,7 +41,7 @@ exports_repo(
 )
 
 exports_pip(
-    name = "deploy",
+    name = "export_python_pip",
     package_name = "labm8",
     classifiers = [
         "Development Status :: 4 - Beta",
