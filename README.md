@@ -22,6 +22,8 @@ A monolithic repository for (almost) everything I have done while at the Univers
 
 ##  Publications
 
+1. Chris Cummins, Zacharias V. Fisches, Tal Ben-Nun, Torsten Hoefler, Hugh Leather. "**ProGraML: Graph-based Deep Learning for Program Optimization and Analysis**". [arXiv:2003.10536](https://arxiv.org/abs/2003.10536).
+   [[source code]](/programl/Documentation/arXiv.2003.10536/tex).
 1. Chris Cummins, "**Deep Learning for Compilers**". PhD thesis.
    [[source code]](/docs/thesis).
    Build command: `$ bazel build //docs/thesis`.
