@@ -1,0 +1,40 @@
+%+------------------------------------------------------------+----------+------------+-------------+------------+-----------------+-----------------+---------------+
+%| source_name                                                | language | file_count | graph_count | line_count | statement_count | statement_count | branch_factor |
+%+------------------------------------------------------------+----------+------------+-------------+------------+-----------------+-----------------+---------------+
+%| blas-3.8.0                                                 | fortran  |        300 |          83 |     114083 |          165718 |          326782 |    1.92486627 |
+%| github.com/av-maramzin/SNU_NPB:NPB3.3-SER-C                | c        |        122 |           3 |       1239 |             975 |            1815 |    1.64823333 |
+%| linux-4.19                                                 | c        |      13920 |        3848 |   11164045 |         6935620 |        14005386 |    1.91736788 |
+%| opencv-3.4.0                                               | cpp      |        442 |         110 |     283008 |          377520 |          751432 |    1.91927636 |
+%| pact17_opencl_devmap                                       | opencl   |        256 |          76 |      59241 |          105652 |          204598 |    1.75749474 |
+%| sqlite:////var/phd/datasets/github/repos_by_lang/c.db      | c        |      43618 |       11732 |   10370757 |        10791095 |        20878352 |    1.73002717 |
+%| sqlite:////var/phd/datasets/github/repos_by_lang/opencl.db | opencl   |       5302 |        1345 |    1848119 |         3033871 |         6794770 |    1.72519063 |
+%| sqlite:////var/phd/datasets/github/repos_by_lang/swift.db  | swift    |       4719 |         514 |      63970 |           75830 |          202087 |    1.04556031 |
+%| tensorflow                                                 | cpp      |       1986 |         396 |    2326580 |         2454937 |         4884154 |    1.92428460 |
+%+------------------------------------------------------------+----------+------------+-------------+------------+-----------------+-----------------+---------------+
+\renewcommand{\arraystretch}{1.55}
+\footnotesize
+\begin{tabular}{L{3.35cm} L{1.45cm} L{2.75cm} | r r R{1.69cm} R{1.6cm}}
+  & \textbf{Source language} & \textbf{Domain} & \textbf{IR files} & \textbf{IR lines} & \textbf{Avg. vertices / IR} & \textbf{Avg. edges / IR}\\
+  \hline
+  BLAS 3.8.0 & Fortran & Scientific Computing & 300 & 345,613 & 1,664 & 3,276\\
+  \hline
+  Linux 4.19 & C & Operating Systems & 13,851 & 41,332,089 & 1,857 & 3,760 \\
+  \hline
+  OpenCL Benchmarks~\cite{Cummins2017b} & OpenCL & Benchmarks & 256 & 149,779 & 1,027 & 1,970 \\
+  \hline
+  OpenCV 3.4.0 & C++ & Computer Vision & 400 & 1,168,758 & 3,761 & 7,442\\
+  \hline
+  POJ-104~\cite{Mou2016} & C++ & Standard Algorithms & 182,815 & 64,518,837 & 312 & 569 \\
+  \hline
+  Tensorflow~\cite{Abadi} & C++ & Machine learning & 1,584 & 8,444,443 & 5,786 & 11,482 \\
+  \hline
+  \multirow{4}{*}{GitHub} & C & \multirow{4}{*}{Various} & 42,880 & 89,356,570 & 927 & 1,794\\
+                  & Haskell & & 1,371 & 6,745,312 & 4,705 & 7,518\\
+                  & OpenCL & & 5,188 & 10,472,388 & 2,299 & 5,132 \\
+                  & Swift & & 1,783 & 205,140 & 134 & 371 \\
+  \hline
+  \textbf{Total} & --- & --- & \textbf{250,428} & \textbf{222,738,929} & \textbf{153,426,059} & \textbf{294,685,614} \\
+  % \textbf{Total} & --- & --- & $\bm{250,428}$ & $\bm{2.2 \times 10^8}$ & $\bm{1.5\times10^8}$ & $\bm{3.0\times10^8}$ \\
+  \hline
+  % node count =\textbf{Avg. 2,247} & edge count = \textbf{Avg. 4,331}
+\end{tabular}

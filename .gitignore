@@ -127,3 +127,6 @@ __pycache__
 /deeplearning/ml4pl/.vscode/
 
 deeplearning/ml4pl/graphs/programl_pb2.py
+programl/dataset/**
+programl/dataflow/dataset/**
+programl/dataflow/ml/logs/**
