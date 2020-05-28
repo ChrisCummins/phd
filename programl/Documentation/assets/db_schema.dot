@@ -1,0 +1,118 @@
+digraph G {
+  fontname = "Bitstream Vera Sans"
+  // fontsize = 8
+  // layout = sfdp
+
+  node [
+    fontname = "Bitstream Vera Sans"
+    // fontsize = 8
+    shape = "record"
+  ]
+
+  edge [
+    fontname = "Bitstream Vera Sans"
+    // fontsize = 8
+  ]
+
+  subgraph cluster_src {
+    label = "//deeplearning/ml4pl/src";
+
+    repo [
+      label = "{repo|repo_id\l...}"
+    ]
+
+    src [
+      label = "{src|src_id\lrepo_id\l...}"
+    ]
+
+    src_text [
+      label = "{src_text|src_id\l...}"
+    ]
+  }
+
+  subgraph cluster_ir {
+    label = "//deeplearning/ml4pl/ir";
+
+    ir [
+      label = "{ir|ir_id\lir_opts_id\lsrc_id\l...}"
+    ]
+
+    ir_opts [
+      label = "{ir_opts|ir_opts_id\l...}"
+    ]
+
+    ir_text [
+      label = "{ir_text|ir_id\l...}"
+    ]
+  }
+
+  subgraph cluster_graphs {
+    label = "//deeplearning/ml4pl/graphs";
+
+    graph_ [
+      label = "{graph|ir_id\l...}"
+    ]
+
+    labels [
+      label = "{labels|labels_id\lir_id\l...}"
+    ]
+
+    instance [
+      label = "{instance|instance_id\lgraph_id\llabels_id\l...}"
+    ]
+
+    graphset [
+      label = "{graphset|graphset_id\linstance\l...}"
+    ]
+
+    graphset_split [
+      label = "{graphset_split|graphset_split_id\lgraphset_id\l...}"
+    ]
+  }
+
+  subgraph cluster_models {
+    label = "//deeplearning/ml4pl/models";
+    model [
+      label = "{model|model_id\l...}"
+    ]
+
+    run [
+      label = "{run|run_id\lmodel_id\l...}"
+    ]
+
+    runset [
+      label = "{runset|runset_id\lrun_id\l...}"
+    ]
+
+    epoch [
+      label = "{epoch|run\lgraphset_split_id\l...}"
+    ]
+
+    model_output [
+      label = "{model_output|model_output_id\lepoch\lgraphset_split\l...}"
+    ]
+
+    model_output_labels [
+      label = "{model_output_labels|model_output_id\l...}"
+    ]
+  }
+
+  src -> repo
+  src_text -> src
+  ir -> src
+  ir -> ir_opts
+  ir_text -> ir
+  graph_ -> ir
+  labels -> graph_
+  instance -> graph_
+  instance -> labels
+  graphset -> instance
+  graphset_split -> graphset
+  run -> model
+  runset -> run
+  epoch -> run
+  epoch -> graphset_split
+  model_output -> epoch
+  model_output -> graphset_split
+  model_output_labels -> model_output
+}
