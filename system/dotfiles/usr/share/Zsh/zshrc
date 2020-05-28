@@ -537,6 +537,7 @@ pkg_config_path_dirs=( \
 export PKG_CONFIG_PATH=$(build_path "${pkg_config_path_dirs[@]}")
 
 ld_library_path_dirs=( \
+    ~/.local/opt/programl/lib \
     /usr/local/opt/openssl/lib \
     /usr/lib \
     /usr/lib32 \
@@ -554,6 +555,7 @@ path_dirs=( \
     ~/.gem/*/ruby/*/bin \
     ~/.local/opt/go/bin \
     ~/go/bin \
+    ~/.local/opt/programl/bin \
     /Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin \
     /usr/contrib/bin \
     /usr/local/bin \
