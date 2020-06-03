@@ -1,4 +1,5 @@
 .env
+INSTALL.md
 requirements.txt
 third_party/bazel/.formatignore
 third_party/bazel/BUILD
