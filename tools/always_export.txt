@@ -35,6 +35,7 @@ tools/bazel
 tools/bazel_env.sh
 tools/Brewfile.travis
 tools/BUILD
+tools/docker/**/*
 tools/flaky_bazel.sh
 tools/whoami.sh
 tools/workspace_status.sh
