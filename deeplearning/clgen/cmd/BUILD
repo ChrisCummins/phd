@@ -22,6 +22,7 @@ py_binary(
     deps = [
         "//deeplearning/clgen/corpuses:preprocessed",
         "//labm8/py:app",
+        "//labm8/py:sqlutil",
         "//third_party/py/tqdm",
     ],
 )

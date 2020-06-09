@@ -12,34 +12,21 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
-"""CLgen: a deep learning program generator.
-
-The core operations of CLgen are:
-
-  1. Preprocess and encode a corpus of handwritten example programs.
-  2. Define and train a machine learning model on the corpus.
-  3. Sample the trained model to generate new programs.
-
-This program automates the execution of all three stages of the pipeline.
-The pipeline can be interrupted and resumed at any time. Results are cached
-across runs. Please note that many of the steps in the pipeline are extremely
-compute intensive and highly parallelized. If configured with CUDA support,
-any NVIDIA GPUs will be used to improve performance where possible.
-
-Made with \033[1;31m♥\033[0;0m by Chris Cummins <chrisc.101@gmail.com>.
-https://chriscummins.cc/clgen
-"""
+"""Export the pre-processed contentfiles from a database."""
+from hashlib import sha256
 from pathlib import Path
 
+import sqlalchemy as sql
 from tqdm import tqdm
 
 from deeplearning.clgen.corpuses.preprocessed import PreprocessedContentFile
 from deeplearning.clgen.corpuses.preprocessed import PreprocessedContentFiles
 from labm8.py import app
+from labm8.py.sqlutil import OffsetLimitBatchedQuery
 
 FLAGS = app.FLAGS
 
-app.DEFINE_input_path(
+app.DEFINE_string(
   "db", None, "Path of a SQLite database of pre-processed contentfiles."
 )
 app.DEFINE_output_path(
@@ -54,15 +41,24 @@ def Main():
   outpath: Path = FLAGS.path
   outpath.mkdir(parents=True, exist_ok=True)
 
+  i = 0
   with db.Session() as session:
-    query = (
-      session.query(PreprocessedContentFile)
-      .filter(PreprocessedContentFile.preprocessing_succeeded == True)
-      .all()
+    query = session.query(PreprocessedContentFile.text).filter(
+      PreprocessedContentFile.preprocessing_succeeded == True
     )
-    for cf in tqdm(query):
-      with open(outpath / f"{cf.sha256}.txt", "w") as f:
-        f.write(cf.text)
+    n = (
+      session.query(sql.func.count(PreprocessedContentFile.id)).filter(
+        PreprocessedContentFile.preprocessing_succeeded == True
+      )
+    ).scalar()
+
+    for batch in OffsetLimitBatchedQuery(query, batch_size=16384):
+      for row in tqdm(batch.rows, initial=i, total=n):
+        text = row[0]
+        name = f"{sha256(text.encode('utf-8')).hexdigest()}{FLAGS.suffix}"
+        with open(outpath / name, "w") as f:
+          f.write(text.encode("ascii", "ignore").decode("ascii"))
+      i += len(batch.rows)
 
 
 if __name__ == "__main__":
