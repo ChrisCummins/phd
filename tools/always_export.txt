@@ -47,6 +47,7 @@ tools/Brewfile.travis
 tools/BUILD
 tools/docker/**/*
 tools/flaky_bazel.sh
+tools/make_bootstrap.py
 tools/whoami.sh
 tools/workspace_status.sh
 version.txt
