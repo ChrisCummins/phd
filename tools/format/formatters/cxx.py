@@ -16,6 +16,7 @@ import sys
 
 from labm8.py import bazelutil
 from tools.format.formatters.base import batched_file_formatter
+from tools.format.formatters.text import FormatText
 
 
 class FormatCxx(batched_file_formatter.BatchedFileFormatter):
@@ -29,5 +30,11 @@ class FormatCxx(batched_file_formatter.BatchedFileFormatter):
     arch = "mac" if sys.platform == "darwin" else "linux"
     self.clang_format = bazelutil.DataPath(f"llvm_{arch}/bin/clang-format")
 
+    self.text_formatter = FormatText(cache_path=self.cache_path)
+
   def RunMany(self, paths):
-    return self._Exec([self.clang_format, "-style", "Google", "-i"] + paths)
+    self._Exec([self.clang_format, "-style", "Google", "-i"] + paths)
+
+    # Regular text format for to sanitize whitespace.
+    for path in paths:
+      self.text_formatter.RunOne(path)

@@ -24,8 +24,7 @@ def test_small_shell_program():
     """
 foo() {
     echo hello; ls
-}
-"""
+}"""
   )
   print(text)
   assert (
@@ -45,8 +44,7 @@ def test_small_bats_program():
     """
 @test "run version" {
     "$BIN"  --version
-}
-""",
+}""",
     assumed_filename="test.bats",
   )
   print(text)

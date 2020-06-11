@@ -21,8 +21,7 @@ FLAGS = test.FLAGS
 def test_format_single_query():
   text = sql.FormatSql.Format(
     """
-select * from users;
-"""
+select * from users;"""
   )
   print(text)
   assert (

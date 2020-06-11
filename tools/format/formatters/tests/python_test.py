@@ -27,8 +27,7 @@ def test_small_python_program():
   text = python.FormatPython.Format(
     """
 def foo():
-      print('hi')
-"""
+      print('hi')"""
   )
   print(text)
   assert (

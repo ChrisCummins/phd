@@ -36,18 +36,27 @@ def test_invalid_proto_field_missing_tag_number():
   with test.Raises(protobuf.FormatProtobuf.FormatError):
     protobuf.FormatProtobuf.Format(
       """
-syntax = "proto2"
+syntax = "proto2";
 message Foo { optional int32 a; }
 """
     )
 
 
-def test_small_proto_file():
+def test_proto_with_missing_import():
+  with test.Raises(protobuf.FormatProtobuf.FormatError):
+    protobuf.FormatProtobuf.Format(
+      """
+syntax = "proto2";
+import "this/is/not/found.proto";
+message Foo { optional int32 a; }"""
+    )
+
+
+def test_small_proto2_file():
   text = protobuf.FormatProtobuf.Format(
     """
 syntax = "proto2";
-message Foo { optional int32 a = 1; }
-"""
+message Foo { optional int32 a = 1; }"""
   )
   print(text)
   assert (
@@ -57,6 +66,25 @@ syntax = "proto2";
 
 message Foo {
   optional int32 a = 1;
+}
+"""
+  )
+
+
+def test_small_proto3_file():
+  text = protobuf.FormatProtobuf.Format(
+    """
+  syntax = "proto3";
+  message Foo { int32 a = 1; }"""
+  )
+  print(text)
+  assert (
+    text
+    == """\
+syntax = "proto3";
+
+message Foo {
+  int32 a = 1;
 }
 """
   )

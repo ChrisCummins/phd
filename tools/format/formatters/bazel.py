@@ -31,4 +31,4 @@ class FormatBuild(batched_file_formatter.BatchedFileFormatter):
     )
 
   def RunMany(self, paths):
-    return self._Exec([self.buildifier] + paths)
+    self._Exec([self.buildifier] + paths)

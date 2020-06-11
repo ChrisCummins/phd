@@ -41,5 +41,22 @@ py_binary(
   )
 
 
+def test_build_file_without_trailing_newline():
+  text = bazel.FormatBuild.Format(
+    """cc_binary(
+  name = "foo"    , srcs = ["foo.cc"])"""
+  )
+  print(text)
+  assert (
+    text
+    == """\
+cc_binary(
+    name = "foo",
+    srcs = ["foo.cc"],
+)
+"""
+  )
+
+
 if __name__ == "__main__":
   test.Main()

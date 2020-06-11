@@ -30,8 +30,7 @@ def test_small_cxx_program():
 template<typename FOO>
 FOO foobar(const T& a) {return a;}
 
-int foo() { return foobar<int>(10); }
-"""
+int foo() { return foobar<int>(10); }"""
   )
   assert (
     text

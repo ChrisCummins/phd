@@ -40,6 +40,7 @@ py_library(
     }),
     visibility = ["//tools/format:__subpackages__"],
     deps = [
+        ":text",
         "//labm8/py:bazelutil",
         "//tools/format/formatters/base:batched_file_formatter",
     ],
