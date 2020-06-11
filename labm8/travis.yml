@@ -2,21 +2,27 @@ os:
   - linux
   - osx
 
+language: python
+
+python:
+  - "3.6"
+  - "3.7"
+
 # Sudo is required to swap out GCC for GCC-5 on linux.
 sudo: required
 
-osx_image: xcode10.2
-
-dist: trusty
-
-language:
-  - generic
+# macOS: 10.15.
+osx_image: xcode11.5
+# Linux: Ubuntu Linux 18.04 and clang 7.
+dist: bionic
+compiler: clang
 
 env:
   matrix:
     - TO_TEST=pypi
     - TO_TEST=bazel
   global:
+    - BAZEL_VERSION=3.1.0
     # MacOS image needs GNU tools in PATH, rather than BSD versions.
     - PATH="$HOME/.local/bin:/usr/local/opt/coreutils/libexec/gnubin/stat:/usr/local/opt/findutils/libexec/gnubin:/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
     # Environment variables needed for zlib.
@@ -29,22 +35,31 @@ addons:
   homebrew:
     brewfile: tools/Brewfile.travis
   apt:
-    sources:
-      - sourceline: 'ppa:jonathonf/python-3.6'
-      - sourceline: 'deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8'
-        key_url: 'https://storage.googleapis.com/bazel-apt/doc/apt-key.pub.gpg'
-      - ubuntu-toolchain-r-test
     packages:
       - openjdk-8-jdk
-      - python
-      - python3.6
-      - python3.6-dev
-      - bazel
       - gcc-5
       - g++-5
 
 services:
   - mysql
+
+before_install:
+  - OS=linux
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then OS=darwin; fi
+  # Install Bazel.
+  - GH_BASE="https://github.com/bazelbuild/bazel/releases/download/$BAZEL_VERSION"
+  - GH_ARTIFACT="bazel-$BAZEL_VERSION-installer-$OS-x86_64.sh"
+  - CI_BASE="http://ci.bazel.io/job/Bazel/JAVA_VERSION=1.8,PLATFORM_NAME=$OS-x86_64/lastSuccessfulBuild/artifact/output/ci"
+  - CI_ARTIFACT="bazel--installer.sh"
+  - URL="$GH_BASE/$GH_ARTIFACT"
+  - if [[ "$BAZEL_VERSION" == "HEAD" ]]; then CI_ARTIFACT="`wget -qO- $CI_BASE | grep
+    -o 'bazel-[-_a-zA-Z0-9\.]*-installer.sh' | uniq`"; fi
+  - if [[ "$BAZEL_VERSION" == "HEAD" ]]; then URL="$CI_BASE/$CI_ARTIFACT"; fi
+  - echo $URL
+  - wget -O install.sh $URL
+  - chmod +x install.sh
+  - "./install.sh --user"
+  - rm -f install.sh
 
 install:
   # Remove pyenv, since we use the system package managers to install python.
