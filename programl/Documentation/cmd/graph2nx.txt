@@ -1,10 +1,6 @@
 Convert a ProgramGraph to NetworkX.
 flags:
 
-programl/cmd/graph2nx.py:
-  --stdin_fmt: The format for stdin. One of {pb,pbtxt}
-    (default: 'pbtxt')
-
 absl.app:
   -?,--[no]help: show this help
     (default: 'false')
@@ -77,6 +73,12 @@ labm8.py.internal.labm8_logging:
     value given by --v.
     (default: '')
     (a comma separated list)
+
+programl.util.py.stdin_fmt:
+  --stdin_fmt: The type of input format to use. Valid options are: "pbtxt" which
+    reads a text format protocol buffer, "pb" which reads a binary format
+    protocol buffer, or "json" which reads a JSON format protocol buffer.
+    (default: 'pbtxt')
 
 absl.flags:
   --flagfile: Insert flag definitions from the given file into the command line.

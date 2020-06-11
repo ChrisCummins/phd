@@ -25,10 +25,6 @@ programl/cmd/inst2vec.py:
   --ir: The path of the IR file that was used to construct the graph. This is
     required to inline struct definitions. This argument may be omitted when
     struct definitions do not need to be inlined.
-  --stdin_fmt: The format for stdin. One of {pb,pbtxt}
-    (default: 'pbtxt')
-  --stdout_fmt: The format for stdout. One of {pb,pbtxt}
-    (default: 'pbtxt')
 
 absl.app:
   -?,--[no]help: show this help
@@ -102,6 +98,20 @@ labm8.py.internal.labm8_logging:
     value given by --v.
     (default: '')
     (a comma separated list)
+
+programl.util.py.stdin_fmt:
+  --stdin_fmt: The type of input format to use. Valid options are: "pbtxt" which
+    reads a text format protocol buffer, "pb" which reads a binary format
+    protocol buffer, or "json" which reads a JSON format protocol buffer.
+    (default: 'pbtxt')
+
+programl.util.py.stdout_fmt:
+  --stdout_fmt: The format of output. Valid options are: "pbtxt" for a text-
+    format protocol buffer, "pb" for a binary format protocol buffer, or "json"
+    for JSON. Text format protocol buffers are recommended for human-readable
+    output, binary-format for efficient and fast file storage, and JSON for
+    processing with third-party tools such as `jq`.
+    (default: 'pbtxt')
 
 absl.flags:
   --flagfile: Insert flag definitions from the given file into the command line.
