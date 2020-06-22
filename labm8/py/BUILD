@@ -766,6 +766,7 @@ py_test(
     srcs = ["viz_test.py"],
     deps = [
         ":app",
+        ":humanize",
         ":test",
         ":viz",
         "//third_party/py/matplotlib",

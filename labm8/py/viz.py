@@ -28,6 +28,7 @@ from scipy import stats
 
 from labm8.py import app
 from labm8.py import fs
+from labm8.py import humanize
 
 FLAGS = app.FLAGS
 
@@ -242,21 +243,27 @@ def Distplot(
   return ax
 
 
+def SummarizeValues(
+  values: typing.Iterable[typing.Any],
+  format: typing.Callable[[typing.Any], str],
+  dtype=np.float32,
+) -> str:
+  """Summarize a sequence of floats."""
+  arr = np.array(list(values), dtype=dtype)
+  percs = " ".join(
+    [f"{p}%={format(np.percentile(arr, p))}" for p in [0, 50, 95, 99, 100]]
+  )
+  return (
+    f"n={humanize.Commas(len(arr))}, mean={format(arr.mean())}, "
+    f"stdev={format(arr.std())}, percentiles=[{percs}]"
+  )
+
+
 def SummarizeFloats(
   floats: typing.Iterable[float], nplaces: int = 2, unit: str = ""
 ) -> str:
   """Summarize a sequence of floats."""
-  arr = np.array(list(floats), dtype=np.float32)
-  percs = " ".join(
-    [
-      f"{p}%={np.percentile(arr, p):.{nplaces}f}{unit}"
-      for p in [0, 50, 95, 99, 100]
-    ]
-  )
-  return (
-    f"n={len(arr)}, mean={arr.mean():.{nplaces}f}{unit}, stdev={arr.std():.{nplaces}f}{unit}, "
-    f"percentiles=[{percs}]"
-  )
+  return SummarizeValues(floats, format=lambda x: f"{x:.{nplaces}f}{unit}")
 
 
 def SummarizeInts(ints: typing.Iterable[int], unit: str = "") -> str:
