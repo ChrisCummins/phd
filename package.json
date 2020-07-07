@@ -8,7 +8,7 @@
     "url": "https://github.com/ChrisCummins/phd/issues"
   },
   "dependencies": {
-    "npm": "^6.13.4"
+    "npm": "^6.14.6"
   },
   "description": "My PhD.",
   "devDependencies": {
