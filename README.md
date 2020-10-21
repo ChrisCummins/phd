@@ -1,3 +1,13 @@
+<a href="https://chriscummins.cc/u/ed/phd-thesis.pdf">
+   <img src="docs/thesis/thesis-click-me.png">
+</a>
+
+**Update:** I have finished my PhD! Please click below for my dissertation,
+which I'm delighted to say won the award for
+[PhD Award for Best Disseration in Scotland 2019-2020](https://www.sicsa.ac.uk/news-events/sicsa-conference-2020/).
+This repository is now in an archival state.
+
+
 # My PhD
 
 <!-- repo size -->
