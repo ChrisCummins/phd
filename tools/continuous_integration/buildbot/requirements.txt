@@ -1,7 +1,7 @@
 attrs==19.1.0
 autobahn==19.2.1
 Automat==0.7.0
-buildbot==2.0.1
+buildbot==2.3.1
 buildbot-console-view==2.0.1
 buildbot-grid-view==2.0.1
 buildbot-waterfall-view==2.0.1
