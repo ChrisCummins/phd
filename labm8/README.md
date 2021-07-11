@@ -13,7 +13,7 @@
   <img src="https://bettercodehub.com/edge/badge/ChrisCummins/labm8?branch=master">
 </a>
 <!-- Travis CI -->
-<a href="https://github.com/ChrisCummins/labm8">
+<a href="https://travis-ci.org/github/ChrisCummins/labm8">
   <img src="https://img.shields.io/travis/ChrisCummins/labm8/master.svg">
 </a>
 <!-- commit counter -->
